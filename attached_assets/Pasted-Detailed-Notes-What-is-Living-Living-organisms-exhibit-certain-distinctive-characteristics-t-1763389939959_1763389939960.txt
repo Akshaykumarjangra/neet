@@ -1,0 +1,165 @@
+Detailed Notes
+## What is Living?
+
+Living organisms exhibit certain distinctive characteristics that differentiate them from non-living matter.
+
+### Defining Characteristics of Living Organisms
+
+**1. Growth**
+- **In living organisms:** Growth occurs from inside (intrinsic)
+- **Cellular mechanism:** Increase in number of cells (cell division)
+- **Multicellular organisms:** Irreversible increase in mass and size
+- **Unicellular organisms:** Growth by cell division
+- **Plants:** Indefinite growth (throughout life)
+- **Animals:** Definite growth (stops after maturity)
+
+**Example:** A seed grows into a plant, a baby grows into an adult
+
+**Non-living can also "grow":** Mountains grow due to external accumulation (extrinsic growth)
+
+**2. Reproduction**
+- Production of offspring similar to parents
+- Ensures continuity of species
+- **Sexual reproduction:** Involves two parents, genetic variation
+- **Asexual reproduction:** Single parent, genetically identical offspring
+
+**Examples:**
+- Bacteria: Binary fission
+- Hydra: Budding
+- Plants: Vegetative propagation
+- Humans: Sexual reproduction
+
+**Exception:** Mules (sterile), worker bees (sterile), but still considered living
+
+**3. Metabolism**
+- Sum total of all chemical reactions in body
+- **Anabolism:** Building up (synthesis) reactions - require energy
+- **Catabolism:** Breaking down reactions - release energy
+
+**Examples:**
+- Respiration: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + Energy (ATP)
+- Photosynthesis: 6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂
+
+**In vitro (test tube) reactions:** Can occur outside body but organism is needed to catalyze
+
+**4. Cellular Organization**
+- All living organisms composed of cells (Cell Theory)
+- **Prokaryotic cells:** No membrane-bound nucleus (bacteria)
+- **Eukaryotic cells:** Membrane-bound nucleus (animals, plants, fungi)
+- Cell is basic structural and functional unit
+
+**5. Consciousness (Responsiveness)**
+- Ability to sense and respond to environmental stimuli
+- **Plants:** Phototropism (light), geotropism (gravity), thigmotropism (touch)
+- **Animals:** Nervous system, sensory organs
+- **Humans:** Self-consciousness, awareness
+
+**Example:** Mimosa (touch-me-not) plant folds leaves when touched
+
+**Organisms in coma:** Alive but lack consciousness temporarily
+
+**Summary:** Living = Growth + Reproduction + Metabolism + Cellular Organization + Consciousness
+
+**Note:** No single defining feature can identify living organisms; combination of all characteristics is necessary.
+
+## Diversity in the Living World
+
+**Biodiversity:** Variety of life forms on Earth
+
+**Estimates:**
+- **Plants:** ~300,000 species
+- **Animals:** ~1.5 million species
+- **Total described:** ~1.7-1.8 million species
+- **Estimated total:** 10-100 million species
+
+**Levels of biodiversity:**
+1. **Genetic diversity:** Variation in genes within species
+2. **Species diversity:** Variety of species in an area
+3. **Ecosystem diversity:** Variety of habitats and ecosystems
+
+## Need for Classification
+
+**Reasons:**
+1. **Organization:** Systematic arrangement of vast diversity
+2. **Identification:** Easy recognition and naming
+3. **Study:** Facilitates research and understanding
+4. **Evolution:** Reveals evolutionary relationships
+5. **Conservation:** Helps identify endangered species
+
+**Without classification:** Impossible to study millions of organisms individually
+
+## Taxonomy and Systematics
+
+**Taxonomy:** Science of identifying, naming, and classifying organisms
+- Coined by: **A.P. de Candolle** (1813)
+- **Father of Taxonomy:** **Carolus Linnaeus**
+
+**Systematics:** Study of diversity and evolutionary relationships among organisms
+- Broader than taxonomy
+- Includes identification, nomenclature, classification, and phylogeny
+
+**Branches:**
+- **Alpha taxonomy:** Identification and naming
+- **Beta taxonomy:** Arrangement in hierarchical system
+- **Gamma taxonomy:** Evolutionary and phylogenetic relationships
+
+## Taxonomic Hierarchy (Categories)
+
+Classification system with hierarchical arrangement from general to specific.
+
+**Taxonomic Categories (Obligate):**
+
+**1. Kingdom** (Highest category)
+- Broadest level
+- Examples: Plantae, Animalia, Fungi, Protista, Monera
+
+**2. Phylum (Animals) / Division (Plants)**
+- Groups of related classes
+- Example: Chordata (animals with notochord)
+
+**3. Class**
+- Groups of related orders
+- Example: Mammalia (mammals)
+
+**4. Order**
+- Groups of related families
+- Example: Primata (primates)
+
+**5. Family**
+- Groups of related genera
+- Ends with suffix **-aceae** (plants) or **-idae** (animals)
+- Example: Hominidae (great apes)
+
+**6. Genus**
+- Groups of closely related species
+- First word in binomial name (capitalized)
+- Example: *Homo*
+
+**7. Species** (Lowest category, Basic unit)
+- Group of actually/potentially interbreeding populations
+- Reproductively isolated from other groups
+- Second word in binomial name (lowercase)
+- Example: *Homo sapiens*
+
+**Hierarchical Arrangement:**
+Kingdom → Phylum/Division → Class → Order → Family → Genus → Species
+
+**Mnemonic:** **K**ing **P**hilip **C**ame **O**ver **F**or **G**ood **S**oup
+
+### Example Classification
+
+**Human Classification:**
+- **Kingdom:** Animalia
+- **Phylum:** Chordata
+- **Class:** Mammalia
+- **Order:** Primata
+- **Family:** Hominidae
+- **Genus:** *Homo*
+- **Species:** *sapiens*
+- **Scientific name:** *Homo sapiens*
+
+**Mango Classification:**
+- **Kingdom:** Plantae
+- **Division:** Magnoliophyta (Angiosperms)
+- **Class:** Dicotyledonae
+- **Ord

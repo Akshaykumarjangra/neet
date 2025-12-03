@@ -1,0 +1,114 @@
+NEET App Content and Syllabus Plan
+
+1. NEET Exam Structure (Based on NTA 2025 Notice)
+
+•
+Mode: Offline (Pen & Paper-based)
+
+•
+Duration: 3 hours 20 minutes (200 minutes) - Note: Some sources suggest 3 hours (180 minutes), but the latest official notice should be followed.
+
+•
+Total Questions: 200 (180 to be attempted)
+
+•
+Total Marks: 720
+
+•
+Marking Scheme: +4 for correct answer, -1 for incorrect answer.
+
+•
+Subjects:
+
+•
+Physics (35 + 15 questions, 45 to be attempted)
+
+•
+Chemistry (35 + 15 questions, 45 to be attempted)
+
+•
+Biology (Botany: 35 + 15 questions, 45 to be attempted; Zoology: 35 + 15 questions, 45 to be attempted)
+
+
+
+2. Syllabus Content Source
+
+The application content must be based on the official NEET (UG) 2025 Syllabus, which covers topics from Class 11 and Class 12.
+
+2.1. Core Content (NCERT-based)
+
+•
+Physics: Units 1-20 (as per the PDF content)
+
+•
+Chemistry: Units 1-20 (as per the PDF content)
+
+•
+Biology (Botany & Zoology): Units 1-20 (as per the PDF content)
+
+2.2. Extended Content (Reference Books)
+
+To ensure 100% readiness, the app will include content and advanced practice questions from highly recommended reference books:
+
+•
+Physics: Concepts of Physics by H.C. Verma (Vol 1 & 2), Objective Physics by D.C. Pandey.
+
+•
+Chemistry: Physical Chemistry by O.P. Tandon, Organic Chemistry by O.P. Tandon/Morrison & Boyd, Inorganic Chemistry by J.D. Lee.
+
+•
+Biology: Trueman's Elementary Biology (Vol 1 & 2), Objective Biology by Dinesh.
+
+3. Application Features (Confirmed by User)
+
+The application must include all the following features:
+
+1.
+Interactive Practice Questions: With detailed solutions and explanations.
+
+2.
+Mock Tests: Simulating actual NEET exam conditions.
+
+3.
+Video Lectures/Concept Explanations: For all topics.
+
+4.
+Progress Tracking: Detailed performance analytics.
+
+5.
+Adaptive Learning: AI-based personalized study plans.
+
+6.
+Gamification: Points, badges, and leaderboards.
+
+7.
+Multi-Platform: Desktop, Mobile, and Web.
+
+4. Assessment System Requirements
+
+•
+Chapter-wise Tests: For every unit/chapter in the syllabus.
+
+•
+Full-length Mock Tests: Simulating the 200-question, 720-mark pattern.
+
+•
+Previous Year Question Papers (PYQs): At least the last 10 years (2016-2025) to cover trends and pattern changes.
+
+•
+Daily Practice Questions (DPQs): Short, focused daily quizzes.
+
+5. Technology Stack Consideration (Initial Draft for Phase 3)
+
+•
+Backend: Python (for AI/Adaptive Learning, API)
+
+•
+Frontend: C++ (for high-performance desktop/mobile components, if needed, but a modern cross-platform framework is preferred for multi-platform support) and a web framework (e.g., React/Vue)
+
+•
+Database: PostgreSQL (for scalability and complex data structures)
+
+•
+Interactive Elements: Python Turtle (as requested by the user, likely for simple, engaging physics/biology simulations or gamified elements). This will be integrated into the desktop/web environment.
+
