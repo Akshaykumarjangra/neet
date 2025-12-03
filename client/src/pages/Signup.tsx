@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
 const signupSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
@@ -46,7 +46,7 @@ export default function Signup() {
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -101,15 +101,15 @@ export default function Signup() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input
-                        data-testid="input-username"
-                        placeholder="Choose a username"
-                        autoComplete="username"
+                        data-testid="input-name"
+                        placeholder="Enter your full name"
+                        autoComplete="name"
                         {...field}
                       />
                     </FormControl>

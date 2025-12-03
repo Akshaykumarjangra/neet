@@ -9,32 +9,22 @@ const router = Router();
 
 // Validation schemas
 const signupSchema = z.object({
-  username: z.string().min(3).max(50),
+  name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(8),
 });
 
 const loginSchema = z.object({
-  username: z.string(),
+  email: z.string().email(),
   password: z.string(),
 });
 
 // Sign up new user
 router.post("/signup", async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = signupSchema.parse(req.body);
+    const { name, email, password } = signupSchema.parse(req.body);
 
-    // Check if username or email already exists
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, username))
-      .limit(1);
-
-    if (existingUser) {
-      return res.status(400).json({ error: "Username already exists" });
-    }
-
+    // Check if email already exists
     const [existingEmail] = await db
       .select()
       .from(users)
@@ -46,26 +36,22 @@ router.post("/signup", async (req: Request, res: Response) => {
     }
 
     // Create user
-    const user = await createUser(username, email, password);
+    const user = await createUser(name, email, password);
 
     // Create session
     req.session.userId = user.id;
-    req.session.username = user.username;
 
     // Fetch full user details
     const [fullUser] = await db
       .select({
         id: users.id,
-        username: users.username,
+        name: users.name,
         email: users.email,
         currentLevel: users.currentLevel,
         totalPoints: users.totalPoints,
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
-        adminGranted: users.adminGranted,
-        accessExpiry: users.accessExpiry,
-        openaiTokensUsed: users.openaiTokensUsed,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -84,32 +70,28 @@ router.post("/signup", async (req: Request, res: Response) => {
 // Login user
 router.post("/login", async (req: Request, res: Response) => {
   try {
-    const { username, password } = loginSchema.parse(req.body);
+    const { email, password } = loginSchema.parse(req.body);
 
-    const user = await authenticateUser(username, password);
+    const user = await authenticateUser(email, password);
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid username or password" });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Create session
     req.session.userId = user.id;
-    req.session.username = user.username;
 
     // Fetch full user details
     const [fullUser] = await db
       .select({
         id: users.id,
-        username: users.username,
+        name: users.name,
         email: users.email,
         currentLevel: users.currentLevel,
         totalPoints: users.totalPoints,
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
-        adminGranted: users.adminGranted,
-        accessExpiry: users.accessExpiry,
-        openaiTokensUsed: users.openaiTokensUsed,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -149,16 +131,13 @@ router.get("/me", async (req: Request, res: Response) => {
     const [user] = await db
       .select({
         id: users.id,
-        username: users.username,
+        name: users.name,
         email: users.email,
         currentLevel: users.currentLevel,
         totalPoints: users.totalPoints,
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
-        adminGranted: users.adminGranted,
-        accessExpiry: users.accessExpiry,
-        openaiTokensUsed: users.openaiTokensUsed,
       })
       .from(users)
       .where(eq(users.id, userId))

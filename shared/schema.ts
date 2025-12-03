@@ -29,9 +29,9 @@ export const questions = pgTable("questions", {
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+  name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  passwordHash: text("password_hash").notNull(),
   currentLevel: integer("current_level").notNull().default(1),
   totalPoints: integer("total_points").notNull().default(0),
   studyStreak: integer("study_streak").notNull().default(0),
@@ -43,10 +43,6 @@ export const users = pgTable("users", {
   }>(),
   isAdmin: boolean("is_admin").notNull().default(false),
   isPaidUser: boolean("is_paid_user").notNull().default(false),
-  adminGranted: boolean("admin_granted").notNull().default(false),
-  accessExpiry: timestamp("access_expiry"),
-  openaiTokensUsed: integer("openai_tokens_used").notNull().default(0),
-  openaiTokensLimit: integer("openai_tokens_limit").notNull().default(1000000),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

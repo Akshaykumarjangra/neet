@@ -20,45 +20,45 @@ export async function verifyPassword(
 
 // User authentication
 export async function authenticateUser(
-  username: string,
+  email: string,
   password: string
-): Promise<{ id: string; username: string; email: string } | null> {
+): Promise<{ id: string; name: string; email: string } | null> {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.username, username))
+    .where(eq(users.email, email))
     .limit(1);
 
   if (!user) {
     return null;
   }
 
-  const isValid = await verifyPassword(password, user.password);
+  const isValid = await verifyPassword(password, user.passwordHash);
   if (!isValid) {
     return null;
   }
 
   return {
     id: user.id,
-    username: user.username,
+    name: user.name,
     email: user.email,
   };
 }
 
 // Create new user
 export async function createUser(
-  username: string,
+  name: string,
   email: string,
   password: string
-): Promise<{ id: string; username: string; email: string }> {
+): Promise<{ id: string; name: string; email: string }> {
   const hashedPassword = await hashPassword(password);
 
   const [newUser] = await db
     .insert(users)
     .values({
-      username,
+      name,
       email,
-      password: hashedPassword,
+      passwordHash: hashedPassword,
       currentLevel: 1,
       totalPoints: 0,
       studyStreak: 0,
@@ -68,7 +68,7 @@ export async function createUser(
 
   return {
     id: newUser.id,
-    username: newUser.username,
+    name: newUser.name,
     email: newUser.email,
   };
 }
@@ -77,7 +77,6 @@ export async function createUser(
 declare module "express-session" {
   interface SessionData {
     userId: string;
-    username: string;
   }
 }
 
