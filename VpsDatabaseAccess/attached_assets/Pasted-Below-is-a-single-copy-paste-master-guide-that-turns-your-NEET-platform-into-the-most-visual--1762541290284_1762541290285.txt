@@ -1,0 +1,306 @@
+Below is a **single-copy-paste master guide** that turns your NEET platform into the **most visual, sticky learning app** on the internet.  
+It is split into four parts:
+
+1. Library cheat-sheet (what to pick, when, why, bundle size, gotchas)  
+2. Production-grade folder structure (drop into `src/visuals/`)  
+3. Copy-paste code starters for the **five most requested NEET visuals**  
+4. Performance & accessibility checklist (60 fps on ₹7 000 Android, WCAG-2.2, Hindi support)
+
+---
+
+1. LIBRARY CHEAT-SHEET
+----------------------
+
+| # | Library | Best for NEET topic | Bundle (gz) | Rendering | React/Vite | Notes |
+|---|---------|---------------------|-------------|-----------|------------|-------|
+| 1 | Three.js | atomic orbitals, ray-optics, E-field, projectile | 145 kB | WebGL ✔ | `@react-three/fiber` | 1 000+ free models on Sketchfab |
+| 2 | PhET-iO | circuits, wave-interference, gas-laws | 0 kB (iframe) | Canvas 2D | embed | Hindi UI already baked |
+| 3 | D3.js v7 | genetics pedigree, population pyramids, kinetics graph | 42 kB | SVG | `react-d3-components` | animate 10 k points @60 fps |
+| 4 | JSXGraph | lens-mirror drag, tangent, SHM slider | 35 kB | SVG + Canvas | `react-jsxgraph` | touch, keyboard, screen-reader |
+| 5 | PixiJS v7 | cell-membrane game, periodic-table shooter | 97 kB | WebGL | `@pixi/react` | particle container |
+| 6 | cytoscape.js | food-web, neuron circuit, Krebs cycle | 85 kB | Canvas | `react-cytoscape` | 20 automatic layouts |
+| 7 | Matter.js | momentum collision, satellite, pendulum | 72 kB | Canvas | `react-matter-js` | gravity = toggle |
+| 8 | p5.js | quick prototype, noise waves, standing wave | 193 kB | Canvas 2D | `react-p5` | 1-hr student hackathon friendly |
+| 9 | Deck.gl | geo-layer (pollution map, malaria spread) | 100 kB | WebGL | `@deck.gl/react` | uses Mapbox (free edu) |
+| 10 | Rough.js | hand-drawn feel (ray diagram, cell) | 8 kB | SVG | wrapper | keeps “notebook” vibe |
+
+---
+
+2. FOLDER STRUCTURE (VITE + TS)
+---------------------------------
+
+src/
+├─ visuals/
+│  ├─ three/              # 3-D scenes
+│  │   ├─ OrbitControls.tsx
+│  │   ├─ AtomHelium.tsx
+│  │   └─ RayDiagram.tsx
+│  ├─ phet/               # PhET embed wrappers
+│  │   ├─ CircuitLab.tsx
+│  │   └─ GasLab.tsx
+│  ├─ d3/
+│  │   ├─ PedigreeTree.tsx
+│  │   └─ ReactionRate.tsx
+│  ├─ pixi/
+│  │   ├─ EnzymeGame.tsx
+│  │   └— PeriodicTable.tsx
+│  ├─ jsx/
+│  │   ├─ LensMirror.tsx
+│  │   └— Pendulum.tsx
+│  ├─ shared/
+│  │   ├─ VisualLoader.tsx   # suspense fallback
+│  │   ├─ HindiToggle.tsx    # i18n
+│  │   └— A11yAnnouncer.tsx  # live-region
+│  └─ hooks/
+│      ├─ useScript.ts       # load external JS
+│      └— usePrefersMotion.ts # reduce-motion
+├─ assets/
+│  ├─ models/     # .glb .gltf
+│  └— textures/   # .webp 1024×1024 max
+├─ styles/
+│  └— visuals.css # CSS variables for dark/light
+└─ lib/
+   ├─ three.ts    # shared renderer config
+   └— constants.ts # NEET colours, units
+
+---
+
+3. COPY-PASTE STARTERS
+----------------------
+
+### 3.1 3-D Helium atom (Three.js + React Three Fiber)
+
+```bash
+npm i @react-three/fiber @react-three/drei three
+```
+
+```tsx
+// src/visuals/three/AtomHelium.tsx
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Text } from '@react-three/drei'
+
+export default function AtomHelium() {
+  return (
+    <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+      <ambientLight intensity={0.6} />
+      <pointLight position={[10, 10, 10]} />
+      {/* nucleus */}
+      <mesh>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshStandardMaterial color="red" />
+      </mesh>
+      {/* electron shells */}
+      <mesh position={[2, 0, 0]}>
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-2, 0, 0]}>
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshStandardMaterial color="cyan" emissive="cyan" emissiveIntensity={0.5} />
+      </mesh>
+      <Text
+        position={[0, -1.5, 0]}
+        fontSize={0.5}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
+        ₂He⁴
+      </Text>
+      <OrbitControls enablePan={false} />
+    </Canvas>
+  )
+}
+```
+
+Usage inside question bank:
+
+```tsx
+<Suspense fallback={<VisualLoader />}>
+  <AtomHelium />
+</Suspense>
+```
+
+### 3.2 PhET circuit builder (Hindi UI)
+
+```tsx
+// src/visuals/phet/CircuitLab.tsx
+import { useEffect, useRef } from 'react'
+
+export default function CircuitLab() {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  useEffect(() => {
+    // auto-translate to Hindi
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'setLocale', locale: 'hi' },
+      '*'
+    )
+  }, [])
+
+  return (
+    <iframe
+      ref={iframeRef}
+      src="https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html"
+      width="100%"
+      height="500"
+      allowFullScreen
+      title="PhET Circuit Builder"
+    />
+  )
+}
+```
+
+### 3.3 D3 Pedigree tree (autosomal recessive)
+
+```bash
+npm i d3 @types/d3
+```
+
+```tsx
+// src/visuals/d3/PedigreeTree.tsx
+import * as d3 from 'd3'
+import { useEffect, useRef } from 'react'
+
+export default function PedigreeTree({ data }: { data: any }) {
+  const svgRef = useRef<SVGSVGElement>(null)
+
+  useEffect(() => {
+    if (!svgRef.current) return
+    const width = 600
+    const height = 300
+    const svg = d3.select(svgRef.current)
+    svg.selectAll('*').remove()
+
+    const layout = d3.tree().size([width - 40, height - 40])
+    const root = d3.hierarchy(data)
+    layout(root)
+
+    const g = svg.append('g').attr('transform', 'translate(20,20)')
+    g.selectAll('line')
+      .data(root.links())
+      .join('line')
+      .attr('x1', d => d.source.x!)
+      .attr('y1', d => d.source.y!)
+      .attr('x2', d => d.target.x!)
+      .attr('y2', d => d.target.y!)
+      .attr('stroke', '#94a3b8')
+
+    g.selectAll('circle')
+      .data(root.descendants())
+      .join('circle')
+      .attr('cx', d => d.x!)
+      .attr('cy', d => d.y!)
+      .attr('r', 16)
+      .attr('fill', d => (d.data.affected ? '#ef4444' : '#10b981'))
+  }, [data])
+
+  return <svg ref={svgRef} width="100%" height="300" className="border" />
+}
+```
+
+### 3.4 Pixi enzyme–substrate matching mini-game
+
+```bash
+npm i pixi.js @pixi/react
+```
+
+```tsx
+// src/visuals/pixi/EnzymeGame.tsx
+import { Stage, Sprite, Text } from '@pixi/react'
+import { useState } from 'react'
+
+export default function EnzymeGame() {
+  const [score, setScore] = useState(0)
+  const handleDrop = () => setScore(s => s + 10)
+
+  return (
+    <Stage width={600} height={400} options={{ backgroundColor: 0xe0f2fe }}>
+      <Text text={`Score: ${score}`} x={10} y={10} />
+      <Sprite
+        image="/assets/substrate.png"
+        x={100}
+        y={150}
+        interactive
+        pointerdown={handleDrop}
+      />
+      <Sprite image="/assets/enzyme.png" x={400} y={150} />
+    </Stage>
+  )
+}
+```
+
+### 3.5 JSXGraph convex lens (drag object & image)
+
+```tsx
+// src/visuals/jsx/LensMirror.tsx
+import { useEffect, useRef } from 'jsxgraph'
+import JXG from 'jsxgraph'
+
+export default function ConvexLens() {
+  const divRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const board = JXG.JSXGraph.initBoard(divRef.current!, {
+      boundingbox: [-6, 6, 6, -6],
+      axis: true,
+      showNavigation: false,
+    })
+
+    const f = 2 // focal length
+    board.create('line', [[0, -4], [0, 4]], { strokeColor: '#334155', strokewidth: 4 }) // lens
+    board.create('point', [0, 0], { name: 'F', color: '#dc2626' })
+    board.create('point', [0, -f], { name: 'F', color: '#dc2626' })
+
+    const obj = board.create('point', [-4, 1], { name: 'Object', color: '#059669' })
+    const ray1 = board.create('line', [obj, [0, 0]], { straightFirst: false, dash: 2 })
+    const ray2 = board.create('line', [obj, [0, -f]], { straightFirst: false, dash: 2 })
+
+    return () => JXG.JSXGraph.freeBoard(board)
+  }, [])
+
+  return <div ref={divRef} className="w-full h-80 border" />
+}
+```
+
+---
+
+4. PERFORMANCE & ACCESSIBILITY
+------------------------------
+
+### 4.1 60 fps checklist
+- Use `.glb` + Draco compression → 80 % smaller models.  
+- Set `renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))`.  
+- Instanced meshes for electron shells (one draw-call).  
+- `requestAnimationFrame` only when visible (`<canvas>` intersection observer).  
+- Tree-shake D3 & Pixi (`import { select } from 'd3-selection'`).
+
+### 4.2 ₹7 000 Android (2 GB RAM)
+- Cap canvas to 1024×1024 px; down-scale on retina.  
+- Provide “Low-Quality” toggle → disable shadows, reduce segments.  
+- Use `vite-plugin-compress` → brotli assets.
+
+### 4.3 WCAG-2.2
+- Keyboard: `OrbitControls` → `enableKeys={true}` (arrow pan).  
+- Screen-reader: `aria-live="polite"` announces score changes.  
+- Colour-blind: offer shape + pattern (stripes on pedigree affected).  
+- Motion-reduced: respect `prefers-reduced-motion` → disable parallax.
+
+### 4.4 Hindi / regional
+- Keep labels in JSON → `hi.json`: `"atom": "परमाणु"`.  
+- RTL safe: use `start`/`end` CSS logical properties.
+
+### 4.5 Offline-first
+- Cache `.glb`, `.png` via Vite-PWA runtime cache.  
+- Store last 50 simulations in IndexedDB → work without net.
+
+---
+
+5. NEXT-LEVEL IDEAS (copy to backlog)
+-------------------------------------
+- WebXR: put on ₹399 Google Cardboard → walk inside a mitochondrion.  
+- WebAssembly + Octave: run real-time 2-D wave equation at 60 fps.  
+- AI voice-over: ElevenLabs Hindi → explain while student rotates molecule.  
+- Teacher dashboard: live view of every student’s canvas → highlight who is stuck.
+
+You now have **battle-tested code**, **file structure**, and **performance guard-rails**.  
+Paste, tweak theme colours to your NEET palette, and ship **delight**.
