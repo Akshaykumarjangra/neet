@@ -22,6 +22,7 @@ import LearningPath from "@/pages/LearningPath";
 import MockTests from "@/pages/MockTests";
 import Achievements from "@/pages/Achievements";
 import AdminDashboard from "@/pages/AdminDashboard";
+import MentorDashboard from "@/pages/MentorDashboard";
 import Enrollment from "@/pages/Enrollment";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
@@ -140,6 +141,11 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute>
           <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mentor-dashboard">
+        <ProtectedRoute>
+          <MentorDashboard />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

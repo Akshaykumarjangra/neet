@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 interface User {
   id: string;
   username: string;
+  name: string;
   email: string;
+  role: "student" | "mentor" | "admin";
   currentLevel: number;
   totalPoints: number;
   studyStreak: number;

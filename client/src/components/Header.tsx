@@ -1,4 +1,4 @@
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -27,7 +27,8 @@ export function Header({
   userLevel = 12,
   studyStreak = 7,
 }: HeaderProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const [location, setLocation] = useLocation();
   const subjects = ["Physics", "Chemistry", "Biology"];
 
@@ -146,6 +147,10 @@ export function Header({
               <DropdownMenuItem onClick={() => setLocation('/profile')} data-testid="menu-profile">
                 <User className="mr-2 h-4 w-4" />
                 Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation('/mentor-dashboard')} data-testid="menu-mentor-dashboard">
+                <GraduationCap className="mr-2 h-4 w-4" />
+                Mentor Dashboard
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
                 <LogOut className="mr-2 h-4 w-4" />
