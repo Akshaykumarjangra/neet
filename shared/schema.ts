@@ -199,6 +199,39 @@ export const userAchievements = pgTable("user_achievements", {
   unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
 });
 
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  displayName: varchar("display_name", { length: 100 }),
+  bio: text("bio"),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  rankTitle: varchar("rank_title", { length: 50 }).default("Beginner"),
+  badges: jsonb("badges").$type<string[]>().default([]),
+  preferences: jsonb("preferences").$type<Record<string, any>>().default({}),
+  equippedFrame: varchar("equipped_frame", { length: 100 }),
+  equippedBadge: varchar("equipped_badge", { length: 100 }),
+  equippedTitle: varchar("equipped_title", { length: 200 }),
+  showProfile: boolean("show_profile").notNull().default(true),
+  school: varchar("school", { length: 200 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userCombos = pgTable("user_combos", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subject: varchar("subject", { length: 50 }).notNull(),
+  currentCombo: integer("current_combo").notNull().default(0),
+  maxCombo: integer("max_combo").notNull().default(0),
+  lastAnswerAt: timestamp("last_answer_at").defaultNow(),
+}, (table) => ({
+  uniqueUserSubject: uniqueIndex("user_combos_user_subject_unique_idx").on(table.userId, table.subject),
+}));
+
 export const dailyChallenges = pgTable("daily_challenges", {
   id: serial("id").primaryKey(),
   challengeDate: timestamp("challenge_date").notNull(),
@@ -688,31 +721,6 @@ export const activePowerUps = pgTable("active_power_ups", {
   powerUpTypeId: integer("power_up_type_id").references(() => powerUpTypes.id).notNull(),
   activatedAt: timestamp("activated_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
-});
-
-// User Profile Customization
-export const userProfiles = pgTable("user_profiles", {
-  userId: varchar("user_id").primaryKey().references(() => users.id),
-  displayName: varchar("display_name", { length: 100 }),
-  bio: text("bio"),
-  school: varchar("school", { length: 200 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 100 }),
-  equippedFrame: integer("equipped_frame").references(() => cosmetics.id),
-  equippedBadge: integer("equipped_badge").references(() => cosmetics.id),
-  equippedTitle: integer("equipped_title").references(() => cosmetics.id),
-  showProfile: boolean("show_profile").notNull().default(true),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// Combo System (for consecutive correct answers)
-export const userCombos = pgTable("user_combos", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  subject: varchar("subject", { length: 50 }).notNull(),
-  currentCombo: integer("current_combo").notNull().default(0),
-  maxCombo: integer("max_combo").notNull().default(0),
-  lastAnswerAt: timestamp("last_answer_at"),
 });
 
 // Insert Schemas

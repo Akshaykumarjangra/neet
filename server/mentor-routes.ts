@@ -173,6 +173,10 @@ router.get("/mentors", async (req: Request, res: Response) => {
 router.get("/mentors/:id", async (req: Request, res: Response) => {
   try {
     const mentorId = parseInt(req.params.id);
+    
+    if (isNaN(mentorId)) {
+      return res.status(400).json({ error: "Invalid mentor ID" });
+    }
 
     const [mentor] = await db
       .select({
