@@ -97,19 +97,31 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 3, 2025 - Major UX/UI Enhancement
+- **Public Landing Page**: New Home page with hero section, NEET value proposition, syllabus coverage, social proof, testimonials
+- **Mentor Discovery**: New /mentors page with search/filter, mentor cards, profile modal, 3-step booking flow
+- **Practice Enhancements**: Added timed mode with configurable timer, attempt summary modal with stats/charts, question flagging/reporting
+- **Community Q&A**: New /community page with discussions, voting, replies, filters (public viewing, auth for posting)
+- **Content Polish**: Added empty states, loading skeletons, error handling with retry buttons across all pages
+- **UX Improvements**: Onboarding wizard for new users, NextBestAction component, dashboard animations
+
 ### December 3, 2025 - Database & API Fixes
-- **Database Sync**: Created 10 missing database tables (chapter_content, user_profiles, user_combos, mock_tests, user_performance, past_year_papers, subject_syllabus, achievements, question_reports, content_versions)
-- **Fixed Mentor Routes**: Resolved NaN error on `/api/mentors/:id` route that was catching `/api/mentors/status` requests
-- **Session Store**: Created user_sessions table to prevent connection timeout on startup
-- **Schema Updates**: Added userProfiles and userCombos Drizzle schema definitions
-- **All API Routes Verified**: LMS library, game stats, mentors endpoints returning 200 status codes
+- **Database Sync**: Created 10+ missing database tables including discussions, discussion_replies, discussion_votes
+- **Questions Schema**: Migrated questions table to use JSONB options column
+- **Fixed Mentor Routes**: Resolved NaN error on `/api/mentors/:id` route
+- **Session Store**: Created user_sessions table to prevent connection timeout
 
 ### Previous Updates
 - Added mentor management system with 5 database tables
 - Implemented role-based access control (RBAC)
 - Created mentor dashboard with application, profile, availability management
 - Added admin panel for mentor verification
-- Fixed mentor role assignment bug (approval now updates users.role)
+
+### New Pages Added
+- `/` - Public landing page (Home)
+- `/mentors` - Public mentor discovery with booking flow
+- `/community` - Public Q&A discussion board
+- `/practice` - Enhanced practice with timer and flagging
 
 ## User Preferences
 - Use shadcn/ui components for consistent UI
