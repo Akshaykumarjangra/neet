@@ -24,6 +24,7 @@ import MockTests from "@/pages/MockTests";
 import Achievements from "@/pages/Achievements";
 import AdminDashboard from "@/pages/AdminDashboard";
 import MentorDashboard from "@/pages/MentorDashboard";
+import MentorDiscovery from "@/pages/MentorDiscovery";
 import Enrollment from "@/pages/Enrollment";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
@@ -36,6 +37,9 @@ import ClassWiseContent from "@/pages/ClassWiseContent";
 function Router() {
   return (
     <Switch>
+      <Route path="/mentors">
+        <MentorDiscovery />
+      </Route>
       <Route path="/enroll">
         <Enrollment />
       </Route>

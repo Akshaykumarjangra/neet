@@ -227,6 +227,9 @@ export default function Home() {
             <Link href="/enroll" className="text-muted-foreground hover:text-foreground transition-colors">
               Explore
             </Link>
+            <Link href="/mentors" className="text-muted-foreground hover:text-foreground transition-colors">
+              Find Mentors
+            </Link>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
@@ -608,9 +611,10 @@ export default function Home() {
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/enroll">
-                  <Button size="lg" variant="outline" className="gap-2 text-base px-10" data-testid="button-cta-explore">
-                    Learn More
+                <Link href="/mentors">
+                  <Button size="lg" variant="outline" className="gap-2 text-base px-10" data-testid="button-cta-mentors">
+                    <Users className="h-5 w-5" />
+                    Find a Mentor
                   </Button>
                 </Link>
               </div>
