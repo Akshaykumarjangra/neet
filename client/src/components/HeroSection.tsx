@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, BookOpen, Target } from "lucide-react";
-import heroImage from "@assets/generated_images/NEET_hero_banner_illustration_c5f7ea18.png";
+import heroImage from "@assets/generated_images/futuristic_medical_data_visualization_background.png";
 
 interface HeroSectionProps {
   onGetStarted?: () => void;
