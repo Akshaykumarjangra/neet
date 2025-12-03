@@ -63,6 +63,13 @@ A comprehensive AI-driven Learning Management System designed for NEET medical e
 - Mentor verification (approve/reject applications)
 - Content approval workflow (planned)
 
+### 5. Gamification System
+- **Routes**: `/api/game/*`
+- `GET /api/game/stats/live` - Live statistics (public)
+- `GET /api/game/leaderboard` - Leaderboard (auth required)
+- `GET /api/game/challenges` - Daily challenges (auth required)
+- `POST /api/game/achievements/:id/claim` - Claim achievement (auth required)
+
 ## Database Schema
 
 ### Core Tables
