@@ -12,7 +12,7 @@ export function GuestRoute({ children }: GuestRouteProps) {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [isAuthenticated, isLoading, setLocation]);
 

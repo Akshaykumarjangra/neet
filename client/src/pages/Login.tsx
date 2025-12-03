@@ -57,7 +57,7 @@ export default function Login() {
         title: "Login successful",
         description: "Welcome back to NEET Prep!",
       });
-      setLocation("/");
+      setLocation("/dashboard");
     },
     onError: (error: any) => {
       toast({

@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GuestRoute } from "@/components/GuestRoute";
+import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import GameLobbyDashboard from "@/pages/GameLobbyDashboard";
 import Practice from "@/pages/Practice";
@@ -64,6 +65,9 @@ function Router() {
         </GuestRoute>
       </Route>
       <Route path="/">
+        <Home />
+      </Route>
+      <Route path="/dashboard">
         <ProtectedRoute>
           <GameLobbyDashboard />
         </ProtectedRoute>

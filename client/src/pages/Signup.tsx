@@ -64,7 +64,7 @@ export default function Signup() {
         title: "Account created",
         description: "Welcome to NEET Prep! Let's start studying.",
       });
-      setLocation("/");
+      setLocation("/dashboard");
     },
     onError: (error: any) => {
       toast({
