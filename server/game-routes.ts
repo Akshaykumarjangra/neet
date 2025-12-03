@@ -182,7 +182,7 @@ router.get("/leaderboard", requireAuth, async (req, res) => {
     let query = db
       .select({
         userId: users.id,
-        username: users.username,
+        username: users.name,
         points: users.totalPoints,
         level: users.currentLevel,
         studyStreak: users.studyStreak,
@@ -235,7 +235,7 @@ router.get("/leaderboard", requireAuth, async (req, res) => {
       const leaderboard = await db
         .select({
           userId: users.id,
-          username: users.username,
+          username: users.name,
           points: users.totalPoints,
           level: users.currentLevel,
           studyStreak: users.studyStreak,
@@ -265,7 +265,7 @@ router.get("/leaderboard", requireAuth, async (req, res) => {
     const leaderboard = await db
       .select({
         userId: users.id,
-        username: users.username,
+        username: users.name,
         points: users.totalPoints,
         level: users.currentLevel,
         studyStreak: users.studyStreak,

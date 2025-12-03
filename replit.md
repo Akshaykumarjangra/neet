@@ -89,6 +89,15 @@ npm run dev  # Starts both frontend (5000) and backend
 ```
 
 ## Recent Changes (December 2025)
+
+### December 3, 2025 - Database & API Fixes
+- **Database Sync**: Created 10 missing database tables (chapter_content, user_profiles, user_combos, mock_tests, user_performance, past_year_papers, subject_syllabus, achievements, question_reports, content_versions)
+- **Fixed Mentor Routes**: Resolved NaN error on `/api/mentors/:id` route that was catching `/api/mentors/status` requests
+- **Session Store**: Created user_sessions table to prevent connection timeout on startup
+- **Schema Updates**: Added userProfiles and userCombos Drizzle schema definitions
+- **All API Routes Verified**: LMS library, game stats, mentors endpoints returning 200 status codes
+
+### Previous Updates
 - Added mentor management system with 5 database tables
 - Implemented role-based access control (RBAC)
 - Created mentor dashboard with application, profile, availability management
