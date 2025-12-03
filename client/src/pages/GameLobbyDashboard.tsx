@@ -7,6 +7,8 @@ import { DailyChallengeCard } from "@/components/game/DailyChallengeCard";
 import { LeaderboardPreview } from "@/components/game/LeaderboardPreview";
 import { XpGainAnimation } from "@/components/game/XpGainAnimation";
 import { DashboardMetrics } from "@/components/DashboardMetrics";
+import { NextBestAction } from "@/components/NextBestAction";
+import { OnboardingModal, useOnboarding } from "@/components/OnboardingModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -37,10 +39,28 @@ export default function GameLobbyDashboard() {
   const [showXpGain, setShowXpGain] = useState(false);
   const [xpGainAmount, setXpGainAmount] = useState(0);
 
+  const {
+    showOnboarding,
+    setShowOnboarding,
+    isNewUser,
+    preferences,
+    updatePreferences,
+  } = useOnboarding();
+
   // Update streak on mount
   useEffect(() => {
     updateStreak();
   }, []);
+
+  // Trigger onboarding for new users
+  useEffect(() => {
+    if (user && isNewUser) {
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isNewUser, setShowOnboarding]);
 
   // Fetch user statistics
   const { data: userStats, isLoading: statsLoading } = useQuery<UserStats>({
@@ -196,13 +216,20 @@ export default function GameLobbyDashboard() {
           studyStreak={streak}
         />
 
+        <OnboardingModal
+          isOpen={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+          onComplete={updatePreferences}
+          userName={user?.username || user?.name || "Student"}
+        />
+
         <XpGainAnimation
           amount={xpGainAmount}
           trigger={showXpGain}
           onComplete={() => setShowXpGain(false)}
         />
 
-        <main className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+        <main className="container mx-auto px-4 py-6 md:py-8 max-w-7xl space-y-6 md:space-y-8">
           {/* Epic Welcome Section */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -241,11 +268,20 @@ export default function GameLobbyDashboard() {
             </Card>
           </motion.div>
 
+          {/* Next Best Action - Top Priority */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <NextBestAction />
+          </motion.div>
+
           {/* Live Stats Ticker */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
           >
             <LiveStatsTicker />
           </motion.div>
@@ -274,11 +310,14 @@ export default function GameLobbyDashboard() {
                 <h2 className="text-3xl font-bold">Choose Your Map</h2>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="h-full min-h-[140px]"
                 >
                   <DropIntoChapter
                     subject="Physics"
@@ -294,6 +333,9 @@ export default function GameLobbyDashboard() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="h-full min-h-[140px]"
                 >
                   <DropIntoChapter
                     subject="Chemistry"
@@ -310,19 +352,20 @@ export default function GameLobbyDashboard() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Card
-                    className="glass-panel cursor-pointer transition-all hover:scale-105 hover:shadow-xl border-2 border-emerald-500/30"
+                    className="glass-panel cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 border-2 border-emerald-500/30 h-full min-h-[140px]"
                     onClick={() => {
-                      console.log('Biology clicked');
                       setLocation('/biology');
                     }}
                     data-testid="card-biology"
                   >
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 h-full flex flex-col justify-between">
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center glow-halo">
-                          <Dna className="h-6 w-6 text-emerald-500" />
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg">
+                          <Dna className="h-6 w-6 text-white" />
                         </div>
                         <div>
                           <h3 className="text-xl font-bold">Biology</h3>
@@ -346,29 +389,31 @@ export default function GameLobbyDashboard() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.99 }}
                 >
                   <Card
-                    className="glass-panel cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl border-2 border-gradient-to-r from-purple-500/30 via-pink-500/30 to-cyan-500/30"
+                    className="glass-panel cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 border-2 border-purple-500/30 h-full min-h-[140px]"
                     onClick={() => setLocation('/explore')}
                     data-testid="card-explore"
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-6 h-full flex flex-col justify-center">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-cyan-500/20 flex items-center justify-center glow-halo">
-                            <Compass className="h-7 w-7 text-purple-500" />
+                          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                            <Compass className="h-7 w-7 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
+                            <h3 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
                               Explore All Content
                             </h3>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Browse all 98 NCERT chapters with topics, visualizations & more
+                              Browse all NCERT chapters with topics & visualizations
                             </p>
                           </div>
                         </div>
                         <div className="hidden sm:block">
-                          <Badge variant="outline" className="text-lg px-4 py-2">
+                          <Badge variant="secondary" className="text-lg px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
                             {chapterCounts.Physics + chapterCounts.Chemistry + chapterCounts.Biology} Chapters
                           </Badge>
                         </div>
