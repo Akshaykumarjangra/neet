@@ -347,6 +347,77 @@ router.post("/mentors/apply", requireAuth, async (req: Request, res: Response) =
   }
 });
 
+router.get("/mentors/status", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+
+    const [mentor] = await db
+      .select({
+        id: mentors.id,
+        verificationStatus: mentors.verificationStatus,
+        createdAt: mentors.createdAt,
+        bio: mentors.bio,
+        subjects: mentors.subjects,
+        topics: mentors.topics,
+        hourlyRate: mentors.hourlyRate,
+        experienceYears: mentors.experienceYears,
+        education: mentors.education,
+        languages: mentors.languages,
+        avgRating: mentors.avgRating,
+        reviewCount: mentors.reviewCount,
+        totalSessionsCompleted: mentors.totalSessionsCompleted,
+        totalEarningsCents: mentors.totalEarningsCents,
+        isAvailable: mentors.isAvailable,
+      })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.json({ status: "not_applied", mentor: null });
+    }
+
+    if (mentor.verificationStatus === "approved") {
+      const availability = await db
+        .select()
+        .from(mentorAvailability)
+        .where(eq(mentorAvailability.mentorId, mentor.id));
+
+      const recentBookings = await db
+        .select({
+          id: mentorBookings.id,
+          startAt: mentorBookings.startAt,
+          endAt: mentorBookings.endAt,
+          status: mentorBookings.status,
+          priceCents: mentorBookings.priceCents,
+          studentName: users.name,
+        })
+        .from(mentorBookings)
+        .leftJoin(users, eq(mentorBookings.studentId, users.id))
+        .where(eq(mentorBookings.mentorId, mentor.id))
+        .orderBy(desc(mentorBookings.createdAt))
+        .limit(10);
+
+      return res.json({
+        status: "approved",
+        mentor: {
+          ...mentor,
+          availability,
+          recentBookings,
+        },
+      });
+    }
+
+    res.json({
+      status: mentor.verificationStatus,
+      mentor,
+    });
+  } catch (error: any) {
+    console.error("Get mentor status error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get("/mentors/my-profile", requireAuth, requireRole("mentor"), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId!;

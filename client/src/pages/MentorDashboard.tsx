@@ -145,18 +145,21 @@ export default function MentorDashboard() {
   const [topics, setTopics] = useState<string[]>([]);
   const [meetingLinkInput, setMeetingLinkInput] = useState<Record<number, string>>({});
 
-  const { data: mentorStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery<{ hasMentor: boolean; mentor?: MentorData }>({
+  const { data: mentorStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery<{ status: string; hasMentor: boolean; mentor?: MentorData }>({
     queryKey: ["/api/mentors/status"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/mentors/my-profile", { credentials: "include" });
+        const response = await fetch("/api/mentors/status", { credentials: "include" });
         if (response.ok) {
-          const mentor = await response.json();
-          return { hasMentor: true, mentor };
+          const data = await response.json();
+          if (data.status === "not_applied") {
+            return { status: "not_applied", hasMentor: false };
+          }
+          return { status: data.status, hasMentor: true, mentor: data.mentor };
         }
-        return { hasMentor: false };
+        return { status: "not_applied", hasMentor: false };
       } catch {
-        return { hasMentor: false };
+        return { status: "not_applied", hasMentor: false };
       }
     },
     enabled: !!user,
