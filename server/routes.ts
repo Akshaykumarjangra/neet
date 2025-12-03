@@ -17,6 +17,7 @@ import gameRoutes from "./game-routes";
 import adminRoutes from "./admin-routes";
 import chapterContentRoutes from "./chapter-content-routes";
 import lmsRoutes from "./lms-routes";
+import mentorRoutes from "./mentor-routes";
 import { bulkQuestionGenerator } from "./bulk-question-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -60,6 +61,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LMS routes (Library, Progress, Bookmarks, Notes)
   app.use("/api/lms", lmsRoutes);
+
+  // Mentor routes (Mentor profiles, Bookings, Availability, Reviews)
+  app.use("/api", mentorRoutes);
 
   // Topic routes
   app.get("/api/topics", async (req, res) => {
