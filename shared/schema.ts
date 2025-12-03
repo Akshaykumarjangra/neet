@@ -1,9 +1,19 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, pgEnum, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const chapterStatusEnum = pgEnum("chapter_status", ["draft", "in_review", "published", "archived"]);
+
+export const userRoleEnum = pgEnum("user_role", ["student", "mentor", "admin"]);
+
+export const verificationStatusEnum = pgEnum("verification_status", ["pending", "approved", "rejected"]);
+
+export const bookingStatusEnum = pgEnum("booking_status", ["requested", "confirmed", "completed", "cancelled"]);
+
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "refunded"]);
+
+export const contentAssetTypeEnum = pgEnum("content_asset_type", ["video", "pdf", "image", "handwritten_note"]);
 
 export const contentTopics = pgTable("content_topics", {
   id: serial("id").primaryKey(),
@@ -32,6 +42,9 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: userRoleEnum("role").notNull().default("student"),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
+  headline: varchar("headline", { length: 200 }),
   currentLevel: integer("current_level").notNull().default(1),
   totalPoints: integer("total_points").notNull().default(0),
   studyStreak: integer("study_streak").notNull().default(0),
@@ -43,6 +56,124 @@ export const users = pgTable("users", {
   }>(),
   isAdmin: boolean("is_admin").notNull().default(false),
   isPaidUser: boolean("is_paid_user").notNull().default(false),
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============ MENTOR MANAGEMENT SYSTEM ============
+
+export const mentors = pgTable("mentors", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  bio: text("bio"),
+  subjects: jsonb("subjects").$type<string[]>().notNull().default([]),
+  topics: jsonb("topics").$type<string[]>().notNull().default([]),
+  hourlyRate: integer("hourly_rate_cents").notNull().default(0),
+  experienceYears: integer("experience_years").notNull().default(0),
+  education: jsonb("education").$type<Array<{
+    degree: string;
+    institution: string;
+    year?: number;
+  }>>().notNull().default([]),
+  languages: jsonb("languages").$type<string[]>().notNull().default(["English"]),
+  calendarTimezone: varchar("calendar_timezone", { length: 50 }).default("UTC"),
+  verificationStatus: verificationStatusEnum("verification_status").notNull().default("pending"),
+  verificationDocuments: jsonb("verification_documents").$type<Array<{
+    type: string;
+    url: string;
+    uploadedAt: string;
+    verified?: boolean;
+  }>>().notNull().default([]),
+  avgRating: real("avg_rating").default(0),
+  reviewCount: integer("review_count").notNull().default(0),
+  totalEarningsCents: integer("total_earnings_cents").notNull().default(0),
+  totalSessionsCompleted: integer("total_sessions_completed").notNull().default(0),
+  isAvailable: boolean("is_available").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const mentorAvailability = pgTable("mentor_availability", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").references(() => mentors.id).notNull(),
+  dayOfWeek: integer("day_of_week").notNull(),
+  startTime: varchar("start_time", { length: 10 }).notNull(),
+  endTime: varchar("end_time", { length: 10 }).notNull(),
+  isRecurring: boolean("is_recurring").notNull().default(true),
+  specificDate: timestamp("specific_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const mentorBookings = pgTable("mentor_bookings", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").references(() => mentors.id).notNull(),
+  studentId: varchar("student_id").references(() => users.id).notNull(),
+  startAt: timestamp("start_at").notNull(),
+  endAt: timestamp("end_at").notNull(),
+  status: bookingStatusEnum("status").notNull().default("requested"),
+  priceCents: integer("price_cents").notNull(),
+  paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
+  meetingLink: varchar("meeting_link", { length: 500 }),
+  notes: text("notes"),
+  cancellationReason: text("cancellation_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const mentorReviews = pgTable("mentor_reviews", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").references(() => mentors.id).notNull(),
+  studentId: varchar("student_id").references(() => users.id).notNull(),
+  bookingId: integer("booking_id").references(() => mentorBookings.id),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const mentorPayouts = pgTable("mentor_payouts", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").references(() => mentors.id).notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  initiatedAt: timestamp("initiated_at"),
+  paidAt: timestamp("paid_at"),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============ CONTENT ASSETS (Videos, Notes, PDFs) ============
+
+export const contentAssets = pgTable("content_assets", {
+  id: serial("id").primaryKey(),
+  chapterContentId: integer("chapter_content_id"),
+  mentorId: integer("mentor_id").references(() => mentors.id),
+  type: contentAssetTypeEnum("type").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  url: varchar("url", { length: 1000 }).notNull(),
+  thumbnailUrl: varchar("thumbnail_url", { length: 1000 }),
+  durationSeconds: integer("duration_seconds"),
+  pageCount: integer("page_count"),
+  fileSizeBytes: integer("file_size_bytes"),
+  transcription: text("transcription"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  isPublic: boolean("is_public").notNull().default(false),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const contentVersions = pgTable("content_versions", {
+  id: serial("id").primaryKey(),
+  chapterContentId: integer("chapter_content_id").notNull(),
+  version: integer("version").notNull(),
+  contentSnapshot: jsonb("content_snapshot").notNull(),
+  changeDescription: text("change_description"),
+  createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -265,8 +396,13 @@ export const chapterContent = pgTable("chapter_content", {
   }>>().notNull().default([]),
   
   authorId: varchar("author_id").references(() => users.id),
+  mentorId: integer("mentor_id").references(() => mentors.id),
   status: chapterStatusEnum("status").notNull().default("draft"),
+  approvalStatus: verificationStatusEnum("approval_status").notNull().default("pending"),
+  approverId: varchar("approver_id").references(() => users.id),
+  rejectionReason: text("rejection_reason"),
   version: integer("version").notNull().default(1),
+  previousVersionId: integer("previous_version_id"),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -621,3 +757,69 @@ export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 
 export type UserCombo = typeof userCombos.$inferSelect;
 export type InsertUserCombo = z.infer<typeof insertUserComboSchema>;
+
+// ============ MENTOR MANAGEMENT SYSTEM Insert Schemas & Types ============
+
+export const insertMentorSchema = createInsertSchema(mentors).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  avgRating: true,
+  reviewCount: true,
+  totalEarningsCents: true,
+  totalSessionsCompleted: true,
+});
+
+export const insertMentorAvailabilitySchema = createInsertSchema(mentorAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMentorBookingSchema = createInsertSchema(mentorBookings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMentorReviewSchema = createInsertSchema(mentorReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMentorPayoutSchema = createInsertSchema(mentorPayouts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContentAssetSchema = createInsertSchema(contentAssets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+});
+
+export const insertContentVersionSchema = createInsertSchema(contentVersions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Mentor = typeof mentors.$inferSelect;
+export type InsertMentor = z.infer<typeof insertMentorSchema>;
+
+export type MentorAvailability = typeof mentorAvailability.$inferSelect;
+export type InsertMentorAvailability = z.infer<typeof insertMentorAvailabilitySchema>;
+
+export type MentorBooking = typeof mentorBookings.$inferSelect;
+export type InsertMentorBooking = z.infer<typeof insertMentorBookingSchema>;
+
+export type MentorReview = typeof mentorReviews.$inferSelect;
+export type InsertMentorReview = z.infer<typeof insertMentorReviewSchema>;
+
+export type MentorPayout = typeof mentorPayouts.$inferSelect;
+export type InsertMentorPayout = z.infer<typeof insertMentorPayoutSchema>;
+
+export type ContentAsset = typeof contentAssets.$inferSelect;
+export type InsertContentAsset = z.infer<typeof insertContentAssetSchema>;
+
+export type ContentVersion = typeof contentVersions.$inferSelect;
+export type InsertContentVersion = z.infer<typeof insertContentVersionSchema>;
