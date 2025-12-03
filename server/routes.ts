@@ -18,6 +18,7 @@ import adminRoutes from "./admin-routes";
 import chapterContentRoutes from "./chapter-content-routes";
 import lmsRoutes from "./lms-routes";
 import mentorRoutes from "./mentor-routes";
+import discussionRoutes, { replyRoutes } from "./discussion-routes";
 import { bulkQuestionGenerator } from "./bulk-question-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -64,6 +65,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mentor routes (Mentor profiles, Bookings, Availability, Reviews)
   app.use("/api", mentorRoutes);
+
+  // Community Discussion routes
+  app.use("/api/discussions", discussionRoutes);
+  app.use("/api/replies", replyRoutes);
 
   // Topic routes
   app.get("/api/topics", async (req, res) => {

@@ -831,3 +831,83 @@ export type InsertContentAsset = z.infer<typeof insertContentAssetSchema>;
 
 export type ContentVersion = typeof contentVersions.$inferSelect;
 export type InsertContentVersion = z.infer<typeof insertContentVersionSchema>;
+
+// ============ COMMUNITY Q&A / DISCUSSIONS ============
+
+export const voteTypeEnum = pgEnum("vote_type", ["up", "down"]);
+
+export const discussions = pgTable("discussions", {
+  id: serial("id").primaryKey(),
+  chapterId: integer("chapter_id").references(() => chapterContent.id),
+  topicId: integer("topic_id").references(() => contentTopics.id),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").notNull().default(false),
+  isResolved: boolean("is_resolved").notNull().default(false),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const discussionReplies = pgTable("discussion_replies", {
+  id: serial("id").primaryKey(),
+  discussionId: integer("discussion_id").references(() => discussions.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  isAcceptedAnswer: boolean("is_accepted_answer").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const discussionVotes = pgTable("discussion_votes", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  discussionId: integer("discussion_id").references(() => discussions.id),
+  replyId: integer("reply_id").references(() => discussionReplies.id),
+  voteType: voteTypeEnum("vote_type").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueDiscussionVote: uniqueIndex("discussion_votes_user_discussion_idx").on(table.userId, table.discussionId),
+  uniqueReplyVote: uniqueIndex("discussion_votes_user_reply_idx").on(table.userId, table.replyId),
+}));
+
+export const insertDiscussionSchema = createInsertSchema(discussions, {
+  title: z.string().min(1).max(300),
+  content: z.string().min(1),
+  chapterId: z.number().nullable().optional(),
+  topicId: z.number().nullable().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  isPinned: true,
+  isResolved: true,
+});
+
+export const insertDiscussionReplySchema = createInsertSchema(discussionReplies, {
+  content: z.string().min(1),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isAcceptedAnswer: true,
+});
+
+export const insertDiscussionVoteSchema = createInsertSchema(discussionVotes, {
+  discussionId: z.number().nullable().optional(),
+  replyId: z.number().nullable().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Discussion = typeof discussions.$inferSelect;
+export type InsertDiscussion = z.infer<typeof insertDiscussionSchema>;
+
+export type DiscussionReply = typeof discussionReplies.$inferSelect;
+export type InsertDiscussionReply = z.infer<typeof insertDiscussionReplySchema>;
+
+export type DiscussionVote = typeof discussionVotes.$inferSelect;
+export type InsertDiscussionVote = z.infer<typeof insertDiscussionVoteSchema>;

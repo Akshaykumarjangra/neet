@@ -33,6 +33,7 @@ import Library from "@/pages/Library";
 import Explore from "@/pages/Explore";
 import Class12 from "@/pages/Class12";
 import ClassWiseContent from "@/pages/ClassWiseContent";
+import Community from "@/pages/Community";
 
 function Router() {
   return (
@@ -155,6 +156,9 @@ function Router() {
         <ProtectedRoute>
           <MentorDashboard />
         </ProtectedRoute>
+      </Route>
+      <Route path="/community">
+        <Community />
       </Route>
       <Route component={NotFound} />
     </Switch>
