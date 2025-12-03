@@ -3,8 +3,11 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Medal, Award, TrendingUp, Crown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Trophy, Medal, Award, TrendingUp, Crown, AlertCircle, RefreshCw, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useGamification } from "@/hooks/useGamification";
 import { useAuth } from "@/hooks/useAuth";
@@ -170,17 +173,43 @@ export default function Leaderboard() {
                 {/* Only render the active scope's content */}
                 <TabsContent value={selectedScope} className="space-y-3">
                   {isLoading ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      Loading rankings...
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Card key={i} className="hover-elevate">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 flex-1">
+                                <Skeleton className="h-6 w-16" />
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="flex-1">
+                                  <Skeleton className="h-5 w-32 mb-2" />
+                                  <Skeleton className="h-4 w-24" />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <Skeleton className="h-6 w-20" />
+                                <Skeleton className="h-8 w-16" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   ) : error ? (
-                    <div className="text-center py-12">
-                      <p className="text-destructive font-semibold mb-2">
-                        {error instanceof Error ? error.message : 'Failed to load leaderboard'}
+                    <div className="text-center py-12 space-y-4">
+                      <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                        <AlertCircle className="h-12 w-12 text-destructive" />
+                      </div>
+                      <h3 className="text-xl font-semibold">Unable to Load Rankings</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        {error instanceof Error && error.message.includes('profile') 
+                          ? `Complete your profile to view ${selectedScope} rankings. Add your location details to compete with others nearby!`
+                          : "We couldn't load the leaderboard right now. Please check your connection and try again."}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Complete your profile to view {selectedScope} rankings
-                      </p>
+                      <Button onClick={() => window.location.reload()} className="gap-2" data-testid="button-retry-leaderboard">
+                        <RefreshCw className="h-4 w-4" />
+                        Try Again
+                      </Button>
                     </div>
                   ) : leaderboardData && leaderboardData.length > 0 ? (
                     <AnimatePresence mode="wait">
@@ -251,14 +280,29 @@ export default function Leaderboard() {
                       </motion.div>
                     </AnimatePresence>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No rankings available for this scope yet.
+                    <div className="text-center py-12 space-y-4">
+                      <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                        <Users className="h-12 w-12 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-semibold">No Rankings Yet</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        Be the first to climb the {selectedScope} leaderboard! Complete lessons and earn XP to appear here.
+                      </p>
+                      <Button onClick={() => window.location.href = '/practice'} variant="outline" className="gap-2" data-testid="button-start-earning">
+                        <Trophy className="h-4 w-4" />
+                        Start Earning XP
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
+
+          {/* Quick Navigation */}
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/leaderboard" />
+          </div>
         </main>
       </div>
     </ThemeProvider>

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Clock, Target, Trophy } from "lucide-react";
+import { Clock, Target, Trophy, FileQuestion, AlertCircle, RefreshCw, ClipboardList } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +23,7 @@ export default function MockTests() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: tests, isLoading } = useQuery<MockTest[]>({
+  const { data: tests, isLoading, error, refetch } = useQuery<MockTest[]>({
     queryKey: ['/api/mock-tests'],
   });
 
@@ -51,12 +52,60 @@ export default function MockTests() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-12 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="mt-4 text-muted-foreground">Loading mock tests...</p>
+        <main className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="mb-8">
+            <Skeleton className="h-10 w-48 mb-2" />
+            <Skeleton className="h-5 w-80" />
           </div>
-        </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-12 max-w-6xl">
+          <Card className="max-w-lg mx-auto">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to Load Tests</h3>
+              <p className="text-muted-foreground">
+                We couldn't load the mock tests right now. Please check your connection and try again.
+              </p>
+              <Button onClick={() => refetch()} className="gap-2" data-testid="button-retry-tests">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/mock-tests" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -74,16 +123,24 @@ export default function MockTests() {
         </div>
 
         {!tests || tests.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Trophy className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No Mock Tests Available</h3>
-              <p className="text-muted-foreground mb-6">
-                Mock tests will be added soon. Check back later!
+          <Card className="glass-panel">
+            <CardContent className="py-16 text-center space-y-4">
+              <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                <ClipboardList className="h-16 w-16 text-primary" />
+              </div>
+              <h3 className="text-2xl font-semibold">No Mock Tests Available Yet</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                We're preparing comprehensive NEET mock tests for you. Check back soon to test your knowledge with full-length practice exams.
               </p>
-              <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
-                Return to Dashboard
-              </Button>
+              <div className="flex gap-3 justify-center pt-4">
+                <Button onClick={() => setLocation('/practice')} variant="outline" data-testid="button-practice-instead">
+                  <FileQuestion className="h-4 w-4 mr-2" />
+                  Practice Questions
+                </Button>
+                <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
+                  Return to Dashboard
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (

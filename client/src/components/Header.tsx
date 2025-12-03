@@ -1,4 +1,4 @@
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -81,6 +81,18 @@ export function Header({
               {subject}
             </Button>
           ))}
+          <div className="h-4 w-px bg-border mx-2" />
+          <Button
+            variant={location === '/community' ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setLocation('/community')}
+            data-testid="button-community"
+            className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+            style={{ borderBottom: 'none !important' }}
+          >
+            <Users className="h-4 w-4 mr-1.5" />
+            Community
+          </Button>
         </nav>
 
         {/* Mobile Navigation */}
@@ -101,6 +113,13 @@ export function Header({
                   {subject}
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuItem
+                onClick={() => setLocation('/community')}
+                className={location === '/community' ? "bg-accent" : ""}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Community
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

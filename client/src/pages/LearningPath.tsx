@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, CheckCircle2, Lock, Play, Zap, Clock, Trophy, ArrowRight, Sparkles, Target, TrendingUp } from "lucide-react";
+import { BookOpen, CheckCircle2, Lock, Play, Zap, Clock, Trophy, ArrowRight, Sparkles, Target, TrendingUp, AlertCircle, RefreshCw, Compass } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,7 +42,7 @@ export default function LearningPath() {
   const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
 
-  const { data, isLoading } = useQuery<LearningPathData>({
+  const { data, isLoading, error, refetch } = useQuery<LearningPathData>({
     queryKey: ['/api/lms/learning-path/next'],
   });
 
@@ -63,17 +64,89 @@ export default function LearningPath() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-12 flex items-center justify-center">
-          <motion.div
-            initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
-            className="text-center"
-          >
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">Loading your personalized learning path...</p>
-          </motion.div>
-        </div>
+        <main className="container mx-auto px-4 py-12 max-w-7xl">
+          <div className="glass-panel p-8 rounded-3xl mb-12">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <Skeleton className="h-14 w-14 rounded-xl" />
+                  <Skeleton className="h-10 w-64" />
+                </div>
+                <Skeleton className="h-5 w-96" />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-10 w-40" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
+            <div className="mt-6 space-y-2">
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+          <Card className="glass-panel mb-8">
+            <CardHeader className="pt-8">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <Skeleton className="h-8 w-64 mb-2" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-12 w-48" />
+            </CardContent>
+          </Card>
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-48" />
+            <div className="space-y-6">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="ml-16 glass-panel">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <Skeleton className="h-6 w-48 mb-2" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                      <Skeleton className="h-6 w-20" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-10 w-36" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-12 max-w-7xl">
+          <Card className="glass-panel max-w-lg mx-auto mt-20">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to Load Learning Path</h3>
+              <p className="text-muted-foreground">
+                We couldn't load your personalized learning path. Please check your connection and try again.
+              </p>
+              <Button onClick={() => refetch()} className="gap-2" data-testid="button-retry-learning-path">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/learning-path" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -378,12 +451,18 @@ export default function LearningPath() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-16"
           >
-            <div className="glass-panel p-12 rounded-2xl max-w-md mx-auto">
-              <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-2xl font-semibold mb-2">No chapters available</h3>
+            <div className="glass-panel p-12 rounded-2xl max-w-md mx-auto space-y-4">
+              <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                <Compass className="h-16 w-16 text-primary" />
+              </div>
+              <h3 className="text-2xl font-semibold">Your Learning Path is Being Created</h3>
               <p className="text-muted-foreground">
-                Check back soon for new content
+                We're preparing a personalized learning journey just for you. Complete your profile to get started with tailored NEET preparation content.
               </p>
+              <Button onClick={() => setLocation('/explore')} className="gap-2" data-testid="button-explore-content">
+                <BookOpen className="h-4 w-4" />
+                Explore Content
+              </Button>
             </div>
           </motion.div>
         )}

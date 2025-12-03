@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
+import { Trophy, AlertCircle, RefreshCw, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +44,7 @@ export default function Achievements() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: achievements = [], isLoading } = useQuery<Achievement[]>({
+  const { data: achievements = [], isLoading, error, refetch } = useQuery<Achievement[]>({
     queryKey: ['/api/game/achievements'],
   });
 
@@ -79,14 +81,94 @@ export default function Achievements() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8">
+      <div className="min-h-screen p-8 gradient-mesh-bg">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Loading Achievements...
-              </h1>
+              <Skeleton className="h-10 w-64" />
+              <Skeleton className="h-5 w-40" />
             </div>
+            <Skeleton className="h-10 w-36" />
+          </div>
+          <Card className="glass-panel">
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-3 w-full" />
+            </CardContent>
+          </Card>
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="glass-panel">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <Skeleton className="h-12 w-12 rounded-lg" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-40 mt-3" />
+                  <Skeleton className="h-4 w-full" />
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-8 gradient-mesh-bg">
+        <div className="max-w-7xl mx-auto">
+          <Card className="glass-panel max-w-lg mx-auto mt-20">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to Load Achievements</h3>
+              <p className="text-muted-foreground">
+                We couldn't load your achievements right now. Please check your connection and try again.
+              </p>
+              <Button onClick={() => refetch()} className="gap-2" data-testid="button-retry-achievements">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/achievements" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (achievements.length === 0) {
+    return (
+      <div className="min-h-screen p-8 gradient-mesh-bg">
+        <div className="max-w-7xl mx-auto">
+          <Card className="glass-panel max-w-lg mx-auto mt-20">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                <Star className="h-12 w-12 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">No Achievements Available</h3>
+              <p className="text-muted-foreground">
+                Start your learning journey to unlock exciting achievements and earn rewards!
+              </p>
+              <Button onClick={() => window.location.href = '/learning-path'} className="gap-2" data-testid="button-start-learning">
+                <Trophy className="h-4 w-4" />
+                Start Learning
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/achievements" />
           </div>
         </div>
       </div>

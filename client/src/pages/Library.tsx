@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
-import { BookOpen, Bookmark, Clock, TrendingUp, Search, Filter, StickyNote, Trash2, Grid3x3, List, Sparkles, Eye } from "lucide-react";
+import { BookOpen, Bookmark, Clock, TrendingUp, Search, Filter, StickyNote, Trash2, Grid3x3, List, Sparkles, Eye, AlertCircle, RefreshCw, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -46,7 +47,7 @@ export default function Library() {
   const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
 
-  const { data: chapters, isLoading } = useQuery<ChapterLibraryItem[]>({
+  const { data: chapters, isLoading, error, refetch } = useQuery<ChapterLibraryItem[]>({
     queryKey: ["/api/lms/library"],
   });
 
@@ -126,10 +127,98 @@ export default function Library() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading library...</p>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-6 space-y-6">
+          <div className="glass-panel p-6 rounded-2xl">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-5 w-96" />
+              </div>
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="glass-panel">
+                <CardHeader className="space-y-3">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-6">
+          <Card className="glass-panel max-w-lg mx-auto mt-20">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to Load Library</h3>
+              <p className="text-muted-foreground">
+                We couldn't load your content library. This might be a temporary issue with our servers.
+              </p>
+              <Button onClick={() => refetch()} className="gap-2" data-testid="button-retry-library">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!chapters || chapters.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-6">
+          <Card className="glass-panel max-w-lg mx-auto mt-20">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                <FolderOpen className="h-12 w-12 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">No Content Available Yet</h3>
+              <p className="text-muted-foreground">
+                Your content library is being prepared. Check back soon for chapters, notes, and study materials.
+              </p>
+              <Button onClick={() => refetch()} variant="outline" className="gap-2" data-testid="button-refresh-library">
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="mt-12 pt-8 border-t">
+            <QuickNavigationBar currentPath="/library" />
+          </div>
         </div>
       </div>
     );
