@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
 import { storage } from "./storage";
 import { db } from "./db";
-import { chapterContent } from "@shared/schema";
-import { eq, asc } from "drizzle-orm";
+import { chapterContent, flashcards, flashcardDecks, contentTopics, userFlashcardProgress } from "@shared/schema";
+import { eq, asc, and, sql, lte, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -192,6 +192,115 @@ router.post("/bookmarks/formulas/:formulaId", async (req: Request, res: Response
   }
 });
 
+// ============ FLASHCARDS ROUTES (Public) ============
+
+router.get("/flashcards", async (req: Request, res: Response) => {
+  try {
+    const { subject, deckId, limit } = req.query;
+    
+    let query = db
+      .select({
+        id: flashcards.id,
+        front: flashcards.front,
+        back: flashcards.back,
+        order: flashcards.order,
+        deckId: flashcards.deckId,
+        createdAt: flashcards.createdAt,
+        deckName: flashcardDecks.name,
+        deckSubject: flashcardDecks.subject,
+        topicId: flashcardDecks.topicId,
+      })
+      .from(flashcards)
+      .innerJoin(flashcardDecks, eq(flashcards.deckId, flashcardDecks.id));
+
+    const conditions: any[] = [];
+    
+    if (subject) {
+      conditions.push(eq(flashcardDecks.subject, subject as string));
+    }
+    
+    if (deckId) {
+      conditions.push(eq(flashcards.deckId, parseInt(deckId as string)));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+
+    query = query.orderBy(flashcards.order);
+    
+    if (limit) {
+      query = query.limit(parseInt(limit as string)) as typeof query;
+    }
+
+    const results = await query;
+    res.json(results);
+  } catch (error) {
+    console.error("Error fetching flashcards:", error);
+    res.status(500).json({ error: "Failed to fetch flashcards" });
+  }
+});
+
+router.get("/flashcards/:id", async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [card] = await db
+      .select({
+        id: flashcards.id,
+        front: flashcards.front,
+        back: flashcards.back,
+        order: flashcards.order,
+        deckId: flashcards.deckId,
+        createdAt: flashcards.createdAt,
+        deckName: flashcardDecks.name,
+        deckSubject: flashcardDecks.subject,
+        topicId: flashcardDecks.topicId,
+      })
+      .from(flashcards)
+      .innerJoin(flashcardDecks, eq(flashcards.deckId, flashcardDecks.id))
+      .where(eq(flashcards.id, id))
+      .limit(1);
+
+    if (!card) {
+      return res.status(404).json({ error: "Flashcard not found" });
+    }
+    res.json(card);
+  } catch (error) {
+    console.error("Error fetching flashcard:", error);
+    res.status(500).json({ error: "Failed to fetch flashcard" });
+  }
+});
+
+router.get("/flashcard-decks", async (req: Request, res: Response) => {
+  try {
+    const { subject } = req.query;
+    
+    let query = db
+      .select({
+        id: flashcardDecks.id,
+        name: flashcardDecks.name,
+        subject: flashcardDecks.subject,
+        topicId: flashcardDecks.topicId,
+        description: flashcardDecks.description,
+        createdAt: flashcardDecks.createdAt,
+        cardCount: sql<number>`count(${flashcards.id})`,
+      })
+      .from(flashcardDecks)
+      .leftJoin(flashcards, eq(flashcards.deckId, flashcardDecks.id))
+      .groupBy(flashcardDecks.id);
+
+    if (subject) {
+      query = query.where(eq(flashcardDecks.subject, subject as string)) as typeof query;
+    }
+
+    const results = await query.orderBy(flashcardDecks.name);
+    res.json(results);
+  } catch (error) {
+    console.error("Error fetching flashcard decks:", error);
+    res.status(500).json({ error: "Failed to fetch flashcard decks" });
+  }
+});
+
 // ============ SPACED REPETITION / FLASHCARD PROGRESS (Auth Required) ============
 
 router.get("/flashcard-progress", async (req: Request, res: Response) => {
@@ -216,11 +325,95 @@ router.get("/flashcard-progress/due", async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req)!;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
-    const dueCards = await storage.getDueFlashcards(userId, limit);
-    res.json(dueCards);
+    const { subject } = req.query;
+    
+    const now = new Date();
+    let query = db
+      .select({
+        id: flashcards.id,
+        front: flashcards.front,
+        back: flashcards.back,
+        order: flashcards.order,
+        deckId: flashcards.deckId,
+        createdAt: flashcards.createdAt,
+        deckName: flashcardDecks.name,
+        deckSubject: flashcardDecks.subject,
+        topicId: flashcardDecks.topicId,
+        progressId: userFlashcardProgress.id,
+        easeFactor: userFlashcardProgress.easeFactor,
+        interval: userFlashcardProgress.interval,
+        repetitions: userFlashcardProgress.repetitions,
+        nextReviewAt: userFlashcardProgress.nextReviewAt,
+        lastReviewedAt: userFlashcardProgress.lastReviewedAt,
+      })
+      .from(userFlashcardProgress)
+      .innerJoin(flashcards, eq(userFlashcardProgress.flashcardId, flashcards.id))
+      .innerJoin(flashcardDecks, eq(flashcards.deckId, flashcardDecks.id))
+      .where(
+        and(
+          eq(userFlashcardProgress.userId, userId),
+          lte(userFlashcardProgress.nextReviewAt, now),
+          ...(subject ? [eq(flashcardDecks.subject, subject as string)] : [])
+        )
+      )
+      .orderBy(asc(userFlashcardProgress.nextReviewAt))
+      .limit(limit);
+
+    const results = await query;
+    res.json(results);
   } catch (error) {
     console.error("Error fetching due flashcards:", error);
     res.status(500).json({ error: "Failed to fetch due flashcards" });
+  }
+});
+
+router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
+  if (!isAuthenticated(req)) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  try {
+    const userId = getUserId(req)!;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const [dueResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFlashcardProgress)
+      .where(and(
+        eq(userFlashcardProgress.userId, userId),
+        lte(userFlashcardProgress.nextReviewAt, now)
+      ));
+    
+    const [learnedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFlashcardProgress)
+      .where(and(
+        eq(userFlashcardProgress.userId, userId),
+        sql`${userFlashcardProgress.interval} > 21`
+      ));
+    
+    const [reviewedTodayResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFlashcardProgress)
+      .where(and(
+        eq(userFlashcardProgress.userId, userId),
+        sql`${userFlashcardProgress.lastReviewedAt} >= ${startOfToday}`
+      ));
+    
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFlashcardProgress)
+      .where(eq(userFlashcardProgress.userId, userId));
+    
+    res.json({
+      dueToday: Number(dueResult.count),
+      learned: Number(learnedResult.count),
+      reviewedToday: Number(reviewedTodayResult.count),
+      total: Number(totalResult.count),
+    });
+  } catch (error) {
+    console.error("Error fetching flashcard stats:", error);
+    res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 
