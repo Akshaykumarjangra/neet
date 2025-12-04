@@ -97,6 +97,24 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 4, 2025 - AI Content Generation
+- **OpenAI Integration**: Using Replit AI Integrations with GPT-5 for content generation
+- **AI Question Generator**: 
+  - Subject selection (Physics, Chemistry, Biology)
+  - Custom topic input with difficulty levels (easy/medium/hard)
+  - Adjustable count slider (1-10 questions)
+  - Preview generated questions with options and explanations
+  - Save to existing topics in database
+- **AI Flashcard Generator**:
+  - Subject and topic selection
+  - Count slider (1-20 flashcards)
+  - Interactive flip-card preview
+- **Admin API Routes**:
+  - `POST /api/admin/generate-questions` - Generate questions via OpenAI
+  - `POST /api/admin/generate-flashcards` - Generate flashcards via OpenAI
+  - `POST /api/admin/save-generated-questions` - Save generated content to DB
+- **Demo Login System**: Added demo accounts for testing (admin@demo.com, student@demo.com, mentor@demo.com with password "demo123")
+
 ### December 4, 2025 - Interactive Simulations System
 - **Simulations Library**: New /simulations page with grid of interactive science simulations
 - **Subject Filters**: Filter simulations by Physics, Chemistry, or Biology
