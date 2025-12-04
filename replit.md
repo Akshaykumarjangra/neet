@@ -22,11 +22,15 @@ A comprehensive AI-driven Learning Management System designed for NEET medical e
 │   ├── routes.ts            # Main API routes
 │   ├── auth-routes.ts       # Authentication routes
 │   ├── mentor-routes.ts     # Mentor management APIs
+│   ├── admin-routes.ts      # Admin panel APIs
 │   ├── lms-routes.ts        # LMS content APIs
-│   └── storage.ts           # Database interface
+│   ├── storage.ts           # Database interface
+│   ├── ws/                  # WebSocket server for real-time tests
+│   └── seeds/               # Content seeding scripts (70+ files)
 ├── shared/                   # Shared types
 │   └── schema.ts            # Drizzle schema + Zod types
-└── scripts/                  # Migration scripts
+├── scripts/                  # Migration scripts
+└── attached_assets/          # Generated images (subject icons, hero bg)
 ```
 
 ## Key Features
