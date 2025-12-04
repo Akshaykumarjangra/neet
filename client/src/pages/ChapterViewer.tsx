@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
@@ -8,33 +8,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BookOpen,
   ArrowLeft,
   Clock,
-  Target,
   Lightbulb,
-  BookMarked,
-  TrendingUp,
   AlertCircle,
   Bookmark,
   ChevronLeft,
   ChevronRight,
-  StickyNote,
-  X,
-  Save,
   Copy,
   Check,
-  FileText,
   FlaskConical,
   Zap,
-  GraduationCap
+  GraduationCap,
+  Star,
+  AlertTriangle,
+  List,
+  Share2,
+  Minus,
+  Plus,
+  CheckCircle2,
+  Timer,
+  Brain,
+  Trophy,
+  ChevronUp,
+  ArrowRight
 } from "lucide-react";
-import type { ChapterContent, Keypoint, Formula } from "@shared/schema";
+import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema";
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
 import { ViewportActivatedVisualization } from "@/components/visualizations/ViewportActivatedVisualization";
 import { PhetSimulationViewer } from "@/components/PhetSimulationViewer";
@@ -49,12 +54,21 @@ export default function ChapterViewer() {
   const { toast } = useToast();
   const sessionIdRef = useRef<number | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { subject, classLevel, chapterNumber } = params;
-  const [activeTab, setActiveTab] = useState("overview");
-  const [newNote, setNewNote] = useState("");
+  const [activeTab, setActiveTab] = useState("read");
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [copiedKeypointId, setCopiedKeypointId] = useState<number | null>(null);
   const [copiedFormulaId, setCopiedFormulaId] = useState<number | null>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [fontSize, setFontSize] = useState(18);
+  const [showToc, setShowToc] = useState(false);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [isChapterComplete, setIsChapterComplete] = useState(false);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+  const [showResults, setShowResults] = useState(false);
+  const [showFloatingToolbar, setShowFloatingToolbar] = useState(true);
 
   const { data: chapter, isLoading, error } = useQuery<ChapterContent>({
     queryKey: ['chapter', subject, classLevel, chapterNumber],
@@ -68,16 +82,6 @@ export default function ChapterViewer() {
       return response.json();
     },
     enabled: !!subject && !!classLevel && !!chapterNumber,
-  });
-
-  const { data: notes } = useQuery({
-    queryKey: ['/api/lms/notes', chapter?.id],
-    queryFn: async () => {
-      if (!chapter?.id) return [];
-      const response = await fetch(`/api/lms/notes?chapterContentId=${chapter.id}`);
-      return response.json();
-    },
-    enabled: !!chapter?.id,
   });
 
   const { data: bookmarks = [] } = useQuery<any[]>({
@@ -107,6 +111,18 @@ export default function ChapterViewer() {
     enabled: !!chapter?.id,
   });
 
+  const { data: practiceQuestions = [] } = useQuery<Question[]>({
+    queryKey: ['/api/questions/chapter', chapter?.id],
+    queryFn: async () => {
+      if (!chapter?.id) return [];
+      const response = await fetch(`/api/questions?chapterContentId=${chapter.id}&limit=5`);
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data.slice(0, 5);
+    },
+    enabled: !!chapter?.id,
+  });
+
   const { data: keypointBookmarks = [] } = useQuery<any[]>({
     queryKey: ['/api/learn/bookmarks/keypoints'],
     queryFn: async () => {
@@ -132,6 +148,28 @@ export default function ChapterViewer() {
     }
   }, [bookmarks, chapter?.id]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeSpent(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (contentRef.current) {
+      const element = contentRef.current;
+      const scrollTop = window.scrollY - element.offsetTop;
+      const scrollHeight = element.scrollHeight - window.innerHeight;
+      const progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
+      setReadingProgress(progress);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
   const startSessionMutation = useMutation({
     mutationFn: async () => {
       if (!chapter?.id) return;
@@ -144,29 +182,6 @@ export default function ChapterViewer() {
         sessionIdRef.current = data.id;
         sessionStartTimeRef.current = Date.now();
       }
-    },
-    onError: () => {
-      sessionIdRef.current = null;
-      sessionStartTimeRef.current = null;
-    },
-  });
-
-  const endSessionMutation = useMutation({
-    mutationFn: async () => {
-      if (!sessionIdRef.current || !sessionStartTimeRef.current) return;
-      const sessionId = sessionIdRef.current;
-      const durationMs = Date.now() - sessionStartTimeRef.current;
-      const durationMinutes = Math.floor(durationMs / 60000);
-
-      sessionIdRef.current = null;
-      sessionStartTimeRef.current = null;
-
-      return await apiRequest('PATCH', `/api/lms/sessions/${sessionId}`, {
-        endedAt: new Date().toISOString(),
-        durationMinutes: Math.max(1, durationMinutes),
-        sectionsViewed: ['introduction', 'notes', 'concepts'],
-        interactionCount: 5,
-      });
     },
     onError: () => {
       sessionIdRef.current = null;
@@ -194,37 +209,6 @@ export default function ChapterViewer() {
       toast({
         title: isBookmarked ? "Bookmark removed" : "Chapter bookmarked",
         description: isBookmarked ? "Removed from bookmarks" : "Added to your bookmarks",
-      });
-    },
-  });
-
-  const addNoteMutation = useMutation({
-    mutationFn: async (noteText: string) => {
-      if (!chapter?.id || !noteText.trim()) return;
-      return await apiRequest('POST', '/api/lms/notes', {
-        chapterContentId: chapter.id,
-        noteText,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/lms/notes', chapter?.id] });
-      setNewNote("");
-      toast({
-        title: "Note added",
-        description: "Your note has been saved",
-      });
-    },
-  });
-
-  const deleteNoteMutation = useMutation({
-    mutationFn: async (noteId: number) => {
-      return await apiRequest('DELETE', `/api/lms/notes/${noteId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/lms/notes', chapter?.id] });
-      toast({
-        title: "Note deleted",
-        description: "Your note has been removed",
       });
     },
   });
@@ -291,15 +275,15 @@ export default function ChapterViewer() {
   const getSubjectColor = (subj: string) => {
     switch (subj?.toLowerCase()) {
       case 'physics':
-        return 'text-blue-600 dark:text-blue-400';
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30';
       case 'chemistry':
-        return 'text-green-600 dark:text-green-400';
+        return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30';
       case 'biology':
       case 'botany':
       case 'zoology':
-        return 'text-purple-600 dark:text-purple-400';
+        return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30';
       default:
-        return 'text-foreground';
+        return 'bg-gray-500/10 text-foreground border-gray-500/30';
     }
   };
 
@@ -320,15 +304,20 @@ export default function ChapterViewer() {
     navigate(`/chapter/${subject}/${classLevel}/${currentChapter + 1}`);
   };
 
-  const copyToClipboard = async (text: string, formulaId: number) => {
+  const copyToClipboard = async (text: string, id: number, type: 'keypoint' | 'formula') => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedFormulaId(formulaId);
+      if (type === 'keypoint') {
+        setCopiedKeypointId(id);
+        setTimeout(() => setCopiedKeypointId(null), 2000);
+      } else {
+        setCopiedFormulaId(id);
+        setTimeout(() => setCopiedFormulaId(null), 2000);
+      }
       toast({
         title: "Copied!",
-        description: "Formula copied to clipboard",
+        description: `${type === 'keypoint' ? 'Keypoint' : 'Formula'} copied to clipboard`,
       });
-      setTimeout(() => setCopiedFormulaId(null), 2000);
     } catch (err) {
       toast({
         title: "Failed to copy",
@@ -336,6 +325,32 @@ export default function ChapterViewer() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: chapter?.chapterTitle,
+        text: `Check out this chapter: ${chapter?.chapterTitle}`,
+        url: window.location.href,
+      });
+    } catch (err) {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Chapter link copied to clipboard",
+      });
+    }
+  };
+
+  const adjustFontSize = (delta: number) => {
+    setFontSize(prev => Math.min(24, Math.max(14, prev + delta)));
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const isKeypointBookmarked = (keypointId: number) => {
@@ -346,50 +361,45 @@ export default function ChapterViewer() {
     return formulaBookmarks.some((b: any) => b.formulaId === formulaId);
   };
 
-  const getNeetFrequencyBadge = (frequency: string) => {
-    const colors: Record<string, string> = {
-      'low': 'bg-slate-500',
-      'medium': 'bg-blue-500',
-      'high': 'bg-orange-500',
-      'very_high': 'bg-red-500',
-    };
-    const labels: Record<string, string> = {
-      'low': 'Low Freq',
-      'medium': 'Medium Freq',
-      'high': 'High Yield',
-      'very_high': 'Very High Yield',
-    };
+  const getPriorityBadge = (keypoint: Keypoint) => {
+    if (keypoint.isHighYield || keypoint.neetFrequency === 'very_high') {
+      return (
+        <Badge className="bg-red-500 text-white font-semibold">
+          <Star className="h-3 w-3 mr-1" />
+          Must Know
+        </Badge>
+      );
+    }
+    if (keypoint.neetFrequency === 'high' || keypoint.neetFrequency === 'medium') {
+      return (
+        <Badge className="bg-amber-500 text-white font-semibold">
+          <Lightbulb className="h-3 w-3 mr-1" />
+          Good to Know
+        </Badge>
+      );
+    }
     return (
-      <Badge className={`${colors[frequency] || 'bg-slate-500'} text-white`}>
-        {labels[frequency] || frequency}
+      <Badge className="bg-blue-500 text-white font-semibold">
+        <Brain className="h-3 w-3 mr-1" />
+        For Experts
       </Badge>
     );
   };
 
-  const getCategoryBadge = (category: string) => {
-    const colors: Record<string, string> = {
-      'concept': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      'definition': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      'law': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-      'principle': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-      'theorem': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
-      'rule': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
-      'exception': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      'application': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    };
-    return (
-      <Badge className={colors[category] || 'bg-slate-100 text-slate-800'} variant="outline">
-        {category.charAt(0).toUpperCase() + category.slice(1)}
-      </Badge>
-    );
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const estimatedReadTime = chapter?.estimatedStudyMinutes 
+    ? Math.ceil(chapter.estimatedStudyMinutes * 0.6) 
+    : 15;
 
   if (isLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background">
           <Header />
-          <div className="container mx-auto p-6 max-w-5xl">
+          <div className="container mx-auto p-6 max-w-6xl">
             <Skeleton className="h-10 w-32 mb-6" />
             <Skeleton className="h-12 w-3/4 mb-4" />
             <Skeleton className="h-6 w-1/2 mb-8" />
@@ -405,7 +415,7 @@ export default function ChapterViewer() {
       <ThemeProvider>
         <div className="min-h-screen bg-background">
           <Header />
-          <div className="container mx-auto p-6 max-w-5xl">
+          <div className="container mx-auto p-6 max-w-6xl">
             <Button
               variant="ghost"
               onClick={handleBackClick}
@@ -427,418 +437,553 @@ export default function ChapterViewer() {
     );
   }
 
-  const difficultyLevels = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];
-  const difficultyColors = ['bg-green-500', 'bg-blue-500', 'bg-yellow-500', 'bg-orange-500', 'bg-red-500'];
+  const sections = [
+    { id: 'intro', title: 'Introduction' },
+    { id: 'objectives', title: 'Learning Objectives' },
+    { id: 'content', title: 'Main Content' },
+    { id: 'concepts', title: 'Key Concepts' },
+    { id: 'visualizations', title: 'Interactive Demos' },
+  ];
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto p-6 max-w-5xl">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <Button
-              variant="ghost"
-              onClick={handleBackClick}
-              data-testid="button-back-to-chapters"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to {subject} Chapters
-            </Button>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+            <div className="container mx-auto px-4 py-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackClick}
+                    className="shrink-0"
+                    data-testid="button-back-to-chapters"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium truncate">
+                    Chapter {chapter.chapterNumber}
+                  </span>
+                </div>
+                
+                <div className="flex-1 max-w-md mx-4">
+                  <Progress value={readingProgress} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    {Math.round(readingProgress)}% complete
+                  </p>
+                </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePreviousChapter}
-                disabled={parseInt(chapterNumber) <= 1}
-                data-testid="button-previous-chapter"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNextChapter}
-                data-testid="button-next-chapter"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-
-              <Separator orientation="vertical" className="h-8" />
-
-              <Button
-                variant={isBookmarked ? "default" : "outline"}
-                size="icon"
-                onClick={() => bookmarkMutation.mutate()}
-                data-testid="button-toggle-bookmark"
-              >
-                <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-              </Button>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="gap-1">
+                    <Clock className="h-3 w-3" />
+                    {estimatedReadTime} min read
+                  </Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <Timer className="h-3 w-3" />
+                    {formatTime(timeSpent)}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Badge variant="outline" className={getSubjectColor(subject)}>
-                {subject} - Class {classLevel}
-              </Badge>
-              <Badge variant="outline">
-                Chapter {chapter.chapterNumber}
-              </Badge>
-              {chapter.status && (
-                <Badge variant={chapter.status === 'published' ? 'default' : 'secondary'}>
-                  {chapter.status}
+          <div className="container mx-auto px-4 py-6 max-w-6xl" ref={contentRef}>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge className={getSubjectColor(subject || '')}>
+                  {subject} • Class {classLevel}
                 </Badge>
-              )}
+                <Badge variant="outline">
+                  Chapter {chapter.chapterNumber}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePreviousChapter}
+                  disabled={parseInt(chapterNumber) <= 1}
+                  data-testid="button-previous-chapter"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNextChapter}
+                  data-testid="button-next-chapter"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
 
-            <h1 className="text-4xl font-bold mb-4" data-testid="text-chapter-title">
-              {chapter.chapterTitle}
-            </h1>
+            <div className="mb-8">
+              <h1 
+                className="text-3xl md:text-4xl font-bold mb-4 font-serif" 
+                data-testid="text-chapter-title"
+                style={{ fontFamily: 'Georgia, serif' }}
+              >
+                {chapter.chapterTitle}
+              </h1>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {chapter.introduction}
+              </p>
+            </div>
 
-            <p className="text-lg text-muted-foreground mb-6">
-              {chapter.introduction}
-            </p>
-
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              {chapter.estimatedStudyMinutes && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{Math.floor(chapter.estimatedStudyMinutes / 60)}h {chapter.estimatedStudyMinutes % 60}m</span>
-                </div>
-              )}
-              {chapter.difficultyLevel && (
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <Badge className={difficultyColors[chapter.difficultyLevel - 1]}>
-                    {difficultyLevels[chapter.difficultyLevel - 1] || 'Medium'}
-                  </Badge>
-                </div>
-              )}
-              {chapter.ncertChapterRef && (
-                <div className="flex items-center gap-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-6 h-12">
+                <TabsTrigger 
+                  value="read" 
+                  className="flex items-center gap-2 text-base" 
+                  data-testid="tab-read"
+                >
                   <BookOpen className="h-4 w-4" />
-                  <span>{chapter.ncertChapterRef}</span>
-                </div>
-              )}
-            </div>
-          </div>
+                  <span>Read</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="keypoints" 
+                  className="flex items-center gap-2 text-base" 
+                  data-testid="tab-keypoints"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span>Key Points</span>
+                  {keypoints.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {keypoints.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="formulas" 
+                  className="flex items-center gap-2 text-base" 
+                  data-testid="tab-formulas"
+                >
+                  <FlaskConical className="h-4 w-4" />
+                  <span>Formulas</span>
+                  {formulas.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {formulas.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="practice" 
+                  className="flex items-center gap-2 text-base" 
+                  data-testid="tab-practice"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Practice</span>
+                </TabsTrigger>
+              </TabsList>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="overview" className="flex items-center gap-2" data-testid="tab-overview">
-                <BookOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">Overview</span>
-              </TabsTrigger>
-              <TabsTrigger value="keypoints" className="flex items-center gap-2" data-testid="tab-keypoints">
-                <Zap className="h-4 w-4" />
-                <span className="hidden sm:inline">Keypoints</span>
-                {keypoints.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                    {keypoints.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="formulas" className="flex items-center gap-2" data-testid="tab-formulas">
-                <FlaskConical className="h-4 w-4" />
-                <span className="hidden sm:inline">Formulas</span>
-                {formulas.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                    {formulas.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="practice" className="flex items-center gap-2" data-testid="tab-practice">
-                <GraduationCap className="h-4 w-4" />
-                <span className="hidden sm:inline">Practice</span>
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="flex items-center gap-2" data-testid="tab-notes">
-                <StickyNote className="h-4 w-4" />
-                <span className="hidden sm:inline">Notes</span>
-                {notes && notes.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                    {notes.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
+              <TabsContent value="read" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  <div className="lg:col-span-3 space-y-6">
+                    {chapter.learningObjectives && chapter.learningObjectives.length > 0 && (
+                      <Card className="border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20" id="objectives">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                            <Lightbulb className="h-5 w-5" />
+                            Did You Know? - Learning Objectives
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {chapter.learningObjectives.map((objective, idx) => (
+                              <li key={idx} className="flex items-start gap-2" style={{ fontSize: `${fontSize}px` }}>
+                                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                                <span className="font-serif">{objective}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
 
-            <TabsContent value="overview" className="space-y-6">
-              {chapter.learningObjectives && chapter.learningObjectives.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5" />
-                      Learning Objectives
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="list-disc list-inside space-y-2">
-                      {chapter.learningObjectives.map((objective, idx) => (
-                        <li key={idx} className="text-muted-foreground">
-                          {objective}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-
-              {chapter.prerequisites && chapter.prerequisites.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookMarked className="h-5 w-5" />
-                      Prerequisites
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {chapter.prerequisites.map((prereq, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {prereq}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Detailed Notes</CardTitle>
-                </CardHeader>
-                <CardContent className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {chapter.detailedNotes}
-                  </ReactMarkdown>
-                </CardContent>
-              </Card>
-
-              {chapter.keyConcepts && chapter.keyConcepts.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="h-5 w-5" />
-                      Key Concepts
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {chapter.keyConcepts.map((concept, idx) => (
-                        <div key={idx} className="border-l-4 border-primary pl-4 py-2">
-                          <h4 className="font-semibold mb-1">{concept.title}</h4>
-                          <p className="text-muted-foreground text-sm mb-2">{concept.description}</p>
-                          {concept.formula && (
-                            <code className="block bg-muted p-2 rounded text-sm font-mono">
-                              {concept.formula}
-                            </code>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {chapter.formulas && chapter.formulas.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Important Formulas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-3">
-                      {chapter.formulas.map((formula, idx) => (
-                        <code
-                          key={idx}
-                          className="block bg-muted p-3 rounded text-sm font-mono"
-                          data-testid={`formula-${idx}`}
-                        >
-                          {formula}
-                        </code>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {chapter.importantTopics && chapter.importantTopics.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Important Topics</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {chapter.importantTopics.map((topic, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {topic}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {chapter.phetSimulations && chapter.phetSimulations.length > 0 && (
-                <PhetSimulationViewer simulations={chapter.phetSimulations} />
-              )}
-
-              {chapter.visualizationsData && chapter.visualizationsData.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Interactive Visualizations</CardTitle>
-                    <CardDescription>
-                      Explore these visual aids to deepen your understanding
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {chapter.visualizationsData.map((viz, idx) => (
-                        <div key={idx}>
-                          <div className="mb-2">
-                            <Badge variant="secondary" className="mb-2">
-                              {viz.type}
-                            </Badge>
-                            <h3 className="text-lg font-semibold">{viz.title}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {viz.description}
-                            </p>
-                          </div>
-                          <ViewportActivatedVisualization>
-                            <VisualizationRenderer
-                              visualizationType={viz.type}
-                              visualizationConfig={viz.config}
-                            />
-                          </ViewportActivatedVisualization>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="keypoints" className="space-y-4">
-              {keypointsLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-32 w-full" />
-                  ))}
-                </div>
-              ) : keypoints.length === 0 ? (
-                <Card className="py-12">
-                  <CardContent className="flex flex-col items-center justify-center text-center">
-                    <Zap className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Keypoints Available</h3>
-                    <p className="text-muted-foreground max-w-md">
-                      Keypoints for this chapter haven't been added yet. Check back later or explore other chapters.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {keypoints.map((keypoint) => (
-                    <Card key={keypoint.id} className="relative" data-testid={`keypoint-card-${keypoint.id}`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              {getCategoryBadge(keypoint.category)}
-                              {keypoint.neetFrequency && getNeetFrequencyBadge(keypoint.neetFrequency)}
-                              {keypoint.isHighYield && (
-                                <Badge className="bg-amber-500 text-white">
-                                  <Zap className="h-3 w-3 mr-1" />
-                                  High Yield
-                                </Badge>
-                              )}
-                            </div>
-                            <CardTitle className="text-lg">{keypoint.title}</CardTitle>
-                          </div>
-                          <Button
-                            variant={isKeypointBookmarked(keypoint.id) ? "default" : "outline"}
-                            size="icon"
-                            onClick={() => toggleKeypointBookmarkMutation.mutate(keypoint.id)}
-                            data-testid={`button-bookmark-keypoint-${keypoint.id}`}
-                          >
-                            <Bookmark className={`h-4 w-4 ${isKeypointBookmarked(keypoint.id) ? 'fill-current' : ''}`} />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-base leading-relaxed">{keypoint.content}</p>
-                        {keypoint.tags && keypoint.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-4">
-                            {keypoint.tags.map((tag, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
+                    {chapter.prerequisites && chapter.prerequisites.length > 0 && (
+                      <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <Star className="h-5 w-5" />
+                            Remember This! - Prerequisites
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {chapter.prerequisites.map((prereq, idx) => (
+                              <Tooltip key={idx}>
+                                <TooltipTrigger>
+                                  <Badge variant="secondary" className="cursor-help font-medium">
+                                    {prereq}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>You should understand this topic before proceeding</p>
+                                </TooltipContent>
+                              </Tooltip>
                             ))}
                           </div>
-                        )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <Card id="content">
+                      <CardContent className="pt-6">
+                        <div 
+                          className="prose dark:prose-invert max-w-none prose-headings:font-serif prose-p:leading-relaxed"
+                          style={{ fontSize: `${fontSize}px`, fontFamily: 'Georgia, serif', lineHeight: '1.8' }}
+                        >
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {chapter.detailedNotes}
+                          </ReactMarkdown>
+                        </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="formulas" className="space-y-4">
-              {formulasLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-40 w-full" />
-                  ))}
-                </div>
-              ) : formulas.length === 0 ? (
-                <Card className="py-12">
-                  <CardContent className="flex flex-col items-center justify-center text-center">
-                    <FlaskConical className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Formulas Available</h3>
-                    <p className="text-muted-foreground max-w-md">
-                      Formulas for this chapter haven't been added yet. Check back later or explore other chapters.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {formulas.map((formula) => (
-                    <Card key={formula.id} className="relative" data-testid={`formula-card-${formula.id}`}>
+                    <Card className="border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              {formula.neetFrequency && getNeetFrequencyBadge(formula.neetFrequency)}
-                              {formula.isHighYield && (
-                                <Badge className="bg-amber-500 text-white">
-                                  <Zap className="h-3 w-3 mr-1" />
-                                  High Yield
-                                </Badge>
-                              )}
-                            </div>
-                            <CardTitle className="text-lg">{formula.name}</CardTitle>
-                          </div>
-                          <Button
-                            variant={isFormulaBookmarked(formula.id) ? "default" : "outline"}
-                            size="icon"
-                            onClick={() => toggleFormulaBookmarkMutation.mutate(formula.id)}
-                            data-testid={`button-bookmark-formula-${formula.id}`}
-                          >
-                            <Bookmark className={`h-4 w-4 ${isFormulaBookmarked(formula.id) ? 'fill-current' : ''}`} />
-                          </Button>
-                        </div>
+                        <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                          <AlertTriangle className="h-5 w-5" />
+                          Common Mistakes to Avoid
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="relative">
-                          <div className="bg-muted p-4 rounded-lg font-mono text-lg flex items-center justify-between gap-4">
-                            <code className="break-all">
-                              {formula.plainFormula || formula.latexFormula}
-                            </code>
+                      <CardContent>
+                        <ul className="space-y-3" style={{ fontSize: `${fontSize - 1}px` }}>
+                          <li className="flex items-start gap-2 font-serif">
+                            <span className="text-red-500 font-bold">✗</span>
+                            <span>Don't memorize without understanding the underlying concepts</span>
+                          </li>
+                          <li className="flex items-start gap-2 font-serif">
+                            <span className="text-red-500 font-bold">✗</span>
+                            <span>Don't skip the practice questions - they reinforce learning</span>
+                          </li>
+                          <li className="flex items-start gap-2 font-serif">
+                            <span className="text-red-500 font-bold">✗</span>
+                            <span>Don't rush through the formulas without noting the conditions</span>
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {chapter.keyConcepts && chapter.keyConcepts.length > 0 && (
+                      <Card id="concepts">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Brain className="h-5 w-5" />
+                            Key Concepts
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {chapter.keyConcepts.map((concept, idx) => (
+                              <div 
+                                key={idx} 
+                                className="border-l-4 border-primary pl-4 py-3 bg-muted/30 rounded-r-lg"
+                              >
+                                <h4 className="font-semibold text-lg mb-2 font-serif">{concept.title}</h4>
+                                <p 
+                                  className="text-muted-foreground mb-3 font-serif"
+                                  style={{ fontSize: `${fontSize}px` }}
+                                >
+                                  {concept.description}
+                                </p>
+                                {concept.formula && (
+                                  <code className="block bg-slate-100 dark:bg-slate-800 p-3 rounded text-base font-mono">
+                                    {concept.formula}
+                                  </code>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {chapter.phetSimulations && chapter.phetSimulations.length > 0 && (
+                      <div id="visualizations">
+                        <PhetSimulationViewer simulations={chapter.phetSimulations} />
+                      </div>
+                    )}
+
+                    {chapter.visualizationsData && chapter.visualizationsData.length > 0 && (
+                      <Card id="visualizations">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Zap className="h-5 w-5" />
+                            Interactive Visualizations
+                          </CardTitle>
+                          <CardDescription>
+                            Explore these visual aids to deepen your understanding
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-6">
+                            {chapter.visualizationsData.map((viz, idx) => (
+                              <div key={idx}>
+                                <div className="mb-3">
+                                  <Badge variant="secondary" className="mb-2">
+                                    {viz.type}
+                                  </Badge>
+                                  <h3 className="text-lg font-semibold">{viz.title}</h3>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {viz.description}
+                                  </p>
+                                </div>
+                                <ViewportActivatedVisualization>
+                                  <VisualizationRenderer
+                                    visualizationType={viz.type}
+                                    visualizationConfig={viz.config}
+                                  />
+                                </ViewportActivatedVisualization>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  <div className="lg:col-span-1">
+                    <div className="sticky top-28 space-y-4">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <List className="h-4 w-4" />
+                            Quick Navigation
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {sections.map((section) => (
                             <Button
+                              key={section.id}
                               variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-left h-auto py-2"
+                              onClick={() => {
+                                const element = document.getElementById(section.id);
+                                if (element) {
+                                  element.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                            >
+                              {section.title}
+                            </Button>
+                          ))}
+                        </CardContent>
+                      </Card>
+
+                      {chapter.importantTopics && chapter.importantTopics.length > 0 && (
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm">Important Topics</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                              {chapter.importantTopics.map((topic, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {topic}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800">
+                        <CardContent className="pt-4">
+                          <Button
+                            className={`w-full ${isChapterComplete ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                            onClick={() => {
+                              setIsChapterComplete(!isChapterComplete);
+                              toast({
+                                title: isChapterComplete ? "Unmarked" : "Chapter Completed!",
+                                description: isChapterComplete 
+                                  ? "Chapter marked as incomplete" 
+                                  : "Great job! Keep up the learning!",
+                              });
+                            }}
+                            data-testid="button-mark-complete"
+                          >
+                            {isChapterComplete ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Completed!
+                              </>
+                            ) : (
+                              <>
+                                <Check className="h-4 w-4 mr-2" />
+                                Mark as Complete
+                              </>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="keypoints" className="space-y-4">
+                {keypointsLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-32 w-full" />
+                    ))}
+                  </div>
+                ) : keypoints.length === 0 ? (
+                  <Card className="py-12">
+                    <CardContent className="flex flex-col items-center justify-center text-center">
+                      <Zap className="h-16 w-16 text-muted-foreground mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">No Keypoints Available</h3>
+                      <p className="text-muted-foreground max-w-md">
+                        Keypoints for this chapter haven't been added yet. Check back later or explore other chapters.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Accordion type="single" collapsible className="space-y-3">
+                    {keypoints.map((keypoint) => (
+                      <AccordionItem 
+                        key={keypoint.id} 
+                        value={`keypoint-${keypoint.id}`}
+                        className="border rounded-lg px-4 bg-card shadow-sm"
+                        data-testid={`keypoint-card-${keypoint.id}`}
+                      >
+                        <AccordionTrigger className="hover:no-underline py-4">
+                          <div className="flex items-start gap-3 text-left flex-1">
+                            <div className="flex flex-col gap-2 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {getPriorityBadge(keypoint)}
+                                <Badge variant="outline" className="capitalize">
+                                  {keypoint.category}
+                                </Badge>
+                              </div>
+                              <h3 className="font-semibold text-lg">{keypoint.title}</h3>
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4">
+                          <div className="space-y-4">
+                            <p 
+                              className="text-base leading-relaxed font-serif"
+                              style={{ fontSize: `${fontSize}px` }}
+                            >
+                              {keypoint.content}
+                            </p>
+                            
+                            {keypoint.tags && keypoint.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {keypoint.tags.map((tag, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2 pt-2 border-t">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyToClipboard(keypoint.content, keypoint.id, 'keypoint')}
+                                data-testid={`button-copy-keypoint-${keypoint.id}`}
+                              >
+                                {copiedKeypointId === keypoint.id ? (
+                                  <>
+                                    <Check className="h-4 w-4 mr-2 text-green-500" />
+                                    Copied!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Copy
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant={isKeypointBookmarked(keypoint.id) ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => toggleKeypointBookmarkMutation.mutate(keypoint.id)}
+                                data-testid={`button-bookmark-keypoint-${keypoint.id}`}
+                              >
+                                <Star className={`h-4 w-4 mr-2 ${isKeypointBookmarked(keypoint.id) ? 'fill-current' : ''}`} />
+                                {isKeypointBookmarked(keypoint.id) ? 'Saved' : 'Save'}
+                              </Button>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                )}
+              </TabsContent>
+
+              <TabsContent value="formulas" className="space-y-4">
+                {formulasLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-48 w-full" />
+                    ))}
+                  </div>
+                ) : formulas.length === 0 ? (
+                  <Card className="py-12">
+                    <CardContent className="flex flex-col items-center justify-center text-center">
+                      <FlaskConical className="h-16 w-16 text-muted-foreground mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">No Formulas Available</h3>
+                      <p className="text-muted-foreground max-w-md">
+                        Formulas for this chapter haven't been added yet. Check back later or explore other chapters.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-6">
+                    {formulas.map((formula) => (
+                      <Card key={formula.id} className="overflow-hidden" data-testid={`formula-card-${formula.id}`}>
+                        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 pb-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                {formula.isHighYield && (
+                                  <Badge className="bg-amber-500 text-white">
+                                    <Zap className="h-3 w-3 mr-1" />
+                                    High Yield
+                                  </Badge>
+                                )}
+                                {formula.neetFrequency && (
+                                  <Badge variant="outline" className="capitalize">
+                                    {formula.neetFrequency.replace('_', ' ')} frequency
+                                  </Badge>
+                                )}
+                              </div>
+                              <CardTitle className="text-xl">{formula.name}</CardTitle>
+                            </div>
+                            <Button
+                              variant={isFormulaBookmarked(formula.id) ? "default" : "outline"}
                               size="icon"
-                              className="flex-shrink-0"
-                              onClick={() => copyToClipboard(formula.plainFormula || formula.latexFormula, formula.id)}
+                              onClick={() => toggleFormulaBookmarkMutation.mutate(formula.id)}
+                              data-testid={`button-bookmark-formula-${formula.id}`}
+                            >
+                              <Star className={`h-4 w-4 ${isFormulaBookmarked(formula.id) ? 'fill-current' : ''}`} />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-5">
+                          <div className="relative">
+                            <div className="bg-slate-900 dark:bg-slate-800 p-6 rounded-xl text-center">
+                              <code className="text-2xl md:text-3xl text-white font-mono tracking-wide">
+                                {formula.plainFormula || formula.latexFormula}
+                              </code>
+                            </div>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="absolute top-3 right-3"
+                              onClick={() => copyToClipboard(formula.plainFormula || formula.latexFormula, formula.id, 'formula')}
                               data-testid={`button-copy-formula-${formula.id}`}
                             >
                               {copiedFormulaId === formula.id ? (
@@ -848,160 +993,408 @@ export default function ChapterViewer() {
                               )}
                             </Button>
                           </div>
-                        </div>
 
-                        {formula.unit && (
-                          <div className="text-sm">
-                            <span className="font-medium">Unit:</span>{" "}
-                            <span className="text-muted-foreground">{formula.unit}</span>
-                          </div>
-                        )}
+                          {formula.variables && formula.variables.length > 0 && (
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                Variables Explained
+                              </h4>
+                              <div className="grid gap-2">
+                                {formula.variables.map((variable, idx) => (
+                                  <div key={idx} className="flex items-baseline gap-3 text-sm">
+                                    <code className="font-mono bg-white dark:bg-slate-800 px-3 py-1 rounded font-semibold text-blue-600 dark:text-blue-400">
+                                      {variable.symbol}
+                                    </code>
+                                    <span className="text-muted-foreground flex-1">
+                                      {variable.meaning}
+                                      {variable.unit && (
+                                        <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                          {variable.unit}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                        {formula.variables && formula.variables.length > 0 && (
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Variables:</h4>
-                            <div className="grid gap-2">
-                              {formula.variables.map((variable, idx) => (
-                                <div key={idx} className="flex items-baseline gap-2 text-sm">
-                                  <code className="font-mono bg-muted px-2 py-0.5 rounded">
-                                    {variable.symbol}
-                                  </code>
-                                  <span className="text-muted-foreground">
-                                    {variable.meaning}
-                                    {variable.unit && ` (${variable.unit})`}
-                                  </span>
-                                </div>
+                          {formula.unit && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-medium">Unit:</span>
+                              <Badge variant="secondary">{formula.unit}</Badge>
+                            </div>
+                          )}
+
+                          {formula.conditions && (
+                            <div className="border-l-4 border-amber-500 pl-4 bg-amber-50/50 dark:bg-amber-950/20 py-3 rounded-r-lg">
+                              <h4 className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-1">
+                                When to Use
+                              </h4>
+                              <p className="text-sm text-muted-foreground">{formula.conditions}</p>
+                            </div>
+                          )}
+
+                          {formula.derivation && (
+                            <div className="border-l-4 border-blue-500 pl-4 bg-blue-50/50 dark:bg-blue-950/20 py-3 rounded-r-lg">
+                              <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-1">
+                                Derivation Hint
+                              </h4>
+                              <p className="text-sm text-muted-foreground">{formula.derivation}</p>
+                            </div>
+                          )}
+
+                          {formula.tags && formula.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {formula.tags.map((tag, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
                               ))}
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
 
-                        {formula.conditions && (
+              <TabsContent value="practice" className="space-y-6">
+                {practiceQuestions.length > 0 && !showResults ? (
+                  <div className="space-y-6">
+                    <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-medium text-sm mb-1">Conditions:</h4>
-                            <p className="text-sm text-muted-foreground">{formula.conditions}</p>
+                            <CardTitle className="flex items-center gap-2">
+                              <Brain className="h-5 w-5" />
+                              Quick Quiz
+                            </CardTitle>
+                            <CardDescription>
+                              Test your understanding with {practiceQuestions.length} questions
+                            </CardDescription>
                           </div>
-                        )}
+                          <Badge variant="secondary" className="text-lg px-4 py-2">
+                            {Object.keys(selectedAnswers).length} / {practiceQuestions.length}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                    </Card>
 
-                        {formula.derivation && (
-                          <div>
-                            <h4 className="font-medium text-sm mb-1">Derivation:</h4>
-                            <p className="text-sm text-muted-foreground">{formula.derivation}</p>
-                          </div>
-                        )}
-
-                        {formula.tags && formula.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {formula.tags.map((tag, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {tag}
+                    {practiceQuestions.map((question, idx) => (
+                      <Card key={question.id} className="overflow-hidden" data-testid={`quiz-question-${question.id}`}>
+                        <CardHeader className="bg-muted/30">
+                          <div className="flex items-start justify-between gap-4">
+                            <CardTitle className="text-lg font-normal flex-1">
+                              <span className="font-bold mr-2">Q{idx + 1}.</span>
+                              {question.questionText}
+                            </CardTitle>
+                            <div className="flex gap-2 shrink-0">
+                              <Badge variant="outline">
+                                {['Easy', 'Medium', 'Hard', 'Expert'][question.difficultyLevel - 1] || 'Medium'}
                               </Badge>
+                              {question.pyqYear && (
+                                <Badge className="bg-orange-500 text-white">
+                                  PYQ {question.pyqYear}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                          <div className="grid gap-3">
+                            {question.options.map((option) => (
+                              <Button
+                                key={option.id}
+                                variant={selectedAnswers[question.id] === option.id ? "default" : "outline"}
+                                className={`justify-start h-auto py-3 px-4 text-left whitespace-normal ${
+                                  selectedAnswers[question.id] === option.id
+                                    ? 'ring-2 ring-primary'
+                                    : ''
+                                }`}
+                                onClick={() => {
+                                  setSelectedAnswers(prev => ({
+                                    ...prev,
+                                    [question.id]: option.id
+                                  }));
+                                }}
+                                data-testid={`quiz-option-${question.id}-${option.id}`}
+                              >
+                                <span className="font-bold mr-3">{option.id}.</span>
+                                {option.text}
+                              </Button>
                             ))}
                           </div>
-                        )}
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    <div className="flex justify-center gap-4">
+                      <Button
+                        size="lg"
+                        onClick={() => setShowResults(true)}
+                        disabled={Object.keys(selectedAnswers).length < practiceQuestions.length}
+                        className="px-8"
+                        data-testid="button-submit-quiz"
+                      >
+                        <CheckCircle2 className="mr-2 h-5 w-5" />
+                        Check Answers
+                      </Button>
+                    </div>
+                  </div>
+                ) : showResults ? (
+                  <div className="space-y-6">
+                    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <Trophy className="h-16 w-16 mx-auto text-amber-500 mb-4" />
+                          <h3 className="text-2xl font-bold mb-2">Quiz Complete!</h3>
+                          <p className="text-lg text-muted-foreground mb-4">
+                            You got{' '}
+                            <span className="font-bold text-green-600">
+                              {practiceQuestions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length}
+                            </span>{' '}
+                            out of {practiceQuestions.length} correct
+                          </p>
+                          <div className="flex justify-center gap-4">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedAnswers({});
+                                setShowResults(false);
+                              }}
+                              data-testid="button-retry-quiz"
+                            >
+                              Try Again
+                            </Button>
+                            <Button
+                              onClick={() => navigate(`/practice?subject=${subject}&chapter=${chapterNumber}`)}
+                              data-testid="button-full-practice"
+                            >
+                              Full Practice
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="practice" className="space-y-6">
-              <Card className="py-12">
-                <CardContent className="flex flex-col items-center justify-center text-center">
-                  <GraduationCap className="h-16 w-16 text-primary mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Ready to Practice?</h3>
-                  <p className="text-muted-foreground max-w-md mb-6">
-                    Test your understanding of {chapter.chapterTitle} with practice questions tailored to NEET preparation.
-                  </p>
-                  <Button
-                    size="lg"
-                    onClick={() => navigate('/practice')}
-                    data-testid="button-practice-now"
-                  >
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Start Practice Questions
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notes" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <StickyNote className="h-5 w-5" />
-                    My Notes for {chapter.chapterTitle}
-                  </CardTitle>
-                  <CardDescription>
-                    Add personal notes to help with your revision
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="Add a new note..."
-                      value={newNote}
-                      onChange={(e) => setNewNote(e.target.value)}
-                      className="min-h-24"
-                      data-testid="textarea-new-note"
-                    />
-                    <Button
-                      onClick={() => addNoteMutation.mutate(newNote)}
-                      disabled={!newNote.trim() || addNoteMutation.isPending}
-                      data-testid="button-save-note"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Note
-                    </Button>
-                  </div>
-
-                  <Separator />
-
-                  <ScrollArea className="h-96">
-                    <div className="space-y-3">
-                      {notes && notes.length > 0 ? (
-                        notes.map((note: any) => (
-                          <Card key={note.id} className="p-3" data-testid={`note-${note.id}`}>
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="text-sm flex-1 whitespace-pre-wrap">{note.noteText}</p>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 flex-shrink-0"
-                                onClick={() => deleteNoteMutation.mutate(note.id)}
-                                data-testid={`button-delete-note-${note.id}`}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {new Date(note.createdAt).toLocaleDateString(undefined, {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
+                    {practiceQuestions.map((question, idx) => {
+                      const isCorrect = selectedAnswers[question.id] === question.correctAnswer;
+                      return (
+                        <Card 
+                          key={question.id} 
+                          className={`overflow-hidden border-l-4 ${isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}
+                        >
+                          <CardHeader className="bg-muted/30">
+                            <CardTitle className="text-lg font-normal flex items-start gap-3">
+                              {isCorrect ? (
+                                <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0 mt-0.5" />
+                              ) : (
+                                <AlertCircle className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
+                              )}
+                              <span>
+                                <span className="font-bold mr-2">Q{idx + 1}.</span>
+                                {question.questionText}
+                              </span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-4 space-y-4">
+                            <div className="grid gap-2">
+                              {question.options.map((option) => {
+                                const isSelected = selectedAnswers[question.id] === option.id;
+                                const isAnswer = question.correctAnswer === option.id;
+                                return (
+                                  <div
+                                    key={option.id}
+                                    className={`p-3 rounded-lg border ${
+                                      isAnswer
+                                        ? 'bg-green-100 dark:bg-green-900/30 border-green-500'
+                                        : isSelected
+                                        ? 'bg-red-100 dark:bg-red-900/30 border-red-500'
+                                        : 'bg-muted/30'
+                                    }`}
+                                  >
+                                    <span className="font-bold mr-2">{option.id}.</span>
+                                    {option.text}
+                                    {isAnswer && (
+                                      <Badge className="ml-2 bg-green-500">Correct</Badge>
+                                    )}
+                                  </div>
+                                );
                               })}
-                            </p>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">
-                            No notes yet. Add your first note above!
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </ScrollArea>
+                            </div>
+                            {question.solutionDetail && (
+                              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg">
+                                <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">
+                                  Explanation
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {question.solutionDetail}
+                                </p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Card className="py-12">
+                    <CardContent className="flex flex-col items-center justify-center text-center">
+                      <GraduationCap className="h-20 w-20 text-primary mb-6" />
+                      <h3 className="text-2xl font-bold mb-3">Ready to Practice?</h3>
+                      <p className="text-muted-foreground max-w-md mb-6">
+                        Test your understanding of {chapter.chapterTitle} with practice questions tailored to NEET preparation.
+                      </p>
+                      <Button
+                        size="lg"
+                        onClick={() => navigate(`/practice?subject=${subject}&chapter=${chapterNumber}`)}
+                        className="px-8"
+                        data-testid="button-practice-now"
+                      >
+                        <BookOpen className="mr-2 h-5 w-5" />
+                        Start Practice Questions
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {showFloatingToolbar && (
+            <div className="fixed bottom-6 right-6 z-50">
+              <Card className="shadow-xl border-2">
+                <CardContent className="p-2 flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowToc(!showToc)}
+                        data-testid="button-toggle-toc"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Table of Contents</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={isBookmarked ? "default" : "ghost"}
+                        size="icon"
+                        onClick={() => bookmarkMutation.mutate()}
+                        data-testid="button-toggle-bookmark"
+                      >
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{isBookmarked ? 'Remove Bookmark' : 'Bookmark Chapter'}</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleShare}
+                        data-testid="button-share"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Share</TooltipContent>
+                  </Tooltip>
+
+                  <div className="w-px h-6 bg-border mx-1" />
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => adjustFontSize(-2)}
+                        disabled={fontSize <= 14}
+                        data-testid="button-font-decrease"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Decrease Font Size</TooltipContent>
+                  </Tooltip>
+
+                  <span className="text-xs font-mono w-8 text-center">{fontSize}</span>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => adjustFontSize(2)}
+                        disabled={fontSize >= 24}
+                        data-testid="button-font-increase"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Increase Font Size</TooltipContent>
+                  </Tooltip>
+
+                  <div className="w-px h-6 bg-border mx-1" />
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={scrollToTop}
+                        data-testid="button-scroll-top"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Scroll to Top</TooltipContent>
+                  </Tooltip>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
+
+          {showToc && (
+            <div className="fixed bottom-24 right-6 z-50 w-64">
+              <Card className="shadow-xl">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Table of Contents</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  {sections.map((section) => (
+                    <Button
+                      key={section.id}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left h-auto py-2"
+                      onClick={() => {
+                        const element = document.getElementById(section.id);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                        setShowToc(false);
+                      }}
+                    >
+                      {section.title}
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
-      </div>
+      </TooltipProvider>
     </ThemeProvider>
   );
 }
