@@ -361,6 +361,28 @@ export const mockTests = pgTable("mock_tests", {
   questionsList: jsonb("questions_list").$type<number[]>().notNull(),
   durationMinutes: integer("duration_minutes").notNull(),
   subject: varchar("subject", { length: 50 }),
+  passingPercentage: integer("passing_percentage").default(40),
+  instructions: text("instructions"),
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const flashcardDecks = pgTable("flashcard_decks", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  subject: varchar("subject", { length: 50 }),
+  topicId: integer("topic_id").references(() => contentTopics.id),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const flashcards = pgTable("flashcards", {
+  id: serial("id").primaryKey(),
+  deckId: integer("deck_id").references(() => flashcardDecks.id).notNull(),
+  front: text("front").notNull(),
+  back: text("back").notNull(),
+  order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -465,6 +487,17 @@ export const insertUserPerformanceSchema = createInsertSchema(userPerformance).o
 });
 
 export const insertMockTestSchema = createInsertSchema(mockTests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFlashcardDeckSchema = createInsertSchema(flashcardDecks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
   id: true,
   createdAt: true,
 });
@@ -591,6 +624,12 @@ export type InsertUserPerformance = z.infer<typeof insertUserPerformanceSchema>;
 
 export type MockTest = typeof mockTests.$inferSelect;
 export type InsertMockTest = z.infer<typeof insertMockTestSchema>;
+
+export type FlashcardDeck = typeof flashcardDecks.$inferSelect;
+export type InsertFlashcardDeck = z.infer<typeof insertFlashcardDeckSchema>;
+
+export type Flashcard = typeof flashcards.$inferSelect;
+export type InsertFlashcard = z.infer<typeof insertFlashcardSchema>;
 
 export type ChapterContent = typeof chapterContent.$inferSelect;
 export type InsertChapterContent = z.infer<typeof insertChapterContentSchema>;

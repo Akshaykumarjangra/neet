@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Plus, Upload, DollarSign, Clock, CheckCircle, XCircle, GraduationCap, ChevronDown, ChevronUp } from "lucide-react";
+import { Shield, Users, Plus, Upload, DollarSign, Clock, CheckCircle, XCircle, GraduationCap, ChevronDown, ChevronUp, Layers } from "lucide-react";
 import PlaceholderVisualization from "@/components/PlaceholderVisualization";
 
 interface User {
@@ -192,9 +192,19 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen gradient-mesh-bg p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <Shield className="h-10 w-10 text-yellow-500" />
-          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <Shield className="h-10 w-10 text-yellow-500" />
+            <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+          </div>
+          <Button
+            onClick={() => setLocation("/admin/content")}
+            className="gap-2"
+            data-testid="button-content-manager"
+          >
+            <Layers className="h-4 w-4" />
+            Content Manager
+          </Button>
         </div>
 
         {/* Stats Grid */}

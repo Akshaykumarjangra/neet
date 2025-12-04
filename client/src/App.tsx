@@ -23,6 +23,7 @@ import LearningPath from "@/pages/LearningPath";
 import MockTests from "@/pages/MockTests";
 import Achievements from "@/pages/Achievements";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminContentManager from "@/pages/AdminContentManager";
 import MentorDashboard from "@/pages/MentorDashboard";
 import MentorDiscovery from "@/pages/MentorDiscovery";
 import Enrollment from "@/pages/Enrollment";
@@ -150,6 +151,11 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute>
           <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/content">
+        <ProtectedRoute>
+          <AdminContentManager />
         </ProtectedRoute>
       </Route>
       <Route path="/mentor-dashboard">

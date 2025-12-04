@@ -15,6 +15,7 @@ import learningPathRoutes from "./learning-path-routes";
 import mockTestRoutes from "./mock-test-routes";
 import gameRoutes from "./game-routes";
 import adminRoutes from "./admin-routes";
+import adminContentRoutes from "./admin-content-routes";
 import chapterContentRoutes from "./chapter-content-routes";
 import lmsRoutes from "./lms-routes";
 import mentorRoutes from "./mentor-routes";
@@ -56,6 +57,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
+  
+  // Admin Content Management routes
+  app.use("/api/admin", adminContentRoutes);
 
   // Chapter Content routes
   app.use("/api/chapters", chapterContentRoutes);
