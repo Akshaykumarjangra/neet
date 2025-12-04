@@ -792,7 +792,7 @@ export default function AdminDashboard() {
                       })}
                       disabled={generateQuestionsMutation.isPending || !aiTopic.trim()}
                       className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                      data-testid="button-generate-questions"
+                      data-testid="button-ai-generate-questions"
                     >
                       {generateQuestionsMutation.isPending ? (
                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
@@ -907,7 +907,7 @@ export default function AdminDashboard() {
                       })}
                       disabled={generateFlashcardsMutation.isPending || !aiTopic.trim()}
                       className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-                      data-testid="button-generate-flashcards"
+                      data-testid="button-ai-generate-flashcards"
                     >
                       {generateFlashcardsMutation.isPending ? (
                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
