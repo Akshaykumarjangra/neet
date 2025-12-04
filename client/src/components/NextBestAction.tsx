@@ -71,7 +71,9 @@ export function NextBestAction() {
   const todayPracticed = (userStats?.todayAttempts || 0) > 0;
   const hasBookmarks = (bookmarkedQuestions?.length || 0) > 0;
 
-  const incompleteChapter = chapterProgress?.find(
+  // Ensure chapterProgress is an array before using .find()
+  const chapterProgressArray = Array.isArray(chapterProgress) ? chapterProgress : [];
+  const incompleteChapter = chapterProgressArray.find(
     (ch) => ch.progress > 0 && ch.progress < 100
   );
 

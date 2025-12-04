@@ -32,7 +32,7 @@ import {
   userFlashcardProgress,
   flashcards,
 } from "@shared/schema";
-import { eq, and, sql, desc, lt, lte, asc } from "drizzle-orm";
+import { eq, and, sql, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -57,6 +57,8 @@ export interface IStorage {
     topicId?: number;
     difficulty?: number;
     limit?: number;
+    pyqOnly?: boolean;
+    pyqYear?: number;
   }): Promise<Question[]>;
   createQuestion(question: InsertQuestion): Promise<Question>;
   
@@ -181,6 +183,8 @@ export class DbStorage implements IStorage {
     topicId?: number;
     difficulty?: number;
     limit?: number;
+    pyqOnly?: boolean;
+    pyqYear?: number;
   }): Promise<Question[]> {
     const conditions: ReturnType<typeof eq>[] = [];
     
@@ -190,6 +194,14 @@ export class DbStorage implements IStorage {
     
     if (filters.difficulty) {
       conditions.push(eq(questions.difficultyLevel, filters.difficulty));
+    }
+
+    if (filters.pyqOnly) {
+      conditions.push(isNotNull(questions.pyqYear));
+    }
+
+    if (filters.pyqYear) {
+      conditions.push(eq(questions.pyqYear, filters.pyqYear));
     }
     
     if (filters.subject) {

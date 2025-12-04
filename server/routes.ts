@@ -131,13 +131,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Question routes
   app.get("/api/questions", async (req, res) => {
     try {
-      const { subject, topicId, difficulty, limit } = req.query;
+      const { subject, topicId, difficulty, limit, pyqOnly, pyqYear } = req.query;
 
       const filters: any = {};
       if (subject) filters.subject = subject as string;
       if (topicId) filters.topicId = parseInt(topicId as string);
       if (difficulty) filters.difficulty = parseInt(difficulty as string);
       if (limit) filters.limit = parseInt(limit as string);
+      if (pyqOnly === 'true') filters.pyqOnly = true;
+      if (pyqYear) filters.pyqYear = parseInt(pyqYear as string);
 
       const questions = await storage.getFilteredQuestions(filters);
       res.json(questions);

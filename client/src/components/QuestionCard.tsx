@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, ChevronRight, ChevronLeft, SkipForward, Bookmark, BookmarkCheck } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronRight, ChevronLeft, SkipForward, Bookmark, BookmarkCheck, Calendar } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,6 +13,7 @@ interface QuestionCardProps {
   question: string;
   options: { id: string; text: string }[];
   isBookmarked?: boolean;
+  pyqYear?: number | null;
   onToggleBookmark?: () => void;
   onSubmit: (answer: string) => void;
   onSkip?: () => void;
@@ -27,6 +28,7 @@ export function QuestionCard({
   question,
   options,
   isBookmarked = false,
+  pyqYear,
   onToggleBookmark,
   onSubmit,
   onSkip,
@@ -69,6 +71,12 @@ export function QuestionCard({
             <Badge variant="secondary" className="text-xs">
               {topic}
             </Badge>
+            {pyqYear && (
+              <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                <Calendar className="h-3 w-3" />
+                PYQ {pyqYear}
+              </Badge>
+            )}
           </div>
 
           {onToggleBookmark && (

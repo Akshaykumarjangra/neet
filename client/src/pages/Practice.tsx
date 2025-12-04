@@ -16,8 +16,8 @@ import { LootCrate } from "@/components/game/LootCrate";
 import { KillCamReplay } from "@/components/game/KillCamReplay";
 import { ComboTracker } from "@/components/game/ComboTracker";
 import { XpGainAnimation } from "@/components/game/XpGainAnimation";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, Loader2, Filter, RefreshCw, Timer, Clock, Flag, AlertTriangle, HelpCircle, BookmarkCheck, MessageSquare, Trophy, Target, Zap, TrendingUp, Star, Sparkles, PartyPopper } from "lucide-react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { ChevronLeft, Loader2, Filter, RefreshCw, Timer, Clock, Flag, AlertTriangle, HelpCircle, BookmarkCheck, MessageSquare, Trophy, Target, Zap, TrendingUp, Star, Sparkles, PartyPopper, Calendar, X, Award, Minus, Plus, GraduationCap } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Question, ContentTopic } from "@shared/schema";
@@ -46,6 +46,8 @@ interface SessionStats {
   maxCombo: number;
   currentLevel: number;
   levelProgress: number;
+  neetMarksGained: number;
+  neetMarksLost: number;
 }
 
 const FLAGGED_QUESTIONS_KEY = "neet-flagged-questions";
@@ -98,6 +100,8 @@ export default function Practice() {
     maxCombo: 0,
     currentLevel: level,
     levelProgress: 0,
+    neetMarksGained: 0,
+    neetMarksLost: 0,
   });
 
   const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
@@ -105,6 +109,11 @@ export default function Practice() {
   const [flagNote, setFlagNote] = useState("");
   const [selectedFlagType, setSelectedFlagType] = useState<"review" | "error" | "difficult" | "unclear" | null>(null);
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+
+  const [pyqOnly, setPyqOnly] = useState(false);
+  const [pyqYear, setPyqYear] = useState<string>("all");
+  const [neetMarkingMode, setNeetMarkingMode] = useState(false);
+  const [neetScore, setNeetScore] = useState(0);
 
   useEffect(() => {
     setFlaggedQuestions(getFlaggedQuestions());
@@ -119,12 +128,14 @@ export default function Practice() {
     if (selectedSubject !== "all") params.append("subject", selectedSubject);
     if (selectedTopic !== "all") params.append("topicId", selectedTopic);
     if (selectedDifficulty !== "all") params.append("difficulty", selectedDifficulty);
+    if (pyqOnly) params.append("pyqOnly", "true");
+    if (pyqYear !== "all") params.append("pyqYear", pyqYear);
     params.append("limit", "100");
     return params.toString();
   };
 
   const { data: questions, isLoading, error, refetch } = useQuery<Question[]>({
-    queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty],
+    queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty, pyqOnly, pyqYear],
     queryFn: async () => {
       const queryParams = buildQueryParams();
       const url = `/api/questions${queryParams ? '?' + queryParams : ''}`;
@@ -162,6 +173,34 @@ export default function Practice() {
   const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
   const effectiveSubject = selectedSubject === "all" ? "General" : selectedSubject;
+
+  const currentTopicName = useMemo(() => {
+    if (selectedTopic !== "all") {
+      const topic = topics?.find(t => t.id.toString() === selectedTopic);
+      return topic?.topicName || null;
+    }
+    return null;
+  }, [selectedTopic, topics]);
+
+  const neetNetScore = sessionStats.neetMarksGained - sessionStats.neetMarksLost;
+  const neetPercentile = useMemo(() => {
+    const maxMarks = sessionStats.questionsAttempted * 4;
+    if (maxMarks === 0) return 0;
+    const percentage = (neetNetScore / maxMarks) * 100;
+    if (percentage >= 90) return 99;
+    if (percentage >= 80) return 95;
+    if (percentage >= 70) return 85;
+    if (percentage >= 60) return 70;
+    if (percentage >= 50) return 50;
+    if (percentage >= 40) return 30;
+    return 10;
+  }, [neetNetScore, sessionStats.questionsAttempted]);
+
+  const neet720Equivalent = useMemo(() => {
+    if (sessionStats.questionsAttempted === 0) return 0;
+    const accuracy = sessionStats.correctAnswers / sessionStats.questionsAttempted;
+    return Math.round(accuracy * 720);
+  }, [sessionStats.correctAnswers, sessionStats.questionsAttempted]);
 
   const { data: comboData } = useQuery<{ currentCombo: number; maxCombo: number }>({
     queryKey: ['/api/game/combo', user?.id, effectiveSubject],
@@ -276,6 +315,8 @@ export default function Practice() {
       setShowSolution(true);
       setIsTimerRunning(false);
 
+      const neetMarksChange = variables.isCorrect ? 4 : (variables.selectedAnswer ? 1 : 0);
+      
       setSessionStats(prev => ({
         ...prev,
         questionsAttempted: prev.questionsAttempted + 1,
@@ -286,7 +327,13 @@ export default function Practice() {
         xpEarned: prev.xpEarned + variables.pointsEarned,
         maxCombo: Math.max(prev.maxCombo, variables.isCorrect ? variables.prevCombo + 1 : 0),
         currentLevel: level,
+        neetMarksGained: variables.isCorrect ? prev.neetMarksGained + 4 : prev.neetMarksGained,
+        neetMarksLost: !variables.isCorrect && variables.selectedAnswer ? prev.neetMarksLost + 1 : prev.neetMarksLost,
       }));
+
+      if (neetMarkingMode) {
+        setNeetScore(prev => prev + (variables.isCorrect ? 4 : (variables.selectedAnswer ? -1 : 0)));
+      }
 
       if (variables.isCorrect) {
         addPoints(variables.pointsEarned);
@@ -436,6 +483,7 @@ export default function Practice() {
     setShowSolution(false);
     setSubmittedAnswer(null);
     setShowKillCam(false);
+    setNeetScore(0);
     setSessionStats({
       questionsAttempted: 0,
       correctAnswers: 0,
@@ -446,8 +494,15 @@ export default function Practice() {
       maxCombo: 0,
       currentLevel: level,
       levelProgress: 0,
+      neetMarksGained: 0,
+      neetMarksLost: 0,
     });
     refetch();
+  };
+
+  const handleClearTopicFilter = () => {
+    setSelectedTopic("all");
+    handleFilterChange();
   };
 
   const handleFilterChange = () => {
@@ -785,6 +840,89 @@ export default function Practice() {
             )}
           </Card>
 
+          <Card className="mb-6" data-testid="card-neet-mode">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">NEET Marking Mode</CardTitle>
+                  <Badge variant="secondary" className="text-xs">-1/+4</Badge>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="neet-mode"
+                      checked={neetMarkingMode}
+                      onCheckedChange={(checked) => {
+                        setNeetMarkingMode(checked);
+                        if (checked) {
+                          setNeetScore(0);
+                        }
+                      }}
+                      data-testid="switch-neet-mode"
+                    />
+                    <Label htmlFor="neet-mode" className="text-sm font-medium">
+                      {neetMarkingMode ? "Enabled" : "Disabled"}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+
+            {neetMarkingMode && (
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-center gap-6 p-4 bg-muted/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Plus className="h-4 w-4" />
+                      <span className="text-2xl font-bold">{sessionStats.neetMarksGained}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Marks Gained</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-center">
+                    <div className="flex items-center gap-1 text-red-600">
+                      <Minus className="h-4 w-4" />
+                      <span className="text-2xl font-bold">{sessionStats.neetMarksLost}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Marks Lost</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${neetNetScore >= 0 ? 'text-primary' : 'text-red-600'}`}>
+                      {neetNetScore >= 0 ? '+' : ''}{neetNetScore}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Net Score</p>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {currentTopicName && (
+            <Card className="mb-6 border-primary/50 bg-primary/5" data-testid="card-topic-mode">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Topic-Focused Practice:</span>
+                    <Badge variant="default" className="text-sm">{currentTopicName}</Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearTopicFilter}
+                    data-testid="button-clear-topic"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Clear Topic Filter
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -793,7 +931,7 @@ export default function Practice() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Subject</label>
                   <Select
@@ -864,6 +1002,51 @@ export default function Practice() {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-sm font-medium">PYQ Filter</label>
+                  <div className="flex items-center gap-2 h-10">
+                    <Switch
+                      id="pyq-only"
+                      checked={pyqOnly}
+                      onCheckedChange={(checked) => {
+                        setPyqOnly(checked);
+                        if (!checked) setPyqYear("all");
+                        handleFilterChange();
+                      }}
+                      data-testid="switch-pyq-only"
+                    />
+                    <Label htmlFor="pyq-only" className="text-sm flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      PYQ Only
+                    </Label>
+                  </div>
+                </div>
+
+                {pyqOnly && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">PYQ Year</label>
+                    <Select
+                      value={pyqYear}
+                      onValueChange={(value) => {
+                        setPyqYear(value);
+                        handleFilterChange();
+                      }}
+                    >
+                      <SelectTrigger data-testid="select-pyq-year">
+                        <SelectValue placeholder="All Years" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Years</SelectItem>
+                        {[2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            NEET {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Show</label>
                   <div className="flex items-center gap-2 h-10">
                     <Switch
@@ -882,7 +1065,7 @@ export default function Practice() {
                 </div>
               </div>
 
-              {(selectedSubject !== "all" || selectedTopic !== "all" || selectedDifficulty !== "all" || showFlaggedOnly) && (
+              {(selectedSubject !== "all" || selectedTopic !== "all" || selectedDifficulty !== "all" || showFlaggedOnly || pyqOnly) && (
                 <div className="flex gap-2 mt-4 flex-wrap">
                   <span className="text-sm text-muted-foreground">Active filters:</span>
                   {selectedSubject !== "all" && (
@@ -907,6 +1090,13 @@ export default function Practice() {
                     <Badge variant="secondary" className="gap-1">
                       Flagged Only
                       <button onClick={() => { setShowFlaggedOnly(false); handleFilterChange(); }}>×</button>
+                    </Badge>
+                  )}
+                  {pyqOnly && (
+                    <Badge variant="secondary" className="gap-1 bg-purple-500/10 text-purple-600">
+                      <Calendar className="h-3 w-3" />
+                      PYQ Only {pyqYear !== "all" ? `(${pyqYear})` : ""}
+                      <button onClick={() => { setPyqOnly(false); setPyqYear("all"); handleFilterChange(); }}>×</button>
                     </Badge>
                   )}
                 </div>
@@ -1046,10 +1236,11 @@ export default function Practice() {
                   questionNumber={currentQuestionIndex + 1}
                   difficulty={getDifficultyLabel(currentQuestion.difficultyLevel)}
                   subject={currentQuestion.topicId.toString()}
-                  topic="NEET Prep"
+                  topic={currentTopicName || "NEET Prep"}
                   question={currentQuestion.questionText}
                   options={currentQuestion.options}
                   isBookmarked={isBookmarked}
+                  pyqYear={(currentQuestion as any).pyqYear}
                   onToggleBookmark={() => setIsBookmarked(!isBookmarked)}
                   onSubmit={handleSubmit}
                   onSkip={handleNext}
@@ -1205,34 +1396,106 @@ export default function Practice() {
               </motion.div>
 
               {sessionStats.questionsAttempted > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="h-48"
-                >
-                  <p className="text-sm font-medium mb-2">Performance Overview</p>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Correct', value: sessionStats.correctAnswers, color: '#22c55e' },
-                          { name: 'Incorrect', value: sessionStats.incorrectAnswers, color: '#ef4444' },
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        <Cell fill="#22c55e" />
-                        <Cell fill="#ef4444" />
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </motion.div>
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.55 }}
+                    className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg p-4 border border-primary/20"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">NEET Score Analysis</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                      <div className="bg-white/50 dark:bg-black/20 rounded-md p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-green-600">
+                          <Plus className="h-3 w-3" />
+                          <span className="font-bold">{sessionStats.neetMarksGained}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Marks Gained</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded-md p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-red-600">
+                          <Minus className="h-3 w-3" />
+                          <span className="font-bold">{sessionStats.neetMarksLost}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Negative Marks</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded-md p-2 text-center">
+                        <div className={`font-bold ${neetNetScore >= 0 ? 'text-primary' : 'text-red-600'}`}>
+                          {neetNetScore >= 0 ? '+' : ''}{neetNetScore}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Net Score</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded-md p-2 text-center">
+                        <div className="font-bold text-purple-600">{neet720Equivalent}/720</div>
+                        <p className="text-[10px] text-muted-foreground">720 Equivalent</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Estimated Percentile</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {neetPercentile}th Percentile
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground">NEET Cutoff Comparison:</span>
+                        <Badge 
+                          variant={neet720Equivalent >= 650 ? "default" : "outline"} 
+                          className={`text-[10px] ${neet720Equivalent >= 650 ? 'bg-green-500' : ''}`}
+                        >
+                          650+ {neet720Equivalent >= 650 ? '✓' : ''}
+                        </Badge>
+                        <Badge 
+                          variant={neet720Equivalent >= 600 ? "default" : "outline"} 
+                          className={`text-[10px] ${neet720Equivalent >= 600 && neet720Equivalent < 650 ? 'bg-blue-500' : neet720Equivalent >= 650 ? 'bg-green-500' : ''}`}
+                        >
+                          600+ {neet720Equivalent >= 600 ? '✓' : ''}
+                        </Badge>
+                        <Badge 
+                          variant={neet720Equivalent >= 550 ? "default" : "outline"} 
+                          className={`text-[10px] ${neet720Equivalent >= 550 && neet720Equivalent < 600 ? 'bg-yellow-500' : neet720Equivalent >= 600 ? 'bg-green-500' : ''}`}
+                        >
+                          550+ {neet720Equivalent >= 550 ? '✓' : ''}
+                        </Badge>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="h-48"
+                  >
+                    <p className="text-sm font-medium mb-2">Performance Overview</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Correct', value: sessionStats.correctAnswers, color: '#22c55e' },
+                            { name: 'Incorrect', value: sessionStats.incorrectAnswers, color: '#ef4444' },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          <Cell fill="#22c55e" />
+                          <Cell fill="#ef4444" />
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </motion.div>
+                </>
               )}
             </div>
 

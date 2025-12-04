@@ -35,6 +35,7 @@ export const questions = pgTable("questions", {
   difficultyLevel: integer("difficulty_level").notNull(),
   sourceType: varchar("source_type", { length: 50 }).notNull(),
   relatedTopics: jsonb("related_topics").$type<string[]>(),
+  pyqYear: integer("pyq_year"),
 });
 
 export const users = pgTable("users", {
