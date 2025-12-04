@@ -1,9 +1,10 @@
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ export function Header({
   studyStreak = 7,
 }: HeaderProps) {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const [location, setLocation] = useLocation();
   const subjects = ["Physics", "Chemistry", "Biology"];
@@ -49,7 +51,6 @@ export function Header({
         method: 'POST',
         credentials: 'include',
       });
-      // Invalidate auth cache to clear user data
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       setLocation('/login');
     } catch (error) {
@@ -104,13 +105,29 @@ export function Header({
             <Play className="h-4 w-4 mr-1.5" />
             Simulations
           </Button>
+          {user?.isAdmin && (
+            <>
+              <div className="h-4 w-px bg-border mx-2" />
+              <Button
+                variant={location.startsWith('/admin') ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setLocation('/admin')}
+                data-testid="button-admin"
+                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                style={{ borderBottom: 'none !important' }}
+              >
+                <Shield className="h-4 w-4 mr-1.5" />
+                Admin
+              </Button>
+            </>
+          )}
         </nav>
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -120,6 +137,7 @@ export function Header({
                   key={subject}
                   onClick={() => handleSubjectClick(subject)}
                   className={activeSubject === subject ? "bg-accent" : ""}
+                  data-testid={`menu-mobile-${subject.toLowerCase()}`}
                 >
                   {subject}
                 </DropdownMenuItem>
@@ -127,6 +145,7 @@ export function Header({
               <DropdownMenuItem
                 onClick={() => setLocation('/community')}
                 className={location === '/community' ? "bg-accent" : ""}
+                data-testid="menu-mobile-community"
               >
                 <Users className="h-4 w-4 mr-2" />
                 Community
@@ -134,10 +153,21 @@ export function Header({
               <DropdownMenuItem
                 onClick={() => setLocation('/simulations')}
                 className={location === '/simulations' ? "bg-accent" : ""}
+                data-testid="menu-mobile-simulations"
               >
                 <Play className="h-4 w-4 mr-2" />
                 Simulations
               </DropdownMenuItem>
+              {user?.isAdmin && (
+                <DropdownMenuItem
+                  onClick={() => setLocation('/admin')}
+                  className={location.startsWith('/admin') ? "bg-accent" : ""}
+                  data-testid="menu-mobile-admin"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -177,7 +207,9 @@ export function Header({
             <DropdownMenuTrigger asChild>
               <Avatar className="h-9 w-9 cursor-pointer hover:opacity-80 transition-opacity" data-testid="avatar-user">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-primary text-primary-foreground">AB</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {user?.username?.slice(0, 2).toUpperCase() || "AB"}
+                </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -189,6 +221,12 @@ export function Header({
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Mentor Dashboard
               </DropdownMenuItem>
+              {user?.isAdmin && (
+                <DropdownMenuItem onClick={() => setLocation('/admin')} data-testid="menu-admin">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin Hub
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +28,8 @@ import {
   Upload, 
   ArrowLeft,
   Eye,
-  EyeOff
+  EyeOff,
+  FolderOpen
 } from "lucide-react";
 
 interface Topic {
@@ -85,6 +86,7 @@ interface Flashcard {
 }
 
 const SUBJECTS = ["Physics", "Chemistry", "Biology", "Botany", "Zoology"];
+const CLASS_LEVELS = ["11", "12"];
 const DIFFICULTY_OPTIONS = [
   { value: "1", label: "Easy" },
   { value: "2", label: "Medium" },
@@ -94,7 +96,25 @@ const DIFFICULTY_OPTIONS = [
 export default function AdminContentManager() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const { toast } = useToast();
+
+  const searchParams = new URLSearchParams(searchString);
+  const initialTab = searchParams.get("tab") || "questions";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const tabParam = params.get("tab");
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [searchString]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setLocation(`/admin/content?tab=${value}`, { replace: true });
+  };
 
   if (!user || !user.isAdmin) {
     setLocation("/");
@@ -112,7 +132,7 @@ export default function AdminContentManager() {
             data-testid="button-back-admin"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Admin
+            Back to Admin Hub
           </Button>
         </div>
         
@@ -121,8 +141,8 @@ export default function AdminContentManager() {
           <h1 className="text-4xl font-bold">Content Manager</h1>
         </div>
 
-        <Tabs defaultValue="questions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto" data-testid="tabs-content-manager">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 h-auto" data-testid="tabs-content-manager">
             <TabsTrigger value="questions" className="py-3" data-testid="tab-questions">
               <FileText className="h-4 w-4 mr-2" />
               Questions
@@ -138,6 +158,10 @@ export default function AdminContentManager() {
             <TabsTrigger value="flashcards" className="py-3" data-testid="tab-flashcards">
               <Layers className="h-4 w-4 mr-2" />
               Flashcards
+            </TabsTrigger>
+            <TabsTrigger value="chapters" className="py-3" data-testid="tab-chapters">
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Chapters
             </TabsTrigger>
           </TabsList>
 
@@ -155,6 +179,10 @@ export default function AdminContentManager() {
           
           <TabsContent value="flashcards">
             <FlashcardsCreator />
+          </TabsContent>
+
+          <TabsContent value="chapters">
+            <ChapterContentManager />
           </TabsContent>
         </Tabs>
       </div>
@@ -656,11 +684,11 @@ function QuestionForm({
       </div>
 
       <div>
-        <Label>Solution Explanation</Label>
+        <Label>Solution Detail</Label>
         <Textarea
           value={formData.solutionDetail}
           onChange={(e) => setFormData({ ...formData, solutionDetail: e.target.value })}
-          placeholder="Explain the solution..."
+          placeholder="Enter the detailed solution..."
           rows={4}
           data-testid="input-solution"
         />
@@ -682,9 +710,9 @@ function TopicsManager() {
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
 
   const [formData, setFormData] = useState({
-    topicName: "",
     subject: "",
-    classLevel: "11",
+    classLevel: "",
+    topicName: "",
     ncertChapter: "",
   });
 
@@ -721,15 +749,11 @@ function TopicsManager() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/topics"] });
       toast({ title: "Topic deleted successfully" });
     },
-    onError: (error: any) => toast({ 
-      title: "Failed to delete topic", 
-      description: error?.message || "Topic may have associated questions",
-      variant: "destructive" 
-    }),
+    onError: () => toast({ title: "Failed to delete topic", variant: "destructive" }),
   });
 
   const resetForm = () => {
-    setFormData({ topicName: "", subject: "", classLevel: "11", ncertChapter: "" });
+    setFormData({ subject: "", classLevel: "", topicName: "", ncertChapter: "" });
   };
 
   const handleSubmit = () => {
@@ -739,9 +763,9 @@ function TopicsManager() {
   const handleEdit = (topic: Topic) => {
     setEditingTopic(topic);
     setFormData({
-      topicName: topic.topicName,
       subject: topic.subject,
       classLevel: topic.classLevel,
+      topicName: topic.topicName,
       ncertChapter: topic.ncertChapter || "",
     });
     setIsEditOpen(true);
@@ -761,9 +785,7 @@ function TopicsManager() {
               <BookOpen className="h-5 w-5" />
               Topics Manager
             </CardTitle>
-            <CardDescription>
-              Manage content topics ({topics.length} total)
-            </CardDescription>
+            <CardDescription>Organize questions by topic ({topics.length} topics)</CardDescription>
           </div>
           <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -808,6 +830,7 @@ function TopicsManager() {
                   <TableHead>Topic Name</TableHead>
                   <TableHead className="w-24">Subject</TableHead>
                   <TableHead className="w-20">Class</TableHead>
+                  <TableHead className="w-32">NCERT Chapter</TableHead>
                   <TableHead className="w-24">Questions</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
                 </TableRow>
@@ -820,7 +843,10 @@ function TopicsManager() {
                     <TableCell>
                       <Badge variant="outline">{topic.subject}</Badge>
                     </TableCell>
-                    <TableCell>{topic.classLevel}</TableCell>
+                    <TableCell>Class {topic.classLevel}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {topic.ncertChapter || "-"}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{topic.questionCount}</Badge>
                     </TableCell>
@@ -885,16 +911,6 @@ function TopicForm({
 }) {
   return (
     <div className="space-y-4">
-      <div>
-        <Label>Topic Name</Label>
-        <Input
-          value={formData.topicName}
-          onChange={(e) => setFormData({ ...formData, topicName: e.target.value })}
-          placeholder="Enter topic name"
-          data-testid="input-topic-name"
-        />
-      </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Subject</Label>
@@ -922,19 +938,30 @@ function TopicForm({
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="11">Class 11</SelectItem>
-              <SelectItem value="12">Class 12</SelectItem>
+              {CLASS_LEVELS.map((c) => (
+                <SelectItem key={c} value={c}>Class {c}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div>
-        <Label>NCERT Chapter Reference (Optional)</Label>
+        <Label>Topic Name</Label>
+        <Input
+          value={formData.topicName}
+          onChange={(e) => setFormData({ ...formData, topicName: e.target.value })}
+          placeholder="Enter topic name"
+          data-testid="input-topic-name"
+        />
+      </div>
+
+      <div>
+        <Label>NCERT Chapter (Optional)</Label>
         <Input
           value={formData.ncertChapter}
           onChange={(e) => setFormData({ ...formData, ncertChapter: e.target.value })}
-          placeholder="e.g., Chapter 1: The Living World"
+          placeholder="e.g., Chapter 1: Physical World"
           data-testid="input-ncert-chapter"
         />
       </div>
@@ -951,6 +978,8 @@ function TopicForm({
 function MockTestsBuilder() {
   const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingTest, setEditingTest] = useState<MockTest | null>(null);
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
 
   const [formData, setFormData] = useState({
@@ -966,7 +995,10 @@ function MockTestsBuilder() {
     queryKey: ["/api/admin/mock-tests"],
   });
 
-  const { data: questionsData } = useQuery<{ questions: Question[] }>({
+  const { data: questionsData } = useQuery<{
+    questions: Question[];
+    pagination: any;
+  }>({
     queryKey: ["/api/admin/questions"],
   });
 
@@ -979,6 +1011,18 @@ function MockTestsBuilder() {
       resetForm();
     },
     onError: () => toast({ title: "Failed to create mock test", variant: "destructive" }),
+  });
+
+  const updateTestMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => 
+      apiRequest("PUT", `/api/admin/mock-tests/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/mock-tests"] });
+      toast({ title: "Mock test updated successfully" });
+      setIsEditOpen(false);
+      setEditingTest(null);
+    },
+    onError: () => toast({ title: "Failed to update mock test", variant: "destructive" }),
   });
 
   const deleteTestMutation = useMutation({
@@ -1025,6 +1069,33 @@ function MockTestsBuilder() {
     });
   };
 
+  const handleEdit = (test: MockTest) => {
+    setEditingTest(test);
+    setFormData({
+      title: test.title,
+      testType: test.testType,
+      durationMinutes: test.durationMinutes.toString(),
+      subject: test.subject || "",
+      passingPercentage: test.passingPercentage?.toString() || "40",
+      instructions: test.instructions || "",
+    });
+    setSelectedQuestions(test.questionsList || []);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = () => {
+    if (!editingTest) return;
+    updateTestMutation.mutate({ 
+      id: editingTest.id, 
+      data: {
+        ...formData,
+        durationMinutes: parseInt(formData.durationMinutes),
+        passingPercentage: parseInt(formData.passingPercentage),
+        questionsList: selectedQuestions,
+      }
+    });
+  };
+
   const toggleQuestion = (id: number) => {
     setSelectedQuestions(prev => 
       prev.includes(id) 
@@ -1057,120 +1128,16 @@ function MockTestsBuilder() {
               <DialogHeader>
                 <DialogTitle>Create New Mock Test</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Test Name</Label>
-                    <Input
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Enter test name"
-                      data-testid="input-test-name"
-                    />
-                  </div>
-                  <div>
-                    <Label>Test Type</Label>
-                    <Select 
-                      value={formData.testType} 
-                      onValueChange={(v) => setFormData({ ...formData, testType: v })}
-                    >
-                      <SelectTrigger data-testid="select-test-type">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="practice">Practice</SelectItem>
-                        <SelectItem value="full_mock">Full Mock</SelectItem>
-                        <SelectItem value="chapter_test">Chapter Test</SelectItem>
-                        <SelectItem value="pyq">Previous Year</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Duration (minutes)</Label>
-                    <Input
-                      type="number"
-                      value={formData.durationMinutes}
-                      onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                      data-testid="input-duration"
-                    />
-                  </div>
-                  <div>
-                    <Label>Subject</Label>
-                    <Select 
-                      value={formData.subject} 
-                      onValueChange={(v) => setFormData({ ...formData, subject: v })}
-                    >
-                      <SelectTrigger data-testid="select-test-subject">
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Subjects</SelectItem>
-                        {SUBJECTS.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Passing %</Label>
-                    <Input
-                      type="number"
-                      value={formData.passingPercentage}
-                      onChange={(e) => setFormData({ ...formData, passingPercentage: e.target.value })}
-                      data-testid="input-passing-percentage"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Instructions</Label>
-                  <Textarea
-                    value={formData.instructions}
-                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                    placeholder="Test instructions for students..."
-                    rows={3}
-                    data-testid="input-instructions"
-                  />
-                </div>
-
-                <div>
-                  <Label className="mb-2 block">
-                    Select Questions ({selectedQuestions.length} selected)
-                  </Label>
-                  <ScrollArea className="h-48 border rounded-md p-2">
-                    {questionsData?.questions?.map((q) => (
-                      <div
-                        key={q.id}
-                        className={`p-2 rounded cursor-pointer mb-1 ${
-                          selectedQuestions.includes(q.id) 
-                            ? "bg-primary/20 border border-primary" 
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => toggleQuestion(q.id)}
-                        data-testid={`question-select-${q.id}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{q.subject || "N/A"}</Badge>
-                          <span className="text-sm line-clamp-1">{q.questionText}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </ScrollArea>
-                </div>
-
-                <DialogFooter>
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={createTestMutation.isPending}
-                    data-testid="button-submit-test"
-                  >
-                    Create Test
-                  </Button>
-                </DialogFooter>
-              </div>
+              <MockTestForm
+                formData={formData}
+                setFormData={setFormData}
+                selectedQuestions={selectedQuestions}
+                toggleQuestion={toggleQuestion}
+                questions={questionsData?.questions || []}
+                onSubmit={handleSubmit}
+                isPending={createTestMutation.isPending}
+                submitLabel="Create Test"
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -1232,14 +1199,24 @@ function MockTestsBuilder() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteTestMutation.mutate(test.id)}
-                        data-testid={`button-delete-test-${test.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(test)}
+                          data-testid={`button-edit-test-${test.id}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteTestMutation.mutate(test.id)}
+                          data-testid={`button-delete-test-${test.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1247,17 +1224,174 @@ function MockTestsBuilder() {
             </Table>
           </ScrollArea>
         )}
+
+        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingTest(null); resetForm(); }}}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Mock Test</DialogTitle>
+            </DialogHeader>
+            <MockTestForm
+              formData={formData}
+              setFormData={setFormData}
+              selectedQuestions={selectedQuestions}
+              toggleQuestion={toggleQuestion}
+              questions={questionsData?.questions || []}
+              onSubmit={handleUpdate}
+              isPending={updateTestMutation.isPending}
+              submitLabel="Update Test"
+            />
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
+  );
+}
+
+function MockTestForm({
+  formData,
+  setFormData,
+  selectedQuestions,
+  toggleQuestion,
+  questions,
+  onSubmit,
+  isPending,
+  submitLabel,
+}: {
+  formData: any;
+  setFormData: (data: any) => void;
+  selectedQuestions: number[];
+  toggleQuestion: (id: number) => void;
+  questions: Question[];
+  onSubmit: () => void;
+  isPending: boolean;
+  submitLabel: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Test Name</Label>
+          <Input
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="Enter test name"
+            data-testid="input-test-name"
+          />
+        </div>
+        <div>
+          <Label>Test Type</Label>
+          <Select 
+            value={formData.testType} 
+            onValueChange={(v) => setFormData({ ...formData, testType: v })}
+          >
+            <SelectTrigger data-testid="select-test-type">
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="practice">Practice</SelectItem>
+              <SelectItem value="full_mock">Full Mock</SelectItem>
+              <SelectItem value="chapter_test">Chapter Test</SelectItem>
+              <SelectItem value="pyq">Previous Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label>Duration (minutes)</Label>
+          <Input
+            type="number"
+            value={formData.durationMinutes}
+            onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+            data-testid="input-duration"
+          />
+        </div>
+        <div>
+          <Label>Subject</Label>
+          <Select 
+            value={formData.subject} 
+            onValueChange={(v) => setFormData({ ...formData, subject: v })}
+          >
+            <SelectTrigger data-testid="select-test-subject">
+              <SelectValue placeholder="Select subject" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Subjects</SelectItem>
+              {SUBJECTS.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Passing %</Label>
+          <Input
+            type="number"
+            value={formData.passingPercentage}
+            onChange={(e) => setFormData({ ...formData, passingPercentage: e.target.value })}
+            data-testid="input-passing-percentage"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Instructions</Label>
+        <Textarea
+          value={formData.instructions}
+          onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+          placeholder="Test instructions for students..."
+          rows={3}
+          data-testid="input-instructions"
+        />
+      </div>
+
+      <div>
+        <Label className="mb-2 block">
+          Select Questions ({selectedQuestions.length} selected)
+        </Label>
+        <ScrollArea className="h-48 border rounded-md p-2">
+          {questions.map((q) => (
+            <div
+              key={q.id}
+              className={`p-2 rounded cursor-pointer mb-1 ${
+                selectedQuestions.includes(q.id) 
+                  ? "bg-primary/20 border border-primary" 
+                  : "hover:bg-muted"
+              }`}
+              onClick={() => toggleQuestion(q.id)}
+              data-testid={`question-select-${q.id}`}
+            >
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">{q.subject || "N/A"}</Badge>
+                <span className="text-sm line-clamp-1">{q.questionText}</span>
+              </div>
+            </div>
+          ))}
+        </ScrollArea>
+      </div>
+
+      <DialogFooter>
+        <Button 
+          onClick={onSubmit} 
+          disabled={isPending}
+          data-testid="button-submit-test"
+        >
+          {submitLabel}
+        </Button>
+      </DialogFooter>
+    </div>
   );
 }
 
 function FlashcardsCreator() {
   const { toast } = useToast();
   const [isAddDeckOpen, setIsAddDeckOpen] = useState(false);
+  const [isEditDeckOpen, setIsEditDeckOpen] = useState(false);
   const [isAddCardsOpen, setIsAddCardsOpen] = useState(false);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<FlashcardDeck | null>(null);
+  const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null);
   const [bulkJson, setBulkJson] = useState("");
 
   const [deckFormData, setDeckFormData] = useState({
@@ -1299,6 +1433,18 @@ function FlashcardsCreator() {
       resetDeckForm();
     },
     onError: () => toast({ title: "Failed to create deck", variant: "destructive" }),
+  });
+
+  const updateDeckMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => 
+      apiRequest("PUT", `/api/admin/flashcard-decks/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/flashcard-decks"] });
+      toast({ title: "Deck updated successfully" });
+      setIsEditDeckOpen(false);
+      setEditingDeck(null);
+    },
+    onError: () => toast({ title: "Failed to update deck", variant: "destructive" }),
   });
 
   const deleteDeckMutation = useMutation({
@@ -1362,6 +1508,28 @@ function FlashcardsCreator() {
     });
   };
 
+  const handleEditDeck = (deck: FlashcardDeck) => {
+    setEditingDeck(deck);
+    setDeckFormData({
+      name: deck.name,
+      subject: deck.subject || "",
+      topicId: deck.topicId?.toString() || "",
+      description: deck.description || "",
+    });
+    setIsEditDeckOpen(true);
+  };
+
+  const handleUpdateDeck = () => {
+    if (!editingDeck) return;
+    updateDeckMutation.mutate({
+      id: editingDeck.id,
+      data: {
+        ...deckFormData,
+        topicId: deckFormData.topicId ? parseInt(deckFormData.topicId) : null,
+      },
+    });
+  };
+
   const handleAddCard = () => {
     if (!selectedDeck) return;
     addCardsMutation.mutate({
@@ -1412,72 +1580,14 @@ function FlashcardsCreator() {
               <DialogHeader>
                 <DialogTitle>Create New Flashcard Deck</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Deck Name</Label>
-                  <Input
-                    value={deckFormData.name}
-                    onChange={(e) => setDeckFormData({ ...deckFormData, name: e.target.value })}
-                    placeholder="Enter deck name"
-                    data-testid="input-deck-name"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Subject</Label>
-                    <Select 
-                      value={deckFormData.subject} 
-                      onValueChange={(v) => setDeckFormData({ ...deckFormData, subject: v, topicId: "" })}
-                    >
-                      <SelectTrigger data-testid="select-deck-subject">
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SUBJECTS.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Topic (Optional)</Label>
-                    <Select 
-                      value={deckFormData.topicId} 
-                      onValueChange={(v) => setDeckFormData({ ...deckFormData, topicId: v })}
-                    >
-                      <SelectTrigger data-testid="select-deck-topic">
-                        <SelectValue placeholder="Select topic" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredTopics.map((t) => (
-                          <SelectItem key={t.id} value={t.id.toString()}>{t.topicName}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Description (Optional)</Label>
-                  <Textarea
-                    value={deckFormData.description}
-                    onChange={(e) => setDeckFormData({ ...deckFormData, description: e.target.value })}
-                    placeholder="Deck description..."
-                    data-testid="input-deck-description"
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button 
-                    onClick={handleCreateDeck} 
-                    disabled={createDeckMutation.isPending}
-                    data-testid="button-submit-deck"
-                  >
-                    Create Deck
-                  </Button>
-                </DialogFooter>
-              </div>
+              <FlashcardDeckForm
+                formData={deckFormData}
+                setFormData={setDeckFormData}
+                topics={filteredTopics}
+                onSubmit={handleCreateDeck}
+                isPending={createDeckMutation.isPending}
+                submitLabel="Create Deck"
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -1519,14 +1629,24 @@ function FlashcardsCreator() {
                             <span className="text-xs text-muted-foreground">{deck.cardCount} cards</span>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => { e.stopPropagation(); deleteDeckMutation.mutate(deck.id); }}
-                          data-testid={`button-delete-deck-${deck.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); handleEditDeck(deck); }}
+                            data-testid={`button-edit-deck-${deck.id}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); deleteDeckMutation.mutate(deck.id); }}
+                            data-testid={`button-delete-deck-${deck.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1553,16 +1673,16 @@ function FlashcardsCreator() {
                       <DialogHeader>
                         <DialogTitle>Bulk Import Cards</DialogTitle>
                         <DialogDescription>
-                          Paste JSON array of cards. Each card should have: front, back
+                          Paste JSON array of cards with "front" and "back" fields
                         </DialogDescription>
                       </DialogHeader>
                       <Textarea
                         value={bulkJson}
                         onChange={(e) => setBulkJson(e.target.value)}
-                        placeholder='[{"front": "Term", "back": "Definition"}]'
+                        placeholder='[{"front": "Question", "back": "Answer"}, ...]'
                         rows={8}
                         className="font-mono text-sm"
-                        data-testid="textarea-bulk-cards-json"
+                        data-testid="textarea-bulk-cards"
                       />
                       <DialogFooter>
                         <Button
@@ -1575,6 +1695,7 @@ function FlashcardsCreator() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+
                   <Dialog open={isAddCardsOpen} onOpenChange={setIsAddCardsOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" data-testid="button-add-card">
@@ -1588,26 +1709,26 @@ function FlashcardsCreator() {
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <Label>Front (Question/Term)</Label>
+                          <Label>Front (Question)</Label>
                           <Textarea
                             value={cardFormData.front}
                             onChange={(e) => setCardFormData({ ...cardFormData, front: e.target.value })}
-                            placeholder="Enter the front side..."
+                            placeholder="Enter question..."
                             data-testid="input-card-front"
                           />
                         </div>
                         <div>
-                          <Label>Back (Answer/Definition)</Label>
+                          <Label>Back (Answer)</Label>
                           <Textarea
                             value={cardFormData.back}
                             onChange={(e) => setCardFormData({ ...cardFormData, back: e.target.value })}
-                            placeholder="Enter the back side..."
+                            placeholder="Enter answer..."
                             data-testid="input-card-back"
                           />
                         </div>
                         <DialogFooter>
-                          <Button 
-                            onClick={handleAddCard} 
+                          <Button
+                            onClick={handleAddCard}
                             disabled={addCardsMutation.isPending}
                             data-testid="button-submit-card"
                           >
@@ -1622,44 +1743,277 @@ function FlashcardsCreator() {
             </div>
 
             {!selectedDeck ? (
-              <div className="text-center py-12 text-muted-foreground border rounded-lg">
-                <p>Select a deck to view and manage cards</p>
-              </div>
-            ) : !deckCards.length ? (
-              <div className="text-center py-12 text-muted-foreground border rounded-lg">
-                <p>No cards in this deck yet</p>
+              <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                <p>Select a deck to view cards</p>
               </div>
             ) : (
-              <ScrollArea className="h-[400px] border rounded-lg">
-                <div className="p-2 space-y-2">
-                  {deckCards.map((card, idx) => (
-                    <div
-                      key={card.id}
-                      className="p-3 rounded-lg bg-muted/50 border"
-                      data-testid={`flashcard-${card.id}`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className="text-xs text-muted-foreground mb-1">Card {idx + 1}</div>
-                          <div className="text-sm font-medium mb-2">{card.front}</div>
-                          <div className="text-sm text-muted-foreground">{card.back}</div>
+              <ScrollArea className="h-[350px] border rounded-lg p-2">
+                {deckCards.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No cards in this deck</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {deckCards.map((card) => (
+                      <div
+                        key={card.id}
+                        className="p-3 rounded-lg border hover:bg-muted/50"
+                        data-testid={`card-item-${card.id}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{card.front}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{card.back}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteCardMutation.mutate({ deckId: selectedDeck.id, cardId: card.id })}
+                            data-testid={`button-delete-card-${card.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteCardMutation.mutate({ deckId: selectedDeck.id, cardId: card.id })}
-                          data-testid={`button-delete-card-${card.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </ScrollArea>
             )}
           </div>
         </div>
+
+        <Dialog open={isEditDeckOpen} onOpenChange={(open) => { setIsEditDeckOpen(open); if (!open) { setEditingDeck(null); resetDeckForm(); }}}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Flashcard Deck</DialogTitle>
+            </DialogHeader>
+            <FlashcardDeckForm
+              formData={deckFormData}
+              setFormData={setDeckFormData}
+              topics={filteredTopics}
+              onSubmit={handleUpdateDeck}
+              isPending={updateDeckMutation.isPending}
+              submitLabel="Update Deck"
+            />
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FlashcardDeckForm({
+  formData,
+  setFormData,
+  topics,
+  onSubmit,
+  isPending,
+  submitLabel,
+}: {
+  formData: any;
+  setFormData: (data: any) => void;
+  topics: Topic[];
+  onSubmit: () => void;
+  isPending: boolean;
+  submitLabel: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Deck Name</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Enter deck name"
+          data-testid="input-deck-name"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Subject</Label>
+          <Select 
+            value={formData.subject} 
+            onValueChange={(v) => setFormData({ ...formData, subject: v, topicId: "" })}
+          >
+            <SelectTrigger data-testid="select-deck-subject">
+              <SelectValue placeholder="Select subject" />
+            </SelectTrigger>
+            <SelectContent>
+              {SUBJECTS.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Topic (Optional)</Label>
+          <Select 
+            value={formData.topicId} 
+            onValueChange={(v) => setFormData({ ...formData, topicId: v })}
+          >
+            <SelectTrigger data-testid="select-deck-topic">
+              <SelectValue placeholder="Select topic" />
+            </SelectTrigger>
+            <SelectContent>
+              {topics.map((t) => (
+                <SelectItem key={t.id} value={t.id.toString()}>{t.topicName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label>Description (Optional)</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Deck description..."
+          data-testid="input-deck-description"
+        />
+      </div>
+
+      <DialogFooter>
+        <Button 
+          onClick={onSubmit} 
+          disabled={isPending}
+          data-testid="button-submit-deck"
+        >
+          {submitLabel}
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+function ChapterContentManager() {
+  const { toast } = useToast();
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+
+  const { data: topics = [], isLoading } = useQuery<Topic[]>({
+    queryKey: ["/api/admin/topics"],
+  });
+
+  const filteredTopics = topics.filter(t => {
+    if (selectedSubject && t.subject !== selectedSubject) return false;
+    if (selectedClass && t.classLevel !== selectedClass) return false;
+    return true;
+  });
+
+  const subjectGroups = filteredTopics.reduce((acc, topic) => {
+    const key = `${topic.subject} - Class ${topic.classLevel}`;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(topic);
+    return acc;
+  }, {} as Record<string, Topic[]>);
+
+  return (
+    <Card className="glass-panel">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5" />
+              Chapter Content Manager
+            </CardTitle>
+            <CardDescription>
+              Manage chapter-specific content and organize by subject ({topics.length} chapters)
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-4 mb-6">
+          <div className="w-48">
+            <Label>Filter by Subject</Label>
+            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+              <SelectTrigger data-testid="select-filter-subject">
+                <SelectValue placeholder="All Subjects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Subjects</SelectItem>
+                {SUBJECTS.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-48">
+            <Label>Filter by Class</Label>
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <SelectTrigger data-testid="select-filter-class">
+                <SelectValue placeholder="All Classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Classes</SelectItem>
+                {CLASS_LEVELS.map((c) => (
+                  <SelectItem key={c} value={c}>Class {c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : Object.keys(subjectGroups).length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>No chapters found matching the filters</p>
+          </div>
+        ) : (
+          <ScrollArea className="h-[500px]">
+            <div className="space-y-6">
+              {Object.entries(subjectGroups).map(([group, groupTopics]) => (
+                <div key={group} data-testid={`chapter-group-${group.replace(/\s+/g, '-')}`}>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    {group}
+                    <Badge variant="secondary">{groupTopics.length} chapters</Badge>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {groupTopics.map((topic) => (
+                      <Card 
+                        key={topic.id} 
+                        className="hover:border-primary/50 transition-colors"
+                        data-testid={`chapter-card-${topic.id}`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium">{topic.topicName}</h4>
+                              {topic.ncertChapter && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {topic.ncertChapter}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant="secondary">{topic.questionCount} Q</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 mt-3">
+                            <Badge variant="outline" className="text-xs">{topic.subject}</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Class {topic.classLevel}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );
