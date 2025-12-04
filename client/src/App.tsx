@@ -89,12 +89,12 @@ function Router() {
       </Route>
       <Route path="/physics">
         <ProtectedRoute>
-          <PhysicsContent />
+          <Physics />
         </ProtectedRoute>
       </Route>
-      <Route path="/physics-subject">
+      <Route path="/physics-legacy">
         <ProtectedRoute>
-          <Physics />
+          <PhysicsContent />
         </ProtectedRoute>
       </Route>
       <Route path="/chemistry">

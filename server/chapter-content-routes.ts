@@ -63,12 +63,14 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
   try {
     const { subject, classLevel, chapterNumber } = req.params;
     
+    const normalizedSubject = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
+    
     const [chapter] = await db
       .select()
       .from(chapterContent)
       .where(
         and(
-          eq(chapterContent.subject, subject),
+          eq(chapterContent.subject, normalizedSubject),
           eq(chapterContent.classLevel, classLevel),
           eq(chapterContent.chapterNumber, parseInt(chapterNumber))
         )

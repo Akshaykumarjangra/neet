@@ -388,7 +388,7 @@ function TopicSelectionModal({
               variant="outline"
               className="w-full justify-start text-left h-auto py-3"
               onClick={() => {
-                setLocation(`/chapter/physics/class${classLevel === "11" ? "11" : "12"}/${chapter.chapterNumber}`);
+                setLocation(`/chapter/physics/${classLevel}/${chapter.chapterNumber}`);
                 onOpenChange(false);
               }}
               data-testid={`modal-chapter-${chapter.id}`}
@@ -505,8 +505,7 @@ export default function Physics() {
   }, [physicsChapters]);
 
   const handleChapterClick = (chapter: ChapterData) => {
-    const classPath = selectedClass === "11" ? "class11" : "class12";
-    setLocation(`/chapter/physics/${classPath}/${chapter.chapterNumber}`);
+    setLocation(`/chapter/physics/${selectedClass}/${chapter.chapterNumber}`);
   };
 
   const handleRandomChapter = () => {
