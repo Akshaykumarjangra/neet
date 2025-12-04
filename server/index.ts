@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
+import createMemoryStore from "memorystore";
 import helmet from "helmet";
 import compression from "compression";
 import { rateLimit } from "express-rate-limit";
@@ -55,22 +56,36 @@ if (sessionSecret === "dev-secret-change-in-production" && process.env.NODE_ENV 
   throw new Error("Please set a strong SESSION_SECRET in production");
 }
 
-// Session configuration with PostgreSQL store
+// Session store configuration
+// Use MemoryStore for development to avoid database connection timeout issues
+// Use PostgreSQL store in production for persistence across restarts
+const MemoryStore = createMemoryStore(session);
 const PgSession = ConnectPgSimple(session);
 
-const sessionStore = new PgSession({
-  pool,
-  tableName: "user_sessions",
-  createTableIfMissing: true,
-  errorLog: (err) => {
-    console.error('Session store error (non-fatal):', err.message);
-  },
-});
+let sessionStore: session.Store;
 
-// Handle session store errors gracefully
-sessionStore.on('error', (err) => {
-  console.error('Session store connection error (non-fatal):', err.message);
-});
+if (process.env.NODE_ENV === 'production') {
+  const pgStore = new PgSession({
+    pool,
+    tableName: "user_sessions",
+    createTableIfMissing: true,
+    errorLog: (err) => {
+      console.error('Session store error (non-fatal):', err.message);
+    },
+  });
+  
+  pgStore.on('error', (err) => {
+    console.error('Session store connection error (non-fatal):', err.message);
+  });
+  
+  sessionStore = pgStore;
+  log('Using PostgreSQL session store for production');
+} else {
+  sessionStore = new MemoryStore({
+    checkPeriod: 86400000, // Prune expired entries every 24h
+  });
+  log('Using MemoryStore for development sessions');
+}
 
 export const sessionMiddleware = session({
   store: sessionStore,

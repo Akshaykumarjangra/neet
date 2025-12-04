@@ -97,6 +97,17 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 4, 2025 - Interactive Simulations System
+- **Simulations Library**: New /simulations page with grid of interactive science simulations
+- **Subject Filters**: Filter simulations by Physics, Chemistry, or Biology
+- **PhET Integration**: Embedded PhET simulations (Build a Molecule, Balancing Equations)
+- **Custom Simulations**:
+  - Projectile Motion (Canvas-based physics simulator with velocity, angle, gravity controls)
+  - Circuit Builder (Interactive circuit with battery, resistor, bulb, current flow animation)
+  - 3D Molecule Viewer (Three.js molecules: H₂O, CO₂, CH₄, NH₃, glucose, ethanol)
+- **Chapter Integration**: Added Simulations tab to ChemistryChapter1 with embedded PhET labs
+- **Session Store Fix**: Using MemoryStore for development to prevent database timeouts
+
 ### December 4, 2025 - Admin Content Management System
 - **Content Manager**: New /admin/content page with tabbed interface for managing all LMS content
 - **Questions Manager**: Add/edit/delete questions with bulk JSON import, subject/topic/difficulty filters
@@ -130,6 +141,8 @@ npm run dev  # Starts both frontend (5000) and backend
 - `/mentors` - Public mentor discovery with booking flow
 - `/community` - Public Q&A discussion board
 - `/practice` - Enhanced practice with timer and flagging
+- `/simulations` - Interactive simulations library with filters
+- `/admin/content` - Admin content management system
 
 ## User Preferences
 - Use shadcn/ui components for consistent UI
