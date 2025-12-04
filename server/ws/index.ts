@@ -33,13 +33,13 @@ export class WSServer {
   // Helper to extract userId from session during WebSocket upgrade
   private async extractUserIdFromSession(req: IncomingMessage): Promise<string | null> {
     return new Promise((resolve) => {
-      // Create mock response object
+      // Create mock response object for session middleware
       const res = {
         getHeader: () => {},
         setHeader: () => {},
         writeHead: () => {},
         end: () => {},
-      } as ServerResponse;
+      } as unknown as ServerResponse;
       
       // Run session middleware to populate session
       this.sessionMiddleware(req as any, res as any, () => {
