@@ -142,6 +142,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bookmarked questions endpoint - must be before /:id to avoid route conflict
+  app.get("/api/questions/bookmarked", async (req, res) => {
+    try {
+      // Return empty array as question bookmarks are not yet implemented
+      // This endpoint exists to prevent the /:id route from catching "bookmarked" as an ID
+      res.json([]);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Generation status endpoint - must be before /:id to avoid route conflict
+  app.get("/api/questions/generation-status", async (req, res) => {
+    try {
+      const totalQuestions = await db.select({ count: sql<number>`count(*)` }).from(questions);
+      const totalTopics = await db.select({ count: sql<number>`count(*)` }).from(contentTopics);
+
+      const count = Number(totalQuestions[0].count);
+      const topicCount = Number(totalTopics[0].count);
+
+      res.json({
+        totalQuestions: count,
+        totalTopics: topicCount,
+        estimatedSets: Math.floor(count / 20),
+        progress: Math.min(100, (count / 50000) * 100).toFixed(2),
+      });
+    } catch (error) {
+      console.error("Error fetching generation status:", error);
+      res.status(500).json({ error: "Failed to fetch status" });
+    }
+  });
+
+  // Progress/chapters endpoint for user chapter progress
+  app.get("/api/progress/chapters/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      // Return empty object as this endpoint was missing
+      res.json({});
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/questions/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -307,26 +350,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk question generation endpoints
-  app.get("/api/questions/generation-status", async (req, res) => {
-    try {
-      const totalQuestions = await db.select({ count: sql<number>`count(*)` }).from(questions);
-      const totalTopics = await db.select({ count: sql<number>`count(*)` }).from(contentTopics);
-
-      const count = Number(totalQuestions[0].count);
-      const topicCount = Number(totalTopics[0].count);
-
-      res.json({
-        totalQuestions: count,
-        totalTopics: topicCount,
-        estimatedSets: Math.floor(count / 20),
-        progress: Math.min(100, (count / 50000) * 100).toFixed(2),
-      });
-    } catch (error) {
-      console.error("Error fetching generation status:", error);
-      res.status(500).json({ error: "Failed to fetch status" });
-    }
-  });
-
   app.post("/api/questions/generate-bulk", async (req, res) => {
     try {
       // Start generation in background

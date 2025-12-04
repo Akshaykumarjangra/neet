@@ -37,13 +37,13 @@ router.get("/users", requireAdmin, async (req, res) => {
   try {
     const allUsers = await db.select({
       id: users.id,
-      username: users.username,
+      name: users.name,
       email: users.email,
+      role: users.role,
+      isAdmin: users.isAdmin,
       isPaidUser: users.isPaidUser,
-      adminGranted: users.adminGranted,
-      accessExpiry: users.accessExpiry,
-      openaiTokensUsed: users.openaiTokensUsed,
-      openaiTokensLimit: users.openaiTokensLimit,
+      currentLevel: users.currentLevel,
+      totalPoints: users.totalPoints,
       createdAt: users.createdAt,
     }).from(users);
 
@@ -60,7 +60,7 @@ router.post("/grant-access/:userId", requireAdmin, async (req, res) => {
     const { userId } = req.params;
 
     await db.update(users)
-      .set({ adminGranted: true })
+      .set({ isPaidUser: true })
       .where(eq(users.id, userId));
 
     res.json({ success: true });
@@ -76,7 +76,7 @@ router.post("/revoke-access/:userId", requireAdmin, async (req, res) => {
     const { userId } = req.params;
 
     await db.update(users)
-      .set({ adminGranted: false })
+      .set({ isPaidUser: false })
       .where(eq(users.id, userId));
 
     res.json({ success: true });
@@ -89,10 +89,10 @@ router.post("/revoke-access/:userId", requireAdmin, async (req, res) => {
 // Add a single user with free access
 router.post("/add-user", requireAdmin, async (req, res) => {
   try {
-    const { email, username } = req.body;
+    const { email, name } = req.body;
 
-    if (!email || !username || !email.trim() || !username.trim()) {
-      return res.status(400).json({ error: "Valid email and username required" });
+    if (!email || !name || !email.trim() || !name.trim()) {
+      return res.status(400).json({ error: "Valid email and name required" });
     }
 
     // Generate random password
@@ -101,15 +101,13 @@ router.post("/add-user", requireAdmin, async (req, res) => {
 
     const [newUser] = await db.insert(users).values({
       email: email.trim(),
-      username: username.trim(),
-      password: hashedPassword,
-      adminGranted: true,
-      isPaidUser: false,
+      name: name.trim(),
+      passwordHash: hashedPassword,
+      isPaidUser: true,
     }).returning({
       id: users.id,
-      username: users.username,
+      name: users.name,
       email: users.email,
-      adminGranted: users.adminGranted,
       isPaidUser: users.isPaidUser,
       createdAt: users.createdAt,
     });
@@ -150,8 +148,8 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
       }
 
       try {
-        // Generate username from email
-        const username = trimmedEmail.split('@')[0] + '_' + Math.random().toString(36).slice(-4);
+        // Generate name from email
+        const name = trimmedEmail.split('@')[0] + '_' + Math.random().toString(36).slice(-4);
 
         // Generate random password
         const randomPassword = Math.random().toString(36).slice(-12);
@@ -159,15 +157,13 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
 
         const [newUser] = await db.insert(users).values({
           email: trimmedEmail,
-          username,
-          password: hashedPassword,
-          adminGranted: true,
-          isPaidUser: false,
+          name,
+          passwordHash: hashedPassword,
+          isPaidUser: true,
         }).returning({
           id: users.id,
-          username: users.username,
+          name: users.name,
           email: users.email,
-          adminGranted: users.adminGranted,
           isPaidUser: users.isPaidUser,
           createdAt: users.createdAt,
         });
