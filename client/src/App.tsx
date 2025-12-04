@@ -38,6 +38,7 @@ import Community from "@/pages/Community";
 import Simulations from "@/pages/Simulations";
 import Syllabus from "@/pages/Syllabus";
 import Search from "@/pages/Search";
+import Physics from "@/pages/Physics";
 
 function Router() {
   return (
@@ -89,6 +90,11 @@ function Router() {
       <Route path="/physics">
         <ProtectedRoute>
           <PhysicsContent />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/physics-subject">
+        <ProtectedRoute>
+          <Physics />
         </ProtectedRoute>
       </Route>
       <Route path="/chemistry">

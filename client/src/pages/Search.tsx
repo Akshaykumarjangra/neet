@@ -229,7 +229,7 @@ export default function Search() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <QuickNavigationBar />
+      <QuickNavigationBar currentPath="/search" />
       
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="space-y-6">

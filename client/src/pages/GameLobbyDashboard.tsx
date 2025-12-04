@@ -1,199 +1,395 @@
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { LiveStatsTicker } from "@/components/game/LiveStatsTicker";
-import { SeasonProgressBar } from "@/components/game/SeasonProgressBar";
-import { DropIntoChapter } from "@/components/game/DropIntoChapter";
-import { DailyChallengeCard } from "@/components/game/DailyChallengeCard";
-import { LeaderboardPreview } from "@/components/game/LeaderboardPreview";
-import { XpGainAnimation } from "@/components/game/XpGainAnimation";
-import { DashboardMetrics } from "@/components/DashboardMetrics";
-import { NextBestAction } from "@/components/NextBestAction";
-import { OnboardingModal, useOnboarding } from "@/components/OnboardingModal";
-import { ContinueLearning } from "@/components/ContinueLearning";
-import { WeakAreasCarousel } from "@/components/WeakAreasCarousel";
-import { DueFlashcardsWidget } from "@/components/DueFlashcardsWidget";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useGamification } from "@/hooks/useGamification";
 import { useAuth } from "@/hooks/useAuth";
-import { Atom, Flame, Leaf, Dog, Loader2, Crown, Star, Zap, Dna, Compass, GraduationCap } from "lucide-react";
-import confetti from "canvas-confetti";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Atom,
+  Flame,
+  Leaf,
+  BookOpen,
+  Target,
+  Clock,
+  TrendingUp,
+  Zap,
+  Layers,
+  FileText,
+  Search,
+  Trophy,
+  Crown,
+  Medal,
+  Play,
+  ChevronRight,
+  Sparkles,
+  GraduationCap,
+  Loader2,
+} from "lucide-react";
 
-interface UserStats {
-  totalAttempts: number;
-  correctAnswers: number;
-  accuracy: number;
-  subjectStats: {
-    subject: string;
-    accuracy: number;
-    correct: number;
-    total: number;
-  }[];
+interface CircularProgressProps {
+  value: number;
+  max: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  label: string;
+  sublabel?: string;
+}
+
+function CircularProgress({
+  value,
+  max,
+  size = 80,
+  strokeWidth = 8,
+  color,
+  label,
+  sublabel,
+}: CircularProgressProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const percentage = Math.min((value / max) * 100, 100);
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            fill="none"
+            className="text-muted/30"
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-lg font-bold">{Math.round(percentage)}%</span>
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-medium">{label}</p>
+        {sublabel && (
+          <p className="text-xs text-muted-foreground">{sublabel}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SubjectCardProps {
+  subject: string;
+  icon: React.ElementType;
+  colorClass: string;
+  bgGradient: string;
+  progress: number;
+  chapterCount: number;
+  questionCount: number;
+  lastChapter?: string;
+  onContinue: () => void;
+}
+
+function SubjectCard({
+  subject,
+  icon: Icon,
+  colorClass,
+  bgGradient,
+  progress,
+  chapterCount,
+  questionCount,
+  lastChapter,
+  onContinue,
+}: SubjectCardProps) {
+  const radius = 35;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const strokeColor =
+    colorClass === "blue"
+      ? "#3b82f6"
+      : colorClass === "purple"
+      ? "#a855f7"
+      : "#10b981";
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <Card
+        className="glass-panel cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden group h-full"
+        style={{
+          borderWidth: 2,
+          borderColor:
+            colorClass === "blue"
+              ? "rgba(59, 130, 246, 0.3)"
+              : colorClass === "purple"
+              ? "rgba(168, 85, 247, 0.3)"
+              : "rgba(16, 185, 129, 0.3)",
+        }}
+        onClick={onContinue}
+        data-testid={`card-subject-${subject.toLowerCase()}`}
+      >
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-5 group-hover:opacity-10 transition-opacity`}
+        />
+        <CardContent className="p-6 relative">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div
+                className={`p-3 rounded-xl bg-gradient-to-br ${bgGradient} shadow-lg`}
+              >
+                <Icon className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">{subject}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {lastChapter || "Start learning"}
+                </p>
+              </div>
+            </div>
+            <div className="relative" style={{ width: 80, height: 80 }}>
+              <svg width={80} height={80} className="transform -rotate-90">
+                <circle
+                  cx={40}
+                  cy={40}
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth={6}
+                  fill="none"
+                  className="text-muted/20"
+                />
+                <motion.circle
+                  cx={40}
+                  cy={40}
+                  r={radius}
+                  stroke={strokeColor}
+                  strokeWidth={6}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset }}
+                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold">{progress}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mb-4">
+            <Badge
+              variant="secondary"
+              className="text-xs"
+              data-testid={`badge-chapters-${subject.toLowerCase()}`}
+            >
+              <BookOpen className="h-3 w-3 mr-1" />
+              {chapterCount} Chapters
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="text-xs"
+              data-testid={`badge-questions-${subject.toLowerCase()}`}
+            >
+              <FileText className="h-3 w-3 mr-1" />
+              {questionCount}+ Questions
+            </Badge>
+          </div>
+
+          <Button
+            className={`w-full bg-gradient-to-r ${bgGradient} hover:opacity-90 text-white`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onContinue();
+            }}
+            data-testid={`button-continue-${subject.toLowerCase()}`}
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Continue Learning
+            <ChevronRight className="h-4 w-4 ml-auto" />
+          </Button>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+interface RecentActivity {
+  id: string;
+  type: "chapter" | "question" | "test" | "flashcard";
+  title: string;
+  subject: string;
+  timestamp: Date;
 }
 
 export default function GameLobbyDashboard() {
   const [, setLocation] = useLocation();
   const { points, level, streak, updateStreak } = useGamification();
   const { user } = useAuth();
-  const [showXpGain, setShowXpGain] = useState(false);
-  const [xpGainAmount, setXpGainAmount] = useState(0);
 
-  const {
-    showOnboarding,
-    setShowOnboarding,
-    isNewUser,
-    preferences,
-    updatePreferences,
-  } = useOnboarding();
-
-  // Update streak on mount
   useEffect(() => {
     updateStreak();
   }, []);
 
-  // Trigger onboarding for new users
-  useEffect(() => {
-    if (user && isNewUser) {
-      const timer = setTimeout(() => {
-        setShowOnboarding(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [user, isNewUser, setShowOnboarding]);
-
-  // Fetch user statistics
-  const { data: userStats, isLoading: statsLoading } = useQuery<UserStats>({
-    queryKey: ['/api/stats/user', user?.id],
+  const { data: userStats, isLoading: statsLoading } = useQuery<{
+    totalAttempts: number;
+    correctAnswers: number;
+    accuracy: number;
+  }>({
+    queryKey: ["/api/stats/user", user?.id],
     enabled: !!user?.id,
   });
 
-  // Fetch daily challenges
-  const { data: dailyChallengesData = [] } = useQuery<Array<{
-    id: string;
-    title: string;
-    description: string;
-    reward: number;
-    xpReward: number;
-    progress: number;
-    target: number;
-    completed: boolean;
-  }>>({
-    queryKey: ['/api/game/challenges/daily'],
+  const { data: libraryData } = useQuery<
+    Array<{ subject: string; classLevel: string; chapterNumber: number }>
+  >({
+    queryKey: ["/api/lms/library"],
     enabled: !!user?.id,
   });
 
-  // Transform daily challenges to match component interface
-  const dailyChallenges = dailyChallengesData.length > 0
-    ? dailyChallengesData.map(dc => ({
-      id: parseInt(dc.id) || 0,
-      title: dc.title,
-      description: dc.description,
-      progress: dc.progress,
-      target: dc.target,
-      xpReward: dc.xpReward,
-      completed: dc.completed
-    }))
-    : [
-      {
-        id: 1,
-        title: "Complete 10 Practice Questions",
-        description: "Solve 10 questions from any subject",
-        progress: 3,
-        target: 10,
-        xpReward: 50,
-        completed: false
-      },
-      {
-        id: 2,
-        title: "Study for 30 Minutes",
-        description: "Spend at least 30 minutes learning today",
-        progress: 15,
-        target: 30,
-        xpReward: 30,
-        completed: false
-      },
-      {
-        id: 3,
-        title: "Maintain Your Streak",
-        description: "Log in and study every day",
-        progress: user?.studyStreak || 0,
-        target: (user?.studyStreak || 0) + 1,
-        xpReward: 20,
-        completed: false
-      }
-    ];
+  const { data: flashcardsData } = useQuery<{ dueFlashcards: number }>({
+    queryKey: ["/api/learn/continue-learning"],
+    enabled: !!user?.id,
+  });
 
-  // Fetch leaderboard (India scope for preview)
-  const { data: leaderboardData = [] } = useQuery<any[]>({
-    queryKey: ['/api/game/leaderboard', 'india'],
+  const { data: leaderboardData = [] } = useQuery<
+    Array<{ rank: number; username: string; score: number; level: number }>
+  >({
+    queryKey: ["/api/game/leaderboard", "india"],
     queryFn: async () => {
-      const response = await fetch('/api/game/leaderboard?scope=india');
-      if (!response.ok) throw new Error('Failed to fetch leaderboard');
+      const response = await fetch("/api/game/leaderboard?scope=india");
+      if (!response.ok) return [];
       return response.json();
     },
     enabled: !!user?.id,
   });
 
-  // Fetch user's rank
-  const { data: userRank } = useQuery<{ rank: number; points: number }>({
-    queryKey: ['/api/game/leaderboard/rank', user?.id],
+  const { data: userRank } = useQuery<{ rank: number }>({
+    queryKey: ["/api/game/leaderboard/rank", user?.id],
     enabled: !!user?.id,
   });
 
-  // Fetch chapter counts from library
-  const { data: libraryData, isLoading: libraryLoading } = useQuery<Array<{
-    subject: string;
-    classLevel: string;
-    chapterNumber: number;
-  }>>({
-    queryKey: ['/api/lms/library'],
-    enabled: !!user?.id,
-  });
-
-  // Calculate chapter counts per subject
   const chapterCounts = {
-    Physics: libraryData?.filter(ch => ch.subject === 'Physics').length ?? 30,
-    Chemistry: libraryData?.filter(ch => ch.subject === 'Chemistry').length ?? 30,
-    Biology: libraryData?.filter(ch => ch.subject === 'Biology').length ?? 38,
+    Physics:
+      libraryData?.filter((ch) => ch.subject === "Physics").length ?? 23,
+    Chemistry:
+      libraryData?.filter((ch) => ch.subject === "Chemistry").length ?? 30,
+    Biology:
+      libraryData?.filter((ch) => ch.subject === "Biology").length ?? 38,
   };
 
-  const leaderboardPlayers = leaderboardData.slice(0, 5);
+  const recentActivities: RecentActivity[] = [
+    {
+      id: "1",
+      type: "chapter",
+      title: "Laws of Motion",
+      subject: "Physics",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    },
+    {
+      id: "2",
+      type: "question",
+      title: "Completed 15 MCQs",
+      subject: "Chemistry",
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+    },
+    {
+      id: "3",
+      type: "flashcard",
+      title: "Reviewed 20 flashcards",
+      subject: "Biology",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    },
+    {
+      id: "4",
+      type: "test",
+      title: "Mock Test - Physics",
+      subject: "Physics",
+      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
+    },
+    {
+      id: "5",
+      type: "chapter",
+      title: "Chemical Bonding",
+      subject: "Chemistry",
+      timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000),
+    },
+  ];
 
-  const handleSubjectDrop = (subject: string) => {
-    setXpGainAmount(25);
-    setShowXpGain(true);
-
-    // Epic confetti celebration
-    confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { y: 0.5 },
-      colors: ["#a855f7", "#ec4899", "#3b82f6", "#10b981", "#f59e0b"],
-    });
-
-    setTimeout(() => {
-      setLocation(`/${subject.toLowerCase()}`);
-    }, 800);
+  const dailyGoals = {
+    questionsAnswered: userStats?.totalAttempts ?? 0,
+    questionsTarget: 50,
+    studyTime: 45,
+    studyTimeTarget: 120,
+    accuracy: userStats?.accuracy ?? 0,
+    accuracyTarget: 80,
   };
 
-  // Welcome celebration on first load
-  useEffect(() => {
-    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome) {
-      setTimeout(() => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      }, 500);
-      sessionStorage.setItem('hasSeenWelcome', 'true');
+  const overallProgress =
+    ((dailyGoals.questionsAnswered / dailyGoals.questionsTarget) * 33 +
+      (dailyGoals.studyTime / dailyGoals.studyTimeTarget) * 33 +
+      (dailyGoals.accuracy / dailyGoals.accuracyTarget) * 34) /
+    100;
+
+  const getMotivationalMessage = () => {
+    if (overallProgress >= 80)
+      return "🌟 Amazing work! You're crushing it today!";
+    if (overallProgress >= 50)
+      return "💪 Great progress! Keep the momentum going!";
+    if (overallProgress >= 25) return "🚀 Nice start! Let's push a bit more!";
+    return "✨ Ready to begin? Your goals await!";
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "chapter":
+        return <BookOpen className="h-4 w-4" />;
+      case "question":
+        return <FileText className="h-4 w-4" />;
+      case "test":
+        return <Target className="h-4 w-4" />;
+      case "flashcard":
+        return <Layers className="h-4 w-4" />;
+      default:
+        return <Zap className="h-4 w-4" />;
     }
-  }, []);
+  };
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Crown className="h-5 w-5 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-5 w-5 text-gray-400" />;
+      case 3:
+        return <Medal className="h-5 w-5 text-amber-600" />;
+      default:
+        return null;
+    }
+  };
 
   if (statsLoading) {
     return (
@@ -201,296 +397,512 @@ export default function GameLobbyDashboard() {
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Loading game lobby...</p>
+            <p className="text-muted-foreground">Loading your dashboard...</p>
           </div>
         </div>
       </ThemeProvider>
     );
   }
 
+  const displayName = user?.name || user?.username || "Student";
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-background gradient-mesh-bg">
         <Header
           activeSubject="Dashboard"
-          onSubjectChange={() => { }}
+          onSubjectChange={() => {}}
           userPoints={points}
           userLevel={level}
           studyStreak={streak}
         />
 
-        <OnboardingModal
-          isOpen={showOnboarding}
-          onClose={() => setShowOnboarding(false)}
-          onComplete={updatePreferences}
-          userName={user?.username || user?.name || "Student"}
-        />
-
-        <XpGainAnimation
-          amount={xpGainAmount}
-          trigger={showXpGain}
-          onComplete={() => setShowXpGain(false)}
-        />
-
         <main className="container mx-auto px-4 py-6 md:py-8 max-w-7xl space-y-6 md:space-y-8">
-          {/* Epic Welcome Section */}
+          {/* Welcome Hero Section */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative overflow-hidden"
+            transition={{ duration: 0.5 }}
           >
-            <Card className="glass-panel glow-halo border-2 border-purple-500/30">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
-                      <Crown className="h-10 w-10 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
-                        Welcome to the Arena, {user?.username}!
+            <Card className="glass-panel-strong glow-halo border-2 border-primary/20 overflow-hidden">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex-1">
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <h1
+                        className="text-3xl md:text-4xl font-bold mb-2"
+                        data-testid="text-welcome-greeting"
+                      >
+                        Welcome back, {displayName}! 👋
                       </h1>
-                      <p className="text-lg text-muted-foreground mt-2">
-                        Choose your battlefield and dominate the NEET exam
+                      <p className="text-lg text-muted-foreground mb-4">
+                        Ready to conquer NEET today?
                       </p>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="flex flex-wrap items-center gap-3"
+                    >
+                      <Badge
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 text-sm"
+                        data-testid="badge-study-goal"
+                      >
+                        <Target className="h-4 w-4 mr-2" />
+                        Today: Complete 3 chapters, 50 questions
+                      </Badge>
+
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <Badge
+                          className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 text-sm"
+                          data-testid="badge-streak"
+                        >
+                          <Flame className="h-4 w-4 mr-2" />
+                          {streak} Day Streak 🔥
+                        </Badge>
+                      </motion.div>
+                    </motion.div>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                    className="hidden md:flex items-center justify-center"
+                  >
+                    <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-cyan-400 p-1">
+                      <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
+                        <GraduationCap className="h-16 w-16 text-primary" />
+                      </div>
+                      <motion.div
+                        className="absolute -top-1 -right-1"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Sparkles className="h-8 w-8 text-yellow-400" />
+                      </motion.div>
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-lg px-4 py-2">
-                      <Star className="h-5 w-5 mr-2" />
-                      Level {level}
-                    </Badge>
-                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg px-4 py-2">
-                      <Zap className="h-5 w-5 mr-2" />
-                      {points.toLocaleString()} XP
-                    </Badge>
-                  </div>
+                  </motion.div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Next Best Action - Top Priority */}
+          {/* Subject Cards Grid */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            <NextBestAction />
+            <h2
+              className="text-2xl font-bold mb-4"
+              data-testid="text-subjects-title"
+            >
+              Your Subjects
+            </h2>
+            <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+              <SubjectCard
+                subject="Physics"
+                icon={Atom}
+                colorClass="blue"
+                bgGradient="from-blue-500 to-cyan-500"
+                progress={42}
+                chapterCount={chapterCounts.Physics}
+                questionCount={2500}
+                lastChapter="Chapter 5: Laws of Motion"
+                onContinue={() => setLocation("/physics")}
+              />
+              <SubjectCard
+                subject="Chemistry"
+                icon={Flame}
+                colorClass="purple"
+                bgGradient="from-purple-500 to-pink-500"
+                progress={35}
+                chapterCount={chapterCounts.Chemistry}
+                questionCount={3000}
+                lastChapter="Chapter 8: Chemical Bonding"
+                onContinue={() => setLocation("/chemistry")}
+              />
+              <SubjectCard
+                subject="Biology"
+                icon={Leaf}
+                colorClass="emerald"
+                bgGradient="from-emerald-500 to-green-500"
+                progress={28}
+                chapterCount={chapterCounts.Biology}
+                questionCount={4000}
+                lastChapter="Chapter 3: Plant Kingdom"
+                onContinue={() => setLocation("/biology")}
+              />
+            </div>
           </motion.div>
 
-          {/* Live Stats Ticker */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            <LiveStatsTicker />
-          </motion.div>
+          {/* Daily Goals + Quick Actions Row */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Daily Goals Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="glass-panel h-full" data-testid="card-daily-goals">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
+                    Daily Goals
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <CircularProgress
+                      value={dailyGoals.questionsAnswered}
+                      max={dailyGoals.questionsTarget}
+                      color="#8b5cf6"
+                      label="Questions"
+                      sublabel={`${dailyGoals.questionsAnswered}/${dailyGoals.questionsTarget}`}
+                    />
+                    <CircularProgress
+                      value={dailyGoals.studyTime}
+                      max={dailyGoals.studyTimeTarget}
+                      color="#06b6d4"
+                      label="Study Time"
+                      sublabel={`${dailyGoals.studyTime} min`}
+                    />
+                    <CircularProgress
+                      value={dailyGoals.accuracy}
+                      max={dailyGoals.accuracyTarget}
+                      color="#10b981"
+                      label="Accuracy"
+                      sublabel={`${Math.round(dailyGoals.accuracy)}%`}
+                    />
+                  </div>
 
-          {/* Season Progress */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <SeasonProgressBar
-              currentTier={Math.floor(level / 2)}
-              totalXp={points}
-              nextTierXp={level * 1000}
-              maxTier={50}
-              seasonName="NEET Season 2025"
-              isPremium={false}
-            />
-          </motion.div>
+                  <div className="text-center mb-4">
+                    <p
+                      className="text-lg font-medium"
+                      data-testid="text-motivational-message"
+                    >
+                      {getMotivationalMessage()}
+                    </p>
+                  </div>
 
-          {/* Main Content Grid */}
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* Left Column - Drop Into Chapters */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="mb-4">
-                <h2 className="text-3xl font-bold">Choose Your Map</h2>
-              </div>
-
-              <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="h-full min-h-[140px]"
-                >
-                  <DropIntoChapter
-                    subject="Physics"
-                    icon={Atom}
-                    chapters={chapterCounts.Physics}
-                    iconColor="from-blue-500 to-cyan-500"
-                    isUnlocked={true}
-                    onDrop={() => handleSubjectDrop('Physics')}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="h-full min-h-[140px]"
-                >
-                  <DropIntoChapter
-                    subject="Chemistry"
-                    icon={Flame}
-                    chapters={chapterCounts.Chemistry}
-                    iconColor="from-purple-500 to-pink-500"
-                    isUnlocked={true}
-                    onDrop={() => handleSubjectDrop('Chemistry')}
-                  />
-                </motion.div>
-
-                {/* Biology Card - Replaces Botany and Zoology */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className="glass-panel cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 border-2 border-emerald-500/30 h-full min-h-[140px]"
-                    onClick={() => {
-                      setLocation('/biology');
-                    }}
-                    data-testid="card-biology"
+                  <Button
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
+                    size="lg"
+                    onClick={() => setLocation("/practice")}
+                    data-testid="button-start-studying"
                   >
-                    <CardContent className="p-6 h-full flex flex-col justify-between">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg">
-                          <Dna className="h-6 w-6 text-white" />
+                    <Zap className="h-5 w-5 mr-2" />
+                    Start Studying
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Quick Actions */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="glass-panel h-full" data-testid="card-quick-actions">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-14 text-left"
+                      onClick={() => setLocation("/practice")}
+                      data-testid="button-practice-mode"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 mr-3">
+                        <Target className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Practice Mode</p>
+                        <p className="text-xs text-muted-foreground">
+                          Solve MCQs at your pace
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-14 text-left"
+                      onClick={() => setLocation("/flashcards")}
+                      data-testid="button-flashcards"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 mr-3">
+                        <Layers className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Flashcards</p>
+                        <p className="text-xs text-muted-foreground">
+                          Review with spaced repetition
+                        </p>
+                      </div>
+                      {(flashcardsData?.dueFlashcards ?? 0) > 0 && (
+                        <Badge
+                          className="bg-orange-500 text-white"
+                          data-testid="badge-due-flashcards"
+                        >
+                          {flashcardsData?.dueFlashcards} due
+                        </Badge>
+                      )}
+                      <ChevronRight className="h-5 w-5 text-muted-foreground ml-2" />
+                    </Button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-14 text-left"
+                      onClick={() => setLocation("/mock-tests")}
+                      data-testid="button-mock-test"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-400 to-green-500 mr-3">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Mock Test</p>
+                        <p className="text-xs text-muted-foreground">
+                          Full-length NEET simulation
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-14 text-left"
+                      onClick={() => setLocation("/search")}
+                      data-testid="button-search-action"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 mr-3">
+                        <Search className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Search</p>
+                        <p className="text-xs text-muted-foreground">
+                          Find topics, questions, chapters
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Recent Activity + Leaderboard */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Recent Activity Timeline */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card className="glass-panel" data-testid="card-recent-activity">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-pink-400 to-rose-500">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentActivities.map((activity, index) => (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="flex items-center gap-4"
+                        data-testid={`activity-item-${activity.id}`}
+                      >
+                        <div
+                          className={`p-2 rounded-lg ${
+                            activity.type === "chapter"
+                              ? "bg-blue-500/20 text-blue-500"
+                              : activity.type === "question"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : activity.type === "test"
+                              ? "bg-emerald-500/20 text-emerald-500"
+                              : "bg-orange-500/20 text-orange-500"
+                          }`}
+                        >
+                          {getActivityIcon(activity.type)}
                         </div>
-                        <div>
-                          <h3 className="text-xl font-bold">Biology</h3>
-                          <p className="text-sm text-muted-foreground" data-testid="text-biology-chapters">
-                            {chapterCounts.Biology} Chapters
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {activity.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {activity.subject}
+                          </p>
+                        </div>
+                        <p
+                          className="text-xs text-muted-foreground whitespace-nowrap"
+                          data-testid={`activity-time-${activity.id}`}
+                        >
+                          {formatDistanceToNow(activity.timestamp, {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Leaderboard Preview */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Card className="glass-panel glow-halo" data-testid="card-leaderboard">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500">
+                        <Trophy className="h-5 w-5 text-white" />
+                      </div>
+                      Leaderboard
+                    </CardTitle>
+                    <Badge variant="outline">This Week</Badge>
+                  </div>
+                  {userRank?.rank && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your Rank:{" "}
+                      <span
+                        className="font-bold text-primary"
+                        data-testid="text-user-rank"
+                      >
+                        #{userRank.rank}
+                      </span>
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {leaderboardData.slice(0, 3).map((player, index) => (
+                    <motion.div
+                      key={player.username}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${
+                        index === 0
+                          ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"
+                          : index === 1
+                          ? "bg-gradient-to-r from-gray-300 to-gray-400 text-white"
+                          : index === 2
+                          ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                          : "bg-muted/50"
+                      }`}
+                      data-testid={`leaderboard-player-${index + 1}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {getRankIcon(index + 1) || (
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                            <span className="text-sm font-bold">
+                              #{index + 1}
+                            </span>
+                          </div>
+                        )}
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-400 to-pink-400 text-white">
+                            {player.username.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">
+                            {player.username}
+                          </p>
+                          <p
+                            className={`text-xs ${
+                              index < 3
+                                ? "text-white/80"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            Level {player.level}
                           </p>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Complete NCERT Coverage</span>
-                          <span className="font-medium">Class 11 & 12</span>
-                        </div>
+                      <div className="text-right">
+                        <p className="font-bold">
+                          {player.score.toLocaleString()}
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            index < 3 ? "text-white/80" : "text-muted-foreground"
+                          }`}
+                        >
+                          points
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                    </motion.div>
+                  ))}
 
-                {/* Explore All Content Card */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <Card
-                    className="glass-panel cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 border-2 border-purple-500/30 h-full min-h-[140px]"
-                    onClick={() => setLocation('/explore')}
-                    data-testid="card-explore"
-                  >
-                    <CardContent className="p-6 h-full flex flex-col justify-center">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                            <Compass className="h-7 w-7 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
-                              Explore All Content
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Browse all NCERT chapters with topics & visualizations
-                            </p>
-                          </div>
-                        </div>
-                        <div className="hidden sm:block">
-                          <Badge variant="secondary" className="text-lg px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
-                            {chapterCounts.Physics + chapterCounts.Chemistry + chapterCounts.Biology} Chapters
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-              </div>
-
-              {/* Performance Metrics */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
-                className="mt-8"
-              >
-                <h3 className="text-2xl font-bold mb-4">Your Combat Stats</h3>
-                <DashboardMetrics
-                  questionsSolved={userStats?.totalAttempts || 0}
-                  accuracy={userStats?.accuracy || 0}
-                  studyStreak={streak}
-                  mockTestScore={485}
-                />
-              </motion.div>
-            </div>
-
-            {/* Right Column - Challenges & Leaderboard */}
-            <div className="space-y-6">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-              >
-                <ContinueLearning />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <DueFlashcardsWidget />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.45 }}
-              >
-                <DailyChallengeCard challenges={dailyChallenges} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-              >
-                <LeaderboardPreview
-                  players={leaderboardPlayers}
-                  currentUserRank={userRank?.rank || 0}
-                />
-              </motion.div>
-            </div>
+                  <motion.div whileHover={{ scale: 1.02 }}>
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => setLocation("/leaderboard")}
+                      data-testid="button-view-leaderboard"
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      View Full Leaderboard
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
-
-          {/* Weak Areas Carousel - Full Width Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
-            <WeakAreasCarousel />
-          </motion.div>
         </main>
       </div>
     </ThemeProvider>
