@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ThreeDViewer } from "@/components/ThreeDViewer";
-import { BookOpen, Lightbulb, Calculator, Atom, Zap, TestTubes , Loader2 } from "lucide-react";
+import { PhETSimulation } from "@/components/PhETSimulation";
+import { BookOpen, Lightbulb, Calculator, Atom, Zap, TestTubes, Loader2, Play } from "lucide-react";
 
 interface Topic {
   id: string;
@@ -205,7 +206,7 @@ export function ChemistryChapter1() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">
             <BookOpen className="h-4 w-4 mr-2" />
             Overview
@@ -217,6 +218,10 @@ export function ChemistryChapter1() {
           <TabsTrigger value="visualization">
             <Atom className="h-4 w-4 mr-2" />
             3D Models
+          </TabsTrigger>
+          <TabsTrigger value="simulations" data-testid="tab-simulations">
+            <Play className="h-4 w-4 mr-2" />
+            Simulations
           </TabsTrigger>
           <TabsTrigger value="practice">
             <Zap className="h-4 w-4 mr-2" />
@@ -423,6 +428,65 @@ export function ChemistryChapter1() {
                       <p className="font-semibold mb-2">Mole Fraction (X)</p>
                       <p className="text-sm text-muted-foreground">n₁/(n₁+n₂)</p>
                       <Badge variant="secondary" className="mt-2">Unitless</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="simulations" className="space-y-6" data-testid="simulations-content">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Play className="h-5 w-5 text-purple-500" />
+                Interactive PhET Simulations
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Explore chemistry concepts through interactive simulations from PhET Colorado
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2">
+                  About these simulations:
+                </h4>
+                <ul className="text-sm text-purple-600 dark:text-purple-400 space-y-1">
+                  <li>• These simulations help visualize stoichiometry and molecular concepts</li>
+                  <li>• Build molecules from atoms to understand chemical formulas</li>
+                  <li>• Practice balancing chemical equations interactively</li>
+                  <li>• Use fullscreen mode for better experience</li>
+                </ul>
+              </div>
+
+              <PhETSimulation
+                simulationId="build-a-molecule"
+                title="Build a Molecule"
+                description="Construct molecules from atoms to understand molecular formulas and stoichiometry. Build simple molecules like H₂O, CO₂, and more complex compounds."
+                subject="Chemistry"
+                height={500}
+              />
+
+              <PhETSimulation
+                simulationId="balancing-chemical-equations"
+                title="Balancing Chemical Equations"
+                description="Learn to balance chemical equations by adjusting coefficients. Understand the law of conservation of mass through interactive gameplay."
+                subject="Chemistry"
+                height={500}
+              />
+
+              <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800">
+                <CardContent className="pt-6">
+                  <h4 className="font-semibold mb-3">Related Topics in This Chapter:</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white/50 dark:bg-white/5 p-3 rounded-lg">
+                      <p className="font-medium">Build a Molecule → Mole Concept</p>
+                      <p className="text-sm text-muted-foreground">Understand how atoms combine in fixed ratios</p>
+                    </div>
+                    <div className="bg-white/50 dark:bg-white/5 p-3 rounded-lg">
+                      <p className="font-medium">Balancing Equations → Stoichiometry</p>
+                      <p className="text-sm text-muted-foreground">Apply conservation of mass in reactions</p>
                     </div>
                   </div>
                 </CardContent>

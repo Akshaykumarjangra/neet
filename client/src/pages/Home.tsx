@@ -230,6 +230,9 @@ export default function Home() {
             <Link href="/mentors" className="text-muted-foreground hover:text-foreground transition-colors">
               Find Mentors
             </Link>
+            <Link href="/simulations" className="text-muted-foreground hover:text-foreground transition-colors">
+              Simulations
+            </Link>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>

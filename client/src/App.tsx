@@ -35,6 +35,7 @@ import Explore from "@/pages/Explore";
 import Class12 from "@/pages/Class12";
 import ClassWiseContent from "@/pages/ClassWiseContent";
 import Community from "@/pages/Community";
+import Simulations from "@/pages/Simulations";
 
 function Router() {
   return (
@@ -165,6 +166,11 @@ function Router() {
       </Route>
       <Route path="/community">
         <Community />
+      </Route>
+      <Route path="/simulations">
+        <ProtectedRoute>
+          <Simulations />
+        </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>
