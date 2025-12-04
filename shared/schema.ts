@@ -606,6 +606,144 @@ export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
   startedAt: true,
 } as any);
 
+// ============ LMS KEYPOINTS & FORMULAS ============
+
+export const keypointCategoryEnum = pgEnum("keypoint_category", [
+  "concept", "definition", "law", "principle", "theorem", "rule", "exception", "application"
+]);
+
+export const neetFrequencyEnum = pgEnum("neet_frequency", ["low", "medium", "high", "very_high"]);
+
+export const keypoints = pgTable("keypoints", {
+  id: serial("id").primaryKey(),
+  chapterId: integer("chapter_id").references(() => chapterContent.id),
+  topicId: integer("topic_id").references(() => contentTopics.id),
+  subject: varchar("subject", { length: 50 }).notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  content: text("content").notNull(),
+  category: keypointCategoryEnum("category").notNull().default("concept"),
+  neetFrequency: neetFrequencyEnum("neet_frequency").notNull().default("medium"),
+  isHighYield: boolean("is_high_yield").notNull().default(false),
+  relatedFormulas: jsonb("related_formulas").$type<number[]>().default([]),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const formulas = pgTable("formulas", {
+  id: serial("id").primaryKey(),
+  chapterId: integer("chapter_id").references(() => chapterContent.id),
+  topicId: integer("topic_id").references(() => contentTopics.id),
+  subject: varchar("subject", { length: 50 }).notNull(),
+  name: varchar("name", { length: 300 }).notNull(),
+  latexFormula: text("latex_formula").notNull(),
+  plainFormula: text("plain_formula"),
+  variables: jsonb("variables").$type<Array<{ symbol: string; meaning: string; unit?: string }>>().notNull().default([]),
+  unit: varchar("unit", { length: 100 }),
+  derivation: text("derivation"),
+  conditions: text("conditions"),
+  neetFrequency: neetFrequencyEnum("neet_frequency").notNull().default("medium"),
+  isHighYield: boolean("is_high_yield").notNull().default(false),
+  relatedKeypoints: jsonb("related_keypoints").$type<number[]>().default([]),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userTopicProgress = pgTable("user_topic_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  topicId: integer("topic_id").references(() => contentTopics.id).notNull(),
+  chapterId: integer("chapter_id").references(() => chapterContent.id),
+  completionPercentage: integer("completion_percentage").notNull().default(0),
+  masteryScore: integer("mastery_score").notNull().default(0),
+  questionsAttempted: integer("questions_attempted").notNull().default(0),
+  questionsCorrect: integer("questions_correct").notNull().default(0),
+  flashcardsReviewed: integer("flashcards_reviewed").notNull().default(0),
+  timeSpentMinutes: integer("time_spent_minutes").notNull().default(0),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  userTopicIdx: uniqueIndex("user_topic_progress_user_topic_idx").on(table.userId, table.topicId),
+}));
+
+export const userKeypointBookmarks = pgTable("user_keypoint_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  keypointId: integer("keypoint_id").references(() => keypoints.id).notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userKeypointIdx: uniqueIndex("user_keypoint_bookmarks_idx").on(table.userId, table.keypointId),
+}));
+
+export const userFormulaBookmarks = pgTable("user_formula_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  formulaId: integer("formula_id").references(() => formulas.id).notNull(),
+  note: text("note"),
+  masteryLevel: integer("mastery_level").notNull().default(0),
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  nextReviewAt: timestamp("next_review_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userFormulaIdx: uniqueIndex("user_formula_bookmarks_idx").on(table.userId, table.formulaId),
+}));
+
+export const userFlashcardProgress = pgTable("user_flashcard_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  flashcardId: integer("flashcard_id").references(() => flashcards.id).notNull(),
+  easeFactor: real("ease_factor").notNull().default(2.5),
+  interval: integer("interval").notNull().default(1),
+  repetitions: integer("repetitions").notNull().default(0),
+  nextReviewAt: timestamp("next_review_at").notNull().defaultNow(),
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  userFlashcardIdx: uniqueIndex("user_flashcard_progress_idx").on(table.userId, table.flashcardId),
+}));
+
+export const insertKeypointSchema = createInsertSchema(keypoints).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertFormulaSchema = createInsertSchema(formulas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertUserTopicProgressSchema = createInsertSchema(userTopicProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertUserKeypointBookmarkSchema = createInsertSchema(userKeypointBookmarks).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertUserFormulaBookmarkSchema = createInsertSchema(userFormulaBookmarks).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertUserFlashcardProgressSchema = createInsertSchema(userFlashcardProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
 export const insertPastYearPaperSchema = createInsertSchema(pastYearPapers).omit({
   id: true,
 } as any);
@@ -672,6 +810,24 @@ export type InsertTestSession = z.infer<typeof insertTestSessionSchema>;
 
 export type PastYearPaper = typeof pastYearPapers.$inferSelect;
 export type InsertPastYearPaper = z.infer<typeof insertPastYearPaperSchema>;
+
+export type Keypoint = typeof keypoints.$inferSelect;
+export type InsertKeypoint = z.infer<typeof insertKeypointSchema>;
+
+export type Formula = typeof formulas.$inferSelect;
+export type InsertFormula = z.infer<typeof insertFormulaSchema>;
+
+export type UserTopicProgress = typeof userTopicProgress.$inferSelect;
+export type InsertUserTopicProgress = z.infer<typeof insertUserTopicProgressSchema>;
+
+export type UserKeypointBookmark = typeof userKeypointBookmarks.$inferSelect;
+export type InsertUserKeypointBookmark = z.infer<typeof insertUserKeypointBookmarkSchema>;
+
+export type UserFormulaBookmark = typeof userFormulaBookmarks.$inferSelect;
+export type InsertUserFormulaBookmark = z.infer<typeof insertUserFormulaBookmarkSchema>;
+
+export type UserFlashcardProgress = typeof userFlashcardProgress.$inferSelect;
+export type InsertUserFlashcardProgress = z.infer<typeof insertUserFlashcardProgressSchema>;
 
 // Battle Pass / Season System
 export const seasonPasses = pgTable("season_passes", {

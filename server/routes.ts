@@ -20,6 +20,7 @@ import chapterContentRoutes from "./chapter-content-routes";
 import lmsRoutes from "./lms-routes";
 import mentorRoutes from "./mentor-routes";
 import discussionRoutes, { replyRoutes } from "./discussion-routes";
+import lmsLearningRoutes from "./lms-learning-routes";
 import { bulkQuestionGenerator } from "./bulk-question-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -73,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Community Discussion routes
   app.use("/api/discussions", discussionRoutes);
   app.use("/api/replies", replyRoutes);
+  
+  // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
+  app.use("/api/learn", lmsLearningRoutes);
 
   // Topic routes
   app.get("/api/topics", async (req, res) => {
