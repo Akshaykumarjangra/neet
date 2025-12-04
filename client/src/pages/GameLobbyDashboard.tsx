@@ -9,6 +9,9 @@ import { XpGainAnimation } from "@/components/game/XpGainAnimation";
 import { DashboardMetrics } from "@/components/DashboardMetrics";
 import { NextBestAction } from "@/components/NextBestAction";
 import { OnboardingModal, useOnboarding } from "@/components/OnboardingModal";
+import { ContinueLearning } from "@/components/ContinueLearning";
+import { WeakAreasCarousel } from "@/components/WeakAreasCarousel";
+import { DueFlashcardsWidget } from "@/components/DueFlashcardsWidget";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -446,7 +449,23 @@ export default function GameLobbyDashboard() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+              >
+                <ContinueLearning />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <DueFlashcardsWidget />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.45 }}
               >
                 <DailyChallengeCard challenges={dailyChallenges} />
               </motion.div>
@@ -463,6 +482,15 @@ export default function GameLobbyDashboard() {
               </motion.div>
             </div>
           </div>
+
+          {/* Weak Areas Carousel - Full Width Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <WeakAreasCarousel />
+          </motion.div>
         </main>
       </div>
     </ThemeProvider>
