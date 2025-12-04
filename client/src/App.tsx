@@ -36,6 +36,7 @@ import Class12 from "@/pages/Class12";
 import ClassWiseContent from "@/pages/ClassWiseContent";
 import Community from "@/pages/Community";
 import Simulations from "@/pages/Simulations";
+import Syllabus from "@/pages/Syllabus";
 
 function Router() {
   return (
@@ -170,6 +171,11 @@ function Router() {
       <Route path="/simulations">
         <ProtectedRoute>
           <Simulations />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/syllabus">
+        <ProtectedRoute>
+          <Syllabus />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
