@@ -101,6 +101,31 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 4, 2025 - Comprehensive Frontend Redesign
+- **Physics Content Seeding**: 30 complete chapters (15 Class 11 + 15 Class 12) with 1,651 practice questions
+  - Kid-friendly reading content (1,800-9,300 chars per chapter)
+  - Difficulty levels (easy/medium/hard) and PYQ (Previous Year Questions) tags
+  - Key concepts, formulas, and detailed notes for each chapter
+- **GameLobbyDashboard.tsx**: New student-friendly dashboard
+  - Hero section with streak tracker and motivational messaging
+  - Subject cards with circular progress indicators
+  - Daily goals tracker (questions, study time, accuracy)
+  - Activity timeline with recent actions
+  - Leaderboard preview with top performers
+- **Physics.tsx**: New subject page with unit-based organization
+  - Class toggle (Class 11/Class 12)
+  - Unit accordions (Mechanics, Thermodynamics, Waves, Electrodynamics, etc.)
+  - Chapter cards with progress rings, question counts
+  - Search, filter, and sort functionality
+- **ChapterViewer.tsx**: Redesigned reading experience
+  - 4-tab layout: Read, Key Points, Formulas, Practice
+  - Kid-friendly reading with callout boxes ("Did You Know?", "Remember This!", "Common Mistakes")
+  - Floating toolbar (TOC, bookmark, share, text size controls)
+  - Reading progress tracking with time counter
+  - Markdown rendering with syntax highlighting
+- **API Fixes**: Subject case-sensitivity normalization in chapter-content-routes.ts
+- **Navigation**: Full end-to-end flow (Dashboard → Physics → Chapter Viewer)
+
 ### December 4, 2025 - AI Content Generation
 - **OpenAI Integration**: Using Replit AI Integrations with GPT-5 for content generation
 - **AI Question Generator**: 
