@@ -97,6 +97,14 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 4, 2025 - Admin Content Management System
+- **Content Manager**: New /admin/content page with tabbed interface for managing all LMS content
+- **Questions Manager**: Add/edit/delete questions with bulk JSON import, subject/topic/difficulty filters
+- **Topics Manager**: Create and organize content topics by subject and class level
+- **Mock Tests Builder**: Create tests with question selection, duration, passing marks, publish toggle
+- **Flashcards Creator**: Create decks and cards with front/back content, bulk import support
+- **Admin API Routes**: 16 new endpoints under /api/admin/* for content CRUD operations
+
 ### December 3, 2025 - Major UX/UI Enhancement
 - **Public Landing Page**: New Home page with hero section, NEET value proposition, syllabus coverage, social proof, testimonials
 - **Mentor Discovery**: New /mentors page with search/filter, mentor cards, profile modal, 3-step booking flow
