@@ -36,19 +36,34 @@ import {
   ArrowRight,
   Activity,
   TrendingUp,
-  Zap
+  Zap,
+  Sparkles,
+  Wand2,
+  Brain,
+  Save,
+  Loader2
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 interface User {
   id: string;
-  username: string;
+  name: string;
   email: string;
+  role: string;
+  isAdmin: boolean;
   isPaidUser: boolean;
-  adminGranted: boolean;
-  accessExpiry: string | null;
-  openaiTokensUsed: number;
-  openaiTokensLimit: number;
+  currentLevel: number;
+  totalPoints: number;
   createdAt: string;
+}
+
+interface GenerationStatus {
+  totalQuestions: number;
+  totalTopics: number;
+  progress: string;
+  estimatedSets?: number;
 }
 
 interface PendingMentor {
@@ -87,6 +102,18 @@ export default function AdminDashboard() {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showMentorVerification, setShowMentorVerification] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // AI Content Generation State
+  const [showAIGeneration, setShowAIGeneration] = useState(false);
+  const [aiSubject, setAiSubject] = useState("Physics");
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiQuestionCount, setAiQuestionCount] = useState([5]);
+  const [aiDifficulty, setAiDifficulty] = useState("medium");
+  const [aiFlashcardCount, setAiFlashcardCount] = useState([10]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [generatedFlashcards, setGeneratedFlashcards] = useState<any[]>([]);
+  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (user && !user.isAdmin) {
@@ -134,7 +161,7 @@ export default function AdminDashboard() {
     },
   });
 
-  const { data: generationStatus, refetch: refetchStatus } = useQuery({
+  const { data: generationStatus, refetch: refetchStatus } = useQuery<GenerationStatus>({
     queryKey: ['/api/questions/generation-status'],
     refetchInterval: isGenerating ? 5000 : false,
   });
@@ -198,6 +225,76 @@ export default function AdminDashboard() {
     },
   });
 
+  // Topics for dropdown
+  const { data: topics = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/topics"],
+  });
+
+  // AI Question Generation Mutation
+  const generateQuestionsMutation = useMutation({
+    mutationFn: async (data: { subject: string; topic: string; count: number; difficulty: string }) => {
+      const response = await fetch("/api/admin/generate-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to generate questions");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedQuestions(data.questions || []);
+      toast({ title: "Questions Generated!", description: `Created ${data.count} questions` });
+    },
+    onError: () => {
+      toast({ title: "Generation Failed", description: "Please try again", variant: "destructive" });
+    },
+  });
+
+  // AI Flashcard Generation Mutation
+  const generateFlashcardsMutation = useMutation({
+    mutationFn: async (data: { subject: string; topic: string; count: number }) => {
+      const response = await fetch("/api/admin/generate-flashcards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to generate flashcards");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedFlashcards(data.flashcards || []);
+      toast({ title: "Flashcards Generated!", description: `Created ${data.count} flashcards` });
+    },
+    onError: () => {
+      toast({ title: "Generation Failed", description: "Please try again", variant: "destructive" });
+    },
+  });
+
+  // Save Generated Questions
+  const saveQuestionsMutation = useMutation({
+    mutationFn: async (data: { topicId: number; generatedQuestions: any[] }) => {
+      const response = await fetch("/api/admin/save-generated-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to save questions");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedQuestions([]);
+      setSelectedTopicId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/content-stats"] });
+      toast({ title: "Saved!", description: data.message });
+    },
+    onError: () => {
+      toast({ title: "Save Failed", description: "Please try again", variant: "destructive" });
+    },
+  });
+
   const rejectMentorMutation = useMutation({
     mutationFn: async (mentorId: number) => {
       return apiRequest("PUT", `/api/admin/mentors/${mentorId}/verify`, { status: "rejected" });
@@ -243,9 +340,7 @@ export default function AdminDashboard() {
   };
 
   const hasAccess = (user: User) => {
-    if (user.adminGranted) return true;
-    if (!user.accessExpiry) return false;
-    return new Date(user.accessExpiry) > new Date();
+    return user.isPaidUser || user.isAdmin;
   };
 
   const toggleMentorExpanded = (mentorId: number) => {
@@ -274,8 +369,8 @@ export default function AdminDashboard() {
   const stats = {
     totalUsers: users.length,
     paidUsers: users.filter(u => u.isPaidUser).length,
-    freeUsers: users.filter(u => u.adminGranted && !u.isPaidUser).length,
-    totalTokens: users.reduce((sum, u) => sum + u.openaiTokensUsed, 0),
+    adminUsers: users.filter(u => u.isAdmin).length,
+    totalPoints: users.reduce((sum, u) => sum + u.totalPoints, 0),
     pendingMentors: pendingMentors.length,
   };
 
@@ -573,10 +668,10 @@ export default function AdminDashboard() {
               {users.slice(0, 5).map((u, index) => (
                 <div key={u.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30" data-testid={`activity-item-${index}`}>
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{getInitials(u.username)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(u.name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{u.username}</p>
+                    <p className="text-sm font-medium">{u.name}</p>
                     <p className="text-xs text-muted-foreground">
                       Joined {new Date(u.createdAt).toLocaleDateString()}
                     </p>
@@ -599,6 +694,269 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Content Generation Section */}
+        <Collapsible open={showAIGeneration} onOpenChange={setShowAIGeneration}>
+          <Card className="glass-panel mb-8 border-2 border-purple-500/20" data-testid="ai-generation-section">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-purple-500" />
+                      AI Content Generation
+                      <Badge variant="secondary" className="ml-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                        Powered by GPT-5
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>Generate questions and flashcards using AI</CardDescription>
+                  </div>
+                  {showAIGeneration ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <Tabs defaultValue="questions" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="questions" className="flex items-center gap-2" data-testid="tab-questions">
+                      <Brain className="h-4 w-4" />
+                      Questions
+                    </TabsTrigger>
+                    <TabsTrigger value="flashcards" className="flex items-center gap-2" data-testid="tab-flashcards">
+                      <BookOpen className="h-4 w-4" />
+                      Flashcards
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Questions Generator Tab */}
+                  <TabsContent value="questions" className="space-y-6 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Subject</Label>
+                        <Select value={aiSubject} onValueChange={setAiSubject}>
+                          <SelectTrigger data-testid="select-subject">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Physics">Physics</SelectItem>
+                            <SelectItem value="Chemistry">Chemistry</SelectItem>
+                            <SelectItem value="Biology">Biology</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Topic</Label>
+                        <Input 
+                          value={aiTopic} 
+                          onChange={(e) => setAiTopic(e.target.value)}
+                          placeholder="e.g., Laws of Motion, Organic Chemistry"
+                          data-testid="input-topic"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Number of Questions: {aiQuestionCount[0]}</Label>
+                        <Slider
+                          value={aiQuestionCount}
+                          onValueChange={setAiQuestionCount}
+                          min={1}
+                          max={10}
+                          step={1}
+                          data-testid="slider-question-count"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Difficulty</Label>
+                        <Select value={aiDifficulty} onValueChange={setAiDifficulty}>
+                          <SelectTrigger data-testid="select-difficulty">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="easy">Easy</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="hard">Hard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={() => generateQuestionsMutation.mutate({
+                        subject: aiSubject,
+                        topic: aiTopic,
+                        count: aiQuestionCount[0],
+                        difficulty: aiDifficulty
+                      })}
+                      disabled={generateQuestionsMutation.isPending || !aiTopic.trim()}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      data-testid="button-generate-questions"
+                    >
+                      {generateQuestionsMutation.isPending ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                      ) : (
+                        <><Wand2 className="mr-2 h-4 w-4" /> Generate Questions</>
+                      )}
+                    </Button>
+
+                    {/* Generated Questions Preview */}
+                    {generatedQuestions.length > 0 && (
+                      <div className="mt-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            Generated Questions ({generatedQuestions.length})
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <Select value={selectedTopicId?.toString() || ""} onValueChange={(v) => setSelectedTopicId(Number(v))}>
+                              <SelectTrigger className="w-[200px]" data-testid="select-save-topic">
+                                <SelectValue placeholder="Select topic to save" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {topics.map((t: any) => (
+                                  <SelectItem key={t.id} value={t.id.toString()}>
+                                    {t.topicName} ({t.subject})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={() => selectedTopicId && saveQuestionsMutation.mutate({
+                                topicId: selectedTopicId,
+                                generatedQuestions
+                              })}
+                              disabled={!selectedTopicId || saveQuestionsMutation.isPending}
+                              data-testid="button-save-questions"
+                            >
+                              {saveQuestionsMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <><Save className="mr-2 h-4 w-4" /> Save</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                          {generatedQuestions.map((q, idx) => (
+                            <div key={idx} className="p-4 rounded-lg border bg-card/50" data-testid={`question-preview-${idx}`}>
+                              <p className="font-medium mb-2">Q{idx + 1}: {q.questionText}</p>
+                              <div className="grid grid-cols-2 gap-2 mb-3">
+                                {q.options?.map((opt: any) => (
+                                  <div 
+                                    key={opt.id}
+                                    className={`p-2 rounded text-sm ${opt.id === q.correctAnswer ? 'bg-green-500/20 border-green-500' : 'bg-muted/50'} border`}
+                                  >
+                                    <span className="font-semibold">{opt.id}.</span> {opt.text}
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-sm text-muted-foreground"><strong>Explanation:</strong> {q.solutionDetail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Flashcards Generator Tab */}
+                  <TabsContent value="flashcards" className="space-y-6 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Subject</Label>
+                        <Select value={aiSubject} onValueChange={setAiSubject}>
+                          <SelectTrigger data-testid="select-flashcard-subject">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Physics">Physics</SelectItem>
+                            <SelectItem value="Chemistry">Chemistry</SelectItem>
+                            <SelectItem value="Biology">Biology</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Topic</Label>
+                        <Input 
+                          value={aiTopic} 
+                          onChange={(e) => setAiTopic(e.target.value)}
+                          placeholder="e.g., Cell Division, Thermodynamics"
+                          data-testid="input-flashcard-topic"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Number of Flashcards: {aiFlashcardCount[0]}</Label>
+                      <Slider
+                        value={aiFlashcardCount}
+                        onValueChange={setAiFlashcardCount}
+                        min={1}
+                        max={20}
+                        step={1}
+                        data-testid="slider-flashcard-count"
+                      />
+                    </div>
+
+                    <Button 
+                      onClick={() => generateFlashcardsMutation.mutate({
+                        subject: aiSubject,
+                        topic: aiTopic,
+                        count: aiFlashcardCount[0]
+                      })}
+                      disabled={generateFlashcardsMutation.isPending || !aiTopic.trim()}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                      data-testid="button-generate-flashcards"
+                    >
+                      {generateFlashcardsMutation.isPending ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                      ) : (
+                        <><Wand2 className="mr-2 h-4 w-4" /> Generate Flashcards</>
+                      )}
+                    </Button>
+
+                    {/* Generated Flashcards Preview */}
+                    {generatedFlashcards.length > 0 && (
+                      <div className="mt-6 space-y-4">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Generated Flashcards ({generatedFlashcards.length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {generatedFlashcards.map((card, idx) => (
+                            <div 
+                              key={idx}
+                              className="relative h-48 cursor-pointer perspective-1000"
+                              onClick={() => {
+                                const newFlipped = new Set(flippedCards);
+                                if (newFlipped.has(idx)) {
+                                  newFlipped.delete(idx);
+                                } else {
+                                  newFlipped.add(idx);
+                                }
+                                setFlippedCards(newFlipped);
+                              }}
+                              data-testid={`flashcard-${idx}`}
+                            >
+                              <div className={`absolute inset-0 rounded-lg border-2 p-4 flex items-center justify-center text-center transition-all duration-500 ${flippedCards.has(idx) ? 'opacity-0 rotate-y-180' : 'opacity-100'} bg-gradient-to-br from-purple-500/10 to-pink-500/10`}>
+                                <p className="font-medium">{card.front}</p>
+                              </div>
+                              <div className={`absolute inset-0 rounded-lg border-2 p-4 flex items-center justify-center text-center transition-all duration-500 ${flippedCards.has(idx) ? 'opacity-100' : 'opacity-0 rotate-y-180'} bg-gradient-to-br from-green-500/10 to-blue-500/10`}>
+                                <p className="text-sm">{card.back}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground text-center">Click cards to flip</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* User Management Section (Collapsible) */}
         <Collapsible open={showUserManagement} onOpenChange={setShowUserManagement}>
@@ -687,7 +1045,7 @@ export default function AdminDashboard() {
                       {users.map((u) => (
                         <div key={u.id} className="flex items-center justify-between p-4 rounded-lg bg-card/50 hover:bg-muted/50 transition-colors" data-testid={`user-row-${u.id}`}>
                           <div className="flex-1">
-                            <div className="font-semibold">{u.username}</div>
+                            <div className="font-semibold">{u.name}</div>
                             <div className="text-sm text-muted-foreground">{u.email}</div>
                           </div>
 
@@ -699,14 +1057,14 @@ export default function AdminDashboard() {
                             )}
 
                             {u.isPaidUser && <Badge>Paid</Badge>}
-                            {u.adminGranted && <Badge variant="outline">Admin Granted</Badge>}
+                            {u.isAdmin && <Badge variant="outline">Admin</Badge>}
 
                             <div className="text-sm text-muted-foreground">
                               <Clock className="h-4 w-4 inline mr-1" />
-                              {u.openaiTokensUsed.toLocaleString()} tokens
+                              Level {u.currentLevel} · {u.totalPoints} pts
                             </div>
 
-                            {!u.adminGranted ? (
+                            {!u.isPaidUser ? (
                               <Button
                                 size="sm"
                                 onClick={() => grantAccessMutation.mutate(u.id)}
