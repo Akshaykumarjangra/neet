@@ -37,6 +37,7 @@ import ClassWiseContent from "@/pages/ClassWiseContent";
 import Community from "@/pages/Community";
 import Simulations from "@/pages/Simulations";
 import Syllabus from "@/pages/Syllabus";
+import Search from "@/pages/Search";
 
 function Router() {
   return (
@@ -176,6 +177,11 @@ function Router() {
       <Route path="/syllabus">
         <ProtectedRoute>
           <Syllabus />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/search">
+        <ProtectedRoute>
+          <Search />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

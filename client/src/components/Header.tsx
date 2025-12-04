@@ -1,4 +1,4 @@
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -188,6 +188,16 @@ export function Header({
               Level {userLevel}
             </Badge>
           </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation('/search')}
+            data-testid="button-search"
+            className="hover:bg-accent"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
 
           <Button
             variant="ghost"

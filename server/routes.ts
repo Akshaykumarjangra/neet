@@ -21,6 +21,7 @@ import lmsRoutes from "./lms-routes";
 import mentorRoutes from "./mentor-routes";
 import discussionRoutes, { replyRoutes } from "./discussion-routes";
 import lmsLearningRoutes from "./lms-learning-routes";
+import searchRoutes from "./search-routes";
 import { bulkQuestionGenerator } from "./bulk-question-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -77,6 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
   app.use("/api/learn", lmsLearningRoutes);
+
+  // Search routes (Full-text search across topics, questions, formulas, keypoints)
+  app.use("/api/search", searchRoutes);
 
   // Topic routes
   app.get("/api/topics", async (req, res) => {
