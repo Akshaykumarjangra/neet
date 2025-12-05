@@ -89,27 +89,10 @@ export default function ChapterViewer() {
     enabled: !!chapter?.id,
   });
 
-  const { data: keypoints = [], isLoading: keypointsLoading } = useQuery<Keypoint[]>({
-    queryKey: ['/api/learn/keypoints', chapter?.id],
-    queryFn: async () => {
-      if (!chapter?.id) return [];
-      const response = await fetch(`/api/learn/keypoints?chapterId=${chapter.id}`);
-      if (!response.ok) return [];
-      return response.json();
-    },
-    enabled: !!chapter?.id,
-  });
-
-  const { data: formulas = [], isLoading: formulasLoading } = useQuery<Formula[]>({
-    queryKey: ['/api/learn/formulas', chapter?.id],
-    queryFn: async () => {
-      if (!chapter?.id) return [];
-      const response = await fetch(`/api/learn/formulas?chapterId=${chapter.id}`);
-      if (!response.ok) return [];
-      return response.json();
-    },
-    enabled: !!chapter?.id,
-  });
+  const chapterKeyConcepts = chapter?.keyConcepts || [];
+  const chapterFormulas = chapter?.formulas || [];
+  const keypointsLoading = isLoading;
+  const formulasLoading = isLoading;
 
   const { data: practiceQuestions = [] } = useQuery<Question[]>({
     queryKey: ['/api/questions/chapter', chapter?.id],
@@ -552,9 +535,9 @@ export default function ChapterViewer() {
                 >
                   <Zap className="h-4 w-4" />
                   <span>Key Points</span>
-                  {keypoints.length > 0 && (
+                  {chapterKeyConcepts.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {keypoints.length}
+                      {chapterKeyConcepts.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -565,9 +548,9 @@ export default function ChapterViewer() {
                 >
                   <FlaskConical className="h-4 w-4" />
                   <span>Formulas</span>
-                  {formulas.length > 0 && (
+                  {chapterFormulas.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {formulas.length}
+                      {chapterFormulas.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -835,7 +818,7 @@ export default function ChapterViewer() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : keypoints.length === 0 ? (
+                ) : chapterKeyConcepts.length === 0 ? (
                   <Card className="py-12">
                     <CardContent className="flex flex-col items-center justify-center text-center">
                       <Zap className="h-16 w-16 text-muted-foreground mb-4" />
@@ -846,80 +829,55 @@ export default function ChapterViewer() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Accordion type="single" collapsible className="space-y-3">
-                    {keypoints.map((keypoint) => (
-                      <AccordionItem 
-                        key={keypoint.id} 
-                        value={`keypoint-${keypoint.id}`}
-                        className="border rounded-lg px-4 bg-card shadow-sm"
-                        data-testid={`keypoint-card-${keypoint.id}`}
+                  <div className="grid gap-4">
+                    {chapterKeyConcepts.map((concept: any, idx: number) => (
+                      <Card 
+                        key={idx}
+                        className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow"
+                        data-testid={`keypoint-card-${idx}`}
                       >
-                        <AccordionTrigger className="hover:no-underline py-4">
-                          <div className="flex items-start gap-3 text-left flex-1">
-                            <div className="flex flex-col gap-2 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                {getPriorityBadge(keypoint)}
-                                <Badge variant="outline" className="capitalize">
-                                  {keypoint.category}
-                                </Badge>
-                              </div>
-                              <h3 className="font-semibold text-lg">{keypoint.title}</h3>
-                            </div>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Zap className="h-5 w-5 text-blue-500" />
+                              {concept.title}
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-xs">
+                              Concept {idx + 1}
+                            </Badge>
                           </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-4">
-                          <div className="space-y-4">
-                            <p 
-                              className="text-base leading-relaxed font-serif"
-                              style={{ fontSize: `${fontSize}px` }}
+                        </CardHeader>
+                        <CardContent>
+                          <p 
+                            className="text-base leading-relaxed font-serif text-muted-foreground"
+                            style={{ fontSize: `${fontSize}px` }}
+                          >
+                            {concept.description}
+                          </p>
+                          <div className="flex items-center gap-2 pt-4 mt-4 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyToClipboard(concept.description, idx, 'keypoint')}
+                              data-testid={`button-copy-keypoint-${idx}`}
                             >
-                              {keypoint.content}
-                            </p>
-                            
-                            {keypoint.tags && keypoint.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {keypoint.tags.map((tag, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2 pt-2 border-t">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copyToClipboard(keypoint.content, keypoint.id, 'keypoint')}
-                                data-testid={`button-copy-keypoint-${keypoint.id}`}
-                              >
-                                {copiedKeypointId === keypoint.id ? (
-                                  <>
-                                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                                    Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="h-4 w-4 mr-2" />
-                                    Copy
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant={isKeypointBookmarked(keypoint.id) ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => toggleKeypointBookmarkMutation.mutate(keypoint.id)}
-                                data-testid={`button-bookmark-keypoint-${keypoint.id}`}
-                              >
-                                <Star className={`h-4 w-4 mr-2 ${isKeypointBookmarked(keypoint.id) ? 'fill-current' : ''}`} />
-                                {isKeypointBookmarked(keypoint.id) ? 'Saved' : 'Save'}
-                              </Button>
-                            </div>
+                              {copiedKeypointId === idx ? (
+                                <>
+                                  <Check className="h-4 w-4 mr-2 text-green-500" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
                           </div>
-                        </AccordionContent>
-                      </AccordionItem>
+                        </CardContent>
+                      </Card>
                     ))}
-                  </Accordion>
+                  </div>
                 )}
               </TabsContent>
 
@@ -930,7 +888,7 @@ export default function ChapterViewer() {
                       <Skeleton key={i} className="h-48 w-full" />
                     ))}
                   </div>
-                ) : formulas.length === 0 ? (
+                ) : chapterFormulas.length === 0 ? (
                   <Card className="py-12">
                     <CardContent className="flex flex-col items-center justify-center text-center">
                       <FlaskConical className="h-16 w-16 text-muted-foreground mb-4" />
@@ -942,51 +900,33 @@ export default function ChapterViewer() {
                   </Card>
                 ) : (
                   <div className="grid gap-6">
-                    {formulas.map((formula) => (
-                      <Card key={formula.id} className="overflow-hidden" data-testid={`formula-card-${formula.id}`}>
+                    {chapterFormulas.map((formula: any, idx: number) => (
+                      <Card key={idx} className="overflow-hidden" data-testid={`formula-card-${idx}`}>
                         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 pb-4">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                {formula.isHighYield && (
-                                  <Badge className="bg-amber-500 text-white">
-                                    <Zap className="h-3 w-3 mr-1" />
-                                    High Yield
-                                  </Badge>
-                                )}
-                                {formula.neetFrequency && (
-                                  <Badge variant="outline" className="capitalize">
-                                    {formula.neetFrequency.replace('_', ' ')} frequency
-                                  </Badge>
-                                )}
-                              </div>
+                              <Badge variant="secondary" className="mb-2">
+                                Formula {idx + 1}
+                              </Badge>
                               <CardTitle className="text-xl">{formula.name}</CardTitle>
                             </div>
-                            <Button
-                              variant={isFormulaBookmarked(formula.id) ? "default" : "outline"}
-                              size="icon"
-                              onClick={() => toggleFormulaBookmarkMutation.mutate(formula.id)}
-                              data-testid={`button-bookmark-formula-${formula.id}`}
-                            >
-                              <Star className={`h-4 w-4 ${isFormulaBookmarked(formula.id) ? 'fill-current' : ''}`} />
-                            </Button>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-5">
                           <div className="relative">
                             <div className="bg-slate-900 dark:bg-slate-800 p-6 rounded-xl text-center">
                               <code className="text-2xl md:text-3xl text-white font-mono tracking-wide">
-                                {formula.plainFormula || formula.latexFormula}
+                                {formula.formula}
                               </code>
                             </div>
                             <Button
                               variant="secondary"
                               size="sm"
                               className="absolute top-3 right-3"
-                              onClick={() => copyToClipboard(formula.plainFormula || formula.latexFormula, formula.id, 'formula')}
-                              data-testid={`button-copy-formula-${formula.id}`}
+                              onClick={() => copyToClipboard(formula.formula, idx, 'formula')}
+                              data-testid={`button-copy-formula-${idx}`}
                             >
-                              {copiedFormulaId === formula.id ? (
+                              {copiedFormulaId === idx ? (
                                 <Check className="h-4 w-4 text-green-500" />
                               ) : (
                                 <Copy className="h-4 w-4" />
@@ -994,66 +934,9 @@ export default function ChapterViewer() {
                             </Button>
                           </div>
 
-                          {formula.variables && formula.variables.length > 0 && (
-                            <div className="bg-muted/50 rounded-lg p-4">
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                Variables Explained
-                              </h4>
-                              <div className="grid gap-2">
-                                {formula.variables.map((variable, idx) => (
-                                  <div key={idx} className="flex items-baseline gap-3 text-sm">
-                                    <code className="font-mono bg-white dark:bg-slate-800 px-3 py-1 rounded font-semibold text-blue-600 dark:text-blue-400">
-                                      {variable.symbol}
-                                    </code>
-                                    <span className="text-muted-foreground flex-1">
-                                      {variable.meaning}
-                                      {variable.unit && (
-                                        <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                                          {variable.unit}
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {formula.unit && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <span className="font-medium">Unit:</span>
-                              <Badge variant="secondary">{formula.unit}</Badge>
-                            </div>
-                          )}
-
-                          {formula.conditions && (
-                            <div className="border-l-4 border-amber-500 pl-4 bg-amber-50/50 dark:bg-amber-950/20 py-3 rounded-r-lg">
-                              <h4 className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-1">
-                                When to Use
-                              </h4>
-                              <p className="text-sm text-muted-foreground">{formula.conditions}</p>
-                            </div>
-                          )}
-
-                          {formula.derivation && (
-                            <div className="border-l-4 border-blue-500 pl-4 bg-blue-50/50 dark:bg-blue-950/20 py-3 rounded-r-lg">
-                              <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-1">
-                                Derivation Hint
-                              </h4>
-                              <p className="text-sm text-muted-foreground">{formula.derivation}</p>
-                            </div>
-                          )}
-
-                          {formula.tags && formula.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 pt-2">
-                              {formula.tags.map((tag, idx) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                          <p className="text-muted-foreground" style={{ fontSize: `${fontSize}px` }}>
+                            {formula.description}
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
