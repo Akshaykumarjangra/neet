@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "./db";
 import { userChapterProgress, chapterPrerequisites, xpTransactions } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { requireAuth, getCurrentUser } from "./auth";
+import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 
 const router = Router();
 
@@ -72,7 +72,7 @@ const CHAPTERS: Record<string, Omit<ChapterInfo, 'isLocked' | 'progress'>> = {
   },
 };
 
-router.get('/next', requireAuth, async (req, res) => {
+router.get('/next', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = getCurrentUser(req);
     if (!userId) {
@@ -124,7 +124,7 @@ router.get('/next', requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/:chapterId/progress', requireAuth, async (req, res) => {
+router.patch('/:chapterId/progress', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = getCurrentUser(req);
     if (!userId) {

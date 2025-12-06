@@ -12,7 +12,7 @@ import {
   insertUserChapterNoteSchema,
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { requireAuth } from "./auth";
+import { requireAuth, requireAuthWithPasswordCheck } from "./auth";
 import { GamificationService } from "./gamification";
 
 const router = Router();
@@ -98,7 +98,7 @@ router.get("/library", async (req, res) => {
   }
 });
 
-router.get("/progress", requireAuth, async (req, res) => {
+router.get("/progress", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
 
@@ -135,7 +135,7 @@ router.get("/progress", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/sessions", requireAuth, async (req, res) => {
+router.post("/sessions", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const { chapterContentId, sectionsViewed, interactionCount } = req.body;
@@ -187,7 +187,7 @@ router.post("/sessions", requireAuth, async (req, res) => {
   }
 });
 
-router.patch("/sessions/:id", requireAuth, async (req, res) => {
+router.patch("/sessions/:id", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const sessionId = parseInt(req.params.id);
@@ -255,7 +255,7 @@ router.patch("/sessions/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/bookmarks", requireAuth, async (req, res) => {
+router.get("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
 
@@ -288,7 +288,7 @@ router.get("/bookmarks", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/bookmarks", requireAuth, async (req, res) => {
+router.post("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const validatedData = insertUserChapterBookmarkSchema.parse({
@@ -310,7 +310,7 @@ router.post("/bookmarks", requireAuth, async (req, res) => {
   }
 });
 
-router.delete("/bookmarks/:id", requireAuth, async (req, res) => {
+router.delete("/bookmarks/:id", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const bookmarkId = parseInt(req.params.id);
@@ -335,7 +335,7 @@ router.delete("/bookmarks/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/notes", requireAuth, async (req, res) => {
+router.get("/notes", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const { chapterContentId } = req.query;
@@ -359,7 +359,7 @@ router.get("/notes", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/notes", requireAuth, async (req, res) => {
+router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const validatedData = insertUserChapterNoteSchema.parse({
@@ -409,7 +409,7 @@ router.post("/notes", requireAuth, async (req, res) => {
   }
 });
 
-router.patch("/notes/:id", requireAuth, async (req, res) => {
+router.patch("/notes/:id", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const noteId = parseInt(req.params.id);
@@ -441,7 +441,7 @@ router.patch("/notes/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.delete("/notes/:id", requireAuth, async (req, res) => {
+router.delete("/notes/:id", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const noteId = parseInt(req.params.id);
@@ -466,7 +466,7 @@ router.delete("/notes/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/learning-path/next", requireAuth, async (req, res) => {
+router.get("/learning-path/next", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
 
@@ -553,7 +553,7 @@ router.get("/learning-path/next", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/mastery/:chapterId", requireAuth, async (req, res) => {
+router.get("/mastery/:chapterId", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const { chapterId } = req.params;

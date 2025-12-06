@@ -18,5 +18,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Redirect to="/login" />;
   }
 
+  if (user.mustChangePassword && location !== "/profile") {
+    return <Redirect to="/profile" />;
+  }
+
   return <>{children}</>;
 }

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,11 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, format } from "date-fns";
+import { useLocation } from "wouter";
 import {
   User,
   Mail,
@@ -39,6 +45,9 @@ import {
   Layers,
   GraduationCap,
   Loader2,
+  Eye,
+  EyeOff,
+  AlertTriangle,
 } from "lucide-react";
 
 interface SubjectProgress {
@@ -69,8 +78,102 @@ interface RecentActivity {
 }
 
 export default function Profile() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, forceRefreshAuth } = useAuth();
   const { points, level, streak } = useGamification();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+
+  useEffect(() => {
+    if (user?.mustChangePassword) {
+      setShowPasswordDialog(true);
+    }
+  }, [user?.mustChangePassword]);
+
+  useEffect(() => {
+    if (user?.mustChangePassword && !showPasswordDialog) {
+      setShowPasswordDialog(true);
+    }
+  }, [user?.mustChangePassword, showPasswordDialog]);
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to change password");
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError("");
+      
+      try {
+        const freshData = await forceRefreshAuth();
+        
+        if (freshData.user?.mustChangePassword) {
+          setPasswordError("Password was changed but session still requires password change. Please try again.");
+          return;
+        }
+        
+        toast({
+          title: "Password Changed",
+          description: "Your password has been updated successfully.",
+        });
+        setShowPasswordDialog(false);
+      } catch (error) {
+        setPasswordError("Password was changed but session refresh failed. Please log in again.");
+      }
+    },
+    onError: (error: Error) => {
+      setPasswordError(error.message);
+    },
+  });
+
+  const handlePasswordSubmit = () => {
+    setPasswordError("");
+    
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      queryClient.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const { data: userStats } = useQuery<{
     totalAttempts: number;
@@ -648,6 +751,7 @@ export default function Profile() {
                       variant="outline"
                       className="w-full justify-start h-14 text-left"
                       data-testid="button-security"
+                      onClick={() => setShowPasswordDialog(true)}
                     >
                       <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 mr-3">
                         <Lock className="h-5 w-5 text-white" />
@@ -667,6 +771,7 @@ export default function Profile() {
                       variant="outline"
                       className="w-full justify-start h-14 text-left text-destructive hover:text-destructive"
                       data-testid="button-logout"
+                      onClick={handleLogout}
                     >
                       <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 mr-3">
                         <LogOut className="h-5 w-5 text-white" />
@@ -685,6 +790,152 @@ export default function Profile() {
             </TabsContent>
           </Tabs>
         </main>
+
+        {/* Password Change Dialog */}
+        <Dialog 
+          open={user?.mustChangePassword || showPasswordDialog} 
+          onOpenChange={(open) => {
+            if (user?.mustChangePassword) {
+              return;
+            }
+            setShowPasswordDialog(open);
+            if (!open) {
+              setCurrentPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+              setPasswordError("");
+            }
+          }}
+        >
+          <DialogContent 
+            className="sm:max-w-md" 
+            data-testid="dialog-change-password"
+            hideCloseButton={user?.mustChangePassword}
+            onEscapeKeyDown={(e) => user?.mustChangePassword && e.preventDefault()}
+            onPointerDownOutside={(e) => user?.mustChangePassword && e.preventDefault()}
+            onInteractOutside={(e) => user?.mustChangePassword && e.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                {user?.mustChangePassword ? "Password Change Required" : "Change Password"}
+              </DialogTitle>
+              <DialogDescription>
+                {user?.mustChangePassword ? (
+                  <span className="flex items-center gap-2 text-amber-500">
+                    <AlertTriangle className="h-4 w-4" />
+                    You must change your password before continuing.
+                  </span>
+                ) : (
+                  "Enter your current password and choose a new secure password."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    data-testid="input-current-password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    data-testid="button-toggle-current-password"
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min 8 characters)"
+                    data-testid="input-new-password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    data-testid="button-toggle-new-password"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  data-testid="input-confirm-password"
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2" data-testid="text-password-error">
+                  <AlertTriangle className="h-4 w-4" />
+                  {passwordError}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              {!user?.mustChangePassword && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPasswordDialog(false)}
+                  data-testid="button-cancel-password"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                onClick={handlePasswordSubmit}
+                disabled={!currentPassword || !newPassword || !confirmPassword || changePasswordMutation.isPending}
+                data-testid="button-submit-password"
+              >
+                {changePasswordMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Changing...
+                  </>
+                ) : (
+                  "Change Password"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </ThemeProvider>
   );

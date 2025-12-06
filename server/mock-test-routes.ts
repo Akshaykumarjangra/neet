@@ -2,13 +2,13 @@ import { Router } from "express";
 import { db } from "./db";
 import { mockTests, testSessions, xpTransactions, questions, users } from "@shared/schema";
 import { eq, sql, inArray } from "drizzle-orm";
-import { requireAuth, getCurrentUser } from "./auth";
+import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 
 const FREE_MONTHLY_TEST_LIMIT = 1;
 
 const router = Router();
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const tests = await db.select().from(mockTests);
     res.json(tests);
@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/attempts-this-month', requireAuth, async (req, res) => {
+router.get('/attempts-this-month', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = getCurrentUser(req);
     if (!userId) {
@@ -40,7 +40,7 @@ router.get('/attempts-this-month', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/:id', requireAuth, async (req, res) => {
+router.get('/:id', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const testId = parseInt(req.params.id);
     if (!Number.isInteger(testId) || testId <= 0) {
@@ -81,7 +81,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/:id/start', requireAuth, async (req, res) => {
+router.post('/:id/start', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = getCurrentUser(req);
     if (!userId) {
@@ -143,7 +143,7 @@ router.post('/:id/start', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/:sessionId/submit', requireAuth, async (req, res) => {
+router.post('/:sessionId/submit', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = getCurrentUser(req);
     if (!userId) {

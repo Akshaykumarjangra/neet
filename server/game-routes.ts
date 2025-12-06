@@ -12,12 +12,12 @@ import {
   userAchievements,
 } from "@shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
-import { requireAuth, getCurrentUser } from "./auth";
+import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 
 const router = Router();
 
 // Get daily challenges
-router.get("/challenges/daily", requireAuth, async (req, res) => {
+router.get("/challenges/daily", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
@@ -66,7 +66,7 @@ router.get("/challenges/daily", requireAuth, async (req, res) => {
 });
 
 // Update challenge progress
-router.post("/challenges/:challengeId/progress", requireAuth, async (req, res) => {
+router.post("/challenges/:challengeId/progress", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
@@ -162,7 +162,7 @@ router.post("/challenges/:challengeId/progress", requireAuth, async (req, res) =
 });
 
 // Get leaderboard
-router.get("/leaderboard", requireAuth, async (req, res) => {
+router.get("/leaderboard", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
@@ -345,7 +345,7 @@ router.get("/combo/:userId", async (req, res) => {
   }
 });
 
-router.post("/combo/:userId/update", requireAuth, async (req, res) => {
+router.post("/combo/:userId/update", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
@@ -476,7 +476,7 @@ router.get("/stats/live", async (req, res) => {
 });
 
 // Get all achievements with user unlock status
-router.get("/achievements", requireAuth, async (req, res) => {
+router.get("/achievements", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
@@ -509,7 +509,7 @@ router.get("/achievements", requireAuth, async (req, res) => {
 });
 
 // Check and unlock achievements for a user
-router.post("/achievements/check", requireAuth, async (req, res) => {
+router.post("/achievements/check", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const user = getCurrentUser(req);
     if (!user) {
