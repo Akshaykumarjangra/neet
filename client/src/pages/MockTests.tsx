@@ -6,9 +6,10 @@ import { QuickNavigationBar } from "@/components/QuickNavigationBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Clock, Target, Trophy, FileQuestion, AlertCircle, RefreshCw, ClipboardList } from "lucide-react";
-import { useLocation } from "wouter";
+import { Clock, Target, Trophy, FileQuestion, AlertCircle, RefreshCw, ClipboardList, Lock, Crown } from "lucide-react";
+import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription, PremiumBadge } from "@/components/Paywall";
 
 interface MockTest {
   id: number;
@@ -22,25 +23,58 @@ interface MockTest {
 export default function MockTests() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isPremium, freeLimits, isAuthenticated } = useSubscription();
 
   const { data: tests, isLoading, error, refetch } = useQuery<MockTest[]>({
     queryKey: ['/api/mock-tests'],
   });
 
+  const { data: testAttempts } = useQuery<{ count: number }>({
+    queryKey: ['/api/mock-tests/attempts-this-month'],
+    enabled: isAuthenticated && !isPremium,
+  });
+
+  const freeTestsRemaining = freeLimits.mockTests - (testAttempts?.count ?? 0);
+  const canStartFreeTest = isPremium || freeTestsRemaining > 0;
+
   const startMutation = useMutation({
     mutationFn: async (testId: number) => {
-      return apiRequest('POST', `/api/mock-tests/${testId}/start`);
+      const res = await fetch(`/api/mock-tests/${testId}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw data;
+      }
+      return res.json();
     },
     onSuccess: (response: any, testId) => {
       setLocation(`/mock-test/${testId}`);
     },
     onError: (error: any) => {
       console.error("Failed to start mock test:", error);
-      toast({
-        title: "Error",
-        description: "Failed to start test. Please try again.",
-        variant: "destructive",
-      });
+      if (error?.error === 'PREMIUM_REQUIRED') {
+        toast({
+          title: "Upgrade Required",
+          description: error.message || "Upgrade to Premium for unlimited mock tests.",
+          action: (
+            <Link href="/pricing">
+              <Button size="sm" variant="outline" className="gap-1">
+                <Crown className="h-3 w-3" />
+                View Plans
+              </Button>
+            </Link>
+          ),
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to start test. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -116,10 +150,36 @@ export default function MockTests() {
       
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Mock Tests</h1>
-          <p className="text-muted-foreground">
-            Test your knowledge with full-length NEET mock tests
-          </p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Mock Tests</h1>
+              <p className="text-muted-foreground">
+                Test your knowledge with full-length NEET mock tests
+              </p>
+            </div>
+            {isPremium ? (
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 h-8 px-4">
+                <Crown className="h-4 w-4 mr-2" />
+                Unlimited Access
+              </Badge>
+            ) : isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="h-8 px-4">
+                  {freeTestsRemaining > 0 ? (
+                    <span>{freeTestsRemaining} free test{freeTestsRemaining !== 1 ? 's' : ''} remaining</span>
+                  ) : (
+                    <span className="text-muted-foreground">Free tests used</span>
+                  )}
+                </Badge>
+                <Link href="/pricing">
+                  <Button size="sm" className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                    <Crown className="h-3 w-3" />
+                    Upgrade
+                  </Button>
+                </Link>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {!tests || tests.length === 0 ? (
@@ -174,14 +234,27 @@ export default function MockTests() {
                     </p>
                   </div>
                   
-                  <Button 
-                    className="w-full"
-                    onClick={() => startTest(test.id)}
-                    data-testid={`button-start-test-${test.id}`}
-                  >
-                    <Target className="h-4 w-4 mr-2" />
-                    Start Test
-                  </Button>
+                  {canStartFreeTest || isPremium ? (
+                    <Button 
+                      className="w-full"
+                      onClick={() => startTest(test.id)}
+                      data-testid={`button-start-test-${test.id}`}
+                    >
+                      <Target className="h-4 w-4 mr-2" />
+                      Start Test
+                    </Button>
+                  ) : (
+                    <Link href="/pricing">
+                      <Button 
+                        variant="outline"
+                        className="w-full gap-2"
+                        data-testid={`button-locked-test-${test.id}`}
+                      >
+                        <Lock className="h-4 w-4" />
+                        Upgrade to Access
+                      </Button>
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             ))}

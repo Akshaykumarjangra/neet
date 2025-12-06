@@ -233,6 +233,9 @@ export default function Home() {
             <Link href="/simulations" className="text-muted-foreground hover:text-foreground transition-colors">
               Simulations
             </Link>
+            <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </Link>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
