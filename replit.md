@@ -101,6 +101,23 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 6, 2025 - Bug Fixes & Responsive Design
+- **Community Page Fix**: Fixed crash caused by missing `currentPath` prop in QuickNavigationBar components
+- **Profile Page**: Created comprehensive `/profile` page with user info, avatar, study statistics, subject progress bars, recent activity, achievements, and account settings
+- **Biology Page Redesign**: New `/biology` page with API integration (replaced hardcoded content)
+  - Fetches chapters from `/api/lms/library` API
+  - Class 11 / Class 12 toggle tabs
+  - Organized into Botany (green theme with Leaf icon) and Zoology (orange theme with Bug icon) sections
+  - Chapter cards with progress rings, difficulty stars, estimated time, PYQ badges
+  - Search and filter functionality
+- **Responsive Design Overhaul**: Comprehensive fixes across all major pages
+  - GameLobbyDashboard: Responsive subject cards, CircularProgress, grid layouts
+  - Physics/Biology pages: Responsive padding, font sizes, class toggles
+  - ChapterViewer: Mobile-friendly sticky header, tabs, floating toolbar
+  - QuickNavigationBar: Increased touch targets (48px minimum), better mobile labels
+  - Applied Tailwind responsive prefixes (sm:, md:, lg:) throughout
+- **E2E Testing**: Verified all pages load correctly and navigation works end-to-end
+
 ### December 4, 2025 - Comprehensive Frontend Redesign
 - **Physics Content Seeding**: 30 complete chapters (15 Class 11 + 15 Class 12) with 1,651 practice questions
   - Kid-friendly reading content (1,800-9,300 chars per chapter)
