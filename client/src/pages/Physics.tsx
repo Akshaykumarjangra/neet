@@ -337,7 +337,7 @@ function UnitSection({
             initial={prefersReducedMotion ? {} : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={prefersReducedMotion ? {} : { opacity: 0, height: 0 }}
-            className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-2 sm:gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-3"
           >
             {unitChapters.map((chapter) => (
               <ChapterCard
@@ -420,16 +420,16 @@ function LoadingSkeleton() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <div className="flex gap-4">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
+        <Skeleton className="h-40 sm:h-48 w-full rounded-xl sm:rounded-2xl" />
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-full sm:w-32" />
         </div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="h-20 w-full rounded-xl" />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((j) => (
                 <Skeleton key={j} className="h-32 rounded-lg" />
               ))}
@@ -551,12 +551,12 @@ export default function Physics() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         <motion.div
           initial={prefersReducedMotion ? {} : { opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-6 md:p-8 text-white"
+          className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-4 sm:p-6 md:p-8 text-white"
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
           
@@ -570,21 +570,21 @@ export default function Physics() {
           />
           
           <div className="relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <motion.div
                     animate={prefersReducedMotion ? {} : { rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="p-3 rounded-xl bg-white/20 backdrop-blur-sm"
+                    className="p-2 sm:p-3 rounded-xl bg-white/20 backdrop-blur-sm"
                   >
-                    <Atom className="h-10 w-10" />
+                    <Atom className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10" />
                   </motion.div>
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-physics-title">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-physics-title">
                       Physics
                     </h1>
-                    <p className="text-white/80">NEET 2025 Complete Syllabus</p>
+                    <p className="text-white/80 text-sm sm:text-base">NEET 2025 Complete Syllabus</p>
                   </div>
                 </div>
                 
@@ -609,30 +609,30 @@ export default function Physics() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 p-1 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-1 sm:gap-2 p-1 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Button
                   variant={selectedClass === "11" ? "secondary" : "ghost"}
                   className={cn(
-                    "relative px-6 transition-all",
+                    "relative px-3 sm:px-6 text-sm sm:text-base transition-all",
                     selectedClass === "11" ? "bg-white text-indigo-700 shadow-lg" : "text-white hover:bg-white/10"
                   )}
                   onClick={() => setSelectedClass("11")}
                   data-testid="button-class-11"
                 >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Class 11
+                  <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Class </span>11
                 </Button>
                 <Button
                   variant={selectedClass === "12" ? "secondary" : "ghost"}
                   className={cn(
-                    "relative px-6 transition-all",
+                    "relative px-3 sm:px-6 text-sm sm:text-base transition-all",
                     selectedClass === "12" ? "bg-white text-indigo-700 shadow-lg" : "text-white hover:bg-white/10"
                   )}
                   onClick={() => setSelectedClass("12")}
                   data-testid="button-class-12"
                 >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Class 12
+                  <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Class </span>12
                 </Button>
               </div>
             </div>

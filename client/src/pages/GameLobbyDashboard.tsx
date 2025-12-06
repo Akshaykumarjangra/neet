@@ -52,46 +52,47 @@ function CircularProgress({
   label,
   sublabel,
 }: CircularProgressProps) {
-  const radius = (size - strokeWidth) / 2;
+  const mobileSize = Math.min(size, 60);
+  const radius = (mobileSize - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const percentage = Math.min((value / max) * 100, 100);
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="transform -rotate-90">
+    <div className="flex flex-col items-center gap-1 sm:gap-2">
+      <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20">
+        <svg viewBox="0 0 60 60" className="w-full h-full transform -rotate-90">
           <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+            cx={30}
+            cy={30}
+            r={25}
             stroke="currentColor"
-            strokeWidth={strokeWidth}
+            strokeWidth={6}
             fill="none"
             className="text-muted/30"
           />
           <motion.circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+            cx={30}
+            cy={30}
+            r={25}
             stroke={color}
-            strokeWidth={strokeWidth}
+            strokeWidth={6}
             fill="none"
             strokeLinecap="round"
-            strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset }}
+            strokeDasharray={157}
+            initial={{ strokeDashoffset: 157 }}
+            animate={{ strokeDashoffset: 157 - (percentage / 100) * 157 }}
             transition={{ duration: 1, ease: "easeOut" }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-lg font-bold">{Math.round(percentage)}%</span>
+          <span className="text-xs sm:text-sm md:text-base font-bold">{Math.round(percentage)}%</span>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs sm:text-sm font-medium">{label}</p>
         {sublabel && (
-          <p className="text-xs text-muted-foreground">{sublabel}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">{sublabel}</p>
         )}
       </div>
     </div>
@@ -154,38 +155,38 @@ function SubjectCard({
         <div
           className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-5 group-hover:opacity-10 transition-opacity`}
         />
-        <CardContent className="p-6 relative ml-[0px] mr-[0px] pl-[10px] pr-[10px] pt-[20px] pb-[20px]">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-4">
+        <CardContent className="p-3 sm:p-4 md:p-6 relative">
+          <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
               <div
-                className={`p-3 rounded-xl bg-gradient-to-br ${bgGradient} shadow-lg`}
+                className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${bgGradient} shadow-lg shrink-0`}
               >
-                <Icon className="h-7 w-7 text-white" />
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <div>
-                <h3 className="text-xl font-bold">{subject}</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold truncate">{subject}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {lastChapter || "Start learning"}
                 </p>
               </div>
             </div>
-            <div className="relative" style={{ width: 80, height: 80 }}>
-              <svg width={80} height={80} className="transform -rotate-90">
+            <div className="relative shrink-0 hidden sm:block" style={{ width: 70, height: 70 }}>
+              <svg width={70} height={70} className="transform -rotate-90">
                 <circle
-                  cx={40}
-                  cy={40}
+                  cx={35}
+                  cy={35}
                   r={radius}
                   stroke="currentColor"
-                  strokeWidth={6}
+                  strokeWidth={5}
                   fill="none"
                   className="text-muted/20"
                 />
                 <motion.circle
-                  cx={40}
-                  cy={40}
+                  cx={35}
+                  cy={35}
                   r={radius}
                   stroke={strokeColor}
-                  strokeWidth={6}
+                  strokeWidth={5}
                   fill="none"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -195,12 +196,12 @@ function SubjectCard({
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold">{progress}%</span>
+                <span className="text-sm sm:text-base font-bold">{progress}%</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-1 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
             <Badge
               variant="secondary"
               className="text-xs"
@@ -508,12 +509,12 @@ export default function GameLobbyDashboard() {
             transition={{ delay: 0.2 }}
           >
             <h2
-              className="text-2xl font-bold mb-4"
+              className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
               data-testid="text-subjects-title"
             >
               Your Subjects
             </h2>
-            <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               <SubjectCard
                 subject="Physics"
                 icon={Atom}
@@ -551,7 +552,7 @@ export default function GameLobbyDashboard() {
           </motion.div>
 
           {/* Daily Goals + Quick Actions Row */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Daily Goals Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -567,8 +568,8 @@ export default function GameLobbyDashboard() {
                     Daily Goals
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                <CardContent className="p-3 sm:p-6">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
                     <CircularProgress
                       value={dailyGoals.questionsAnswered}
                       max={dailyGoals.questionsTarget}
@@ -735,7 +736,7 @@ export default function GameLobbyDashboard() {
           </div>
 
           {/* Recent Activity + Leaderboard */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Recent Activity Timeline */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

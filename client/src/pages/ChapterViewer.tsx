@@ -435,37 +435,37 @@ export default function ChapterViewer() {
           <Header />
           
           <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-            <div className="container mx-auto px-4 py-2">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 min-w-0">
+            <div className="container mx-auto px-2 sm:px-4 py-2">
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleBackClick}
-                    className="shrink-0"
+                    className="shrink-0 h-8 w-8 p-0 sm:h-auto sm:w-auto sm:p-2"
                     data-testid="button-back-to-chapters"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm font-medium truncate">
-                    Chapter {chapter.chapterNumber}
+                  <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-none">
+                    Ch {chapter.chapterNumber}
                   </span>
                 </div>
                 
-                <div className="flex-1 max-w-md mx-4">
-                  <Progress value={readingProgress} className="h-2" />
-                  <p className="text-xs text-muted-foreground text-center mt-1">
-                    {Math.round(readingProgress)}% complete
+                <div className="flex-1 max-w-[100px] sm:max-w-md mx-1 sm:mx-4">
+                  <Progress value={readingProgress} className="h-1.5 sm:h-2" />
+                  <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-0.5 sm:mt-1">
+                    {Math.round(readingProgress)}%
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    {estimatedReadTime} min read
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Badge variant="outline" className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 hidden sm:flex">
+                    <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    {estimatedReadTime}m
                   </Badge>
-                  <Badge variant="outline" className="gap-1">
-                    <Timer className="h-3 w-3" />
+                  <Badge variant="outline" className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
+                    <Timer className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     {formatTime(timeSpent)}
                   </Badge>
                 </div>
@@ -473,9 +473,9 @@ export default function ChapterViewer() {
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-6 max-w-6xl" ref={contentRef}>
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center gap-3 flex-wrap">
+          <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 max-w-6xl" ref={contentRef}>
+            <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <Badge className={getSubjectColor(subject || '')}>
                   {subject} • Class {classLevel}
                 </Badge>
@@ -505,67 +505,68 @@ export default function ChapterViewer() {
               </div>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <h1 
-                className="text-3xl md:text-4xl font-bold mb-4 font-serif" 
+                className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 font-serif" 
                 data-testid="text-chapter-title"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 {chapter.chapterTitle}
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
                 {chapter.introduction}
               </p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6 h-12">
+              <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 h-10 sm:h-12">
                 <TabsTrigger 
                   value="read" 
-                  className="flex items-center gap-2 text-base" 
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base px-1 sm:px-3" 
                   data-testid="tab-read"
                 >
-                  <BookOpen className="h-4 w-4" />
-                  <span>Read</span>
+                  <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline sm:inline">Read</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="keypoints" 
-                  className="flex items-center gap-2 text-base" 
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base px-1 sm:px-3" 
                   data-testid="tab-keypoints"
                 >
-                  <Zap className="h-4 w-4" />
-                  <span>Key Points</span>
+                  <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline sm:inline">Key</span>
+                  <span className="hidden md:inline"> Points</span>
                   {chapterKeyConcepts.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                       {chapterKeyConcepts.length}
                     </Badge>
                   )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="formulas" 
-                  className="flex items-center gap-2 text-base" 
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base px-1 sm:px-3" 
                   data-testid="tab-formulas"
                 >
-                  <FlaskConical className="h-4 w-4" />
-                  <span>Formulas</span>
+                  <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline sm:inline">Formulas</span>
                   {chapterFormulas.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                       {chapterFormulas.length}
                     </Badge>
                   )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="practice" 
-                  className="flex items-center gap-2 text-base" 
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-base px-1 sm:px-3" 
                   data-testid="tab-practice"
                 >
-                  <GraduationCap className="h-4 w-4" />
-                  <span>Practice</span>
+                  <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline sm:inline">Practice</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="read" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <TabsContent value="read" className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                   <div className="lg:col-span-3 space-y-6">
                     {chapter.learningObjectives && chapter.learningObjectives.length > 0 && (
                       <Card className="border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20" id="objectives">
@@ -1149,9 +1150,9 @@ export default function ChapterViewer() {
           </div>
 
           {showFloatingToolbar && (
-            <div className="fixed bottom-6 right-6 z-50">
+            <div className="fixed bottom-20 sm:bottom-6 right-3 sm:right-6 z-50">
               <Card className="shadow-xl border-2">
-                <CardContent className="p-2 flex items-center gap-1">
+                <CardContent className="p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -1249,7 +1250,7 @@ export default function ChapterViewer() {
           )}
 
           {showToc && (
-            <div className="fixed bottom-24 right-6 z-50 w-64">
+            <div className="fixed bottom-36 sm:bottom-24 right-3 sm:right-6 z-50 w-56 sm:w-64">
               <Card className="shadow-xl">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Table of Contents</CardTitle>
