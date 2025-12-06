@@ -101,6 +101,28 @@ npm run dev  # Starts both frontend (5000) and backend
 
 ## Recent Changes (December 2025)
 
+### December 6, 2025 - Monetization & Subscription System
+- **Subscription Plans**: 3-tier system (Free, Premium ₹999/month, Organization custom pricing)
+  - Database tables: `subscription_plans`, `user_subscriptions`, `payment_transactions`, `admin_settings`, `audit_logs`
+  - Public API: `GET /api/subscription-plans` - Fetch active subscription plans
+- **Pricing Page**: New `/pricing` route with:
+  - 3 plan cards with feature highlights
+  - Monthly/Yearly toggle with 20% annual discount
+  - Detailed feature comparison table
+  - Dynamic plan fetching from API with loading states
+- **Admin Payment Configuration**: New `/admin/payments` route with:
+  - Payment provider selection (Stripe/Razorpay/None)
+  - Secure API key configuration (secrets masked, never sent to browser)
+  - Subscription plan CRUD management
+  - Subscription statistics dashboard
+- **Paywall System**: 
+  - `client/src/components/Paywall.tsx` - Reusable paywall component (inline/fullpage/modal variants)
+  - `useSubscription` hook - Check subscription status, access limits
+  - Server-side enforcement on `POST /api/mock-tests/:id/start`
+  - Free users: 1 mock test/month limit enforced on backend
+  - Premium users: Unlimited access
+  - Error handling with "Upgrade Required" toast notifications
+
 ### December 6, 2025 - Bug Fixes & Responsive Design
 - **Community Page Fix**: Fixed crash caused by missing `currentPath` prop in QuickNavigationBar components
 - **Profile Page**: Created comprehensive `/profile` page with user info, avatar, study statistics, subject progress bars, recent activity, achievements, and account settings

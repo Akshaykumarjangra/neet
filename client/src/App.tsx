@@ -18,6 +18,7 @@ import BiologyContent from "@/pages/BiologyContent";
 import Biology from "@/pages/Biology";
 import ChapterViewer from "@/pages/ChapterViewer";
 import MockTestPage from "@/pages/MockTest";
+import MockTestResults from "@/pages/MockTestResults";
 import QuestionnaireBuilder from "@/pages/QuestionnaireBuilder";
 import Flashcards from "@/pages/Flashcards";
 import LearningPath from "@/pages/LearningPath";
@@ -144,9 +145,14 @@ function Router() {
           <MockTests />
         </ProtectedRoute>
       </Route>
-      <Route path="/test/:id">
+      <Route path="/mock-test/:id">
         <ProtectedRoute>
           <MockTestPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mock-test/:id/results">
+        <ProtectedRoute>
+          <MockTestResults />
         </ProtectedRoute>
       </Route>
       <Route path="/flashcards">
