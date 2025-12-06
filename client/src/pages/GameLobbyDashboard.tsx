@@ -154,7 +154,7 @@ function SubjectCard({
         <div
           className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-5 group-hover:opacity-10 transition-opacity`}
         />
-        <CardContent className="p-6 relative">
+        <CardContent className="p-6 relative ml-[0px] mr-[0px] pl-[10px] pr-[10px] pt-[20px] pb-[20px]">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-4">
               <div

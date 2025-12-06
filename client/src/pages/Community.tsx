@@ -678,7 +678,7 @@ export default function Community() {
   if (selectedDiscussionId) {
     return (
       <div className="min-h-screen bg-background">
-        <QuickNavigationBar />
+        <QuickNavigationBar currentPath="/community" />
         <div className="container mx-auto p-6 max-w-4xl">
           <DiscussionDetail
             discussionId={selectedDiscussionId}
@@ -691,7 +691,7 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-background">
-      <QuickNavigationBar />
+      <QuickNavigationBar currentPath="/community" />
       <div className="container mx-auto p-6 space-y-6">
         <motion.div
           initial={prefersReducedMotion ? {} : { opacity: 0, y: -20 }}

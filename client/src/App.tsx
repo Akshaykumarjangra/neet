@@ -39,6 +39,7 @@ import Simulations from "@/pages/Simulations";
 import Syllabus from "@/pages/Syllabus";
 import Search from "@/pages/Search";
 import Physics from "@/pages/Physics";
+import Profile from "@/pages/Profile";
 
 function Router() {
   return (
@@ -188,6 +189,11 @@ function Router() {
       <Route path="/search">
         <ProtectedRoute>
           <Search />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
