@@ -44,6 +44,7 @@ import Physics from "@/pages/Physics";
 import Profile from "@/pages/Profile";
 import Pricing from "@/pages/Pricing";
 import AdminPaymentConfig from "@/pages/AdminPaymentConfig";
+import QuestionBank from "@/pages/QuestionBank";
 
 function Router() {
   return (
@@ -217,6 +218,9 @@ function Router() {
         <ProtectedRoute>
           <Profile />
         </ProtectedRoute>
+      </Route>
+      <Route path="/question-bank">
+        <QuestionBank />
       </Route>
       <Route component={NotFound} />
     </Switch>

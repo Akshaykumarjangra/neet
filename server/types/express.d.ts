@@ -5,6 +5,8 @@ declare module "express-session" {
   interface SessionData {
     userId?: string;
     username?: string;
+    previewedQuestionIds?: number[];
+    hasReceivedAnonymousPreview?: boolean;
   }
 }
 

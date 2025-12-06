@@ -62,6 +62,19 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const questionPreviewLimits = pgTable("question_preview_limits", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  previewedQuestionIds: jsonb("previewed_question_ids").$type<number[]>().notNull().default([]),
+  lastAccessedAt: timestamp("last_accessed_at").notNull().defaultNow(),
+});
+
+export const guestPreviewLimits = pgTable("guest_preview_limits", {
+  guestToken: varchar("guest_token", { length: 64 }).primaryKey(),
+  previewedQuestionIds: jsonb("previewed_question_ids").$type<number[]>().notNull().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastAccessedAt: timestamp("last_accessed_at").notNull().defaultNow(),
+});
+
 // ============ MENTOR MANAGEMENT SYSTEM ============
 
 export const mentors = pgTable("mentors", {

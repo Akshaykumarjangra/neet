@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { questions, contentTopics, subscriptionPlans } from "@shared/schema";
+import { questions, contentTopics, subscriptionPlans, users, questionPreviewLimits } from "@shared/schema";
+import { nanoid } from "nanoid";
 import { sql, eq } from "drizzle-orm";
 import {
   insertQuestionSchema,
@@ -148,22 +149,306 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Question routes
+  // Question stats endpoint for Question Bank page
+  app.get("/api/questions/stats", async (req, res) => {
+    try {
+      // Get total count
+      const totalResult = await db.select({ count: sql<number>`count(*)` }).from(questions);
+      const total = Number(totalResult[0].count);
+
+      // Get counts by subject (joining with contentTopics)
+      const subjectCountsResult = await db.select({
+        subject: contentTopics.subject,
+        count: sql<number>`count(*)`
+      })
+        .from(questions)
+        .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+        .groupBy(contentTopics.subject);
+
+      const bySubject: Record<string, number> = {};
+      for (const row of subjectCountsResult) {
+        bySubject[row.subject] = Number(row.count);
+      }
+
+      // Get counts by difficulty
+      const difficultyCountsResult = await db.select({
+        difficulty: questions.difficultyLevel,
+        count: sql<number>`count(*)`
+      })
+        .from(questions)
+        .groupBy(questions.difficultyLevel);
+
+      const byDifficulty: Record<string, number> = {};
+      for (const row of difficultyCountsResult) {
+        const label = row.difficulty === 1 ? 'easy' : row.difficulty === 2 ? 'medium' : 'hard';
+        byDifficulty[label] = Number(row.count);
+      }
+
+      // Get PYQ count
+      const pyqResult = await db.select({ count: sql<number>`count(*)` })
+        .from(questions)
+        .where(sql`${questions.pyqYear} IS NOT NULL`);
+      const pyqCount = Number(pyqResult[0].count);
+
+      // Get PYQ years distribution
+      const pyqYearsResult = await db.select({
+        year: questions.pyqYear,
+        count: sql<number>`count(*)`
+      })
+        .from(questions)
+        .where(sql`${questions.pyqYear} IS NOT NULL`)
+        .groupBy(questions.pyqYear)
+        .orderBy(sql`${questions.pyqYear} DESC`);
+
+      const pyqByYear: Record<string, number> = {};
+      for (const row of pyqYearsResult) {
+        if (row.year) {
+          pyqByYear[String(row.year)] = Number(row.count);
+        }
+      }
+
+      res.json({
+        total,
+        bySubject,
+        byDifficulty,
+        pyqCount,
+        pyqByYear
+      });
+    } catch (error: any) {
+      console.error("Error fetching question stats:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public preview endpoint - returns fixed 5 sample questions for marketing/preview
+  app.get("/api/questions/preview", async (req, res) => {
+    try {
+      const previewQuestions = await db.select({
+        question: questions,
+        topic: contentTopics
+      })
+        .from(questions)
+        .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+        .limit(5);
+      
+      const formattedQuestions = previewQuestions.map(r => ({
+        ...r.question,
+        topic: r.topic
+      }));
+      
+      res.json({
+        questions: formattedQuestions,
+        total: 5,
+        isPreview: true,
+        requiresAuth: true,
+        message: "Sign up to access our full 50,000+ question bank"
+      });
+    } catch (error: any) {
+      console.error("Error fetching preview questions:", error);
+      res.status(500).json({ message: "Failed to load preview questions" });
+    }
+  });
+
+  // Question routes with pagination and search - REQUIRES AUTHENTICATION
   app.get("/api/questions", async (req, res) => {
     try {
-      const { subject, topicId, difficulty, limit, pyqOnly, pyqYear } = req.query;
+      // Authentication required for main questions endpoint
+      if (!req.session?.userId) {
+        return res.status(401).json({ 
+          message: "Authentication required", 
+          requiresAuth: true 
+        });
+      }
 
-      const filters: any = {};
-      if (subject) filters.subject = subject as string;
-      if (topicId) filters.topicId = parseInt(topicId as string);
-      if (difficulty) filters.difficulty = parseInt(difficulty as string);
-      if (limit) filters.limit = parseInt(limit as string);
-      if (pyqOnly === 'true') filters.pyqOnly = true;
-      if (pyqYear) filters.pyqYear = parseInt(pyqYear as string);
+      const { subject, topicId, difficulty, limit, pyqOnly, pyqYear, search, page } = req.query;
 
-      const questions = await storage.getFilteredQuestions(filters);
-      res.json(questions);
+      const FREE_QUESTION_LIMIT = 10;
+      const userId = req.session.userId;
+      
+      // Get user premium status
+      const [currentUser] = await db
+        .select({ isPaidUser: users.isPaidUser })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      const isPremiumUser = currentUser?.isPaidUser || false;
+      
+      let previewedIds: Set<number> = new Set();
+      
+      // For free users, use DB-backed tracking
+      if (!isPremiumUser) {
+        const existing = await db.select().from(questionPreviewLimits).where(eq(questionPreviewLimits.userId, userId)).limit(1);
+        const dbPreviewedIds = existing[0]?.previewedQuestionIds || [];
+        previewedIds = new Set(dbPreviewedIds);
+        
+        // Check if quota exhausted for free users
+        if (previewedIds.size >= FREE_QUESTION_LIMIT) {
+          return res.json({
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: FREE_QUESTION_LIMIT,
+            totalPages: 0,
+            isLimited: true,
+            quotaExhausted: true,
+            quotaRemaining: 0,
+            requiresSignup: false
+          });
+        }
+      }
+      
+      // Determine limits based on access tier
+      const isLimited = !isPremiumUser;
+
+      // Pagination params
+      const pageNum = page ? parseInt(page as string) : 1;
+      let limitNum = limit ? parseInt(limit as string) : 20;
+      let offset = (pageNum - 1) * limitNum;
+      
+      // For non-premium users, we need to enforce limits
+      // Premium users use the page/limit params as provided for proper pagination
+      const fetchLimit = isPremiumUser ? limitNum : 50;
+      const fetchOffset = isPremiumUser ? offset : 0;
+
+      // Build query conditions
+      const conditions: any[] = [];
+      
+      if (topicId) {
+        conditions.push(eq(questions.topicId, parseInt(topicId as string)));
+      }
+      
+      if (difficulty) {
+        conditions.push(eq(questions.difficultyLevel, parseInt(difficulty as string)));
+      }
+
+      if (pyqOnly === 'true') {
+        conditions.push(sql`${questions.pyqYear} IS NOT NULL`);
+      }
+
+      if (pyqYear) {
+        conditions.push(eq(questions.pyqYear, parseInt(pyqYear as string)));
+      }
+
+      if (search) {
+        conditions.push(sql`${questions.questionText} ILIKE ${'%' + search + '%'}`);
+      }
+
+      let questionsList: any[];
+      let totalCount: number;
+
+      if (subject) {
+        // Query with subject filter (need to join with contentTopics)
+        const subjectCondition = eq(contentTopics.subject, subject as string);
+        const allConditions = conditions.length > 0 
+          ? sql`${subjectCondition} AND ${sql.join(conditions, sql` AND `)}`
+          : subjectCondition;
+
+        // Get total count
+        const countResult = await db.select({ count: sql<number>`count(*)` })
+          .from(questions)
+          .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+          .where(allConditions);
+        totalCount = Number(countResult[0].count);
+
+        // Get paginated results
+        const results = await db.select({
+          question: questions,
+          topic: contentTopics
+        })
+          .from(questions)
+          .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+          .where(allConditions)
+          .limit(fetchLimit)
+          .offset(fetchOffset);
+        
+        questionsList = results.map(r => ({
+          ...r.question,
+          topic: r.topic
+        }));
+      } else {
+        // Query without subject filter
+        const whereClause = conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
+
+        // Get total count
+        const countQuery = whereClause 
+          ? db.select({ count: sql<number>`count(*)` }).from(questions).where(whereClause)
+          : db.select({ count: sql<number>`count(*)` }).from(questions);
+        const countResult = await countQuery;
+        totalCount = Number(countResult[0].count);
+
+        // Get paginated results with topic info
+        let resultsQuery = db.select({
+          question: questions,
+          topic: contentTopics
+        })
+          .from(questions)
+          .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id));
+        
+        if (whereClause) {
+          resultsQuery = resultsQuery.where(whereClause) as typeof resultsQuery;
+        }
+        
+        const results = await resultsQuery.limit(fetchLimit).offset(fetchOffset);
+        questionsList = results.map(r => ({
+          ...r.question,
+          topic: r.topic
+        }));
+      }
+
+      // Handle free users (non-premium) - DB-backed tracking for 10 questions
+      if (isLimited) {
+        const newQuestions = questionsList.filter(q => !previewedIds.has(q.id));
+        const remainingQuota = FREE_QUESTION_LIMIT - previewedIds.size;
+        const questionsToShow = newQuestions.slice(0, remainingQuota);
+        
+        // Track viewed questions in database with deduplication
+        const newIds = questionsToShow.map(q => q.id);
+        if (newIds.length > 0) {
+          const uniqueIds = [...new Set([...Array.from(previewedIds), ...newIds])].slice(0, FREE_QUESTION_LIMIT);
+          
+          await db.insert(questionPreviewLimits)
+            .values({ 
+              userId, 
+              previewedQuestionIds: uniqueIds,
+              lastAccessedAt: new Date()
+            })
+            .onConflictDoUpdate({ 
+              target: questionPreviewLimits.userId, 
+              set: { 
+                previewedQuestionIds: uniqueIds, 
+                lastAccessedAt: new Date() 
+              }
+            });
+        }
+        
+        const totalUsed = previewedIds.size + newIds.length;
+        
+        return res.json({
+          questions: questionsToShow,
+          total: totalCount,
+          page: 1,
+          limit: FREE_QUESTION_LIMIT,
+          totalPages: 1,
+          isLimited: true,
+          requiresSignup: false,
+          quotaExhausted: totalUsed >= FREE_QUESTION_LIMIT,
+          quotaRemaining: FREE_QUESTION_LIMIT - totalUsed
+        });
+      }
+
+      const effectiveTotalPages = Math.ceil(totalCount / limitNum);
+
+      res.json({
+        questions: questionsList,
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: effectiveTotalPages,
+        isLimited: false,
+        requiresSignup: false
+      });
     } catch (error: any) {
+      console.error("Error fetching questions:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -213,11 +498,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/questions/:id", async (req, res) => {
     try {
+      // Require authentication to access individual questions
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "Authentication required", requiresAuth: true });
+      }
+      
+      const userId = req.session.userId;
       const id = parseInt(req.params.id);
+      
+      // Check if user is premium
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const isPremiumUser = user[0]?.isPaidUser || false;
+      
       const question = await storage.getQuestionById(id);
 
       if (!question) {
         return res.status(404).json({ error: "Question not found" });
+      }
+      
+      // For non-premium users, enforce quota (only after verifying question exists)
+      if (!isPremiumUser) {
+        const FREE_QUESTION_LIMIT = 10;
+        
+        // Get existing preview record
+        const existing = await db.select()
+          .from(questionPreviewLimits)
+          .where(eq(questionPreviewLimits.userId, userId))
+          .limit(1);
+        
+        const previewedIds: Set<number> = new Set(existing[0]?.previewedQuestionIds || []);
+        
+        // Check if this question is already in their quota
+        if (!previewedIds.has(id)) {
+          // Check if quota is exhausted
+          if (previewedIds.size >= FREE_QUESTION_LIMIT) {
+            return res.status(403).json({ 
+              message: "Question quota exhausted. Upgrade to Premium for unlimited access.",
+              quotaExhausted: true
+            });
+          }
+          
+          // Add this question to their quota (only for valid questions)
+          previewedIds.add(id);
+          const updatedIds = [...previewedIds].slice(0, FREE_QUESTION_LIMIT);
+          
+          await db.insert(questionPreviewLimits)
+            .values({ userId, previewedQuestionIds: updatedIds })
+            .onConflictDoUpdate({
+              target: questionPreviewLimits.userId,
+              set: { previewedQuestionIds: updatedIds, lastAccessedAt: new Date() }
+            });
+        }
       }
 
       res.json(question);
@@ -228,6 +559,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/questions", async (req, res) => {
     try {
+      // Require authentication to create questions
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "Authentication required", requiresAuth: true });
+      }
+      
       const validatedData = insertQuestionSchema.parse(req.body);
       const question = await storage.createQuestion(validatedData);
       res.status(201).json(question);
