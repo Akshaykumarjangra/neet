@@ -42,6 +42,7 @@ import Search from "@/pages/Search";
 import Physics from "@/pages/Physics";
 import Profile from "@/pages/Profile";
 import Pricing from "@/pages/Pricing";
+import AdminPaymentConfig from "@/pages/AdminPaymentConfig";
 
 function Router() {
   return (
@@ -176,6 +177,11 @@ function Router() {
       <Route path="/admin/content">
         <ProtectedRoute>
           <AdminContentManager />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/payments">
+        <ProtectedRoute>
+          <AdminPaymentConfig />
         </ProtectedRoute>
       </Route>
       <Route path="/mentor-dashboard">

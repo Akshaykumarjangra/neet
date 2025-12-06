@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { questions, contentTopics } from "@shared/schema";
-import { sql } from "drizzle-orm";
+import { questions, contentTopics, subscriptionPlans } from "@shared/schema";
+import { sql, eq } from "drizzle-orm";
 import {
   insertQuestionSchema,
   insertContentTopicSchema,
@@ -81,6 +81,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
   app.use("/api/search", searchRoutes);
+
+  // ============ PUBLIC SUBSCRIPTION PLANS ============
+  
+  // Get all active subscription plans (public)
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await db.select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.isActive, true))
+        .orderBy(subscriptionPlans.displayOrder);
+      res.json(plans);
+    } catch (error: any) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
 
   // Topic routes
   app.get("/api/topics", async (req, res) => {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "./db";
-import { users, questions, contentTopics } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, questions, contentTopics, subscriptionPlans, userSubscriptions, adminSettings, auditLogs } from "@shared/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import OpenAI from "openai";
 
@@ -439,5 +439,391 @@ router.get("/topics", requireAdmin, async (req, res) => {
   } catch (error) {
     console.error("Error fetching topics:", error);
     res.status(500).json({ error: "Failed to fetch topics" });
+  }
+});
+
+// ============ PAYMENT & SUBSCRIPTION CONFIGURATION ============
+
+const isSensitiveKey = (key: string): boolean => {
+  const sensitivePatterns = ['secret', 'key', 'password', 'token', 'credential', 'private'];
+  const lowerKey = key.toLowerCase();
+  return sensitivePatterns.some(pattern => lowerKey.includes(pattern));
+};
+
+const maskSensitiveValue = (value: any): string => {
+  return value && String(value).length > 0 ? "••••••••configured" : "";
+};
+
+// Get all admin settings
+router.get("/settings", requireAdmin, async (req, res) => {
+  try {
+    const settings = await db.select().from(adminSettings);
+    const settingsMap: Record<string, any> = {};
+    settings.forEach(s => {
+      if (isSensitiveKey(s.key)) {
+        settingsMap[s.key] = maskSensitiveValue(s.value);
+        settingsMap[`${s.key}_configured`] = !!s.value && String(s.value).length > 0;
+      } else {
+        settingsMap[s.key] = s.value;
+      }
+    });
+    res.json(settingsMap);
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+// Get a single admin setting
+router.get("/settings/:key", requireAdmin, async (req, res) => {
+  try {
+    const { key } = req.params;
+    const [setting] = await db.select().from(adminSettings).where(eq(adminSettings.key, key)).limit(1);
+    if (!setting) {
+      return res.status(404).json({ error: "Setting not found" });
+    }
+    if (isSensitiveKey(key)) {
+      res.json({
+        ...setting,
+        value: maskSensitiveValue(setting.value),
+        configured: !!setting.value && String(setting.value).length > 0
+      });
+    } else {
+      res.json(setting);
+    }
+  } catch (error) {
+    console.error("Error fetching setting:", error);
+    res.status(500).json({ error: "Failed to fetch setting" });
+  }
+});
+
+// Update or create an admin setting
+router.put("/settings/:key", requireAdmin, async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { value, description } = req.body;
+    const userId = req.session?.userId;
+
+    // Check if setting exists
+    const [existing] = await db.select().from(adminSettings).where(eq(adminSettings.key, key)).limit(1);
+
+    if (existing) {
+      // Update existing setting
+      await db.update(adminSettings)
+        .set({ 
+          value, 
+          description: description || existing.description,
+          updatedBy: userId,
+          updatedAt: new Date()
+        })
+        .where(eq(adminSettings.key, key));
+    } else {
+      // Create new setting
+      await db.insert(adminSettings).values({
+        key,
+        value,
+        description,
+        updatedBy: userId,
+      });
+    }
+
+    // Log the change
+    await db.insert(auditLogs).values({
+      userId,
+      action: existing ? "update_setting" : "create_setting",
+      entityType: "admin_setting",
+      entityId: key,
+      oldValue: existing?.value,
+      newValue: value,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error updating setting:", error);
+    res.status(500).json({ error: "Failed to update setting" });
+  }
+});
+
+// Bulk update settings
+router.post("/settings/bulk", requireAdmin, async (req, res) => {
+  try {
+    const { settings } = req.body;
+    const userId = req.session?.userId;
+
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ error: "Settings object required" });
+    }
+
+    for (const [key, value] of Object.entries(settings)) {
+      const [existing] = await db.select().from(adminSettings).where(eq(adminSettings.key, key)).limit(1);
+
+      if (existing) {
+        await db.update(adminSettings)
+          .set({ value, updatedBy: userId, updatedAt: new Date() })
+          .where(eq(adminSettings.key, key));
+      } else {
+        await db.insert(adminSettings).values({ key, value, updatedBy: userId });
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error bulk updating settings:", error);
+    res.status(500).json({ error: "Failed to update settings" });
+  }
+});
+
+// ============ SUBSCRIPTION PLANS MANAGEMENT ============
+
+// Get all subscription plans
+router.get("/subscription-plans", requireAdmin, async (req, res) => {
+  try {
+    const plans = await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.displayOrder);
+    res.json(plans);
+  } catch (error) {
+    console.error("Error fetching subscription plans:", error);
+    res.status(500).json({ error: "Failed to fetch subscription plans" });
+  }
+});
+
+// Get a single subscription plan
+router.get("/subscription-plans/:id", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, parseInt(id))).limit(1);
+    if (!plan) {
+      return res.status(404).json({ error: "Plan not found" });
+    }
+    res.json(plan);
+  } catch (error) {
+    console.error("Error fetching plan:", error);
+    res.status(500).json({ error: "Failed to fetch plan" });
+  }
+});
+
+// Create a new subscription plan
+router.post("/subscription-plans", requireAdmin, async (req, res) => {
+  try {
+    const { name, slug, description, planType, priceMonthly, priceYearly, features, limits, trialDays, isActive, isPopular, displayOrder } = req.body;
+    const userId = req.session?.userId;
+
+    if (!name || !slug) {
+      return res.status(400).json({ error: "Name and slug are required" });
+    }
+
+    const [plan] = await db.insert(subscriptionPlans).values({
+      name,
+      slug,
+      description,
+      planType: planType || 'premium',
+      priceMonthly: priceMonthly || 0,
+      priceYearly: priceYearly || null,
+      features: features || [],
+      limits: limits || null,
+      trialDays: trialDays || 0,
+      isActive: isActive !== false,
+      isPopular: isPopular || false,
+      displayOrder: displayOrder || 0,
+    }).returning();
+
+    // Log the creation
+    await db.insert(auditLogs).values({
+      userId,
+      action: "create_subscription_plan",
+      entityType: "subscription_plan",
+      entityId: plan.id.toString(),
+      newValue: plan,
+    });
+
+    res.json(plan);
+  } catch (error: any) {
+    console.error("Error creating plan:", error);
+    if (error.code === '23505') {
+      return res.status(400).json({ error: "A plan with this slug already exists" });
+    }
+    res.status(500).json({ error: "Failed to create plan" });
+  }
+});
+
+// Update a subscription plan
+router.put("/subscription-plans/:id", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, priceMonthly, priceYearly, features, limits, trialDays, isActive, isPopular, displayOrder, stripeProductId, stripePriceIdMonthly, stripePriceIdYearly, razorpayPlanIdMonthly, razorpayPlanIdYearly } = req.body;
+    const userId = req.session?.userId;
+
+    // Get existing plan for audit log
+    const [existing] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, parseInt(id))).limit(1);
+    if (!existing) {
+      return res.status(404).json({ error: "Plan not found" });
+    }
+
+    const updates: any = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (priceMonthly !== undefined) updates.priceMonthly = priceMonthly;
+    if (priceYearly !== undefined) updates.priceYearly = priceYearly;
+    if (features !== undefined) updates.features = features;
+    if (limits !== undefined) updates.limits = limits;
+    if (trialDays !== undefined) updates.trialDays = trialDays;
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (isPopular !== undefined) updates.isPopular = isPopular;
+    if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+    if (stripeProductId !== undefined) updates.stripeProductId = stripeProductId;
+    if (stripePriceIdMonthly !== undefined) updates.stripePriceIdMonthly = stripePriceIdMonthly;
+    if (stripePriceIdYearly !== undefined) updates.stripePriceIdYearly = stripePriceIdYearly;
+    if (razorpayPlanIdMonthly !== undefined) updates.razorpayPlanIdMonthly = razorpayPlanIdMonthly;
+    if (razorpayPlanIdYearly !== undefined) updates.razorpayPlanIdYearly = razorpayPlanIdYearly;
+
+    const [updated] = await db.update(subscriptionPlans)
+      .set(updates)
+      .where(eq(subscriptionPlans.id, parseInt(id)))
+      .returning();
+
+    // Log the update
+    await db.insert(auditLogs).values({
+      userId,
+      action: "update_subscription_plan",
+      entityType: "subscription_plan",
+      entityId: id,
+      oldValue: existing,
+      newValue: updated,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error updating plan:", error);
+    res.status(500).json({ error: "Failed to update plan" });
+  }
+});
+
+// Delete a subscription plan
+router.delete("/subscription-plans/:id", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session?.userId;
+
+    // Get existing plan for audit log
+    const [existing] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, parseInt(id))).limit(1);
+    if (!existing) {
+      return res.status(404).json({ error: "Plan not found" });
+    }
+
+    // Check if any active subscriptions use this plan
+    const [activeSubscription] = await db.select()
+      .from(userSubscriptions)
+      .where(and(
+        eq(userSubscriptions.planId, parseInt(id)),
+        eq(userSubscriptions.status, 'active')
+      ))
+      .limit(1);
+
+    if (activeSubscription) {
+      return res.status(400).json({ error: "Cannot delete plan with active subscriptions. Deactivate it instead." });
+    }
+
+    await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, parseInt(id)));
+
+    // Log the deletion
+    await db.insert(auditLogs).values({
+      userId,
+      action: "delete_subscription_plan",
+      entityType: "subscription_plan",
+      entityId: id,
+      oldValue: existing,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting plan:", error);
+    res.status(500).json({ error: "Failed to delete plan" });
+  }
+});
+
+// ============ USER SUBSCRIPTIONS MANAGEMENT ============
+
+// Get all user subscriptions with pagination
+router.get("/subscriptions", requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+    const offset = (page - 1) * limit;
+
+    let query = db.select({
+      subscription: userSubscriptions,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      },
+      plan: {
+        id: subscriptionPlans.id,
+        name: subscriptionPlans.name,
+        slug: subscriptionPlans.slug,
+      },
+    })
+    .from(userSubscriptions)
+    .leftJoin(users, eq(userSubscriptions.userId, users.id))
+    .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
+    .orderBy(desc(userSubscriptions.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+    const subscriptions = await query;
+    res.json(subscriptions);
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    res.status(500).json({ error: "Failed to fetch subscriptions" });
+  }
+});
+
+// Get subscription statistics
+router.get("/subscriptions/stats", requireAdmin, async (req, res) => {
+  try {
+    const stats = await db.execute(sql`
+      SELECT 
+        COUNT(*) FILTER (WHERE status = 'active') as active_count,
+        COUNT(*) FILTER (WHERE status = 'trial') as trial_count,
+        COUNT(*) FILTER (WHERE status = 'cancelled') as cancelled_count,
+        COUNT(*) FILTER (WHERE status = 'expired') as expired_count,
+        COUNT(*) as total_count
+      FROM user_subscriptions
+    `);
+
+    res.json(stats.rows[0] || { active_count: 0, trial_count: 0, cancelled_count: 0, expired_count: 0, total_count: 0 });
+  } catch (error) {
+    console.error("Error fetching subscription stats:", error);
+    res.status(500).json({ error: "Failed to fetch subscription stats" });
+  }
+});
+
+// ============ AUDIT LOGS ============
+
+// Get audit logs with pagination
+router.get("/audit-logs", requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = (page - 1) * limit;
+
+    const logs = await db.select({
+      log: auditLogs,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      },
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+    res.json(logs);
+  } catch (error) {
+    console.error("Error fetching audit logs:", error);
+    res.status(500).json({ error: "Failed to fetch audit logs" });
   }
 });

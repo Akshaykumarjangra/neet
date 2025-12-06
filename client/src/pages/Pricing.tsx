@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Check,
   X,
@@ -31,8 +33,11 @@ import {
   Star,
   Shield,
   Headphones,
+  AlertCircle,
+  LucideIcon,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import type { SubscriptionPlan } from "@shared/schema";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -68,72 +73,175 @@ const features: PlanFeature[] = [
   { name: "Custom branding", free: false, premium: false, organization: true },
 ];
 
+interface DisplayPlan {
+  name: string;
+  slug: string;
+  description: string;
+  priceMonthly: number | null;
+  priceYearly: number | null;
+  icon: LucideIcon;
+  color: string;
+  buttonVariant: "outline" | "default" | "secondary";
+  popular: boolean;
+  features: string[];
+}
+
+const fallbackPlans: DisplayPlan[] = [
+  {
+    name: "Free",
+    slug: "free",
+    description: "Get started with basic NEET preparation",
+    priceMonthly: 0,
+    priceYearly: 0,
+    icon: Sparkles,
+    color: "from-gray-500 to-slate-500",
+    buttonVariant: "outline",
+    popular: false,
+    features: [
+      "500 practice questions",
+      "3 sample chapters",
+      "1 mock test per month",
+      "Basic progress tracking",
+      "Community discussions",
+    ],
+  },
+  {
+    name: "Premium",
+    slug: "premium",
+    description: "Complete NEET preparation for serious aspirants",
+    priceMonthly: 999,
+    priceYearly: 7999,
+    icon: Crown,
+    color: "from-purple-500 to-pink-500",
+    buttonVariant: "default",
+    popular: true,
+    features: [
+      "50,000+ questions",
+      "All chapters with rich content",
+      "Unlimited mock tests",
+      "AI-powered learning path",
+      "Video lessons & simulations",
+      "2 mentor sessions/month",
+      "Priority doubt support",
+      "Downloadable materials",
+    ],
+  },
+  {
+    name: "Organization",
+    slug: "organization",
+    description: "For schools, coaching centers & institutions",
+    priceMonthly: null,
+    priceYearly: null,
+    icon: Building2,
+    color: "from-blue-500 to-cyan-500",
+    buttonVariant: "secondary",
+    popular: false,
+    features: [
+      "Everything in Premium",
+      "Bulk student licenses",
+      "Teacher admin dashboard",
+      "School-wide analytics",
+      "10 mentor sessions/month",
+      "Dedicated support",
+      "Custom branding",
+      "API access",
+    ],
+  },
+];
+
+const getPlanConfig = (planType: string): { icon: LucideIcon; color: string; buttonVariant: "outline" | "default" | "secondary" } => {
+  switch (planType) {
+    case "free":
+      return {
+        icon: Sparkles,
+        color: "from-gray-500 to-slate-500",
+        buttonVariant: "outline",
+      };
+    case "premium":
+      return {
+        icon: Crown,
+        color: "from-purple-500 to-pink-500",
+        buttonVariant: "default",
+      };
+    case "organization":
+      return {
+        icon: Building2,
+        color: "from-blue-500 to-cyan-500",
+        buttonVariant: "secondary",
+      };
+    default:
+      return {
+        icon: Sparkles,
+        color: "from-gray-500 to-slate-500",
+        buttonVariant: "outline",
+      };
+  }
+};
+
+const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
+  const config = getPlanConfig(apiPlan.planType);
+  return {
+    name: apiPlan.name,
+    slug: apiPlan.slug,
+    description: apiPlan.description || "",
+    priceMonthly: apiPlan.planType === "organization" ? null : Math.round(apiPlan.priceMonthly / 100),
+    priceYearly: apiPlan.planType === "organization" ? null : (apiPlan.priceYearly ? Math.round(apiPlan.priceYearly / 100) : null),
+    icon: config.icon,
+    color: config.color,
+    buttonVariant: config.buttonVariant,
+    popular: apiPlan.isPopular,
+    features: apiPlan.features || [],
+  };
+};
+
+function PlanCardSkeleton() {
+  return (
+    <Card className="relative h-full flex flex-col">
+      <CardHeader className="text-center pb-4">
+        <Skeleton className="mx-auto h-14 w-14 rounded-xl mb-4" />
+        <Skeleton className="h-8 w-32 mx-auto mb-2" />
+        <Skeleton className="h-4 w-48 mx-auto" />
+      </CardHeader>
+      <CardContent className="flex-1">
+        <div className="text-center mb-6">
+          <Skeleton className="h-10 w-24 mx-auto mb-2" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-start gap-2">
+              <Skeleton className="h-5 w-5 shrink-0 mt-0.5" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Skeleton className="h-11 w-full" />
+      </CardFooter>
+    </Card>
+  );
+}
+
 export default function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  const plans = [
-    {
-      name: "Free",
-      slug: "free",
-      description: "Get started with basic NEET preparation",
-      priceMonthly: 0,
-      priceYearly: 0,
-      icon: Sparkles,
-      color: "from-gray-500 to-slate-500",
-      buttonVariant: "outline" as const,
-      popular: false,
-      features: [
-        "500 practice questions",
-        "3 sample chapters",
-        "1 mock test per month",
-        "Basic progress tracking",
-        "Community discussions",
-      ],
+  const { data: apiPlans, isLoading, isError } = useQuery<SubscriptionPlan[]>({
+    queryKey: ["/api/subscription-plans"],
+    queryFn: async () => {
+      const response = await fetch("/api/subscription-plans");
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription plans");
+      }
+      return response.json();
     },
-    {
-      name: "Premium",
-      slug: "premium",
-      description: "Complete NEET preparation for serious aspirants",
-      priceMonthly: 999,
-      priceYearly: 7999,
-      icon: Crown,
-      color: "from-purple-500 to-pink-500",
-      buttonVariant: "default" as const,
-      popular: true,
-      features: [
-        "50,000+ questions",
-        "All chapters with rich content",
-        "Unlimited mock tests",
-        "AI-powered learning path",
-        "Video lessons & simulations",
-        "2 mentor sessions/month",
-        "Priority doubt support",
-        "Downloadable materials",
-      ],
-    },
-    {
-      name: "Organization",
-      slug: "organization",
-      description: "For schools, coaching centers & institutions",
-      priceMonthly: null, // Custom pricing
-      priceYearly: null,
-      icon: Building2,
-      color: "from-blue-500 to-cyan-500",
-      buttonVariant: "secondary" as const,
-      popular: false,
-      features: [
-        "Everything in Premium",
-        "Bulk student licenses",
-        "Teacher admin dashboard",
-        "School-wide analytics",
-        "10 mentor sessions/month",
-        "Dedicated support",
-        "Custom branding",
-        "API access",
-      ],
-    },
-  ];
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const plans: DisplayPlan[] = apiPlans && apiPlans.length > 0
+    ? apiPlans.map(transformApiPlan)
+    : fallbackPlans;
 
   const formatPrice = (price: number | null) => {
     if (price === null) return "Custom";
@@ -211,93 +319,118 @@ export default function Pricing() {
           </div>
         </motion.div>
 
+        {isError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto mb-8"
+          >
+            <Card className="border-yellow-500/50 bg-yellow-500/10">
+              <CardContent className="p-4 flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                  Unable to load latest pricing. Showing default plans.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto mb-16">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.slug}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card
-                className={`relative h-full flex flex-col ${
-                  plan.popular
-                    ? "border-2 border-primary shadow-xl shadow-primary/20"
-                    : ""
-                }`}
-                data-testid={`card-plan-${plan.slug}`}
+          {isLoading ? (
+            <>
+              <PlanCardSkeleton />
+              <PlanCardSkeleton />
+              <PlanCardSkeleton />
+            </>
+          ) : (
+            plans.map((plan, index) => (
+              <motion.div
+                key={plan.slug}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4">
-                      <Star className="h-3 w-3 mr-1 fill-current" />
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-4">
-                  <div
-                    className={`mx-auto p-3 rounded-xl bg-gradient-to-br ${plan.color} w-fit mb-4`}
-                  >
-                    <plan.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <div className="text-center mb-6">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl font-bold">
-                        {formatPrice(isYearly ? plan.priceYearly : plan.priceMonthly)}
-                      </span>
-                      {plan.priceMonthly !== null && plan.priceMonthly > 0 && (
-                        <span className="text-muted-foreground">
-                          /{isYearly ? "year" : "month"}
+                <Card
+                  className={`relative h-full flex flex-col ${
+                    plan.popular
+                      ? "border-2 border-primary shadow-xl shadow-primary/20"
+                      : ""
+                  }`}
+                  data-testid={`card-plan-${plan.slug}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4">
+                        <Star className="h-3 w-3 mr-1 fill-current" />
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader className="text-center pb-4">
+                    <div
+                      className={`mx-auto p-3 rounded-xl bg-gradient-to-br ${plan.color} w-fit mb-4`}
+                    >
+                      <plan.icon className="h-8 w-8 text-white" />
+                    </div>
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <div className="text-center mb-6">
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-4xl font-bold">
+                          {formatPrice(isYearly ? plan.priceYearly : plan.priceMonthly)}
                         </span>
+                        {plan.priceMonthly !== null && plan.priceMonthly > 0 && (
+                          <span className="text-muted-foreground">
+                            /{isYearly ? "year" : "month"}
+                          </span>
+                        )}
+                      </div>
+                      {isYearly && plan.priceMonthly && plan.priceMonthly > 0 && plan.priceYearly && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          ₹{Math.round(plan.priceYearly / 12)}/month billed yearly
+                        </p>
                       )}
                     </div>
-                    {isYearly && plan.priceMonthly && plan.priceMonthly > 0 && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        ₹{Math.round(plan.priceYearly! / 12)}/month billed yearly
-                      </p>
-                    )}
-                  </div>
 
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
-                        : ""
-                    }`}
-                    variant={plan.buttonVariant}
-                    size="lg"
-                    data-testid={`button-select-${plan.slug}`}
-                  >
-                    {plan.priceMonthly === null ? (
-                      <>Contact Sales</>
-                    ) : plan.priceMonthly === 0 ? (
-                      <>Get Started Free</>
-                    ) : (
-                      <>
-                        Start Free Trial
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className={`w-full ${
+                        plan.popular
+                          ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
+                          : ""
+                      }`}
+                      variant={plan.buttonVariant}
+                      size="lg"
+                      data-testid={`button-select-${plan.slug}`}
+                    >
+                      {plan.priceMonthly === null ? (
+                        <>Contact Sales</>
+                      ) : plan.priceMonthly === 0 ? (
+                        <>Get Started Free</>
+                      ) : (
+                        <>
+                          Start Free Trial
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            ))
+          )}
         </div>
 
         <motion.div
