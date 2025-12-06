@@ -7,8 +7,11 @@ import {
   mentorAvailability,
   mentorBookings,
   mentorReviews,
+  contentAssets,
+  mentorPayouts,
 } from "@shared/schema";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, gte, lte, sum } from "drizzle-orm";
+import { requireAuthWithPasswordCheck } from "./auth";
 
 const router = Router();
 
@@ -115,6 +118,22 @@ const submitReviewSchema = z.object({
 const verifyMentorSchema = z.object({
   status: z.enum(["approved", "rejected"]),
   rejectionReason: z.string().max(500).optional(),
+});
+
+const createContentAssetSchema = z.object({
+  title: z.string().min(1).max(300),
+  description: z.string().max(2000).optional(),
+  type: z.enum(["video", "pdf", "image", "handwritten_note"]),
+  url: z.string().url().max(1000),
+  thumbnailUrl: z.string().url().max(1000).optional(),
+  durationSeconds: z.number().int().min(0).optional(),
+  pageCount: z.number().int().min(1).optional(),
+});
+
+const updateContentAssetSchema = createContentAssetSchema.partial();
+
+const requestPayoutSchema = z.object({
+  amountCents: z.number().int().min(100).optional(),
 });
 
 // ============ PUBLIC ENDPOINTS ============
@@ -931,6 +950,407 @@ router.put("/admin/mentors/:id/verify", requireAuth, requireRole("admin"), async
       return res.status(400).json({ error: error.errors });
     }
     console.error("Verify mentor error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ CONTENT MANAGEMENT ENDPOINTS ============
+
+router.get("/mentors/my-content", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const { type } = req.query;
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    let query = db
+      .select({
+        id: contentAssets.id,
+        type: contentAssets.type,
+        title: contentAssets.title,
+        description: contentAssets.description,
+        url: contentAssets.url,
+        thumbnailUrl: contentAssets.thumbnailUrl,
+        durationSeconds: contentAssets.durationSeconds,
+        pageCount: contentAssets.pageCount,
+        fileSizeBytes: contentAssets.fileSizeBytes,
+        isPublic: contentAssets.isPublic,
+        viewCount: contentAssets.viewCount,
+        createdAt: contentAssets.createdAt,
+        updatedAt: contentAssets.updatedAt,
+      })
+      .from(contentAssets)
+      .where(eq(contentAssets.mentorId, mentor.id))
+      .orderBy(desc(contentAssets.createdAt));
+
+    const results = await query;
+
+    let filteredResults = results;
+    if (type && ["video", "pdf", "image", "handwritten_note"].includes(type as string)) {
+      filteredResults = results.filter((c) => c.type === type);
+    }
+
+    res.json(filteredResults);
+  } catch (error: any) {
+    console.error("List mentor content error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/mentors/my-content", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const validatedData = createContentAssetSchema.parse(req.body);
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const [newContent] = await db
+      .insert(contentAssets)
+      .values({
+        mentorId: mentor.id,
+        type: validatedData.type,
+        title: validatedData.title,
+        description: validatedData.description,
+        url: validatedData.url,
+        thumbnailUrl: validatedData.thumbnailUrl,
+        durationSeconds: validatedData.durationSeconds,
+        pageCount: validatedData.pageCount,
+      })
+      .returning();
+
+    res.status(201).json(newContent);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error("Create content error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put("/mentors/my-content/:id", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const contentId = parseInt(req.params.id);
+    const validatedData = updateContentAssetSchema.parse(req.body);
+
+    if (isNaN(contentId)) {
+      return res.status(400).json({ error: "Invalid content ID" });
+    }
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const [existingContent] = await db
+      .select()
+      .from(contentAssets)
+      .where(
+        and(
+          eq(contentAssets.id, contentId),
+          eq(contentAssets.mentorId, mentor.id)
+        )
+      )
+      .limit(1);
+
+    if (!existingContent) {
+      return res.status(404).json({ error: "Content not found or you don't have permission to update it" });
+    }
+
+    const updateData: any = { updatedAt: new Date() };
+    if (validatedData.title !== undefined) updateData.title = validatedData.title;
+    if (validatedData.description !== undefined) updateData.description = validatedData.description;
+    if (validatedData.type !== undefined) updateData.type = validatedData.type;
+    if (validatedData.url !== undefined) updateData.url = validatedData.url;
+    if (validatedData.thumbnailUrl !== undefined) updateData.thumbnailUrl = validatedData.thumbnailUrl;
+    if (validatedData.durationSeconds !== undefined) updateData.durationSeconds = validatedData.durationSeconds;
+    if (validatedData.pageCount !== undefined) updateData.pageCount = validatedData.pageCount;
+
+    const [updatedContent] = await db
+      .update(contentAssets)
+      .set(updateData)
+      .where(eq(contentAssets.id, contentId))
+      .returning();
+
+    res.json(updatedContent);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error("Update content error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/mentors/my-content/:id", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const contentId = parseInt(req.params.id);
+
+    if (isNaN(contentId)) {
+      return res.status(400).json({ error: "Invalid content ID" });
+    }
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const [deleted] = await db
+      .delete(contentAssets)
+      .where(
+        and(
+          eq(contentAssets.id, contentId),
+          eq(contentAssets.mentorId, mentor.id)
+        )
+      )
+      .returning();
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Content not found or you don't have permission to delete it" });
+    }
+
+    res.json({ message: "Content deleted successfully" });
+  } catch (error: any) {
+    console.error("Delete content error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ EARNINGS & PAYOUT ENDPOINTS ============
+
+router.get("/mentors/my-earnings", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+
+    const [mentor] = await db
+      .select({
+        id: mentors.id,
+        totalEarningsCents: mentors.totalEarningsCents,
+      })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const paidPayoutsResult = await db
+      .select({ total: sum(mentorPayouts.amountCents) })
+      .from(mentorPayouts)
+      .where(
+        and(
+          eq(mentorPayouts.mentorId, mentor.id),
+          eq(mentorPayouts.status, "paid")
+        )
+      );
+
+    const pendingPayoutsResult = await db
+      .select({ total: sum(mentorPayouts.amountCents) })
+      .from(mentorPayouts)
+      .where(
+        and(
+          eq(mentorPayouts.mentorId, mentor.id),
+          eq(mentorPayouts.status, "pending")
+        )
+      );
+
+    const paidPayouts = Number(paidPayoutsResult[0]?.total) || 0;
+    const pendingPayouts = Number(pendingPayoutsResult[0]?.total) || 0;
+    const availableForPayout = mentor.totalEarningsCents - paidPayouts - pendingPayouts;
+
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    const thisMonthBookings = await db
+      .select({ total: sum(mentorBookings.priceCents) })
+      .from(mentorBookings)
+      .where(
+        and(
+          eq(mentorBookings.mentorId, mentor.id),
+          eq(mentorBookings.status, "completed"),
+          eq(mentorBookings.paymentStatus, "paid"),
+          gte(mentorBookings.endAt, thisMonthStart)
+        )
+      );
+
+    const lastMonthBookings = await db
+      .select({ total: sum(mentorBookings.priceCents) })
+      .from(mentorBookings)
+      .where(
+        and(
+          eq(mentorBookings.mentorId, mentor.id),
+          eq(mentorBookings.status, "completed"),
+          eq(mentorBookings.paymentStatus, "paid"),
+          gte(mentorBookings.endAt, lastMonthStart),
+          lte(mentorBookings.endAt, lastMonthEnd)
+        )
+      );
+
+    const thisMonthEarnings = Number(thisMonthBookings[0]?.total) || 0;
+    const lastMonthEarnings = Number(lastMonthBookings[0]?.total) || 0;
+
+    res.json({
+      totalEarningsCents: mentor.totalEarningsCents,
+      paidPayoutsCents: paidPayouts,
+      pendingPayoutsCents: pendingPayouts,
+      availableForPayoutCents: Math.max(0, availableForPayout),
+      thisMonthEarningsCents: thisMonthEarnings,
+      lastMonthEarningsCents: lastMonthEarnings,
+    });
+  } catch (error: any) {
+    console.error("Get earnings error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/mentors/my-payouts", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const payouts = await db
+      .select({
+        id: mentorPayouts.id,
+        amountCents: mentorPayouts.amountCents,
+        status: mentorPayouts.status,
+        periodStart: mentorPayouts.periodStart,
+        periodEnd: mentorPayouts.periodEnd,
+        initiatedAt: mentorPayouts.initiatedAt,
+        paidAt: mentorPayouts.paidAt,
+        failureReason: mentorPayouts.failureReason,
+        createdAt: mentorPayouts.createdAt,
+      })
+      .from(mentorPayouts)
+      .where(eq(mentorPayouts.mentorId, mentor.id))
+      .orderBy(desc(mentorPayouts.createdAt));
+
+    res.json(payouts);
+  } catch (error: any) {
+    console.error("Get payouts error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/mentors/my-payouts/request", requireAuthWithPasswordCheck, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const validatedData = requestPayoutSchema.parse(req.body);
+
+    const [mentor] = await db
+      .select({
+        id: mentors.id,
+        totalEarningsCents: mentors.totalEarningsCents,
+      })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const paidPayoutsResult = await db
+      .select({ total: sum(mentorPayouts.amountCents) })
+      .from(mentorPayouts)
+      .where(
+        and(
+          eq(mentorPayouts.mentorId, mentor.id),
+          eq(mentorPayouts.status, "paid")
+        )
+      );
+
+    const pendingPayoutsResult = await db
+      .select({ total: sum(mentorPayouts.amountCents) })
+      .from(mentorPayouts)
+      .where(
+        and(
+          eq(mentorPayouts.mentorId, mentor.id),
+          eq(mentorPayouts.status, "pending")
+        )
+      );
+
+    const paidPayouts = Number(paidPayoutsResult[0]?.total) || 0;
+    const pendingPayouts = Number(pendingPayoutsResult[0]?.total) || 0;
+    const availableForPayout = mentor.totalEarningsCents - paidPayouts - pendingPayouts;
+
+    if (availableForPayout <= 0) {
+      return res.status(400).json({ error: "No funds available for payout" });
+    }
+
+    const requestedAmount = validatedData.amountCents || availableForPayout;
+
+    if (requestedAmount > availableForPayout) {
+      return res.status(400).json({
+        error: "Requested amount exceeds available balance",
+        availableForPayoutCents: availableForPayout,
+      });
+    }
+
+    const now = new Date();
+    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const periodEnd = now;
+
+    const [newPayout] = await db
+      .insert(mentorPayouts)
+      .values({
+        mentorId: mentor.id,
+        amountCents: requestedAmount,
+        status: "pending",
+        periodStart,
+        periodEnd,
+        initiatedAt: now,
+      })
+      .returning();
+
+    res.status(201).json({
+      message: "Payout request submitted successfully",
+      payout: newPayout,
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error("Request payout error:", error);
     res.status(500).json({ error: error.message });
   }
 });

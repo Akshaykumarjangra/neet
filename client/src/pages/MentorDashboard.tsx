@@ -29,6 +29,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   GraduationCap,
   Clock,
   DollarSign,
@@ -45,6 +62,13 @@ import {
   Link as LinkIcon,
   TrendingUp,
   Award,
+  Video,
+  FileText,
+  Wallet,
+  CreditCard,
+  Upload,
+  Eye,
+  Edit,
 } from "lucide-react";
 
 const SUBJECTS = ["Physics", "Chemistry", "Biology"] as const;
@@ -134,6 +158,46 @@ interface BookingData {
   studentName: string | null;
   studentAvatar?: string | null;
   createdAt: string;
+}
+
+interface ContentData {
+  id: number;
+  mentorId: number;
+  title: string;
+  description: string | null;
+  type: "video" | "pdf" | "image" | "handwritten_note";
+  url: string;
+  thumbnailUrl: string | null;
+  durationMinutes: number | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EarningsData {
+  totalEarningsCents: number;
+  availableForPayoutCents: number;
+  pendingPayoutsCents: number;
+  thisMonthCents: number;
+}
+
+interface PayoutData {
+  id: number;
+  mentorId: number;
+  amountCents: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+}
+
+interface ContentFormData {
+  title: string;
+  description: string;
+  type: "video" | "pdf" | "image" | "handwritten_note";
+  url: string;
+  thumbnailUrl: string;
+  durationMinutes: number | null;
 }
 
 export default function MentorDashboard() {
