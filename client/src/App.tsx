@@ -14,7 +14,8 @@ import Practice from "@/pages/Practice";
 import Leaderboard from "@/pages/Leaderboard";
 import PhysicsContent from "@/pages/PhysicsContent";
 import ChemistryContent from "@/pages/ChemistryContent";
-import BiologyContent from "@/pages/BiologyContent"; // Assuming BiologyContent page is created
+import BiologyContent from "@/pages/BiologyContent";
+import Biology from "@/pages/Biology";
 import ChapterViewer from "@/pages/ChapterViewer";
 import MockTestPage from "@/pages/MockTest";
 import QuestionnaireBuilder from "@/pages/QuestionnaireBuilder";
@@ -104,6 +105,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/biology">
+        <ProtectedRoute>
+          <Biology />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/biology-legacy">
         <ProtectedRoute>
           <BiologyContent />
         </ProtectedRoute>
