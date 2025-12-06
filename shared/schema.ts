@@ -1097,3 +1097,293 @@ export type InsertDiscussionReply = z.infer<typeof insertDiscussionReplySchema>;
 
 export type DiscussionVote = typeof discussionVotes.$inferSelect;
 export type InsertDiscussionVote = z.infer<typeof insertDiscussionVoteSchema>;
+
+// ============ SUBSCRIPTION & PAYMENT SYSTEM ============
+
+export const subscriptionPlanEnum = pgEnum("subscription_plan", ["free", "premium", "organization"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "cancelled", "expired", "pending", "trial", "past_due", "paused"]);
+export const billingIntervalEnum = pgEnum("billing_interval", ["monthly", "yearly", "one_time"]);
+
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  planType: subscriptionPlanEnum("plan_type").notNull().default("premium"),
+  priceMonthly: integer("price_monthly_cents").notNull(), // in paise (99900 = ₹999)
+  priceYearly: integer("price_yearly_cents"), // in paise
+  currency: varchar("currency", { length: 10 }).notNull().default("INR"),
+  billingInterval: billingIntervalEnum("billing_interval").notNull().default("monthly"),
+  // Stripe integration
+  stripeProductId: varchar("stripe_product_id", { length: 255 }),
+  stripePriceIdMonthly: varchar("stripe_price_id_monthly", { length: 255 }),
+  stripePriceIdYearly: varchar("stripe_price_id_yearly", { length: 255 }),
+  // Razorpay integration
+  razorpayPlanIdMonthly: varchar("razorpay_plan_id_monthly", { length: 255 }),
+  razorpayPlanIdYearly: varchar("razorpay_plan_id_yearly", { length: 255 }),
+  // Features and limits
+  features: jsonb("features").$type<string[]>().notNull().default([]),
+  limits: jsonb("limits").$type<{
+    mockTestsPerMonth?: number;
+    questionsPerDay?: number;
+    mentorSessionsPerMonth?: number;
+    videoAccess?: boolean;
+    simulationsAccess?: boolean;
+    downloadContent?: boolean;
+    maxSeats?: number; // for organization plans
+  }>(),
+  trialDays: integer("trial_days").default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  isPopular: boolean("is_popular").notNull().default(false),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  planId: integer("plan_id").references(() => subscriptionPlans.id).notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id), // null if individual
+  status: subscriptionStatusEnum("status").notNull().default("pending"),
+  billingInterval: billingIntervalEnum("billing_interval").notNull().default("monthly"),
+  quantity: integer("quantity").notNull().default(1), // for seat-based plans
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  trialEndDate: timestamp("trial_end_date"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  autoRenew: boolean("auto_renew").notNull().default(true),
+  // Payment provider IDs
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  razorpaySubscriptionId: varchar("razorpay_subscription_id", { length: 255 }),
+  razorpayCustomerId: varchar("razorpay_customer_id", { length: 255 }),
+  cancelledAt: timestamp("cancelled_at"),
+  cancellationReason: text("cancellation_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  activeSubIdx: uniqueIndex("active_subscription_idx").on(table.userId, table.status),
+}));
+
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subscriptionId: integer("subscription_id").references(() => userSubscriptions.id),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  amount: integer("amount_cents").notNull(),
+  currency: varchar("currency", { length: 10 }).notNull().default("INR"),
+  status: paymentStatusEnum("status").notNull().default("pending"),
+  paymentMethod: varchar("payment_method", { length: 50 }), // stripe, razorpay, upi, card
+  paymentProvider: varchar("payment_provider", { length: 50 }), // stripe, razorpay
+  // Provider-specific IDs
+  stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+  stripeChargeId: varchar("stripe_charge_id", { length: 255 }),
+  razorpayOrderId: varchar("razorpay_order_id", { length: 255 }),
+  razorpayPaymentId: varchar("razorpay_payment_id", { length: 255 }),
+  razorpaySignature: varchar("razorpay_signature", { length: 500 }),
+  // Response and metadata
+  paymentGatewayResponse: jsonb("payment_gateway_response"),
+  failureCode: varchar("failure_code", { length: 100 }),
+  failureMessage: text("failure_message"),
+  invoiceUrl: varchar("invoice_url", { length: 500 }),
+  receiptEmail: varchar("receipt_email", { length: 255 }),
+  description: text("description"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Webhook event tracking for payment providers
+export const webhookEvents = pgTable("webhook_events", {
+  id: serial("id").primaryKey(),
+  provider: varchar("provider", { length: 50 }).notNull(), // stripe, razorpay
+  eventId: varchar("event_id", { length: 255 }).notNull().unique(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  payload: jsonb("payload").notNull(),
+  processed: boolean("processed").notNull().default(false),
+  processedAt: timestamp("processed_at"),
+  error: text("error"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============ ORGANIZATION / SCHOOL SYSTEM ============
+
+export const organizationTypeEnum = pgEnum("organization_type", ["school", "coaching", "college", "corporate"]);
+export const orgMemberRoleEnum = pgEnum("org_member_role", ["owner", "admin", "teacher", "student"]);
+export const invitationStatusEnum = pgEnum("invitation_status", ["pending", "accepted", "expired", "cancelled"]);
+
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 100 }).unique(),
+  type: organizationTypeEnum("type").notNull().default("school"),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  country: varchar("country", { length: 100 }).default("India"),
+  pincode: varchar("pincode", { length: 10 }),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  website: varchar("website", { length: 255 }),
+  // Ownership and billing
+  ownerUserId: varchar("owner_user_id").references(() => users.id),
+  billingEmail: varchar("billing_email", { length: 255 }),
+  billingName: varchar("billing_name", { length: 200 }),
+  gstNumber: varchar("gst_number", { length: 20 }),
+  // Seat management
+  totalSeats: integer("total_seats").notNull().default(50),
+  usedSeats: integer("used_seats").notNull().default(0),
+  // Subscription linkage
+  planId: integer("plan_id").references(() => subscriptionPlans.id),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").default("pending"),
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  // Verification and status
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const organizationMembers = pgTable("organization_members", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  role: orgMemberRoleEnum("role").notNull().default("student"),
+  department: varchar("department", { length: 100 }),
+  classSection: varchar("class_section", { length: 50 }), // e.g., "12-A"
+  employeeId: varchar("employee_id", { length: 50 }), // for teachers
+  studentRollNumber: varchar("student_roll_number", { length: 50 }),
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+  invitedBy: varchar("invited_by").references(() => users.id),
+  isActive: boolean("is_active").notNull().default(true),
+}, (table) => ({
+  orgMemberIdx: uniqueIndex("org_member_idx").on(table.organizationId, table.userId),
+}));
+
+export const organizationInvitations = pgTable("organization_invitations", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: orgMemberRoleEnum("role").notNull().default("student"),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  status: invitationStatusEnum("status").notNull().default("pending"),
+  invitedBy: varchar("invited_by").references(() => users.id).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ============ ADMIN SETTINGS & AUDIT ============
+
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: jsonb("value"),
+  description: text("description"),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  action: varchar("action", { length: 100 }).notNull(),
+  entityType: varchar("entity_type", { length: 50 }),
+  entityId: varchar("entity_id", { length: 100 }),
+  oldValue: jsonb("old_value"),
+  newValue: jsonb("new_value"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertOrganizationSchema = createInsertSchema(organizations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usedSeats: true,
+} as any);
+
+export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers).omit({
+  id: true,
+  joinedAt: true,
+} as any);
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertOrganizationInvitationSchema = createInsertSchema(organizationInvitations).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+// Types
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+
+export type OrganizationMember = typeof organizationMembers.$inferSelect;
+export type InsertOrganizationMember = z.infer<typeof insertOrganizationMemberSchema>;
+
+export type OrganizationInvitation = typeof organizationInvitations.$inferSelect;
+export type InsertOrganizationInvitation = z.infer<typeof insertOrganizationInvitationSchema>;
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;

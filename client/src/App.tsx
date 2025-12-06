@@ -41,6 +41,7 @@ import Syllabus from "@/pages/Syllabus";
 import Search from "@/pages/Search";
 import Physics from "@/pages/Physics";
 import Profile from "@/pages/Profile";
+import Pricing from "@/pages/Pricing";
 
 function Router() {
   return (
@@ -78,6 +79,9 @@ function Router() {
       </Route>
       <Route path="/">
         <Home />
+      </Route>
+      <Route path="/pricing">
+        <Pricing />
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute>
