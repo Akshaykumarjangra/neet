@@ -59,6 +59,9 @@ export const users = pgTable("users", {
   isPaidUser: boolean("is_paid_user").notNull().default(false),
   isVerified: boolean("is_verified").notNull().default(false),
   verifiedAt: timestamp("verified_at"),
+  isOwner: boolean("is_owner").notNull().default(false),
+  isDisabled: boolean("is_disabled").notNull().default(false),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

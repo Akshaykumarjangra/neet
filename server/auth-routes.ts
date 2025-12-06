@@ -53,6 +53,7 @@ router.post("/signup", async (req: Request, res: Response) => {
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
+        isOwner: users.isOwner,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -94,6 +95,7 @@ router.post("/login", async (req: Request, res: Response) => {
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
+        isOwner: users.isOwner,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -141,6 +143,7 @@ router.get("/me", async (req: Request, res: Response) => {
         studyStreak: users.studyStreak,
         isAdmin: users.isAdmin,
         isPaidUser: users.isPaidUser,
+        isOwner: users.isOwner,
       })
       .from(users)
       .where(eq(users.id, userId))

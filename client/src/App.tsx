@@ -26,6 +26,7 @@ import MockTests from "@/pages/MockTests";
 import Achievements from "@/pages/Achievements";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminContentManager from "@/pages/AdminContentManager";
+import AdminUsers from "@/pages/AdminUsers";
 import MentorDashboard from "@/pages/MentorDashboard";
 import MentorDiscovery from "@/pages/MentorDiscovery";
 import Enrollment from "@/pages/Enrollment";
@@ -189,6 +190,11 @@ function Router() {
       <Route path="/admin/payments">
         <ProtectedRoute>
           <AdminPaymentConfig />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/users">
+        <ProtectedRoute>
+          <AdminUsers />
         </ProtectedRoute>
       </Route>
       <Route path="/mentor-dashboard">

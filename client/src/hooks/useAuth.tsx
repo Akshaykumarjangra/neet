@@ -12,6 +12,7 @@ interface User {
   studyStreak: number;
   isAdmin: boolean;
   isPaidUser: boolean;
+  isOwner: boolean;
   adminGranted: boolean;
   accessExpiry: string | null;
   openaiTokensUsed: number;

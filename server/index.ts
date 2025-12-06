@@ -10,7 +10,66 @@ import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeWebSocketServer } from "./ws/index";
-import { pool } from "./db";
+import { pool, db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcrypt";
+
+import { nanoid } from "nanoid";
+
+async function ensureOwnerAccount() {
+  const ownerEmail = "akg45272@gmail.com";
+  
+  try {
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, ownerEmail))
+      .limit(1);
+    
+    if (existingUser) {
+      if (!existingUser.isOwner) {
+        await db
+          .update(users)
+          .set({ isOwner: true, isAdmin: true, role: "admin" })
+          .where(eq(users.email, ownerEmail));
+        log(`[Owner Account] Updated existing user ${ownerEmail} to owner status`);
+      } else {
+        log(`[Owner Account] Owner account ${ownerEmail} already exists`);
+      }
+    } else {
+      const ownerPassword = process.env.OWNER_INITIAL_PASSWORD;
+      
+      if (!ownerPassword) {
+        console.error(`[Owner Account] FATAL: OWNER_INITIAL_PASSWORD env var is required to create owner account`);
+        console.error(`[Owner Account] Set OWNER_INITIAL_PASSWORD in your environment and restart the server`);
+        throw new Error("OWNER_INITIAL_PASSWORD environment variable is required for initial setup");
+      }
+      
+      const passwordHash = await bcrypt.hash(ownerPassword, 10);
+      
+      await db.insert(users).values({
+        email: ownerEmail,
+        name: "Admin Owner",
+        passwordHash,
+        role: "admin",
+        isAdmin: true,
+        isOwner: true,
+        isPaidUser: true,
+        isDisabled: false,
+        mustChangePassword: true,
+      });
+      
+      log(`[Owner Account] Created new owner account: ${ownerEmail}`);
+      log(`[Owner Account] Please change the password after first login`);
+    }
+  } catch (error: any) {
+    if (error.message === "OWNER_INITIAL_PASSWORD environment variable is required for initial setup") {
+      process.exit(1); // Exit immediately to prevent server startup
+    }
+    console.error("[Owner Account] Error ensuring owner account:", error);
+  }
+}
 
 const app = express();
 
@@ -145,6 +204,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await ensureOwnerAccount();
+  
   const server = await registerRoutes(app);
 
   // Initialize WebSocket server with session middleware

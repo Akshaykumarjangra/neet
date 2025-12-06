@@ -40,9 +40,82 @@ const requireAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
-// Get all users (admin only)
-router.get("/users", requireAdmin, async (req, res) => {
+// Middleware to check if user is owner (blocks non-owners from access)
+const requireOwner = async (req: any, res: any, next: any) => {
+  const userId = req.session?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
   try {
+    const [user] = await db
+      .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (!user.isOwner) {
+      return res.status(403).json({ error: "Owner access required. Only the platform owner can manage users." });
+    }
+
+    req.isOwner = true;
+    next();
+  } catch (error) {
+    console.error("Owner check error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Get all users (admin only) with pagination and filters
+router.get("/users", requireOwner, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 20;
+    const search = (req.query.search as string) || "";
+    const roleFilter = req.query.role as string;
+    const statusFilter = req.query.status as string;
+    const premiumFilter = req.query.premium as string;
+
+    let conditions: any[] = [];
+
+    if (search) {
+      conditions.push(
+        sql`(LOWER(${users.name}) LIKE LOWER(${'%' + search + '%'}) OR LOWER(${users.email}) LIKE LOWER(${'%' + search + '%'}))`
+      );
+    }
+
+    if (roleFilter && roleFilter !== "all") {
+      conditions.push(eq(users.role, roleFilter as "student" | "mentor" | "admin"));
+    }
+
+    if (statusFilter === "enabled") {
+      conditions.push(eq(users.isDisabled, false));
+    } else if (statusFilter === "disabled") {
+      conditions.push(eq(users.isDisabled, true));
+    }
+
+    if (premiumFilter === "true") {
+      conditions.push(eq(users.isPaidUser, true));
+    } else if (premiumFilter === "false") {
+      conditions.push(eq(users.isPaidUser, false));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(users)
+      .where(whereClause);
+
+    const total = countResult?.count || 0;
+    const totalPages = Math.ceil(total / pageSize);
+    const offset = (page - 1) * pageSize;
+
     const allUsers = await db.select({
       id: users.id,
       name: users.name,
@@ -50,15 +123,138 @@ router.get("/users", requireAdmin, async (req, res) => {
       role: users.role,
       isAdmin: users.isAdmin,
       isPaidUser: users.isPaidUser,
+      isOwner: users.isOwner,
+      isDisabled: users.isDisabled,
       currentLevel: users.currentLevel,
       totalPoints: users.totalPoints,
       createdAt: users.createdAt,
-    }).from(users);
+    })
+    .from(users)
+    .where(whereClause)
+    .orderBy(desc(users.createdAt))
+    .limit(pageSize)
+    .offset(offset);
 
-    res.json(allUsers);
+    res.json({
+      users: allUsers,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+      }
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+// Change user role
+router.patch("/users/:id/role", requireOwner, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    const isCurrentUserOwner = req.isOwner;
+
+    if (!role || !["student", "mentor", "admin"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role. Must be student, mentor, or admin" });
+    }
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.isOwner) {
+      return res.status(403).json({ error: "Cannot change owner's role" });
+    }
+
+    if (targetUser.role === "admin" && !isCurrentUserOwner) {
+      return res.status(403).json({ error: "Only owner can demote admin users" });
+    }
+
+    if (role === "admin" && !isCurrentUserOwner) {
+      return res.status(403).json({ error: "Only owner can promote users to admin" });
+    }
+
+    await db.update(users)
+      .set({ role, isAdmin: role === "admin" })
+      .where(eq(users.id, id));
+
+    res.json({ success: true, message: `User role changed to ${role}` });
+  } catch (error) {
+    console.error("Error changing user role:", error);
+    res.status(500).json({ error: "Failed to change user role" });
+  }
+});
+
+// Toggle premium status
+router.patch("/users/:id/premium", requireOwner, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isPaidUser } = req.body;
+    const isCurrentUserOwner = req.isOwner;
+
+    if (typeof isPaidUser !== "boolean") {
+      return res.status(400).json({ error: "isPaidUser must be a boolean" });
+    }
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.isAdmin && !isCurrentUserOwner) {
+      return res.status(403).json({ error: "Only owner can change admin's premium status" });
+    }
+
+    await db.update(users)
+      .set({ isPaidUser })
+      .where(eq(users.id, id));
+
+    res.json({ success: true, message: `Premium status ${isPaidUser ? "enabled" : "disabled"}` });
+  } catch (error) {
+    console.error("Error toggling premium:", error);
+    res.status(500).json({ error: "Failed to toggle premium status" });
+  }
+});
+
+// Enable/disable account
+router.patch("/users/:id/status", requireOwner, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isDisabled } = req.body;
+    const isCurrentUserOwner = req.isOwner;
+
+    if (typeof isDisabled !== "boolean") {
+      return res.status(400).json({ error: "isDisabled must be a boolean" });
+    }
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (targetUser.isOwner) {
+      return res.status(403).json({ error: "Cannot disable owner account" });
+    }
+
+    if (targetUser.isAdmin && !isCurrentUserOwner) {
+      return res.status(403).json({ error: "Only owner can disable admin accounts" });
+    }
+
+    await db.update(users)
+      .set({ isDisabled })
+      .where(eq(users.id, id));
+
+    res.json({ success: true, message: `Account ${isDisabled ? "disabled" : "enabled"}` });
+  } catch (error) {
+    console.error("Error toggling account status:", error);
+    res.status(500).json({ error: "Failed to toggle account status" });
   }
 });
 
