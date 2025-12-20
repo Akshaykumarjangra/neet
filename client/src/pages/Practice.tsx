@@ -51,6 +51,7 @@ interface SessionStats {
 }
 
 const FLAGGED_QUESTIONS_KEY = "neet-flagged-questions";
+const formatINR = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 
 function getFlaggedQuestions(): FlaggedQuestion[] {
   const stored = localStorage.getItem(FLAGGED_QUESTIONS_KEY);
@@ -89,6 +90,8 @@ export default function Practice() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
 
+  const [practiceMode, setPracticeMode] = useState<"standard" | "adaptive">("standard");
+
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     questionsAttempted: 0,
@@ -102,6 +105,40 @@ export default function Practice() {
     levelProgress: 0,
     neetMarksGained: 0,
     neetMarksLost: 0,
+  });
+
+  const { data: adaptiveQuestions = [], isLoading: adaptiveLoading } = useQuery<Question[]>({
+    queryKey: ["/api/questions/adaptive", user?.id, selectedSubject],
+    queryFn: async () => {
+      try {
+      const payload = await apiRequest("GET", "/api/questions/adaptive");
+        // Handle response format - should have questions array
+        if (Array.isArray(payload)) {
+          return payload;
+        } else if (payload && typeof payload === 'object') {
+          return Array.isArray(payload.questions) ? payload.questions : [];
+        }
+        return [];
+      } catch (err: any) {
+        console.error("Error fetching adaptive questions:", err);
+        if (err.message?.includes('401') || err.message?.includes('Authentication')) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to access adaptive questions.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error Loading Adaptive Questions",
+            description: err.message || "Failed to load adaptive questions. Please try again.",
+            variant: "destructive",
+          });
+        }
+        return [];
+      }
+    },
+    enabled: practiceMode === "adaptive" && !!user?.id,
+    placeholderData: (prev) => prev,
   });
 
   const [flaggedQuestions, setFlaggedQuestions] = useState<FlaggedQuestion[]>([]);
@@ -119,8 +156,10 @@ export default function Practice() {
     setFlaggedQuestions(getFlaggedQuestions());
   }, []);
 
-  const { data: topics } = useQuery<ContentTopic[]>({
+  const { data: topics = [] } = useQuery<ContentTopic[]>({
     queryKey: ['/api/topics'],
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
   });
 
   const buildQueryParams = () => {
@@ -134,42 +173,87 @@ export default function Practice() {
     return params.toString();
   };
 
-  const { data: questions, isLoading, error, refetch } = useQuery<Question[]>({
+  const { data: questions = [], isLoading: standardLoading, error, refetch } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty, pyqOnly, pyqYear],
     queryFn: async () => {
+      try {
       const queryParams = buildQueryParams();
       const url = `/api/questions${queryParams ? '?' + queryParams : ''}`;
-      console.log('🔍 Fetching questions from:', url);
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      const payload = await apiRequest("GET", url);
+        
+        // Handle both array and object response formats
+        let list: Question[] = [];
+        if (Array.isArray(payload)) {
+          list = payload;
+        } else if (payload && typeof payload === 'object') {
+          // Check for questions array in response object
+          if (Array.isArray(payload.questions)) {
+            list = payload.questions;
+          } else if (payload.error) {
+            // If there's an error but still a questions array, use it
+            list = Array.isArray(payload.questions) ? payload.questions : [];
+            if (payload.quotaExhausted) {
+              toast({
+                title: "Question Limit Reached",
+                description: payload.message || "You've reached your free question limit. Upgrade to Premium for unlimited access.",
+                variant: "destructive",
+                duration: 5000,
+              });
+            }
+          }
         }
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Error:', response.status, errorText);
-        throw new Error(`Failed to fetch questions: ${response.status} ${errorText}`);
-      }
-      const data = await response.json();
-      console.log('✅ Questions received:', data.length);
-      const shuffled = [...data].sort(() => Math.random() - 0.5);
+        
+        // Shuffle questions for variety
+      const shuffled = [...list].sort(() => Math.random() - 0.5);
       return shuffled;
+      } catch (err: any) {
+        console.error("Error fetching questions:", err);
+        // If it's a 401, show auth error
+        if (err.message?.includes('401') || err.message?.includes('Authentication')) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to access questions.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error Loading Questions",
+            description: err.message || "Failed to load questions. Please try again.",
+            variant: "destructive",
+          });
+        }
+        return [];
+      }
     },
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false, // Changed to false for better performance
+    refetchOnWindowFocus: false, // Changed to false to prevent unnecessary refetches
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    retry: 3, // Auto-retry failed requests up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    networkMode: 'online', // Only retry when online
   });
 
-  const filteredQuestions = showFlaggedOnly && questions
+  const filteredStandardQuestions = showFlaggedOnly && questions
     ? questions.filter(q => flaggedQuestions.some(f => f.questionId === q.id))
     : questions;
+
+  const questionPool = practiceMode === "adaptive"
+    ? adaptiveQuestions ?? []
+    : filteredStandardQuestions ?? [];
+
+  const isPracticeLoading = practiceMode === "adaptive" ? adaptiveLoading : standardLoading;
+
+  useEffect(() => {
+    setCurrentQuestionIndex(0);
+  }, [practiceMode, questionPool.length]);
 
   const subjects = Array.from(new Set(topics?.map(t => t.subject) || []));
   const filteredTopics = topics?.filter(t => selectedSubject === "all" || t.subject === selectedSubject) || [];
 
-  const currentQuestion = filteredQuestions?.[currentQuestionIndex];
-  const totalQuestions = filteredQuestions?.length || 0;
+  const currentQuestion = questionPool[currentQuestionIndex];
+  const totalQuestions = questionPool.length;
   const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
   const effectiveSubject = selectedSubject === "all" ? "General" : selectedSubject;
@@ -522,15 +606,11 @@ export default function Practice() {
     };
 
     const existingFlagIndex = flaggedQuestions.findIndex(f => f.questionId === currentQuestion.id);
-    let newFlags: FlaggedQuestion[];
+    const newFlags = existingFlagIndex >= 0
+      ? flaggedQuestions.map((f, idx) => (idx === existingFlagIndex ? newFlag : f))
+      : [...flaggedQuestions, newFlag];
 
-    if (existingFlagIndex >= 0) {
-      newFlags = [...flaggedQuestions];
-      newFlags[existingFlagIndex] = newFlag;
-    } else {
-      newFlags = [...flaggedQuestions, newFlag];
-    }
-
+    // Optimistic update in local storage and state
     setFlaggedQuestions(newFlags);
     saveFlaggedQuestions(newFlags);
     setShowFlagPopover(false);
@@ -586,6 +666,63 @@ export default function Practice() {
     };
   }, []);
 
+  // Keyboard shortcuts for practice mode
+  useEffect(() => {
+    if (showSolution || !currentQuestion) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Prevent shortcuts when typing in inputs
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'n':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'ArrowLeft':
+        case 'p':
+          e.preventDefault();
+          handlePrevious();
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          e.preventDefault();
+          if (!showSolution && currentQuestion) {
+            const optionIndex = parseInt(e.key) - 1;
+            if (currentQuestion.options[optionIndex]) {
+              handleSubmit(currentQuestion.options[optionIndex].id);
+            }
+          }
+          break;
+        case 'f':
+          e.preventDefault();
+          if (currentQuestion) {
+            const currentFlag = flaggedQuestions.find(f => f.questionId === currentQuestion.id);
+            if (currentFlag) {
+              removeFlagFromQuestion();
+            } else {
+              handleFlagQuestion("review");
+            }
+          }
+          break;
+        case 's':
+          e.preventDefault();
+          if (!showSolution) {
+            handleNext(); // Skip
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showSolution, currentQuestion, currentQuestionIndex, totalQuestions, flaggedQuestions, handleNext, handlePrevious, handleSubmit, handleFlagQuestion, removeFlagFromQuestion]);
+
   const getDifficultyLabel = (level: number): "Easy" | "Medium" | "Hard" => {
     if (level === 1) return "Easy";
     if (level === 2) return "Medium";
@@ -612,7 +749,7 @@ export default function Practice() {
     ? Math.round(sessionStats.timePerQuestion.reduce((a, b) => a + b, 0) / sessionStats.timePerQuestion.length)
     : 0;
 
-  if (isLoading) {
+  if (isPracticeLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -625,7 +762,7 @@ export default function Practice() {
     );
   }
 
-  if (!filteredQuestions || filteredQuestions.length === 0) {
+  if (!questionPool || questionPool.length === 0) {
     return (
       <ThemeProvider>
         <Header
@@ -721,27 +858,48 @@ export default function Practice() {
               Back to Dashboard
             </Button>
 
-            <div className="flex items-center gap-4 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEndSession}
-                data-testid="button-end-session"
-              >
-                End Session
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  queryClient.invalidateQueries({ queryKey: ['/api/questions'] });
-                  refetch();
-                }}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Sync ({filteredQuestions?.length || 0})
-              </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant={practiceMode === "standard" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPracticeMode("standard")}
+                >
+                  Standard
+                </Button>
+                <Button
+                  variant={practiceMode === "adaptive" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPracticeMode("adaptive")}
+                >
+                  Adaptive
+                </Button>
+                <Badge variant="secondary" className="text-xs uppercase">
+                  {practiceMode === "adaptive" ? "Adaptive queue" : "Linear practice"}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEndSession}
+                  data-testid="button-end-session"
+                >
+                  End Session
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
+                    refetch();
+                  }}
+                  disabled={isPracticeLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isPracticeLoading ? "animate-spin" : ""}`} />
+                  Sync ({questionPool.length})
+                </Button>
+              </div>
             </div>
           </div>
 

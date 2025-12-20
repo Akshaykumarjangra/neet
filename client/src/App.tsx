@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { OwnerRoute } from "@/components/OwnerRoute";
 import { GuestRoute } from "@/components/GuestRoute";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
@@ -14,6 +15,7 @@ import Practice from "@/pages/Practice";
 import Leaderboard from "@/pages/Leaderboard";
 import PhysicsContent from "@/pages/PhysicsContent";
 import ChemistryContent from "@/pages/ChemistryContent";
+import Chemistry from "@/pages/Chemistry";
 import BiologyContent from "@/pages/BiologyContent";
 import Biology from "@/pages/Biology";
 import ChapterViewer from "@/pages/ChapterViewer";
@@ -29,7 +31,8 @@ import AdminContentManager from "@/pages/AdminContentManager";
 import AdminUsers from "@/pages/AdminUsers";
 import MentorDashboard from "@/pages/MentorDashboard";
 import MentorDiscovery from "@/pages/MentorDiscovery";
-import Enrollment from "@/pages/Enrollment";
+import MentorProfile from "@/pages/MentorProfile";
+import MyBookings from "@/pages/MyBookings";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import NotFound from "@/pages/not-found";
@@ -44,17 +47,68 @@ import Search from "@/pages/Search";
 import Physics from "@/pages/Physics";
 import Profile from "@/pages/Profile";
 import Pricing from "@/pages/Pricing";
+import Explain from "@/pages/Explain";
 import AdminPaymentConfig from "@/pages/AdminPaymentConfig";
 import QuestionBank from "@/pages/QuestionBank";
+import LmsContentStudio from "@/pages/LmsContentStudio";
+import MentorLmsAutomation from "@/pages/MentorLmsAutomation";
+import NEETBlast from "@/pages/NEETBlast";
+import BillingStatus from "@/pages/BillingStatus";
+import AdminAnnouncements from "@/pages/AdminAnnouncements";
+import Chat from "@/pages/Chat";
+import PracticeAnalytics from "@/pages/PracticeAnalytics";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 
 function Router() {
+  const [, setLocation] = useLocation();
+
+  // Simple route prefetch hooks: warm critical queries on landing/dashboard/practice routes
+  useEffect(() => {
+    const prefetch = (path: string, fn: () => void) => {
+      if (window.location.pathname === path) {
+        fn();
+      }
+    };
+
+    prefetch("/dashboard", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/learning-path/summary"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/questions/stats"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/mentors/recommendations"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/game/leaderboard"] });
+    });
+
+    prefetch("/practice", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/topics"] });
+    });
+
+    prefetch("/", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/questions/preview"] });
+    });
+
+    prefetch("/pricing", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/subscription-plans"] });
+    });
+
+    prefetch("/billing-status", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/billing/status"] });
+    });
+
+    prefetch("/explore", () => {
+      queryClient.prefetchQuery({ queryKey: ["/api/lms/library"] });
+    });
+  }, []);
+
   return (
     <Switch>
+      <Route path="/mentors/:id">
+        <MentorProfile />
+      </Route>
       <Route path="/mentors">
         <MentorDiscovery />
       </Route>
-      <Route path="/enroll">
-        <Enrollment />
+      <Route path="/explain">
+        <Explain />
       </Route>
       <Route path="/explore">
         <ProtectedRoute>
@@ -109,12 +163,27 @@ function Router() {
       </Route>
       <Route path="/chemistry">
         <ProtectedRoute>
+          <Chemistry />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/chemistry-legacy">
+        <ProtectedRoute>
           <ChemistryContent />
         </ProtectedRoute>
       </Route>
       <Route path="/biology">
         <ProtectedRoute>
           <Biology />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/botany">
+        <ProtectedRoute>
+          <Biology initialSection="Botany" />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/zoology">
+        <ProtectedRoute>
+          <Biology initialSection="Zoology" />
         </ProtectedRoute>
       </Route>
       <Route path="/biology-legacy">
@@ -130,6 +199,11 @@ function Router() {
       <Route path="/practice">
         <ProtectedRoute>
           <Practice />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/progress/analytics">
+        <ProtectedRoute>
+          <PracticeAnalytics />
         </ProtectedRoute>
       </Route>
       <Route path="/leaderboard">
@@ -178,24 +252,39 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/admin">
-        <ProtectedRoute>
+        <OwnerRoute>
           <AdminDashboard />
-        </ProtectedRoute>
+        </OwnerRoute>
+      </Route>
+      <Route path="/admin/lms-studio">
+        <OwnerRoute>
+          <LmsContentStudio />
+        </OwnerRoute>
+      </Route>
+      <Route path="/admin/mentor-automation">
+        <OwnerRoute>
+          <MentorLmsAutomation />
+        </OwnerRoute>
+      </Route>
+      <Route path="/admin/announcements">
+        <OwnerRoute>
+          <AdminAnnouncements />
+        </OwnerRoute>
       </Route>
       <Route path="/admin/content">
-        <ProtectedRoute>
+        <OwnerRoute>
           <AdminContentManager />
-        </ProtectedRoute>
+        </OwnerRoute>
       </Route>
       <Route path="/admin/payments">
-        <ProtectedRoute>
+        <OwnerRoute>
           <AdminPaymentConfig />
-        </ProtectedRoute>
+        </OwnerRoute>
       </Route>
       <Route path="/admin/users">
-        <ProtectedRoute>
+        <OwnerRoute>
           <AdminUsers />
-        </ProtectedRoute>
+        </OwnerRoute>
       </Route>
       <Route path="/mentor-dashboard">
         <ProtectedRoute>
@@ -204,6 +293,11 @@ function Router() {
       </Route>
       <Route path="/community">
         <Community />
+      </Route>
+      <Route path="/chat">
+        <ProtectedRoute>
+          <Chat />
+        </ProtectedRoute>
       </Route>
       <Route path="/simulations">
         <ProtectedRoute>
@@ -225,8 +319,23 @@ function Router() {
           <Profile />
         </ProtectedRoute>
       </Route>
+      <Route path="/my-bookings">
+        <ProtectedRoute>
+          <MyBookings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/billing-status">
+        <ProtectedRoute>
+          <BillingStatus />
+        </ProtectedRoute>
+      </Route>
       <Route path="/question-bank">
         <QuestionBank />
+      </Route>
+      <Route path="/neet-blast">
+        <ProtectedRoute>
+          <NEETBlast />
+        </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>

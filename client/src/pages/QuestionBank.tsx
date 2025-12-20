@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { Paywall } from "@/components/Paywall";
 import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Pagination,
   PaginationContent,
@@ -68,6 +71,7 @@ interface Question {
   sourceType: string;
   pyqYear: number | null;
   topic?: Topic;
+  tags?: { tag: string; category: string }[];
 }
 
 interface QuestionsResponse {
@@ -83,6 +87,12 @@ interface QuestionsResponse {
   isPreview?: boolean;
   requiresAuth?: boolean;
   message?: string;
+}
+
+interface QuestionTagSummary {
+  tag: string;
+  category: string;
+  count: number;
 }
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
@@ -141,7 +151,7 @@ function getSubjectIcon(subject: string) {
   }
 }
 
-function QuestionCard({ question, index, isLocked }: { question: Question; index: number; isLocked: boolean }) {
+function QuestionCard({ question, index, isLocked, onManageTags }: { question: Question; index: number; isLocked: boolean; onManageTags?: () => void }) {
   const truncatedText = question.questionText.length > 200 
     ? question.questionText.substring(0, 200) + "..." 
     : question.questionText;
@@ -164,9 +174,9 @@ function QuestionCard({ question, index, isLocked }: { question: Question; index
             </div>
           </div>
         )}
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2 mb-3">
-            {getDifficultyBadge(question.difficultyLevel)}
+          <CardContent className="p-4">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {getDifficultyBadge(question.difficultyLevel)}
             {question.pyqYear && (
               <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30" data-testid={`badge-pyq-${question.id}`}>
                 <Calendar className="h-3 w-3 mr-1" />
@@ -182,11 +192,27 @@ function QuestionCard({ question, index, isLocked }: { question: Question; index
           <p className="text-sm leading-relaxed" data-testid={`text-question-${question.id}`}>
             {truncatedText}
           </p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
+          </CardContent>
+          {question.tags && question.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-4 pb-4 pt-1">
+              {question.tags.map((tag) => (
+                <Badge key={`${tag.category}-${tag.tag}`} variant="outline" className="text-xs uppercase">
+                  {tag.tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {onManageTags && (
+            <div className="flex justify-end px-4 pb-4">
+              <Button variant="outline" size="sm" onClick={onManageTags}>
+                Manage tags
+              </Button>
+            </div>
+          )}
+        </Card>
+      </motion.div>
+    );
+  }
 
 function SignupWall({ onNavigate, totalQuestions }: { onNavigate: () => void; totalQuestions: number }) {
   return (
@@ -237,6 +263,8 @@ function SignupWall({ onNavigate, totalQuestions }: { onNavigate: () => void; to
 export default function QuestionBank() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const isOwner = user?.isOwner ?? false;
   const isPremium = user?.isPaidUser ?? false;
 
   const [activeSubject, setActiveSubject] = useState("all");
@@ -246,7 +274,23 @@ export default function QuestionBank() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [tagInputValue, setTagInputValue] = useState("");
+  const [tagCategory, setTagCategory] = useState("custom");
   const questionsPerPage = 15;
+  const sortedSelectedTags = useMemo(() => [...selectedTags].sort(), [selectedTags]);
+  const openTagModal = (question: Question) => {
+    setEditingQuestion(question);
+    setTagInputValue((question.tags ?? []).map((tag) => tag.tag).join(", "));
+    setTagCategory(question.tags?.[0]?.category ?? "custom");
+  };
+
+  const closeTagModal = () => {
+    setEditingQuestion(null);
+    setTagInputValue("");
+    setTagCategory("custom");
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -258,10 +302,24 @@ export default function QuestionBank() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeSubject, difficulty, pyqOnly, pyqYear]);
+  }, [activeSubject, difficulty, pyqOnly, pyqYear, selectedTags]);
 
   const { data: stats, isLoading: statsLoading } = useQuery<QuestionStats>({
     queryKey: ["/api/questions/stats"],
+  });
+
+  const { data: tagSummary = [], isLoading: tagsLoading } = useQuery<QuestionTagSummary[]>({
+    queryKey: ["/api/question-tags"],
+    queryFn: async () => {
+      const response = await fetch("/api/question-tags", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to load question tags");
+      }
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5,
   });
 
   const buildQueryString = () => {
@@ -271,35 +329,141 @@ export default function QuestionBank() {
     if (pyqOnly) params.append("pyqOnly", "true");
     if (pyqYear !== "all") params.append("pyqYear", pyqYear);
     if (debouncedSearch) params.append("search", debouncedSearch);
+    sortedSelectedTags.forEach((tag) => params.append("tags", tag));
     params.append("page", String(currentPage));
     params.append("limit", String(questionsPerPage));
     return params.toString();
   };
 
   const { data: questionsData, isLoading: questionsLoading } = useQuery<QuestionsResponse>({
-    queryKey: ["/api/questions", user?.id, activeSubject, difficulty, pyqOnly, pyqYear, debouncedSearch, currentPage],
+    queryKey: [
+      "/api/questions",
+      user?.id,
+      activeSubject,
+      difficulty,
+      pyqOnly,
+      pyqYear,
+      sortedSelectedTags,
+      debouncedSearch,
+      currentPage,
+    ],
     queryFn: async () => {
-      // For unauthenticated users, use the preview endpoint (fixed 5 questions, no filters)
-      if (!user) {
-        const response = await fetch("/api/questions/preview");
-        if (!response.ok) throw new Error("Failed to fetch preview questions");
-        return response.json();
-      }
-      
-      // For authenticated users, use the main endpoint with filters
-      const response = await fetch(`/api/questions?${buildQueryString()}`);
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Session expired - treat as unauthenticated
-          const previewResponse = await fetch("/api/questions/preview");
-          if (!previewResponse.ok) throw new Error("Failed to fetch preview questions");
-          return previewResponse.json();
+      try {
+        // For unauthenticated users, use the preview endpoint (fixed 5 questions, no filters)
+        if (!user) {
+          const response = await fetch("/api/questions/preview", {
+            credentials: 'include',
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Failed to fetch preview questions");
+          }
+          const data = await response.json();
+          // Ensure consistent format
+          return {
+            questions: Array.isArray(data.questions) ? data.questions : (Array.isArray(data) ? data : []),
+            total: data.total || (Array.isArray(data) ? data.length : 0),
+            page: data.page || 1,
+            limit: data.limit || 5,
+            totalPages: data.totalPages || 1,
+            isPreview: true,
+          };
         }
-        throw new Error("Failed to fetch questions");
+        
+        // For authenticated users, use the main endpoint with filters
+        const response = await fetch(`/api/questions?${buildQueryString()}`, {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Session expired - treat as unauthenticated
+            const previewResponse = await fetch("/api/questions/preview", {
+              credentials: 'include',
+            });
+            if (!previewResponse.ok) {
+              const errorData = await previewResponse.json().catch(() => ({}));
+              throw new Error(errorData.error || "Failed to fetch preview questions");
+            }
+            const previewData = await previewResponse.json();
+            return {
+              questions: Array.isArray(previewData.questions) ? previewData.questions : (Array.isArray(previewData) ? previewData : []),
+              total: previewData.total || (Array.isArray(previewData) ? previewData.length : 0),
+              page: previewData.page || 1,
+              limit: previewData.limit || 5,
+              totalPages: previewData.totalPages || 1,
+              isPreview: true,
+            };
+          }
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch questions: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Ensure consistent format
+        return {
+          questions: Array.isArray(data.questions) ? data.questions : [],
+          total: data.total || 0,
+          page: data.page || 1,
+          limit: data.limit || 20,
+          totalPages: data.totalPages || 1,
+          isLimited: data.isLimited || false,
+          quotaExhausted: data.quotaExhausted || false,
+          quotaRemaining: data.quotaRemaining,
+          requiresSignup: data.requiresSignup || false,
+        };
+      } catch (err: any) {
+        console.error('Error fetching questions:', err);
+        throw err;
+      }
+    },
+  });
+
+  const tagMutation = useMutation({
+    mutationFn: async (payload: { questionId: number; tags: { tag: string; category: string }[] }) => {
+      const response = await fetch(`/api/question-tags/question/${payload.questionId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tags: payload.tags,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to update tags");
       }
       return response.json();
     },
+    onSuccess: () => {
+      toast({ title: "Tags saved" });
+      closeTagModal();
+      queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/question-tags"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to save tags",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    },
   });
+
+  const handleSaveTags = () => {
+    if (!editingQuestion) return;
+    const parsedTags = tagInputValue
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .map((tag) => ({ tag, category: tagCategory }));
+
+    tagMutation.mutate({ questionId: editingQuestion.id, tags: parsedTags });
+  };
 
   const handleStartPractice = () => {
     const params = new URLSearchParams();
@@ -308,6 +472,19 @@ export default function QuestionBank() {
     if (pyqOnly) params.append("pyqOnly", "true");
     if (pyqYear !== "all") params.append("pyqYear", pyqYear);
     setLocation(`/practice?${params.toString()}`);
+  };
+
+  const toggleTagFilter = (tag: string) => {
+    const normalized = tag.trim();
+    setSelectedTags((current) =>
+      current.includes(normalized)
+        ? current.filter((value) => value !== normalized)
+        : [...current, normalized]
+    );
+  };
+
+  const clearTagFilters = () => {
+    setSelectedTags([]);
   };
 
   const subjects = ["Physics", "Chemistry", "Botany", "Zoology"];
@@ -563,6 +740,33 @@ export default function QuestionBank() {
                 </Badge>
               )}
             </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 items-center">
+              <span className="text-sm font-semibold text-muted-foreground">Tags</span>
+              {tagsLoading ? (
+                <Skeleton className="h-6 w-20" />
+              ) : (
+                tagSummary.slice(0, 12).map((entry) => (
+                  <Button
+                    key={`${entry.category}-${entry.tag}`}
+                    variant={selectedTags.includes(entry.tag) ? "default" : "outline"}
+                    size="sm"
+                    className="uppercase tracking-wide text-xs h-8 px-3"
+                    onClick={() => toggleTagFilter(entry.tag)}
+                  >
+                    {entry.tag}
+                    <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                      {entry.count}
+                    </span>
+                  </Button>
+                ))
+              )}
+              {selectedTags.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearTagFilters}>
+                  Clear tags
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -628,6 +832,7 @@ export default function QuestionBank() {
                   question={question} 
                   index={index}
                   isLocked={false}
+                  onManageTags={isOwner ? () => openTagModal(question) : undefined}
                 />
               ))}
               
@@ -676,6 +881,52 @@ export default function QuestionBank() {
           </>
         )}
       </main>
+      <Dialog open={Boolean(editingQuestion)} onOpenChange={(open) => !open && closeTagModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage question tags</DialogTitle>
+            <DialogDescription>
+              Add comma separated tags to classify the question for filtering or analytics.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="question-tags" className="text-sm">Tags</Label>
+              <Input
+                id="question-tags"
+                value={tagInputValue}
+                onChange={(event) => setTagInputValue(event.target.value)}
+                placeholder="e.g., pyq, derivations, skill-based"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tag-category" className="text-sm">Category</Label>
+              <Select
+                value={tagCategory}
+                onValueChange={(value) => setTagCategory(value)}
+              >
+                <SelectTrigger id="tag-category" className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="concept">Concept</SelectItem>
+                  <SelectItem value="difficulty">Difficulty</SelectItem>
+                  <SelectItem value="pyq">PYQ</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeTagModal}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTags} disabled={tagMutation.isPending}>
+              {tagMutation.isPending ? "Saving..." : "Save tags"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

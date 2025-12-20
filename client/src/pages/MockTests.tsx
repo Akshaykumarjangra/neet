@@ -27,6 +27,38 @@ export default function MockTests() {
 
   const { data: tests, isLoading, error, refetch } = useQuery<MockTest[]>({
     queryKey: ['/api/mock-tests'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/mock-tests', {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch mock tests: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Handle both array and object response formats
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && typeof data === 'object' && Array.isArray(data.tests)) {
+          return data.tests;
+        } else if (data && typeof data === 'object' && data.error) {
+          throw new Error(data.error);
+        }
+        
+        return [];
+      } catch (err: any) {
+        console.error('Error fetching mock tests:', err);
+        throw err;
+      }
+    },
+        retry: 3, // Auto-retry failed requests
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        networkMode: 'online',
   });
 
   const { data: testAttempts } = useQuery<{ count: number }>({
@@ -128,7 +160,7 @@ export default function MockTests() {
               </div>
               <h3 className="text-xl font-semibold">Unable to Load Tests</h3>
               <p className="text-muted-foreground">
-                We couldn't load the mock tests right now. Please check your connection and try again.
+                {error instanceof Error ? error.message : "We couldn't load the mock tests right now. Please check your connection and try again."}
               </p>
               <Button onClick={() => refetch()} className="gap-2" data-testid="button-retry-tests">
                 <RefreshCw className="h-4 w-4" />
@@ -234,7 +266,42 @@ export default function MockTests() {
                     </p>
                   </div>
                   
-                  {canStartFreeTest || isPremium ? (
+                  {(() => {
+                    // Check if there's a saved progress for this test
+                    const savedProgress = localStorage.getItem(`mocktest_${test.id}_progress`);
+                    const hasSavedProgress = savedProgress && JSON.parse(savedProgress).lastSaved && 
+                      (Date.now() - JSON.parse(savedProgress).lastSaved < 24 * 60 * 60 * 1000);
+                    
+                    if (hasSavedProgress && (canStartFreeTest || isPremium)) {
+                      return (
+                        <div className="space-y-2">
+                          <Button 
+                            className="w-full"
+                            onClick={() => startTest(test.id)}
+                            data-testid={`button-resume-test-${test.id}`}
+                            variant="default"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Resume Test
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs"
+                            onClick={() => {
+                              localStorage.removeItem(`mocktest_${test.id}_progress`);
+                              localStorage.removeItem(`mocktest_${test.id}_answers`);
+                              localStorage.removeItem(`mocktest_${test.id}_timeTaken`);
+                              startTest(test.id);
+                            }}
+                          >
+                            Start Fresh
+                          </Button>
+                        </div>
+                      );
+                    }
+                    
+                    return canStartFreeTest || isPremium ? (
                     <Button 
                       className="w-full"
                       onClick={() => startTest(test.id)}
@@ -254,7 +321,8 @@ export default function MockTests() {
                         Upgrade to Access
                       </Button>
                     </Link>
-                  )}
+                  );
+                  })()}
                 </CardContent>
               </Card>
             ))}

@@ -9,7 +9,11 @@ type VisualizationType =
   | "circuit"
   | "pendulum"
   | "projectile"
-  | "default";
+  | "default"
+  | "threejs"
+  | "d3"
+  | "image"
+  | "video";
 
 interface VisualizationProps {
   [key: string]: any;
@@ -57,8 +61,8 @@ const visualizations: Record<VisualizationType, ComponentType<VisualizationProps
   ),
   circuit: () => (
     <div className="h-64 bg-slate-900 rounded-lg flex items-center justify-center">
-      <div className="border-2 border-yellow-400 w-32 h-24 rounded">
-        <div className="absolute w-4 h-4 bg-yellow-400 rounded-full" />
+      <div className="relative border-2 border-yellow-400 w-32 h-24 rounded">
+        <div className="absolute top-2 left-2 w-4 h-4 bg-yellow-400 rounded-full" />
       </div>
     </div>
   ),
@@ -85,8 +89,11 @@ const visualizations: Record<VisualizationType, ComponentType<VisualizationProps
     </div>
   ),
   default: () => (
-    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-      <p className="text-muted-foreground">Visualization loading...</p>
+    <div className="h-64 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+      <div className="text-center space-y-2">
+        <p className="text-muted-foreground">Interactive Visualization</p>
+        <p className="text-xs text-muted-foreground">This visualization helps illustrate key concepts</p>
+      </div>
     </div>
   ),
 };
@@ -119,6 +126,36 @@ interface VisualizationRendererProps {
 
 export function VisualizationRenderer({ visualizationType, visualizationConfig }: VisualizationRendererProps) {
   const type = (visualizationType || "default") as VisualizationType;
+  
+  // Handle special visualization types
+  if (visualizationType === "threejs" || visualizationType === "d3" || visualizationType === "image" || visualizationType === "video") {
+    return (
+      <div className="h-64 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium">{visualizationConfig?.title || `Interactive ${visualizationType} Visualization`}</p>
+          <p className="text-xs text-muted-foreground">
+            {visualizationConfig?.description || `This ${visualizationType} visualization will be rendered here`}
+          </p>
+          {visualizationType === "image" && visualizationConfig?.assetUrl && (
+            <img 
+              src={visualizationConfig.assetUrl} 
+              alt={visualizationConfig.title || "Visualization"}
+              className="max-w-full max-h-48 rounded"
+            />
+          )}
+          {visualizationType === "video" && visualizationConfig?.assetUrl && (
+            <video 
+              src={visualizationConfig.assetUrl}
+              controls
+              className="max-w-full max-h-48 rounded"
+              autoPlay={visualizationConfig?.autoplay}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+  
   return <VisualizationRegistry type={type} props={visualizationConfig} />;
 }
 

@@ -43,8 +43,10 @@ import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
 import { ViewportActivatedVisualization } from "@/components/visualizations/ViewportActivatedVisualization";
 import { PhetSimulationViewer } from "@/components/PhetSimulationViewer";
+import { ChapterChatbot } from "@/components/ChapterChatbot";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -69,6 +71,7 @@ export default function ChapterViewer() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [showFloatingToolbar, setShowFloatingToolbar] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const { data: chapter, isLoading, error } = useQuery<ChapterContent>({
     queryKey: ['chapter', subject, classLevel, chapterNumber],
@@ -694,18 +697,23 @@ export default function ChapterViewer() {
                       </div>
                     )}
 
-                    {chapter.visualizationsData && chapter.visualizationsData.length > 0 && (
                       <Card id="visualizations">
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
                             <Zap className="h-5 w-5" />
                             Interactive Visualizations
+                          {chapter.visualizationsData && chapter.visualizationsData.length > 0 && (
+                            <Badge variant="secondary" className="ml-2">
+                              {chapter.visualizationsData.length}
+                            </Badge>
+                          )}
                           </CardTitle>
                           <CardDescription>
                             Explore these visual aids to deepen your understanding
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
+                        {chapter.visualizationsData && chapter.visualizationsData.length > 0 ? (
                           <div className="space-y-6">
                             {chapter.visualizationsData.map((viz, idx) => (
                               <div key={idx}>
@@ -721,15 +729,25 @@ export default function ChapterViewer() {
                                 <ViewportActivatedVisualization>
                                   <VisualizationRenderer
                                     visualizationType={viz.type}
-                                    visualizationConfig={viz.config}
+                                    visualizationConfig={{ ...viz.config, title: viz.title, description: viz.description }}
                                   />
                                 </ViewportActivatedVisualization>
                               </div>
                             ))}
                           </div>
+                        ) : (
+                          <div className="py-12 text-center space-y-4">
+                            <Zap className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+                            <div>
+                              <h3 className="text-lg font-semibold mb-2">No Visualizations Available</h3>
+                              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                                Visualizations for this chapter are being prepared. Check back soon for interactive learning aids.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         </CardContent>
                       </Card>
-                    )}
                   </div>
 
                   <div className="lg:col-span-1">
@@ -1279,6 +1297,19 @@ export default function ChapterViewer() {
           )}
         </div>
       </TooltipProvider>
+      
+      {/* Chapter Chatbot */}
+      {chapter && (
+        <ChapterChatbot
+          chapterId={chapter.id}
+          chapterTitle={chapter.chapterTitle}
+          chapterSubject={chapter.subject}
+          keyConcepts={chapter.keyConcepts || []}
+          formulas={chapter.formulas || []}
+          isOpen={isChatbotOpen}
+          onToggle={() => setIsChatbotOpen(!isChatbotOpen)}
+        />
+      )}
     </ThemeProvider>
   );
 }

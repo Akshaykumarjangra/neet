@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 
-const SUBJECTS = ["Physics", "Chemistry", "Biology"] as const;
+const SUBJECTS = ["Physics", "Chemistry", "Botany", "Zoology"] as const;
 const LANGUAGES = ["English", "Hindi", "Tamil", "Telugu", "Bengali", "Marathi", "Gujarati", "Kannada", "Malayalam", "Punjabi"];
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -184,114 +185,7 @@ function MentorCardSkeleton() {
   );
 }
 
-function MentorCard({
-  mentor,
-  onViewProfile,
-  onBookSession,
-}: {
-  mentor: MentorData;
-  onViewProfile: () => void;
-  onBookSession: () => void;
-}) {
-  const initials = mentor.userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    <motion.div variants={fadeInUp} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-      <Card className="h-full hover:shadow-lg transition-all duration-300 border-border/50" data-testid={`card-mentor-${mentor.id}`}>
-        <CardHeader className="pb-4">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary/20">
-              <AvatarImage src={mentor.userAvatar || undefined} alt={mentor.userName} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg truncate" data-testid={`text-mentor-name-${mentor.id}`}>
-                {mentor.userName}
-              </CardTitle>
-              {mentor.userHeadline && (
-                <p className="text-sm text-muted-foreground truncate">{mentor.userHeadline}</p>
-              )}
-              <StarRating rating={mentor.avgRating} count={mentor.reviewCount} />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {mentor.bio && (
-            <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-mentor-bio-${mentor.id}`}>
-              {mentor.bio}
-            </p>
-          )}
-          
-          <div className="flex flex-wrap gap-2">
-            {(mentor.subjects as string[]).map((subject) => (
-              <Badge key={subject} variant="secondary" className="text-xs">
-                {subject}
-              </Badge>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="p-1.5 rounded-md bg-green-500/10">
-                <IndianRupee className="h-3.5 w-3.5 text-green-500" />
-              </div>
-              <span className="font-semibold">₹{mentor.hourlyRate}/hr</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="p-1.5 rounded-md bg-blue-500/10">
-                <Briefcase className="h-3.5 w-3.5 text-blue-500" />
-              </div>
-              <span>{mentor.experienceYears} yrs exp</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="p-1.5 rounded-md bg-purple-500/10">
-                <Users className="h-3.5 w-3.5 text-purple-500" />
-              </div>
-              <span>{mentor.totalSessionsCompleted} sessions</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="p-1.5 rounded-md bg-orange-500/10">
-                <Languages className="h-3.5 w-3.5 text-orange-500" />
-              </div>
-              <span className="truncate">{(mentor.languages as string[]).slice(0, 2).join(", ")}</span>
-            </div>
-          </div>
-
-          {mentor.isAvailable && (
-            <Badge variant="outline" className="text-green-600 border-green-600/30 bg-green-500/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
-              Available Now
-            </Badge>
-          )}
-        </CardContent>
-        <CardFooter className="flex gap-2 pt-4">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={onViewProfile}
-            data-testid={`button-view-profile-${mentor.id}`}
-          >
-            View Profile
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={onBookSession}
-            data-testid={`button-book-session-${mentor.id}`}
-          >
-            Book Session
-          </Button>
-        </CardFooter>
-      </Card>
-    </motion.div>
-  );
-}
+// Using the reusable MentorCard component from @/components/mentors/MentorCard
 
 function MentorProfileModal({
   mentorId,
@@ -940,6 +834,9 @@ export default function MentorDiscovery() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [priceRange, setPriceRange] = useState<[number]>([5000]);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [minRating, setMinRating] = useState<number>(0);
+  const [minExperience, setMinExperience] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "experience" | "sessions">("rating");
   const [showFilters, setShowFilters] = useState(false);
   
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -959,11 +856,17 @@ export default function MentorDiscovery() {
   const filteredMentors = useMemo(() => {
     if (!mentors) return [];
     
-    return mentors.filter((mentor) => {
+    let filtered = mentors.filter((mentor) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (!mentor.userName.toLowerCase().includes(query) &&
-            !(mentor.bio?.toLowerCase().includes(query))) {
+        const mentorSubjects = (mentor.subjects as string[]).join(" ").toLowerCase();
+        const mentorTopics = (mentor.topics as string[]).join(" ").toLowerCase();
+        if (
+          !mentor.userName.toLowerCase().includes(query) &&
+          !(mentor.bio?.toLowerCase().includes(query)) &&
+          !mentorSubjects.includes(query) &&
+          !mentorTopics.includes(query)
+        ) {
           return false;
         }
       }
@@ -986,9 +889,37 @@ export default function MentorDiscovery() {
         return false;
       }
 
+      if (minRating > 0 && (mentor.avgRating || 0) < minRating) {
+        return false;
+      }
+
+      if (minExperience > 0 && mentor.experienceYears < minExperience) {
+        return false;
+      }
+
       return true;
     });
-  }, [mentors, searchQuery, selectedSubjects, selectedLanguage, priceRange]);
+
+    // Sort mentors
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "rating":
+          return (b.avgRating || 0) - (a.avgRating || 0) || (b.reviewCount || 0) - (a.reviewCount || 0);
+        case "price-low":
+          return a.hourlyRate - b.hourlyRate;
+        case "price-high":
+          return b.hourlyRate - a.hourlyRate;
+        case "experience":
+          return b.experienceYears - a.experienceYears;
+        case "sessions":
+          return (b.totalSessionsCompleted || 0) - (a.totalSessionsCompleted || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [mentors, searchQuery, selectedSubjects, selectedLanguage, priceRange, minRating, minExperience, sortBy]);
 
   const handleViewProfile = (mentor: MentorData) => {
     setSelectedMentorId(mentor.id);
@@ -1013,9 +944,12 @@ export default function MentorDiscovery() {
     setSelectedLanguage("");
     setPriceRange([5000]);
     setSelectedDays([]);
+    setMinRating(0);
+    setMinExperience(0);
+    setSortBy("rating");
   };
 
-  const hasActiveFilters = searchQuery || selectedSubjects.length > 0 || selectedLanguage || priceRange[0] < 5000 || selectedDays.length > 0;
+  const hasActiveFilters = searchQuery || selectedSubjects.length > 0 || selectedLanguage || priceRange[0] < 5000 || selectedDays.length > 0 || minRating > 0 || minExperience > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -1038,7 +972,7 @@ export default function MentorDiscovery() {
             <Link href="/mentors" className="text-foreground font-medium">
               Find Mentors
             </Link>
-            <Link href="/enroll" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
               Explore
             </Link>
           </nav>
@@ -1084,7 +1018,7 @@ export default function MentorDiscovery() {
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-subtitle">
             Connect with experienced NEET educators for personalized 1-on-1 guidance. 
-            Get expert help in Physics, Chemistry, and Biology from verified mentors.
+            Get expert help in Physics, Chemistry, Botany, and Zoology from verified mentors.
           </p>
         </motion.div>
 
@@ -1093,7 +1027,7 @@ export default function MentorDiscovery() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search mentors by name..."
+                placeholder="Search by name, subjects, topics, or bio..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -1110,7 +1044,7 @@ export default function MentorDiscovery() {
               Filters
               {hasActiveFilters && (
                 <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-                  {selectedSubjects.length + (selectedLanguage ? 1 : 0) + (priceRange[0] < 5000 ? 1 : 0)}
+                  {selectedSubjects.length + (selectedLanguage ? 1 : 0) + (priceRange[0] < 5000 ? 1 : 0) + (minRating > 0 ? 1 : 0) + (minExperience > 0 ? 1 : 0)}
                 </Badge>
               )}
             </Button>
@@ -1137,7 +1071,7 @@ export default function MentorDiscovery() {
                 className="overflow-hidden"
               >
                 <Card className="mt-4 p-6" data-testid="panel-filters">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
                       <Label className="text-sm font-medium mb-3 block">Subjects</Label>
                       <div className="space-y-2">
@@ -1197,27 +1131,51 @@ export default function MentorDiscovery() {
                     </div>
 
                     <div>
-                      <Label className="text-sm font-medium mb-3 block">Availability</Label>
-                      <div className="flex flex-wrap gap-1">
-                        {DAYS_OF_WEEK.map((day, idx) => (
-                          <button
-                            key={day}
-                            onClick={() => {
-                              setSelectedDays((prev) =>
-                                prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx]
-                              );
-                            }}
-                            className={`px-2 py-1 text-xs rounded border transition-all ${
-                              selectedDays.includes(idx)
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                            data-testid={`button-day-${day.toLowerCase()}`}
-                          >
-                            {day}
-                          </button>
-                        ))}
-                      </div>
+                      <Label className="text-sm font-medium mb-3 block">Min Rating</Label>
+                      <Select value={minRating.toString()} onValueChange={(v) => setMinRating(parseFloat(v))}>
+                        <SelectTrigger data-testid="select-min-rating">
+                          <SelectValue placeholder="Any rating" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Any rating</SelectItem>
+                          <SelectItem value="4.5">4.5+ stars</SelectItem>
+                          <SelectItem value="4.0">4.0+ stars</SelectItem>
+                          <SelectItem value="3.5">3.5+ stars</SelectItem>
+                          <SelectItem value="3.0">3.0+ stars</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium mb-3 block">Min Experience</Label>
+                      <Select value={minExperience.toString()} onValueChange={(v) => setMinExperience(parseInt(v))}>
+                        <SelectTrigger data-testid="select-min-experience">
+                          <SelectValue placeholder="Any experience" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Any experience</SelectItem>
+                          <SelectItem value="1">1+ years</SelectItem>
+                          <SelectItem value="3">3+ years</SelectItem>
+                          <SelectItem value="5">5+ years</SelectItem>
+                          <SelectItem value="10">10+ years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium mb-3 block">Sort By</Label>
+                      <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                        <SelectTrigger data-testid="select-sort">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rating">Highest Rated</SelectItem>
+                          <SelectItem value="price-low">Price: Low to High</SelectItem>
+                          <SelectItem value="price-high">Price: High to Low</SelectItem>
+                          <SelectItem value="experience">Most Experience</SelectItem>
+                          <SelectItem value="sessions">Most Sessions</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </Card>
@@ -1260,10 +1218,53 @@ export default function MentorDiscovery() {
           </Card>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <p className="text-muted-foreground" data-testid="text-results-count">
                 Showing {filteredMentors.length} mentor{filteredMentors.length !== 1 ? "s" : ""}
+                {mentors && mentors.length !== filteredMentors.length && (
+                  <span className="text-xs ml-2">(filtered from {mentors.length})</span>
+                )}
               </p>
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedSubjects.map((subject) => (
+                    <Badge key={subject} variant="secondary" className="gap-1">
+                      {subject}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => toggleSubject(subject)}
+                      />
+                    </Badge>
+                  ))}
+                  {selectedLanguage && (
+                    <Badge variant="secondary" className="gap-1">
+                      {selectedLanguage}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setSelectedLanguage("")}
+                      />
+                    </Badge>
+                  )}
+                  {minRating > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      {minRating}+ ⭐
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setMinRating(0)}
+                      />
+                    </Badge>
+                  )}
+                  {minExperience > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      {minExperience}+ yrs
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setMinExperience(0)}
+                      />
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
 
             <motion.div
@@ -1279,6 +1280,7 @@ export default function MentorDiscovery() {
                   mentor={mentor}
                   onViewProfile={() => handleViewProfile(mentor)}
                   onBookSession={() => handleBookSession(mentor)}
+                  size="standard"
                 />
               ))}
             </motion.div>

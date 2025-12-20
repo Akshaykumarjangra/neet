@@ -1,10 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { db } from "./db";
-import { questions, contentTopics, subscriptionPlans, users, questionPreviewLimits } from "@shared/schema";
+import { questions, contentTopics, subscriptionPlans, users, questionPreviewLimits, questionTags, userPerformance } from "@shared/schema";
 import { nanoid } from "nanoid";
-import { sql, eq } from "drizzle-orm";
+import { sql, eq, inArray } from "drizzle-orm";
 import {
   insertQuestionSchema,
   insertContentTopicSchema,
@@ -23,7 +24,23 @@ import mentorRoutes from "./mentor-routes";
 import discussionRoutes, { replyRoutes } from "./discussion-routes";
 import lmsLearningRoutes from "./lms-learning-routes";
 import searchRoutes from "./search-routes";
-import { bulkQuestionGenerator } from "./bulk-question-generator";
+import billingRoutes from "./billing-routes";
+import lmsAutomationRoutes from "./lms-automation-routes";
+import announcementRoutes from "./announcement-routes";
+import chatRoutes from "./chat-routes";
+import { requireActiveSubscription, requireOwner, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import taskRoutes from "./task-routes";
+import { queueJob } from "./job-service";
+import questionTagRoutes from "./question-tag-routes";
+import analyticsRoutes from "./analytics-routes";
+import profileRoutes from "./profile-routes";
+import explainRoutes from "./explain-routes";
+import chapterChatRoutes from "./chapter-chat-routes";
+
+type ContentTopicInsert = typeof contentTopics.$inferInsert;
+type QuestionPreviewLimitInsert = typeof questionPreviewLimits.$inferInsert;
+type QuestionInsert = typeof questions.$inferInsert;
+type UserPerformanceInsert = typeof userPerformance.$inferInsert;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
@@ -50,13 +67,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/auth", authRoutes);
 
   // Learning Path routes
-  app.use("/api/learning-path", learningPathRoutes);
+  app.use("/api/learning-path", requireActiveSubscription(), learningPathRoutes);
 
   // Mock Test routes
   app.use("/api/mock-tests", mockTestRoutes);
 
   // Game/Gamification routes
-  app.use("/api/game", gameRoutes);
+  app.use("/api/game", requireActiveSubscription(), gameRoutes);
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
@@ -66,6 +83,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Chapter Content routes
   app.use("/api/chapters", chapterContentRoutes);
+  
+  // Chapter Chat routes (context-aware chatbot)
+  app.use("/api/chapters", chapterChatRoutes);
 
   // LMS routes (Library, Progress, Bookmarks, Notes)
   app.use("/api/lms", lmsRoutes);
@@ -78,20 +98,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/replies", replyRoutes);
   
   // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
-  app.use("/api/learn", lmsLearningRoutes);
+  app.use("/api/learn", requireActiveSubscription(), lmsLearningRoutes);
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
   app.use("/api/search", searchRoutes);
 
+  app.use("/api/billing", billingRoutes);
+  app.use("/api/automation", lmsAutomationRoutes);
+  app.use("/api/admin/tasks", taskRoutes);
+  app.use("/api/announcements", announcementRoutes);
+  app.use("/api/chat", chatRoutes);
+  app.use("/api/question-tags", questionTagRoutes);
+  app.use("/api/analytics", analyticsRoutes);
+  app.use("/api/profile", profileRoutes);
+  app.use("/api/explain", explainRoutes);
+
   // ============ PUBLIC SUBSCRIPTION PLANS ============
   
   // Get all active subscription plans (public)
-  app.get("/api/subscription-plans", async (req, res) => {
+  app.get("/api/subscription-plans", async (_req, res) => {
     try {
       const plans = await db.select()
         .from(subscriptionPlans)
         .where(eq(subscriptionPlans.isActive, true))
         .orderBy(subscriptionPlans.displayOrder);
+
+      if (!plans || plans.length === 0) {
+        const now = new Date();
+        const fallbackPlans = [
+          {
+            id: -1,
+            name: "Premium Monthly",
+            slug: "premium-monthly",
+            description: "Full NEET syllabus access with AI guidance billed monthly.",
+            planType: "premium",
+            priceMonthly: 99900,
+            priceYearly: null,
+            currency: "INR",
+            billingInterval: "monthly",
+            features: [
+              "50,000+ questions",
+              "Mock tests & analytics",
+              "AI mentor guidance",
+            ],
+            limits: {
+              mockTestsPerMonth: 8,
+              mentorSessionsPerMonth: 2,
+              downloadContent: true,
+            },
+            trialDays: 0,
+            isActive: true,
+            isPopular: true,
+            displayOrder: 1,
+            createdAt: now,
+          },
+          {
+            id: -2,
+            name: "Premium Yearly",
+            slug: "premium-yearly",
+            description: "Best value annual access (₹11,988) with bonus mentor credits.",
+            planType: "premium",
+            priceMonthly: 99900,
+            priceYearly: 1198800,
+            currency: "INR",
+            billingInterval: "yearly",
+            features: [
+              "Everything in Premium Monthly",
+              "Priority mentor booking",
+              "Exclusive revision bootcamps",
+            ],
+            limits: {
+              mockTestsPerMonth: 12,
+              mentorSessionsPerMonth: 4,
+              downloadContent: true,
+            },
+            trialDays: 0,
+            isActive: true,
+            isPopular: true,
+            displayOrder: 2,
+            createdAt: now,
+          },
+        ];
+        return res.json(fallbackPlans);
+      }
+
       res.json(plans);
     } catch (error: any) {
       console.error("Error fetching subscription plans:", error);
@@ -141,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/topics", async (req, res) => {
     try {
-      const validatedData = insertContentTopicSchema.parse(req.body);
+      const validatedData = insertContentTopicSchema.parse(req.body) as ContentTopicInsert;
       const topic = await storage.createTopic(validatedData);
       res.status(201).json(topic);
     } catch (error: any) {
@@ -252,6 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Question routes with pagination and search - REQUIRES AUTHENTICATION
   app.get("/api/questions", async (req, res) => {
     try {
+      const startedAt = Date.now();
       // Authentication required for main questions endpoint
       if (!req.session?.userId) {
         return res.status(401).json({ 
@@ -303,12 +394,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Pagination params
       const pageNum = page ? parseInt(page as string) : 1;
       let limitNum = limit ? parseInt(limit as string) : 20;
+      // Clamp limits to avoid accidentally huge payloads
+      const MAX_LIMIT = 100;
+      const MIN_LIMIT = 1;
+      limitNum = Math.min(Math.max(limitNum, MIN_LIMIT), MAX_LIMIT);
       let offset = (pageNum - 1) * limitNum;
       
       // For non-premium users, we need to enforce limits
       // Premium users use the page/limit params as provided for proper pagination
       const fetchLimit = isPremiumUser ? limitNum : 50;
       const fetchOffset = isPremiumUser ? offset : 0;
+
+      const rawTagFilter = req.query.tags;
+      const requestedTags = Array.isArray(rawTagFilter)
+        ? rawTagFilter
+        : rawTagFilter
+        ? [rawTagFilter]
+        : [];
+      const normalizedTags = requestedTags
+        .map((value) => String(value).trim())
+        .filter(Boolean);
+      let includedQuestionIds: number[] | null = null;
+      const responseLimit = isPremiumUser ? limitNum : FREE_QUESTION_LIMIT;
+
+      if (normalizedTags.length > 0) {
+        const countExpression = sql<number>`count(*)`;
+        const matchedQuestions = await db
+          .select({
+            questionId: questionTags.questionId,
+            matchCount: countExpression,
+          })
+          .from(questionTags)
+          .where(inArray(questionTags.tag, normalizedTags))
+          .groupBy(questionTags.questionId)
+          .having(sql`${countExpression} >= ${normalizedTags.length}`);
+
+        includedQuestionIds = matchedQuestions.map((row) => row.questionId);
+
+        if (includedQuestionIds.length === 0) {
+          return res.json({
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: responseLimit,
+            totalPages: 0,
+            isLimited: !isPremiumUser,
+            requiresSignup: false,
+            message: "No questions match the selected tags",
+          });
+        }
+      }
 
       // Build query conditions
       const conditions: any[] = [];
@@ -331,6 +466,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (search) {
         conditions.push(sql`${questions.questionText} ILIKE ${'%' + search + '%'}`);
+      }
+
+      if (includedQuestionIds) {
+        conditions.push(inArray(questions.id, includedQuestionIds));
       }
 
       let questionsList: any[];
@@ -395,6 +534,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       }
 
+      // Attach tags for every question returned
+      const questionIds = questionsList.map((q) => q.id);
+      const rawTagRows = questionIds.length
+        ? await db
+            .select({
+              questionId: questionTags.questionId,
+              tag: questionTags.tag,
+              category: questionTags.category,
+            })
+            .from(questionTags)
+            .where(inArray(questionTags.questionId, questionIds))
+        : [];
+
+      const tagMap = new Map<number, { tag: string; category: string }[]>();
+      rawTagRows.forEach((row) => {
+        const existing = tagMap.get(row.questionId) ?? [];
+        existing.push({ tag: row.tag, category: row.category });
+        tagMap.set(row.questionId, existing);
+      });
+
+      const attachTags = (list: any[]) =>
+        list.map((question) => ({
+          ...question,
+          tags: tagMap.get(question.id) ?? [],
+        }));
+
       // Handle free users (non-premium) - DB-backed tracking for 10 questions
       if (isLimited) {
         const newQuestions = questionsList.filter(q => !previewedIds.has(q.id));
@@ -411,20 +576,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userId, 
               previewedQuestionIds: uniqueIds,
               lastAccessedAt: new Date()
-            })
+            } as QuestionPreviewLimitInsert)
             .onConflictDoUpdate({ 
               target: questionPreviewLimits.userId, 
               set: { 
                 previewedQuestionIds: uniqueIds, 
                 lastAccessedAt: new Date() 
-              }
+              } as Partial<QuestionPreviewLimitInsert>
             });
         }
         
         const totalUsed = previewedIds.size + newIds.length;
         
         return res.json({
-          questions: questionsToShow,
+          questions: attachTags(questionsToShow),
           total: totalCount,
           page: 1,
           limit: FREE_QUESTION_LIMIT,
@@ -438,18 +603,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const effectiveTotalPages = Math.ceil(totalCount / limitNum);
 
-      res.json({
-        questions: questionsList,
+      const etagBase = JSON.stringify({
+        ids: questionsList.slice(0, 100).map((q) => q.id),
         total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+      });
+      const etag = `"${crypto.createHash("md5").update(etagBase).digest("hex")}"`;
+      res.setHeader("ETag", etag);
+      res.setHeader("Last-Modified", new Date().toUTCString());
+      
+      // Add cache control headers for better performance
+      res.setHeader("Cache-Control", `public, max-age=${isPremiumUser ? 300 : 60}, stale-while-revalidate=600`);
+
+      if (req.headers["if-none-match"] === etag) {
+        return res.status(304).end();
+      }
+
+      // Ensure questions array is always present
+      const finalQuestions = attachTags(questionsList || []);
+
+      res.json({
+        questions: finalQuestions,
+        total: totalCount || 0,
         page: pageNum,
         limit: limitNum,
         totalPages: effectiveTotalPages,
         isLimited: false,
         requiresSignup: false
       });
+      
+      const duration = Date.now() - startedAt;
+      if (duration > 800) {
+        console.warn(`[SLOW] /api/questions took ${duration}ms (user=${userId}, premium=${isPremiumUser}, limit=${limitNum}, page=${pageNum})`);
+      }
     } catch (error: any) {
       console.error("Error fetching questions:", error);
-      res.status(500).json({ error: error.message });
+      // Return consistent error format
+      res.status(500).json({ 
+        error: error.message || "Failed to fetch questions",
+        questions: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0,
+        isLimited: false,
+        requiresSignup: false
+      });
+    }
+  });
+
+  app.get("/api/questions/adaptive", requireAuthWithPasswordCheck, async (req, res) => {
+    try {
+      const userId = getCurrentUser(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required", requiresAuth: true });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const isPremiumUser = user?.isPaidUser ?? false;
+
+      const topicStats = await db
+        .select({
+          topicId: contentTopics.id,
+          topicName: contentTopics.topicName,
+          subject: contentTopics.subject,
+          correct: sql<number>`SUM(CASE WHEN ${userPerformance.isCorrect} THEN 1 ELSE 0 END)`,
+          total: sql<number>`COUNT(*)`,
+        })
+        .from(userPerformance)
+        .innerJoin(questions, eq(userPerformance.questionId, questions.id))
+        .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+        .where(eq(userPerformance.userId, userId))
+        .groupBy(contentTopics.id, contentTopics.topicName, contentTopics.subject);
+
+      const topicInsights = topicStats.map((topic) => {
+        const total = Number(topic.total ?? 0);
+        const correct = Number(topic.correct ?? 0);
+        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+        return {
+          topicId: Number(topic.topicId),
+          topicName: topic.topicName,
+          subject: topic.subject,
+          accuracy,
+          totalAttempts: total,
+        };
+      });
+
+      const weakTopics = [...topicInsights]
+        .filter((topic) => topic.totalAttempts > 0)
+        .sort((a, b) => a.accuracy - b.accuracy)
+        .slice(0, 4);
+
+      let candidateTopicIds = weakTopics.map((topic) => topic.topicId);
+      if (candidateTopicIds.length === 0) {
+        const fallbackRows = await db
+          .select({ id: contentTopics.id })
+          .from(contentTopics)
+          .limit(4);
+        candidateTopicIds = fallbackRows.map((row) => Number(row.id));
+      }
+
+      const questionQueryBase = db
+        .select({
+          question: questions,
+          topic: contentTopics,
+        })
+        .from(questions)
+        .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id));
+
+      const questionQuery = candidateTopicIds.length > 0
+        ? questionQueryBase.where(inArray(questions.topicId, candidateTopicIds))
+        : questionQueryBase;
+
+      const adaptiveQuestions = await questionQuery.orderBy(sql`RANDOM()`).limit(30);
+
+      const questionIds = adaptiveQuestions.map((row) => row.question.id);
+      const tagRows = questionIds.length
+        ? await db
+            .select({
+              questionId: questionTags.questionId,
+              tag: questionTags.tag,
+              category: questionTags.category,
+            })
+            .from(questionTags)
+            .where(inArray(questionTags.questionId, questionIds))
+        : [];
+
+      const tagMap = new Map<number, { tag: string; category: string }[]>();
+      tagRows.forEach((row) => {
+        const existing = tagMap.get(row.questionId) ?? [];
+        existing.push({ tag: row.tag, category: row.category });
+        tagMap.set(row.questionId, existing);
+      });
+
+      const attachTags = (list: typeof adaptiveQuestions) =>
+        list.map((row) => ({
+          ...row.question,
+          topic: row.topic,
+          tags: tagMap.get(row.question.id) ?? [],
+        }));
+
+      res.json({
+        requiresPremium: !isPremiumUser,
+        weakTopics,
+        questions: attachTags(adaptiveQuestions || []),
+      });
+    } catch (error: any) {
+      console.error("Error generating adaptive questions:", error);
+      res.status(500).json({ 
+        error: "Failed to generate adaptive practice set",
+        requiresPremium: false,
+        weakTopics: [],
+        questions: []
+      });
     }
   });
 
@@ -543,10 +850,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const updatedIds = [...previewedIds].slice(0, FREE_QUESTION_LIMIT);
           
           await db.insert(questionPreviewLimits)
-            .values({ userId, previewedQuestionIds: updatedIds })
+            .values({ userId, previewedQuestionIds: updatedIds } as QuestionPreviewLimitInsert)
             .onConflictDoUpdate({
               target: questionPreviewLimits.userId,
-              set: { previewedQuestionIds: updatedIds, lastAccessedAt: new Date() }
+              set: { previewedQuestionIds: updatedIds, lastAccessedAt: new Date() } as Partial<QuestionPreviewLimitInsert>
             });
         }
       }
@@ -564,7 +871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required", requiresAuth: true });
       }
       
-      const validatedData = insertQuestionSchema.parse(req.body);
+      const validatedData = insertQuestionSchema.parse(req.body) as QuestionInsert;
       const question = await storage.createQuestion(validatedData);
       res.status(201).json(question);
     } catch (error: any) {
@@ -575,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User performance routes
   app.post("/api/performance", async (req, res) => {
     try {
-      const validatedData = insertUserPerformanceSchema.parse(req.body);
+      const validatedData = insertUserPerformanceSchema.parse(req.body) as UserPerformanceInsert;
       const attempt = await storage.recordAttempt(validatedData);
       res.status(201).json(attempt);
     } catch (error: any) {
@@ -712,14 +1019,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk question generation endpoints
-  app.post("/api/questions/generate-bulk", async (req, res) => {
+  app.post("/api/questions/generate-bulk", requireOwner, async (req, res) => {
     try {
-      // Start generation in background
-      bulkQuestionGenerator.generateAllQuestions().catch(console.error);
+      const job = await queueJob("question_generation", {
+        name: "Generate NEET practice questions",
+        payload: {
+          triggeredBy: req.session?.userId || null,
+        },
+      });
 
       res.json({
         success: true,
-        message: "Bulk generation started. Check /api/questions/generation-status for progress."
+        job,
+        message:
+          "Question generation job queued. Track progress in the task queue dashboard.",
       });
     } catch (error) {
       console.error("Error starting bulk generation:", error);

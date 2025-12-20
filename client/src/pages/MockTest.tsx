@@ -17,8 +17,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useState, useEffect, useMemo } from "react";
-import { Clock, ChevronLeft, Flag, AlertTriangle, CheckCircle2, HelpCircle, Eye } from "lucide-react";
+import { Clock, ChevronLeft, Flag, AlertTriangle, CheckCircle2, HelpCircle, Eye, Keyboard, Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Question, MockTest } from "@shared/schema";
 import { useLocation, useRoute } from "wouter";
@@ -26,29 +34,183 @@ import { cn } from "@/lib/utils";
 
 export default function MockTestPage() {
   const [, setLocation] = useLocation();
-  const [, params] = useRoute("/mock-test/:id");
-  const testId = params?.id;
+  const routeMatch = useRoute<{ id: string }>("/mock-test/:id") as [boolean, { id: string } | null] | null;
+  const testId = routeMatch?.[1]?.id ?? "";
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeRemaining, setTimeRemaining] = useState(180 * 60);
-  const [isTestStarted, setIsTestStarted] = useState(true);
+  const [isTestStarted, setIsTestStarted] = useState(false);
   const [isTestSubmitted, setIsTestSubmitted] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set([0]));
 
-  const { data: testData, isLoading } = useQuery({
-    queryKey: ['/api/mock-tests', testId],
-    queryFn: async () => {
-      const response = await fetch(`/api/mock-tests/${testId}`);
-      if (!response.ok) throw new Error('Failed to fetch mock test');
-      return response.json() as Promise<{ test: MockTest; questions: Question[] }>;
-    },
-    enabled: !!testId,
-  });
+  // Auto-save progress to localStorage
+  useEffect(() => {
+    if (isTestStarted && testData && Object.keys(answers).length > 0) {
+      const saveData = {
+        answers,
+        currentQuestionIndex,
+        timeRemaining,
+        flaggedQuestions: Array.from(flaggedQuestions),
+        visitedQuestions: Array.from(visitedQuestions),
+        lastSaved: Date.now(),
+      };
+      localStorage.setItem(`mocktest_${testId}_progress`, JSON.stringify(saveData));
+    }
+  }, [answers, currentQuestionIndex, timeRemaining, flaggedQuestions, visitedQuestions, isTestStarted, testId, testData]);
 
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
+
+  // Check for saved progress on mount
+  useEffect(() => {
+    if (testId && testData) {
+      const savedProgress = localStorage.getItem(`mocktest_${testId}_progress`);
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          // Only show resume option if saved within last 24 hours
+          if (progress.lastSaved && Date.now() - progress.lastSaved < 24 * 60 * 60 * 1000) {
+            setHasSavedProgress(true);
+            setShowResumeDialog(true);
+          }
+        } catch (e) {
+          console.error('Error checking saved progress:', e);
+        }
+      }
+    }
+  }, [testId, testData]);
+
+  const handleResumeTest = () => {
+    const savedProgress = localStorage.getItem(`mocktest_${testId}_progress`);
+    if (savedProgress) {
+      try {
+        const progress = JSON.parse(savedProgress);
+        setAnswers(progress.answers || {});
+        setCurrentQuestionIndex(progress.currentQuestionIndex || 0);
+        setFlaggedQuestions(new Set(progress.flaggedQuestions || []));
+        setVisitedQuestions(new Set(progress.visitedQuestions || [0]));
+        // Restore time remaining (approximate)
+        if (progress.timeRemaining) {
+          setTimeRemaining(progress.timeRemaining);
+        }
+        setIsTestStarted(true);
+        setShowResumeDialog(false);
+      } catch (e) {
+        console.error('Error resuming test:', e);
+      }
+    }
+  };
+
+  const handleStartFresh = () => {
+    localStorage.removeItem(`mocktest_${testId}_progress`);
+    localStorage.removeItem(`mocktest_${testId}_answers`);
+    localStorage.removeItem(`mocktest_${testId}_timeTaken`);
+    setIsTestStarted(true);
+    setVisitedQuestions(new Set([0]));
+    setShowResumeDialog(false);
+  };
+
+  // Keyboard shortcuts
   useEffect(() => {
     if (!isTestStarted || isTestSubmitted) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Prevent shortcuts when typing in inputs
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'n':
+          e.preventDefault();
+          if (currentQuestionIndex < (testData?.questions.length || 0) - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+          }
+          break;
+        case 'ArrowLeft':
+        case 'p':
+          e.preventDefault();
+          if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(prev => prev - 1);
+          }
+          break;
+        case 'f':
+          e.preventDefault();
+          handleToggleFlag();
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          e.preventDefault();
+          const optionIndex = parseInt(e.key) - 1;
+          const currentQuestion = testData?.questions[currentQuestionIndex];
+          if (currentQuestion && currentQuestion.options[optionIndex]) {
+            handleAnswerSubmit(currentQuestion.options[optionIndex].id);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          // Show submit confirmation dialog
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isTestStarted, isTestSubmitted, currentQuestionIndex, testData]);
+
+  const { data: testData, isLoading, error: testError } = useQuery<{ test: MockTest; questions: Question[] }>({
+    queryKey: ['/api/mock-tests', testId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/mock-tests/${testId}`, {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch mock test: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Ensure we have the expected format
+        if (!data || !data.test) {
+          throw new Error('Invalid test data received');
+        }
+        
+        // Ensure questions array exists
+        if (!Array.isArray(data.questions)) {
+          console.warn('Questions array missing or invalid, using empty array');
+          data.questions = [];
+        }
+        
+        return data as { test: MockTest; questions: Question[] };
+      } catch (err: any) {
+        console.error('Error fetching mock test:', err);
+        throw err;
+      }
+    },
+    enabled: !!testId,
+    retry: 3, // Auto-retry failed requests
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    networkMode: 'online',
+  });
+
+  // Initialize timer when test data loads
+  useEffect(() => {
+    if (testData?.test && !isTestStarted) {
+      const durationSeconds = (testData.test.durationMinutes || 180) * 60;
+      setTimeRemaining(durationSeconds);
+    }
+  }, [testData, isTestStarted]);
+
+  useEffect(() => {
+    if (!isTestStarted || isTestSubmitted || !testData) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -61,7 +223,7 @@ export default function MockTestPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isTestStarted, isTestSubmitted]);
+  }, [isTestStarted, isTestSubmitted, testData]);
 
   useEffect(() => {
     setVisitedQuestions(prev => new Set([...prev, currentQuestionIndex]));
@@ -82,6 +244,13 @@ export default function MockTestPage() {
       ...prev,
       [currentQuestionIndex]: answer,
     }));
+    // Auto-advance to next question after short delay (optional UX enhancement)
+    // Uncomment if desired:
+    // setTimeout(() => {
+    //   if (currentQuestionIndex < (testData?.questions.length || 0) - 1) {
+    //     setCurrentQuestionIndex(prev => prev + 1);
+    //   }
+    // }, 300);
   };
 
   const handleToggleFlag = () => {
@@ -97,11 +266,15 @@ export default function MockTestPage() {
   };
 
   const handleSubmitTest = () => {
-    setIsTestSubmitted(true);
+    if (isTestSubmitted) return;
     
-    const timeTaken = testData?.test?.durationMinutes 
-      ? (testData.test.durationMinutes * 60) - timeRemaining 
-      : 180 * 60 - timeRemaining;
+    setIsTestSubmitted(true);
+    setIsTestStarted(false);
+    
+    const durationSeconds = testData?.test?.durationMinutes 
+      ? testData.test.durationMinutes * 60
+      : 180 * 60;
+    const timeTaken = durationSeconds - timeRemaining;
     
     localStorage.setItem(`mocktest_${testId}_answers`, JSON.stringify(answers));
     localStorage.setItem(`mocktest_${testId}_timeTaken`, timeTaken.toString());
@@ -145,11 +318,48 @@ export default function MockTestPage() {
     return { answered, flagged, notAnswered: Math.max(0, notAnswered), notVisited: Math.max(0, notVisited) };
   }, [testData, answers, flaggedQuestions, visitedQuestions]);
 
-  if (isLoading || !testData) {
+  if (isLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <p>Loading mock test...</p>
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading mock test...</p>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (testError || !testData) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-2xl font-bold">Failed to Load Test</h2>
+            <p className="text-muted-foreground">
+              {testError instanceof Error ? testError.message : 'An error occurred while loading the test.'}
+            </p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (!testData.questions || testData.questions.length === 0) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto" />
+            <h2 className="text-2xl font-bold">No Questions Available</h2>
+            <p className="text-muted-foreground">
+              This test has no questions configured. Please contact support.
+            </p>
+            <Button onClick={() => setLocation('/mock-tests')}>Back to Tests</Button>
+          </div>
         </div>
       </ThemeProvider>
     );
@@ -178,6 +388,7 @@ export default function MockTestPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <CardTitle data-testid="text-test-title">{testData.test.title}</CardTitle>
+                    {isTestStarted ? (
                     <div 
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg transition-all",
@@ -193,6 +404,22 @@ export default function MockTestPage() {
                       <Clock className="h-5 w-5" />
                       <span className="font-bold">{formatTime(timeRemaining)}</span>
                     </div>
+                    ) : (
+                      <Button 
+                        onClick={() => {
+                          if (hasSavedProgress) {
+                            setShowResumeDialog(true);
+                          } else {
+                            setIsTestStarted(true);
+                            setVisitedQuestions(new Set([0]));
+                          }
+                        }}
+                        size="lg"
+                        data-testid="button-start-test"
+                      >
+                        {hasSavedProgress ? "Resume Test" : "Start Test"}
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
               </Card>
@@ -207,7 +434,7 @@ export default function MockTestPage() {
                 <Progress value={progress} className="h-2" />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <Button
                   variant={flaggedQuestions.has(currentQuestionIndex) ? "default" : "outline"}
                   size="sm"
@@ -220,10 +447,33 @@ export default function MockTestPage() {
                 >
                   <Flag className="h-4 w-4" />
                   {flaggedQuestions.has(currentQuestionIndex) ? "Flagged for Review" : "Flag for Review"}
+                  <span className="text-xs ml-1 opacity-70">(F)</span>
                 </Button>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Save className="h-3 w-3" />
+                  <span>Auto-saving...</span>
+                </div>
               </div>
 
-              {currentQuestion && (
+              {!isTestStarted ? (
+                <Card>
+                  <CardContent className="p-8 text-center space-y-4">
+                    <h3 className="text-xl font-semibold">Ready to Start?</h3>
+                    <p className="text-muted-foreground">
+                      This test has {totalQuestions} questions and will take approximately {testData.test.durationMinutes || 180} minutes.
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setIsTestStarted(true);
+                        setVisitedQuestions(new Set([0]));
+                      }}
+                      size="lg"
+                    >
+                      Start Test
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : currentQuestion ? (
                 <QuestionCard
                   questionNumber={currentQuestionIndex + 1}
                   difficulty={currentQuestion.difficultyLevel === 1 ? "Easy" : currentQuestion.difficultyLevel === 2 ? "Medium" : "Hard"}
@@ -235,13 +485,84 @@ export default function MockTestPage() {
                   onSkip={() => setCurrentQuestionIndex(Math.min(currentQuestionIndex + 1, totalQuestions - 1))}
                   onPrevious={() => setCurrentQuestionIndex(Math.max(currentQuestionIndex - 1, 0))}
                 />
-              )}
+              ) : null}
             </div>
+
+            {/* Resume Dialog */}
+            <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Resume Previous Attempt?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You have a saved progress for this test. Would you like to resume from where you left off, or start fresh?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    <p>• Your previous answers will be restored</p>
+                    <p>• Flagged questions will be preserved</p>
+                    <p>• Timer will continue from saved time</p>
+                  </div>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleStartFresh}>Start Fresh</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResumeTest}>Resume Test</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <div className="lg:col-span-1">
               <Card className="sticky top-4">
                 <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
                   <CardTitle className="text-base">Question Navigation</CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Keyboard className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                          <DialogDescription>
+                            Use these shortcuts to navigate quickly during the test
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3 py-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Next Question</span>
+                            <div className="flex gap-1">
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">→</kbd>
+                              <span className="text-xs text-muted-foreground">or</span>
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">N</kbd>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Previous Question</span>
+                            <div className="flex gap-1">
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">←</kbd>
+                              <span className="text-xs text-muted-foreground">or</span>
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">P</kbd>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Flag for Review</span>
+                            <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">F</kbd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Select Option 1-4</span>
+                            <div className="flex gap-1">
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">1</kbd>
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">2</kbd>
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">3</kbd>
+                              <kbd className="px-2 py-1 text-xs font-semibold bg-muted rounded">4</kbd>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-5 gap-2" data-testid="question-navigation-grid">
@@ -283,7 +604,12 @@ export default function MockTestPage() {
                   </div>
 
                   <div className="border-t pt-4 space-y-2">
-                    <h4 className="text-sm font-medium mb-3">Status Summary</h4>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium">Status Summary</h4>
+                      <Badge variant="outline" className="text-xs">
+                        Auto-saved
+                      </Badge>
+                    </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">

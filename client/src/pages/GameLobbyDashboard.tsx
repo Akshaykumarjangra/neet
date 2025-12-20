@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { useGamification } from "@/hooks/useGamification";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { categorizeBiologyChapter } from "@/lib/biologySections";
 import {
   Atom,
   Flame,
@@ -31,7 +32,11 @@ import {
   Sparkles,
   GraduationCap,
   Loader2,
+  Bug,
 } from "lucide-react";
+import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
+import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
+import { useState } from "react";
 
 interface CircularProgressProps {
   value: number;
@@ -265,7 +270,7 @@ export default function GameLobbyDashboard() {
   });
 
   const { data: libraryData } = useQuery<
-    Array<{ subject: string; classLevel: string; chapterNumber: number }>
+    Array<{ subject: string; classLevel: string; chapterNumber: number; chapterTitle?: string }>
   >({
     queryKey: ["/api/lms/library"],
     enabled: !!user?.id,
@@ -293,13 +298,40 @@ export default function GameLobbyDashboard() {
     enabled: !!user?.id,
   });
 
+  const { data: mentorRecommendations } = useQuery<{
+    topRated: MentorCardData[];
+    trending: MentorCardData[];
+    trendingSubjects: Array<{ subject: string; count: number }>;
+  }>({
+    queryKey: ["/api/mentors/recommendations"],
+    queryFn: async () => {
+      const response = await fetch("/api/mentors/recommendations");
+      if (!response.ok) throw new Error("Failed to load mentor recommendations");
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [selectedMentor, setSelectedMentor] = useState<MentorForBooking | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+
+  const featuredMentors = mentorRecommendations?.topRated?.slice(0, 3) || [];
+
+  const biologyLibraryChapters = libraryData?.filter((ch) => ch.subject === "Biology") || [];
+
   const chapterCounts = {
     Physics:
       libraryData?.filter((ch) => ch.subject === "Physics").length ?? 23,
     Chemistry:
       libraryData?.filter((ch) => ch.subject === "Chemistry").length ?? 30,
-    Biology:
-      libraryData?.filter((ch) => ch.subject === "Biology").length ?? 38,
+    Botany:
+      biologyLibraryChapters.filter(
+        (ch) => categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber) === "Botany"
+      ).length ?? 19,
+    Zoology:
+      biologyLibraryChapters.filter(
+        (ch) => categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber) === "Zoology"
+      ).length ?? 19,
   };
 
   const recentActivities: RecentActivity[] = [
@@ -321,7 +353,7 @@ export default function GameLobbyDashboard() {
       id: "3",
       type: "flashcard",
       title: "Reviewed 20 flashcards",
-      subject: "Biology",
+      subject: "Zoology",
       timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
     },
     {
@@ -405,7 +437,7 @@ export default function GameLobbyDashboard() {
     );
   }
 
-  const displayName = user?.name || user?.username || "Student";
+  const displayName = user?.displayName || "Student";
 
   return (
     <ThemeProvider>
@@ -514,7 +546,7 @@ export default function GameLobbyDashboard() {
             >
               Your Subjects
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               <SubjectCard
                 subject="Physics"
                 icon={Atom}
@@ -538,15 +570,26 @@ export default function GameLobbyDashboard() {
                 onContinue={() => setLocation("/chemistry")}
               />
               <SubjectCard
-                subject="Biology"
+                subject="Botany"
                 icon={Leaf}
                 colorClass="emerald"
-                bgGradient="from-emerald-500 to-green-500"
+                bgGradient="from-emerald-500 to-lime-500"
+                progress={32}
+                chapterCount={chapterCounts.Botany}
+                questionCount={2100}
+                lastChapter="Chapter 4: Photosynthesis"
+                onContinue={() => setLocation("/botany")}
+              />
+              <SubjectCard
+                subject="Zoology"
+                icon={Bug}
+                colorClass="amber"
+                bgGradient="from-amber-500 to-orange-500"
                 progress={28}
-                chapterCount={chapterCounts.Biology}
-                questionCount={4000}
-                lastChapter="Chapter 3: Plant Kingdom"
-                onContinue={() => setLocation("/biology")}
+                chapterCount={chapterCounts.Zoology}
+                questionCount={1900}
+                lastChapter="Chapter 3: Natural Selection"
+                onContinue={() => setLocation("/zoology")}
               />
             </div>
           </motion.div>
@@ -735,6 +778,59 @@ export default function GameLobbyDashboard() {
             </motion.div>
           </div>
 
+          {/* Featured Mentors Section */}
+          {featuredMentors.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+            >
+              <Card className="glass-panel" data-testid="card-featured-mentors">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500">
+                        <GraduationCap className="h-5 w-5 text-white" />
+                      </div>
+                      Featured Mentors
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setLocation("/mentors")}
+                      className="text-xs"
+                    >
+                      View All
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {featuredMentors.map((mentor) => (
+                      <MentorCard
+                        key={mentor.id}
+                        mentor={mentor}
+                        size="featured"
+                        onViewProfile={() => setLocation(`/mentors/${mentor.id}`)}
+                        onBookSession={() => {
+                          setSelectedMentor({
+                            id: mentor.id,
+                            userName: mentor.userName,
+                            userAvatar: mentor.userAvatar ?? null,
+                            subjects: mentor.subjects,
+                            hourlyRate: mentor.hourlyRate,
+                          });
+                          setShowBookingModal(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
           {/* Recent Activity + Leaderboard */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Recent Activity Timeline */}
@@ -905,6 +1001,18 @@ export default function GameLobbyDashboard() {
             </motion.div>
           </div>
         </main>
+
+        {showBookingModal && selectedMentor && (
+          <BookingModal
+            mentor={selectedMentor}
+            open={showBookingModal}
+            onOpenChange={setShowBookingModal}
+            onSuccess={() => {
+              setShowBookingModal(false);
+              setSelectedMentor(null);
+            }}
+          />
+        )}
       </div>
     </ThemeProvider>
   );

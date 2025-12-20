@@ -58,25 +58,51 @@ function getSubjectFromTopicId(topicId: number): string {
 
 export default function MockTestResults() {
   const [, setLocation] = useLocation();
-  const [, params] = useRoute("/mock-test/:id/results");
-  const testId = params?.id;
+  const routeMatch = useRoute<{ id: string }>("/mock-test/:id/results") as
+    | [boolean, { id: string } | null]
+    | null;
+  const testId = routeMatch?.[1]?.id ?? "";
 
-  const { data: testData, isLoading } = useQuery({
+  const { data: testData, isLoading, error: testError } = useQuery<TestResultData>({
     queryKey: ['/api/mock-tests', testId, 'results'],
     queryFn: async () => {
-      const response = await fetch(`/api/mock-tests/${testId}`);
-      if (!response.ok) throw new Error('Failed to fetch mock test results');
-      const data = await response.json() as { test: MockTest; questions: Question[] };
+      try {
+        const response = await fetch(`/api/mock-tests/${testId}`, {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch mock test: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Ensure we have the expected format
+        if (!data || !data.test) {
+          throw new Error('Invalid test data received');
+        }
+        
+        // Ensure questions array exists
+        if (!Array.isArray(data.questions)) {
+          console.warn('Questions array missing or invalid, using empty array');
+          data.questions = [];
+        }
       
       const storedAnswers = localStorage.getItem(`mocktest_${testId}_answers`);
       const storedTimeTaken = localStorage.getItem(`mocktest_${testId}_timeTaken`);
       
       return {
-        ...data,
+          test: data.test,
+          questions: data.questions || [],
         answers: storedAnswers ? JSON.parse(storedAnswers) : {},
-        timeTaken: storedTimeTaken ? parseInt(storedTimeTaken) : data.test.durationMinutes * 60,
-        totalTime: data.test.durationMinutes * 60,
+          timeTaken: storedTimeTaken ? parseInt(storedTimeTaken) : (data.test.durationMinutes || 180) * 60,
+          totalTime: (data.test.durationMinutes || 180) * 60,
       } as TestResultData;
+      } catch (err: any) {
+        console.error('Error fetching mock test results:', err);
+        throw err;
+      }
     },
     enabled: !!testId,
   });
@@ -185,7 +211,7 @@ export default function MockTestResults() {
     setLocation(`/mock-test/${testId}`);
   };
 
-  if (isLoading || !testData || !results) {
+  if (isLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -193,6 +219,59 @@ export default function MockTestResults() {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-muted-foreground">Loading test results...</p>
           </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (testError || !testData) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <XCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to Load Results</h3>
+              <p className="text-muted-foreground">
+                {testError instanceof Error ? testError.message : 'Failed to load test results. Please try again.'}
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => setLocation('/mock-tests')} variant="outline">
+                  Back to Tests
+                </Button>
+                <Button onClick={() => window.location.reload()}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (!results) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-yellow-500/10 w-fit mx-auto">
+                <MinusCircle className="h-12 w-12 text-yellow-500" />
+              </div>
+              <h3 className="text-xl font-semibold">No Results Available</h3>
+              <p className="text-muted-foreground">
+                Unable to calculate results. Please try taking the test again.
+              </p>
+              <Button onClick={handleRetakeTest}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retake Test
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </ThemeProvider>
     );

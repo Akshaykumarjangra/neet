@@ -10,11 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { INDIAN_STATES } from "@/lib/indian-states";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow, format } from "date-fns";
 import { useLocation } from "wouter";
 import {
@@ -23,6 +28,7 @@ import {
   Calendar,
   Clock,
   BookOpen,
+  CreditCard,
   Target,
   TrendingUp,
   Award,
@@ -41,15 +47,18 @@ import {
   Lock,
   LogOut,
   ChevronRight,
-  FileText,
   Layers,
   GraduationCap,
   Loader2,
   Eye,
   EyeOff,
   AlertTriangle,
+  FileText,
+  Check,
+  MapPin,
+  Building2,
 } from "lucide-react";
-
+ 
 interface SubjectProgress {
   subject: string;
   progress: number;
@@ -77,6 +86,21 @@ interface RecentActivity {
   timestamp: Date;
 }
 
+type BillingInterval = "monthly" | "yearly";
+
+interface SubscriptionSummary {
+  id: number;
+  status: string;
+  billingInterval: BillingInterval;
+  currentPeriodEnd: string | null;
+  planName: string;
+  planSlug: string;
+}
+
+interface SubscriptionStatusResponse {
+  subscription: SubscriptionSummary | null;
+}
+
 export default function Profile() {
   const { user, isLoading: authLoading, forceRefreshAuth } = useAuth();
   const { points, level, streak } = useGamification();
@@ -91,6 +115,36 @@ export default function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [profileName, setProfileName] = useState(user?.displayName || "");
+  const [profileHeadline, setProfileHeadline] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState("");
+  const [profileBio, setProfileBio] = useState("");
+  const [profileSchool, setProfileSchool] = useState("");
+  const [profileCity, setProfileCity] = useState("");
+  const [profileState, setProfileState] = useState("");
+  const [_profilePreferences, setProfilePreferences] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<"admin" | "mentor" | "student">(
+    (user?.role as "admin" | "mentor" | "student") || "student"
+  );
+
+  const { data: profileData = { profile: { name: "", headline: "", avatarUrl: "", bio: "", school: "", city: "", state: "", preferences: {} } }, isLoading: profileLoading } = useQuery<{
+    profile: {
+      name: string;
+      headline?: string | null;
+      avatarUrl?: string | null;
+      bio?: string | null;
+      school?: string | null;
+      city?: string | null;
+      state?: string | null;
+      preferences?: Record<string, any>;
+    };
+  }>({
+    queryKey: ["/api/profile"],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      return apiRequest("GET", "/api/profile");
+    },
+  });
 
   useEffect(() => {
     if (user?.mustChangePassword) {
@@ -103,6 +157,25 @@ export default function Profile() {
       setShowPasswordDialog(true);
     }
   }, [user?.mustChangePassword, showPasswordDialog]);
+
+  useEffect(() => {
+    if (profileData?.profile) {
+      setProfileName(profileData.profile.name || user?.displayName || "");
+      setProfileHeadline(profileData.profile.headline || "");
+      setProfileAvatarUrl(profileData.profile.avatarUrl || "");
+      setProfileBio(profileData.profile.bio || "");
+      setProfileSchool(profileData.profile.school || "");
+      setProfileCity(profileData.profile.city || "");
+      setProfileState(profileData.profile.state || "");
+      setProfilePreferences(profileData.profile.preferences || {});
+    }
+  }, [profileData?.profile, user?.displayName]);
+
+  useEffect(() => {
+    if (user?.role) {
+      setViewMode((user.role as "admin" | "mentor" | "student") || "student");
+    }
+  }, [user?.role]);
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
@@ -146,6 +219,48 @@ export default function Profile() {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (payload: { name: string; headline?: string; avatarUrl?: string; bio?: string; school?: string; city?: string; state?: string }) => {
+      return apiRequest("POST", "/api/profile", payload);
+    },
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/profile"] });
+      const previous = queryClient.getQueryData(["/api/profile"]);
+      const optimistic = {
+        profile: {
+          name: payload.name,
+          headline: payload.headline,
+          avatarUrl: payload.avatarUrl,
+          bio: payload.bio,
+          school: payload.school,
+          city: payload.city,
+          state: payload.state,
+          preferences: _profilePreferences,
+        },
+      };
+      queryClient.setQueryData(["/api/profile"], optimistic);
+      return { previous };
+    },
+    onSuccess: async () => {
+      toast({
+        title: "Profile saved",
+        description: "Your profile has been updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      await forceRefreshAuth();
+    },
+    onError: (error: Error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["/api/profile"], context.previous);
+      }
+      toast({
+        title: "Could not save profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handlePasswordSubmit = () => {
     setPasswordError("");
     
@@ -160,6 +275,62 @@ export default function Profile() {
     }
     
     changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
+
+  const handleProfileSave = () => {
+    const nextName = profileName.trim();
+    const nextHeadline = profileHeadline.trim();
+    const nextAvatar = profileAvatarUrl.trim();
+    const nextBio = profileBio.trim();
+    const nextSchool = profileSchool.trim();
+    const nextCity = profileCity.trim();
+    const nextState = profileState.trim();
+
+    if (!nextName) {
+      toast({
+        title: "Name is required",
+        description: "Please add a name before saving your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (nextBio.length > 1000) {
+      toast({
+        title: "Bio too long",
+        description: "Bio must be under 1000 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (nextSchool.length > 200) {
+      toast({
+        title: "School name too long",
+        description: "School name must be under 200 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (nextCity.length > 100) {
+      toast({
+        title: "City name too long",
+        description: "City name must be under 100 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateProfileMutation.mutate({
+      name: nextName,
+      headline: nextHeadline,
+      avatarUrl: nextAvatar,
+      bio: nextBio,
+      school: nextSchool,
+      city: nextCity,
+      state: nextState,
+    });
   };
 
   const handleLogout = async () => {
@@ -194,6 +365,16 @@ export default function Profile() {
     queryKey: ["/api/game/achievements", user?.id],
     enabled: !!user?.id,
   });
+
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useQuery<SubscriptionStatusResponse>({
+    queryKey: ["/api/billing/status"],
+    enabled: !!user?.id,
+  });
+
+  const activeSubscription = subscriptionStatus?.subscription ?? null;
+  const subscriptionRenewalDate = activeSubscription?.currentPeriodEnd
+    ? format(new Date(activeSubscription.currentPeriodEnd), "PPP")
+    : null;
 
   const subjectProgress: SubjectProgress[] = [
     {
@@ -354,6 +535,20 @@ export default function Profile() {
     }
   };
 
+  const getSubscriptionBadgeColor = (status?: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-500/20 text-green-500 border-green-500/30";
+      case "pending":
+        return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
+      case "cancelled":
+      case "expired":
+        return "bg-red-500/20 text-red-500 border-red-500/30";
+      default:
+        return "bg-slate-500/20 text-slate-500 border-slate-500/30";
+    }
+  };
+
   if (authLoading) {
     return (
       <ThemeProvider>
@@ -367,9 +562,13 @@ export default function Profile() {
     );
   }
 
-  const displayName = user?.name || user?.username || "Student";
+  const displayName = (profileName || user?.displayName || "Student").trim();
+  const displayHeadline = profileHeadline?.trim() || user?.headline || "";
+  const profileAvatar = profileAvatarUrl?.trim() || user?.avatarUrl || "";
   const userInitials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const joinDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+  const canSwitchRole = Boolean((user as any)?.isOwner || user?.isAdmin);
+  const displayRole = (viewMode || (user?.role as "admin" | "mentor" | "student") || "student").toLowerCase();
 
   return (
     <ThemeProvider>
@@ -398,7 +597,7 @@ export default function Profile() {
                     transition={{ delay: 0.2, type: "spring" }}
                   >
                     <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary/30" data-testid="img-avatar">
-                      <AvatarImage src="" alt={displayName} />
+                      <AvatarImage src={profileAvatar} alt={displayName} />
                       <AvatarFallback className="text-2xl md:text-3xl bg-gradient-to-br from-purple-500 to-pink-500 text-white">
                         {userInitials}
                       </AvatarFallback>
@@ -411,13 +610,72 @@ export default function Profile() {
                         {displayName}
                       </h1>
                       <Badge 
-                        className={`${getRoleBadgeColor(user?.role || "student")} capitalize`}
+                        className={`${getRoleBadgeColor(displayRole)} capitalize`}
                         data-testid="badge-user-role"
                       >
                         <Shield className="h-3 w-3 mr-1" />
-                        {user?.role || "student"}
+                        {displayRole}
                       </Badge>
                     </div>
+
+                    {canSwitchRole && (
+                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <Badge variant="outline" className="text-xs">
+                          Viewing as {displayRole}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                              <Shield className="h-4 w-4" />
+                              Switch View
+                              <ChevronRight className="h-4 w-4 ml-auto" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => setViewMode("student")}
+                              className={displayRole === "student" ? "bg-accent" : ""}
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Student View
+                              {displayRole === "student" && <Check className="h-4 w-4 ml-auto" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setViewMode("mentor")}
+                              className={displayRole === "mentor" ? "bg-accent" : ""}
+                              disabled={user?.role !== "mentor" && !user?.isOwner}
+                            >
+                              <GraduationCap className="h-4 w-4 mr-2" />
+                              Mentor Dashboard
+                              {displayRole === "mentor" && <Check className="h-4 w-4 ml-auto" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setViewMode("admin")}
+                              className={displayRole === "admin" ? "bg-accent" : ""}
+                              disabled={!user?.isOwner}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              Admin Hub
+                              {displayRole === "admin" && <Check className="h-4 w-4 ml-auto" />}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <span className="text-xs text-muted-foreground">
+                          Preview dashboard panes in different roles.
+                        </span>
+                      </div>
+                    )}
+
+                    <p className="text-muted-foreground max-w-xl" data-testid="text-user-headline">
+                      {displayHeadline || "Add a short headline to personalize your profile."}
+                    </p>
+
+                    {profileBio && (
+                      <p className="text-sm text-muted-foreground max-w-xl mt-2 mb-4" data-testid="text-user-bio">
+                        {profileBio}
+                      </p>
+                    )}
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 text-muted-foreground mb-4">
                       <div className="flex items-center gap-2" data-testid="text-user-email">
@@ -428,6 +686,24 @@ export default function Profile() {
                         <Calendar className="h-4 w-4" />
                         <span>Joined {format(joinDate, "MMMM yyyy")}</span>
                       </div>
+                      {(profileSchool || profileCity || profileState) && (
+                        <div className="flex flex-wrap items-center gap-3">
+                          {profileSchool && (
+                            <div className="flex items-center gap-2" data-testid="text-user-school">
+                              <Building2 className="h-4 w-4" />
+                              <span className="text-sm">{profileSchool}</span>
+                            </div>
+                          )}
+                          {(profileCity || profileState) && (
+                            <div className="flex items-center gap-2" data-testid="text-user-location">
+                              <MapPin className="h-4 w-4" />
+                              <span className="text-sm">
+                                {[profileCity, profileState].filter(Boolean).join(", ")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -449,6 +725,147 @@ export default function Profile() {
               </CardContent>
             </Card>
           </motion.div>
+
+          <Card className="glass-panel" data-testid="card-profile-settings">
+            <CardHeader>
+              <CardTitle>Profile settings</CardTitle>
+              <CardDescription>Update your profile information. These values are shown in the header and menus.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Basic Information Section */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Basic Information</h3>
+                  <p className="text-sm text-muted-foreground">Name, headline, and avatar shown in your profile</p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-name">Name *</Label>
+                    <Input
+                      id="profile-name"
+                      value={profileName}
+                      onChange={(event) => setProfileName(event.target.value)}
+                      placeholder="Your name"
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                      data-testid="input-profile-name"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-headline">Headline</Label>
+                    <Input
+                      id="profile-headline"
+                      value={profileHeadline}
+                      onChange={(event) => setProfileHeadline(event.target.value)}
+                      placeholder="e.g. Future NEET topper"
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                      data-testid="input-profile-headline"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground">{profileHeadline.length}/200</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-avatar">Avatar URL</Label>
+                    <Input
+                      id="profile-avatar"
+                      value={profileAvatarUrl}
+                      onChange={(event) => setProfileAvatarUrl(event.target.value)}
+                      placeholder="https://..."
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                      data-testid="input-profile-avatar"
+                      maxLength={500}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profile-bio">Bio</Label>
+                  <Textarea
+                    id="profile-bio"
+                    value={profileBio}
+                    onChange={(event) => setProfileBio(event.target.value)}
+                    placeholder="Tell us about yourself..."
+                    disabled={profileLoading || updateProfileMutation.isPending}
+                    data-testid="input-profile-bio"
+                    maxLength={1000}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">{profileBio.length}/1000</p>
+                </div>
+              </div>
+
+              {/* Location & Education Section */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Location & Education</h3>
+                  <p className="text-sm text-muted-foreground">Your school and location information</p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-school">School</Label>
+                    <Input
+                      id="profile-school"
+                      value={profileSchool}
+                      onChange={(event) => setProfileSchool(event.target.value)}
+                      placeholder="Your school name"
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                      data-testid="input-profile-school"
+                      maxLength={200}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-city">City</Label>
+                    <Input
+                      id="profile-city"
+                      value={profileCity}
+                      onChange={(event) => setProfileCity(event.target.value)}
+                      placeholder="Your city"
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                      data-testid="input-profile-city"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-state">State</Label>
+                    <Select
+                      value={profileState}
+                      onValueChange={setProfileState}
+                      disabled={profileLoading || updateProfileMutation.isPending}
+                    >
+                      <SelectTrigger id="profile-state" data-testid="select-profile-state">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {INDIAN_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t">
+                <Button
+                  onClick={handleProfileSave}
+                  disabled={profileLoading || updateProfileMutation.isPending}
+                  data-testid="button-save-profile"
+                >
+                  {updateProfileMutation.isPending ? (
+                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Saving…</span>
+                  ) : (
+                    "Save profile"
+                  )}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Saves instantly and refreshes your header profile card.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Tabs for different sections */}
           <Tabs defaultValue="overview" className="space-y-6" data-testid="profile-tabs">
@@ -580,6 +997,84 @@ export default function Profile() {
                   </Card>
                 </motion.div>
               </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Card className="glass-panel" data-testid="card-subscription">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500">
+                        <CreditCard className="h-5 w-5 text-white" />
+                      </div>
+                      Subscription
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your premium access and billing details
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {subscriptionLoading ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : activeSubscription ? (
+                      <div className="space-y-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Current Plan</p>
+                            <p className="text-xl font-semibold">{activeSubscription.planName}</p>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={getSubscriptionBadgeColor(activeSubscription.status)}
+                          >
+                            {activeSubscription.status}
+                          </Badge>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="p-4 rounded-lg bg-muted/50">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Billing interval
+                            </p>
+                            <p className="text-lg font-semibold capitalize">
+                              {activeSubscription.billingInterval}
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-lg bg-muted/50">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Renews on
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {subscriptionRenewalDate || "—"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          <Button onClick={() => navigate("/billing-status")} className="gap-2">
+                            View Billing
+                          </Button>
+                          <Button variant="outline" onClick={() => navigate("/pricing")}>
+                            Manage Plan
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          You're currently exploring on the free tier. Upgrade to unlock premium
+                          practice, AI guidance, and mentor sessions.
+                        </p>
+                        <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+                          Explore Premium Plans
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
 
             {/* Progress Tab */}

@@ -11,7 +11,11 @@ import { DailyChallengeCard } from "@/components/game/DailyChallengeCard";
 import { LeaderboardPreview } from "@/components/game/LeaderboardPreview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Dna, FlaskConical, Calendar, Trophy, Target, Loader2, Layers, TrendingUp, Zap } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
+import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
+import { BookOpen, Dna, FlaskConical, Calendar, Trophy, Target, Loader2, Layers, TrendingUp, Zap, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -71,12 +75,41 @@ interface UserDailyChallenge {
   };
 }
 
+interface BookingTimelineEntry {
+  label: string;
+  status: "requested" | "confirmed" | "cancelled";
+  at: string;
+}
+
+interface StudentBooking {
+  id: number;
+  mentorId: number;
+  mentorName: string | null;
+  mentorAvatar?: string | null;
+  startAt: string;
+  endAt: string;
+  status: "requested" | "confirmed" | "completed" | "cancelled";
+  meetingLink?: string | null;
+  priceCents?: number;
+  createdAt: string;
+  updatedAt: string;
+  timeline?: BookingTimelineEntry[];
+}
+
+interface MentorRecommendation extends MentorForBooking {
+  userHeadline: string | null;
+  avgRating: number | null;
+  totalSessionsCompleted: number;
+}
+
 export default function Dashboard() {
   const [activeSubject, setActiveSubject] = useState("Physics");
   const [, setLocation] = useLocation();
   const { points, level, streak, updateStreak } = useGamification();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedMentor, setSelectedMentor] = useState<MentorForBooking | null>(null);
 
   // Update streak on component mount
   useEffect(() => {
@@ -145,7 +178,62 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
+  const {
+    data: studentBookings = [],
+    isLoading: bookingsLoading,
+    refetch: refetchBookings,
+  } = useQuery<StudentBooking[]>({
+    queryKey: ['/api/bookings', 'student'],
+    queryFn: async () => {
+      const response = await fetch('/api/bookings', { credentials: 'include' });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: mentorRecommendations } = useQuery<{
+    topRated: MentorCardData[];
+    trending: MentorCardData[];
+    trendingSubjects: Array<{ subject: string; count: number }>;
+  }>({
+    queryKey: ['/api/mentors/recommendations'],
+    queryFn: async () => {
+      const response = await fetch('/api/mentors/recommendations');
+      if (!response.ok) throw new Error('Failed to load mentor recommendations');
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const userPosition = leaderboardData?.find((entry: any) => entry.id === user?.id);
+
+  const sortedBookings = [...studentBookings].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const upcomingBookings = sortedBookings.filter((b) => b.status === "requested" || b.status === "confirmed");
+  const pendingBookings = upcomingBookings.filter((b) => b.status === "requested");
+  const confirmedBookings = upcomingBookings.filter((b) => b.status === "confirmed");
+  const nextBooking = upcomingBookings[0];
+  const recommendedMentors = mentorRecommendations?.topRated?.slice(0, 3) || [];
+
+  const openQuickBook = (mentor: MentorCardData) => {
+    setSelectedMentor({
+      id: mentor.id,
+      userName: mentor.userName,
+      userAvatar: (mentor as any).userAvatar ?? null,
+      subjects: mentor.subjects,
+      hourlyRate: mentor.hourlyRate,
+    });
+    setBookingModalOpen(true);
+  };
+
+  const quickBookFirst = () => {
+    if (recommendedMentors.length) {
+      openQuickBook(recommendedMentors[0]);
+    } else {
+      setLocation('/mentors');
+    }
+  };
 
   // Show error toast for gamification data failures
   useEffect(() => {
@@ -335,71 +423,17 @@ export default function Dashboard() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {subjects.map((subject, index) => {
                 const floatClass = index % 3 === 0 ? 'float-gentle' : index % 3 === 1 ? 'float-medium' : 'float-slow';
-                if (subject.name === "Physics") {
-                  return (
-                    <div key={subject.name} onClick={() => window.location.href = "/physics"} className={`cursor-pointer ${floatClass}`}>
-                      <SubjectCard
-                        subject={subject.name}
-                        icon={physicsIcon}
-                        progress={subject.progress}
-                        totalQuestions={subject.total}
-                        solvedQuestions={subject.solved}
-                        color={subject.color}
-                      />
-                    </div>
-                  );
-                }
-                if (subject.name === "Chemistry") {
-                  return (
-                    <div key={subject.name} onClick={() => window.location.href = "/chemistry"} className={`cursor-pointer ${floatClass}`}>
-                      <SubjectCard
-                        subject={subject.name}
-                        icon={chemistryIcon}
-                        progress={subject.progress}
-                        totalQuestions={subject.total}
-                        solvedQuestions={subject.solved}
-                        color={subject.color}
-                      />
-                    </div>
-                  );
-                }
-                // This block handles the merged Biology subject
-                if (subject.name === "Botany" || subject.name === "Zoology") {
-                  // We only want to render the Biology card once, so we check if it's the first one (Botany)
-                  if (subject.name === "Botany") {
-                    const botanyStat = userStats?.subjectStats.find((s) => s.subject === "Botany");
-                    const zoologyStat = userStats?.subjectStats.find((s) => s.subject === "Zoology");
-                    const totalBiologySolved = (botanyStat?.correct || 0) + (zoologyStat?.correct || 0);
-                    const totalBiologyQuestions = (botanyStat?.total || 0) + (zoologyStat?.total || 0);
-                    const averageBiologyAccuracy = totalBiologyQuestions > 0 ? (totalBiologySolved / totalBiologyQuestions) * 100 : 0;
-
-                    return (
-                      <div key="Biology" onClick={() => setLocation('/biology')} className={`cursor-pointer ${floatClass}`}>
-                        <SubjectCard
-                          subject="Biology"
-                          icon={Dna} // Use Dna icon for Biology
-                          progress={averageBiologyAccuracy}
-                          totalQuestions={totalBiologyQuestions}
-                          solvedQuestions={totalBiologySolved}
-                          color="#10b981" // A color for Biology, e.g., emerald-500
-                        />
-                      </div>
-                    );
-                  }
-                  // If it's Zoology, we don't render anything as it's merged into Biology
-                  return null;
-                }
                 return (
-                  <SubjectCard
-                    key={subject.name}
-                    subject={subject.name}
-                    icon={subject.icon}
-                    progress={subject.progress}
-                    totalQuestions={subject.total}
-                    solvedQuestions={subject.solved}
-                    color={subject.color}
-                    onClick={() => setLocation('/practice')}
-                  />
+                  <div key={subject.name} className={`cursor-pointer ${floatClass}`}>
+                    <SubjectCard
+                      subject={subject.name}
+                      icon={subject.icon}
+                      progress={subject.progress}
+                      totalQuestions={subject.total}
+                      solvedQuestions={subject.solved}
+                      color={subject.color}
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -467,6 +501,147 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          <section className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Mentor Sessions</span>
+                  <div className="flex items-center gap-2">
+                    {nextBooking && (
+                      <Badge variant="outline">
+                        Next: {new Date(nextBooking.startAt).toLocaleDateString()} at {new Date(nextBooking.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </Badge>
+                    )}
+                    {upcomingBookings.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLocation('/my-bookings')}
+                        className="h-auto py-1 text-xs"
+                      >
+                        View All
+                      </Button>
+                    )}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-3 rounded-lg bg-muted/40">
+                    <div className="text-sm text-muted-foreground">Pending</div>
+                    <div className="text-2xl font-semibold">{pendingBookings.length}</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/40">
+                    <div className="text-sm text-muted-foreground">Confirmed</div>
+                    <div className="text-2xl font-semibold">{confirmedBookings.length}</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/40">
+                    <div className="text-sm text-muted-foreground">Total</div>
+                    <div className="text-2xl font-semibold">{upcomingBookings.length}</div>
+                  </div>
+                </div>
+
+                {bookingsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading bookings...
+                  </div>
+                ) : upcomingBookings.length > 0 ? (
+                  <div className="space-y-3">
+                    {upcomingBookings.slice(0, 3).map((booking) => (
+                      <div key={booking.id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={booking.mentorAvatar || undefined} />
+                              <AvatarFallback>{booking.mentorName?.charAt(0) || "M"}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{booking.mentorName || "Mentor"}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(booking.startAt).toLocaleDateString()} · {new Date(booking.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </div>
+                          </div>
+                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>{booking.status}</Badge>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {booking.timeline?.map((step) => (
+                            <Badge key={`${booking.id}-${step.status}`} variant="outline" className="text-[11px]">
+                              {step.label} · {new Date(step.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
+                            </Badge>
+                          )) || (
+                            <Badge variant="outline" className="text-[11px]">Requested</Badge>
+                          )}
+                          {booking.meetingLink && (
+                            <Badge variant="secondary" className="text-[11px]">Link ready</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No upcoming mentor bookings yet.</p>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={quickBookFirst}>
+                    Quick book a mentor
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setLocation('/mentors')}>
+                    Browse mentors
+                  </Button>
+                  {upcomingBookings.length > 0 && (
+                    <Button size="sm" variant="outline" onClick={() => setLocation('/my-bookings')}>
+                      View All Bookings
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Mentor Recommendations</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLocation("/mentors")}
+                    className="text-xs h-auto py-1"
+                  >
+                    View All
+                    <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {mentorRecommendations ? (
+                  recommendedMentors.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {recommendedMentors.map((mentor) => (
+                        <MentorCard
+                          key={mentor.id}
+                          mentor={mentor}
+                          size="compact"
+                          onViewProfile={() => setLocation(`/mentors/${mentor.id}`)}
+                          onBookSession={() => openQuickBook(mentor)}
+                          showQuickBook={true}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No recommendations yet. Check back soon.</p>
+                  )
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading mentor picks...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
           {/* Leaderboard and Daily Challenges Section */}
           <section>
@@ -541,6 +716,16 @@ export default function Dashboard() {
               />
             </div>
           </section>
+
+          <BookingModal
+            mentor={selectedMentor}
+            open={bookingModalOpen}
+            onOpenChange={(open) => {
+              setBookingModalOpen(open);
+              if (!open) setSelectedMentor(null);
+            }}
+            onBooked={() => refetchBookings()}
+          />
         </main>
       </div>
     </ThemeProvider>

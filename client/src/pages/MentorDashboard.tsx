@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+const formatINR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 
@@ -71,7 +72,7 @@ import {
   Edit,
 } from "lucide-react";
 
-const SUBJECTS = ["Physics", "Chemistry", "Biology"] as const;
+const SUBJECTS = ["Physics", "Chemistry", "Botany", "Zoology"] as const;
 const LANGUAGES = ["English", "Hindi", "Tamil", "Telugu", "Bengali", "Marathi", "Gujarati", "Kannada", "Malayalam", "Punjabi"];
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -110,9 +111,18 @@ const availabilitySchema = z.object({
   endTime: z.string().regex(/^\d{2}:\d{2}$/, "Use format HH:MM"),
 });
 
+const quickRegisterSchema = z.object({
+  bio: z.string().min(20, "Bio must be at least 20 characters"),
+  subjects: z.array(z.string()).min(1, "Select at least one subject"),
+  hourlyRate: z.coerce.number().int().min(0, "Rate must be positive").optional(),
+  experienceYears: z.coerce.number().int().min(0).max(50).optional(),
+  languages: z.array(z.string()).min(1, "Pick at least one language").optional(),
+});
+
 type MentorApplication = z.infer<typeof mentorApplicationSchema>;
 type MentorProfile = z.infer<typeof mentorProfileSchema>;
 type AvailabilitySlot = z.infer<typeof availabilitySchema>;
+type QuickRegister = z.infer<typeof quickRegisterSchema>;
 
 interface MentorData {
   id: number;
@@ -158,6 +168,8 @@ interface BookingData {
   studentName: string | null;
   studentAvatar?: string | null;
   createdAt: string;
+  updatedAt: string;
+  timeline?: Array<{ label: string; status: string; at: string }>;
 }
 
 interface ContentData {
@@ -270,6 +282,17 @@ export default function MentorDashboard() {
     },
   });
 
+  const quickRegisterForm = useForm<QuickRegister>({
+    resolver: zodResolver(quickRegisterSchema),
+    defaultValues: {
+      bio: "",
+      subjects: [],
+      hourlyRate: 500,
+      experienceYears: 0,
+      languages: ["English"],
+    },
+  });
+
   useEffect(() => {
     if (mentorStatus?.mentor && mentorStatus.mentor.verificationStatus === "approved") {
       const m = mentorStatus.mentor;
@@ -297,6 +320,20 @@ export default function MentorDashboard() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to submit application", variant: "destructive" });
+    },
+  });
+
+  const quickRegisterMutation = useMutation({
+    mutationFn: async (data: QuickRegister) => {
+      return apiRequest("POST", "/api/mentors/register", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Registration submitted", description: "We received your mentor registration." });
+      quickRegisterForm.reset();
+      refetchStatus();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to register", variant: "destructive" });
     },
   });
 
@@ -385,6 +422,42 @@ export default function MentorDashboard() {
   const upcomingBookings = bookings.filter((b) => b.status === "requested" || b.status === "confirmed");
   const pastBookings = bookings.filter((b) => b.status === "completed" || b.status === "cancelled");
 
+  // Calculate analytics
+  const thisMonthEarnings = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return bookings
+      .filter((b) => {
+        const bookingDate = new Date(b.startAt);
+        return bookingDate >= startOfMonth && b.status === "completed";
+      })
+      .reduce((sum, b) => sum + (b.priceCents || 0), 0);
+  }, [bookings]);
+
+  const uniqueStudents = useMemo(() => {
+    const studentIds = new Set(bookings.map((b) => b.studentName).filter(Boolean));
+    return studentIds.size;
+  }, [bookings]);
+
+  const retentionRate = useMemo(() => {
+    if (uniqueStudents === 0) return 0;
+    const repeatStudents = bookings
+      .reduce((acc, b) => {
+        if (b.studentName) {
+          acc[b.studentName] = (acc[b.studentName] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+    const repeatCount = Object.values(repeatStudents).filter((count) => count > 1).length;
+    return Math.round((repeatCount / uniqueStudents) * 100);
+  }, [bookings, uniqueStudents]);
+
+  const popularSubjects = useMemo(() => {
+    if (!mentor) return [];
+    // For now, return mentor's subjects. In future, could track which subjects get most bookings
+    return mentor.subjects;
+  }, [mentor]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -393,6 +466,119 @@ export default function MentorDashboard() {
           <GraduationCap className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Mentor Dashboard</h1>
         </div>
+
+        {!mentorStatus?.hasMentor && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Fast registration</CardTitle>
+              <CardDescription>Submit a quick mentor registration. You can complete full details later.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...quickRegisterForm}>
+                <form onSubmit={quickRegisterForm.handleSubmit((data) => quickRegisterMutation.mutate(data))} className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={quickRegisterForm.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Short bio</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Tell students about your teaching approach" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={quickRegisterForm.control}
+                    name="subjects"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subjects</FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          {SUBJECTS.map((subject) => {
+                            const checked = field.value?.includes(subject);
+                            return (
+                              <Badge
+                                key={subject}
+                                variant={checked ? "default" : "outline"}
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  const next = checked
+                                    ? field.value.filter((v) => v !== subject)
+                                    : [...(field.value || []), subject];
+                                  field.onChange(next);
+                                }}
+                              >
+                                {subject}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={quickRegisterForm.control}
+                    name="languages"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Languages</FormLabel>
+                        <Select
+                          value={field.value?.[0] || ""}
+                          onValueChange={(value) => field.onChange([value])}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LANGUAGES.map((lang) => (
+                              <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={quickRegisterForm.control}
+                    name="hourlyRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hourly rate (₹)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={quickRegisterForm.control}
+                    name="experienceYears"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Experience (years)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} max={50} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2 flex items-center gap-3">
+                    <Button type="submit" disabled={quickRegisterMutation.isPending}>
+                      {quickRegisterMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit registration"}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">We will mark you as mentor-pending; you can complete full details anytime.</p>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
 
         {isPending && (
           <Card className="mb-8 border-yellow-500/50 bg-yellow-500/10">
@@ -717,10 +903,13 @@ export default function MentorDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold" data-testid="text-earnings">
-                      ₹{(mentor.totalEarningsCents / 100).toLocaleString()}
+                      {formatINR.format(mentor.totalEarningsCents / 100)}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Total earnings
+                    </p>
+                    <p className="text-xs text-green-600 mt-1 font-medium">
+                      {formatINR.format(thisMonthEarnings / 100)} this month
                     </p>
                   </CardContent>
                 </Card>
@@ -741,7 +930,55 @@ export default function MentorDashboard() {
                 </Card>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Students
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold mb-2">{uniqueStudents}</div>
+                    <p className="text-sm text-muted-foreground mb-3">Total students</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Retention Rate</span>
+                        <span className="font-semibold">{retentionRate}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{ width: `${retentionRate}%` }}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      Popular Subjects
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {popularSubjects.slice(0, 4).map((subject) => (
+                        <Badge key={subject} variant="secondary" className="text-sm">
+                          {subject}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      {mentor.topics && mentor.topics.length > 0
+                        ? `${mentor.topics.length} topics covered`
+                        : "Add topics to your profile"}
+                    </p>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1188,6 +1425,16 @@ export default function MentorDashboard() {
                               </div>
                             )}
                           </div>
+
+                          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-2">
+                            {booking.timeline?.map((step) => (
+                              <Badge key={`${booking.id}-${step.status}`} variant="outline">
+                                {step.label} · {new Date(step.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
+                              </Badge>
+                            )) || (
+                              <Badge variant="outline">Requested</Badge>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1226,7 +1473,7 @@ export default function MentorDashboard() {
                               {booking.status}
                             </Badge>
                             <span className="text-sm font-medium">
-                              ₹{(booking.priceCents / 100).toFixed(0)}
+                              {formatINR.format(booking.priceCents / 100)}
                             </span>
                           </div>
                         </div>
