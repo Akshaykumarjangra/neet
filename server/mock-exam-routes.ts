@@ -18,7 +18,7 @@ import {
   organizationMembers,
 } from "@shared/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from "./auth";
 import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { sanitizeResponses, scoreResponses } from "./mock-exam-scoring";
 import { isFeatureEnabled } from "./feature-flags";
@@ -231,7 +231,7 @@ router.get("/papers/:paperId", async (req, res) => {
   }
 });
 
-router.post("/papers/:paperId/start", startLimiter, async (req, res) => {
+router.post("/papers/:paperId/start", requireActiveSubscription(), startLimiter, async (req, res) => {
   try {
     const paperId = Number(req.params.paperId);
     if (!Number.isInteger(paperId)) {

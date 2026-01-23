@@ -1,4 +1,16 @@
 import "dotenv/config";
+
+// Force production mode if we're not running locally
+if (process.env.NODE_ENV === "development" || !process.env.NODE_ENV) {
+  // If we are on the production server (IP-based or hostname-based check)
+  // Or simply, if we are NOT on a typical local dev machine
+  // For safety, let's check if we are in a Docker/Coolify environment
+  if (process.env.PORT === "5001" && !process.env.USERDOMAIN) {
+    process.env.NODE_ENV = "production";
+    console.log("[Setup] Detected production-like environment; forcing NODE_ENV=production");
+  }
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
@@ -141,17 +153,18 @@ const app = express();
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : {
+  contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc: ["'self'", "https:", "data:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://api.razorpay.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'self'"],
+      frameSrc: ["'self'", "https://api.razorpay.com"],
+      workerSrc: ["'self'", "blob:"],
     },
   },
   crossOriginEmbedderPolicy: false,

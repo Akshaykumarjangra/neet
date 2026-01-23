@@ -94,7 +94,9 @@ export default function ChapterViewer() {
         `/api/chapters/by-chapter/${subject}/${classLevel}/${chapterNumber}`
       );
       if (!response.ok) {
-        throw new Error('Chapter not found');
+        const error = new Error('Chapter not found');
+        (error as any).status = response.status;
+        throw error;
       }
       return response.json();
     },
@@ -518,6 +520,8 @@ export default function ChapterViewer() {
   }
 
   if (error || !chapter) {
+    const isPaymentRequired = (error as any)?.status === 402;
+
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background">
@@ -532,12 +536,67 @@ export default function ChapterViewer() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Chapters
             </Button>
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Chapter not found. Please check the chapter number and try again.
-              </AlertDescription>
-            </Alert>
+
+            {isPaymentRequired ? (
+              <Card className="border-primary/50 bg-primary/5 shadow-xl overflow-hidden">
+                <div className="absolute top-0 right-0 p-4">
+                  <Crown className="h-12 w-12 text-primary/20 rotate-12" />
+                </div>
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto p-3 rounded-full bg-primary/10 w-fit mb-4">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-3xl font-bold tracking-tight">Premium Content</CardTitle>
+                  <CardDescription className="text-lg">
+                    This chapter is reserved for our Premium members.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-3 mt-4">
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-background/50 border">
+                      <Zap className="h-6 w-6 text-amber-500 mb-2" />
+                      <h4 className="font-semibold text-sm">50,000+ Questions</h4>
+                      <p className="text-xs text-muted-foreground">Full question bank access</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-background/50 border">
+                      <Trophy className="h-6 w-6 text-blue-500 mb-2" />
+                      <h4 className="font-semibold text-sm">Mock Tests</h4>
+                      <p className="text-xs text-muted-foreground">Unlimited NEET patterns</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-background/50 border">
+                      <Brain className="h-6 w-6 text-purple-500 mb-2" />
+                      <h4 className="font-semibold text-sm">AI Guidance</h4>
+                      <p className="text-xs text-muted-foreground">Personalized study paths</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 px-8"
+                      onClick={() => navigate("/pricing")}
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Upgrade to Premium
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={handleBackClick}
+                    >
+                      Explore Free Chapters
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Chapter not found. Please check the chapter number and try again.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
       </ThemeProvider>

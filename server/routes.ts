@@ -183,18 +183,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/learn", requireActiveSubscription(), lmsLearningRoutes);
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
-  app.use("/api/search", searchRoutes);
+  app.use("/api/search", requireActiveSubscription(), searchRoutes);
 
   app.use("/api/billing", billingRoutes);
 
   app.use("/api/admin/tasks", taskRoutes);
   app.use("/api/announcements", announcementRoutes);
-  app.use("/api/chat", chatRoutes);
+  app.use("/api/chat", requireActiveSubscription(), chatRoutes);
   app.use("/api/question-tags", questionTagRoutes);
-  app.use("/api/analytics", analyticsRoutes);
+  app.use("/api/analytics", requireActiveSubscription(), analyticsRoutes);
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/profile", profileRoutes);
-  app.use("/api/explain", explainRoutes);
+  app.use("/api/explain", requireActiveSubscription(), explainRoutes);
 
   // ============ PUBLIC SUBSCRIPTION PLANS ============
 
