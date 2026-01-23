@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter16() {
   console.log('Seeding Biology Class 11 Chapter 16: Digestion and Absorption...');
@@ -553,7 +554,18 @@ Three pairs:
       chapterTitle: 'Digestion and Absorption',
       estimatedStudyMinutes: 390,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

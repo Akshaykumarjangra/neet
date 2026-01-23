@@ -2,13 +2,66 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { db } from "./db";
+import { GamificationService } from "./gamification";
+import { dailyChallenges, userDailyChallenges } from "@shared/schema";
+import { and, eq, sql } from "drizzle-orm";
 import { mockTests, testSessions, xpTransactions, questions, users } from "@shared/schema";
-import { eq, sql, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 
 const FREE_MONTHLY_TEST_LIMIT = 1;
 
 const router = Router();
+
+async function updateMockDailyChallenges(userId: string) {
+  const challenges = await db.execute(sql`
+    SELECT id, target_value, xp_reward, title
+    FROM daily_challenges
+    WHERE challenge_date::date = CURRENT_DATE
+      AND target_type = 'mock_attempt'
+  `);
+  const rows = challenges.rows ?? [];
+
+  for (const ch of rows) {
+    const [existing] = await db
+      .select()
+      .from(userDailyChallenges)
+      .where(and(eq(userDailyChallenges.userId, userId), eq(userDailyChallenges.challengeId, ch.id)))
+      .limit(1);
+
+    const prev = existing?.progress ?? 0;
+    const newProgress = Math.min(prev + 1, ch.target_value ?? 0);
+    const wasCompleted = existing?.completed ?? false;
+    const isCompleted = newProgress >= (ch.target_value ?? 0);
+
+    if (existing) {
+      await db
+        .update(userDailyChallenges)
+        .set({
+          progress: newProgress,
+          completed: isCompleted,
+          completedAt: isCompleted && !wasCompleted ? new Date() : existing.completedAt,
+        })
+        .where(eq(userDailyChallenges.id, existing.id));
+    } else {
+      await db.insert(userDailyChallenges).values({
+        userId,
+        challengeId: ch.id,
+        progress: newProgress,
+        completed: isCompleted,
+        completedAt: isCompleted ? new Date() : null,
+      });
+    }
+
+    if (isCompleted && !wasCompleted && ch.xp_reward) {
+      await GamificationService.awardXp(userId, Number(ch.xp_reward), {
+        type: "challenge",
+        sourceId: String(ch.id),
+        description: ch.title ? `Daily challenge: ${ch.title}` : "Daily challenge complete",
+      });
+    }
+  }
+}
 
 router.get('/', requireAuthWithPasswordCheck, async (req, res) => {
   try {
@@ -153,20 +206,27 @@ router.post('/:id/start', requireAuthWithPasswordCheck, async (req, res) => {
 
     const endsAt = new Date();
     endsAt.setMinutes(endsAt.getMinutes() + test[0].durationMinutes);
+    const totalQuestions = Array.isArray(test[0].questionsList)
+      ? test[0].questionsList.length
+      : 0;
 
     const session = await db.insert(testSessions).values({
       userId,
       testType: test[0].testType,
-      questionsList: test[0].questionsList,
+      subject: test[0].subject ?? null,
+      totalQuestions,
       startedAt: new Date(),
-      endsAt,
     }).returning();
 
     if (!session || session.length === 0) {
       return res.status(500).json({ error: 'Failed to create test session' });
     }
 
-    res.json(session[0]);
+    res.json({
+      ...session[0],
+      endsAt,
+      questionsList: test[0].questionsList,
+    });
   } catch (error: any) {
     console.error('Error starting test:', error);
     res.status(500).json({ 
@@ -182,7 +242,7 @@ router.post('/:sessionId/submit', requireAuthWithPasswordCheck, async (req, res)
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const { sessionId } = req.params;
+    const sessionId = Number(req.params.sessionId);
     const session = await db.select().from(testSessions)
       .where(eq(testSessions.id, sessionId))
       .limit(1);
@@ -191,11 +251,15 @@ router.post('/:sessionId/submit', requireAuthWithPasswordCheck, async (req, res)
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const score = req.body.score || 0;
+    const score = Number(req.body.score || 0);
+    const correctAnswers = Number(req.body.correctAnswers || 0);
+    const timeTaken = req.body.timeTaken ? Number(req.body.timeTaken) : null;
     await db.update(testSessions)
       .set({
-        status: 'completed',
         score,
+        correctAnswers,
+        completedAt: new Date(),
+        timeTaken,
       })
       .where(eq(testSessions.id, sessionId));
 
@@ -205,7 +269,7 @@ router.post('/:sessionId/submit', requireAuthWithPasswordCheck, async (req, res)
         userId,
         amount: xpReward,
         source: 'mock_test',
-        sourceId: sessionId,
+        sourceId: String(sessionId),
         description: `Completed mock test with score ${score}`,
       });
 
@@ -215,6 +279,10 @@ router.post('/:sessionId/submit', requireAuthWithPasswordCheck, async (req, res)
             current_level = FLOOR((total_points + ${xpReward}) / 1000) + 1
         WHERE id = ${userId}
       `);
+
+      // Check for test score achievements
+      await GamificationService.checkAchievements(userId);
+      await updateMockDailyChallenges(userId);
     }
 
     res.json({ success: true, score, xpReward });
@@ -236,7 +304,7 @@ router.get('/blast-stats', requireAuthWithPasswordCheck, async (req, res) => {
         totalSessions: sql<number>`count(*)::int`,
         avgScore: sql<number>`coalesce(round(avg(${testSessions.score})::numeric, 2), 0)`,
         bestScore: sql<number>`coalesce(max(${testSessions.score}), 0)`,
-        questionsAttempted: sql<number>`coalesce(sum(jsonb_array_length(${testSessions.questionsList})), 0)`,
+        questionsAttempted: sql<number>`coalesce(sum(${testSessions.totalQuestions}), 0)`,
       })
       .from(testSessions)
       .where(eq(testSessions.userId, userId));

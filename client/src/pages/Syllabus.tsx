@@ -274,16 +274,24 @@ export default function Syllabus() {
   };
 
   const getChapterCount = (subject: string) => {
-    const subjectData = subject === "Biology" 
-      ? [...(syllabusData?.Botany || []), ...(syllabusData?.Zoology || [])]
-      : syllabusData?.[subject as keyof SyllabusData] || [];
+    let subjectData: Chapter[] = [];
+
+    if (subject === "Botany") {
+      subjectData = syllabusData?.Botany || [];
+    } else if (subject === "Zoology") {
+      subjectData = syllabusData?.Zoology || [];
+    } else {
+      subjectData = syllabusData?.[subject as keyof SyllabusData] || [];
+    }
+
     return subjectData.filter(c => c.classLevel === classLevel).length;
   };
 
   const subjects = [
     { id: "Physics", label: "Physics", icon: <Atom className="h-4 w-4" /> },
     { id: "Chemistry", label: "Chemistry", icon: <FlaskConical className="h-4 w-4" /> },
-    { id: "Biology", label: "Biology", icon: <Leaf className="h-4 w-4" /> },
+    { id: "Botany", label: "Botany", icon: <Leaf className="h-4 w-4" /> },
+    { id: "Zoology", label: "Zoology", icon: <Bug className="h-4 w-4" /> },
   ];
 
   return (
@@ -352,7 +360,7 @@ export default function Syllabus() {
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2" data-testid="text-page-title">NEET Syllabus</h1>
               <p className="text-muted-foreground">
-                Browse and study chapters across Physics, Chemistry, and Biology
+                Browse and study chapters across Physics, Chemistry, Botany, and Zoology
               </p>
             </div>
 
@@ -437,48 +445,44 @@ export default function Syllabus() {
                   />
                 </TabsContent>
 
-                <TabsContent value="Biology" className="mt-0">
-                  <div className="space-y-8">
-                    <div>
-                      <div className="mb-4">
-                        <h2 className="text-xl font-semibold flex items-center gap-2">
-                          <Leaf className="h-5 w-5 text-green-500" />
-                          Botany
-                          <Badge variant="secondary" className="ml-2">
-                            {classLevel}
-                          </Badge>
-                        </h2>
-                      </div>
-                      <ChapterGrid
-                        chapters={syllabusData?.Botany}
-                        subject="Botany"
-                        classLevel={classLevel}
-                        progress={progressData || {}}
-                        isLoading={isLoading}
-                        onChapterClick={(chapter) => handleChapterClick(chapter, "Botany")}
-                      />
-                    </div>
-
-                    <div>
-                      <div className="mb-4">
-                        <h2 className="text-xl font-semibold flex items-center gap-2">
-                          <Bug className="h-5 w-5 text-amber-500" />
-                          Zoology
-                          <Badge variant="secondary" className="ml-2">
-                            {classLevel}
-                          </Badge>
-                        </h2>
-                      </div>
-                      <ChapterGrid
-                        chapters={syllabusData?.Zoology}
-                        subject="Zoology"
-                        classLevel={classLevel}
-                        progress={progressData || {}}
-                        isLoading={isLoading}
-                        onChapterClick={(chapter) => handleChapterClick(chapter, "Zoology")}
-                      />
-                    </div>
+                <TabsContent value="Botany" className="mt-0">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Leaf className="h-5 w-5 text-green-500" />
+                      Botany
+                      <Badge variant="secondary" className="ml-2">
+                        {classLevel}
+                      </Badge>
+                    </h2>
                   </div>
+                  <ChapterGrid
+                    chapters={syllabusData?.Botany}
+                    subject="Botany"
+                    classLevel={classLevel}
+                    progress={progressData || {}}
+                    isLoading={isLoading}
+                    onChapterClick={(chapter) => handleChapterClick(chapter, "Botany")}
+                  />
+                </TabsContent>
+
+                <TabsContent value="Zoology" className="mt-0">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Bug className="h-5 w-5 text-amber-500" />
+                      Zoology
+                      <Badge variant="secondary" className="ml-2">
+                        {classLevel}
+                      </Badge>
+                    </h2>
+                  </div>
+                  <ChapterGrid
+                    chapters={syllabusData?.Zoology}
+                    subject="Zoology"
+                    classLevel={classLevel}
+                    progress={progressData || {}}
+                    isLoading={isLoading}
+                    onChapterClick={(chapter) => handleChapterClick(chapter, "Zoology")}
+                  />
                 </TabsContent>
               </Tabs>
             )}

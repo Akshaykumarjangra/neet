@@ -45,11 +45,15 @@ import {
   Circle,
   Filter,
   ArrowUpDown,
-  Leaf,
-  Bug,
 } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { cn } from "@/lib/utils";
+import {
+  biologySections,
+  categorizeBiologyChapter,
+  BiologySection as SharedBiologySection,
+  BiologySectionName,
+} from "@/lib/biologySections";
 
 interface ChapterData {
   id: number;
@@ -67,93 +71,8 @@ interface ChapterData {
   keyConcepts?: string[];
 }
 
-interface BiologySection {
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  keywords: string[];
-}
-
-const botanyKeywords = [
-  "living world",
-  "biological classification",
-  "plant kingdom",
-  "anatomy of flowering plants",
-  "transport in plants",
-  "morphology of flowering plants",
-  "photosynthesis",
-  "plant growth",
-  "sexual reproduction in flowering plants",
-  "ecosystem",
-  "biodiversity",
-  "conservation",
-  "microbes",
-  "biotechnology",
-  "mineral nutrition",
-  "respiration in plants",
-  "organisms and populations",
-  "environmental",
-  "strategies for enhancement",
-  "food production",
-];
-
-const zoologyKeywords = [
-  "animal kingdom",
-  "structural organisation in animals",
-  "cell",
-  "biomolecules",
-  "digestion",
-  "breathing",
-  "body fluids",
-  "circulation",
-  "excretion",
-  "locomotion",
-  "movement",
-  "neural",
-  "human reproduction",
-  "reproductive health",
-  "evolution",
-  "human health",
-  "disease",
-  "chemical coordination",
-  "cell cycle",
-  "cell division",
-  "inheritance",
-  "variation",
-  "molecular basis",
-];
-
-const biologySections: BiologySection[] = [
-  {
-    name: "Botany",
-    icon: <Leaf className="h-5 w-5" />,
-    color: "from-green-500 to-emerald-500",
-    keywords: botanyKeywords,
-  },
-  {
-    name: "Zoology",
-    icon: <Bug className="h-5 w-5" />,
-    color: "from-orange-500 to-amber-500",
-    keywords: zoologyKeywords,
-  },
-];
-
-function categorizeChapter(chapter: ChapterData): "Botany" | "Zoology" {
-  const title = chapter.chapterTitle.toLowerCase();
-  
-  for (const keyword of botanyKeywords) {
-    if (title.includes(keyword)) {
-      return "Botany";
-    }
-  }
-  
-  for (const keyword of zoologyKeywords) {
-    if (title.includes(keyword)) {
-      return "Zoology";
-    }
-  }
-  
-  return chapter.chapterNumber % 2 === 0 ? "Zoology" : "Botany";
+interface BiologyProps {
+  initialSection?: BiologySectionName;
 }
 
 function ProgressRing({ progress, size = 48 }: { progress: number; size?: number }) {
@@ -304,7 +223,7 @@ function BiologySectionComponent({
   onChapterClick,
   prefersReducedMotion,
 }: {
-  section: BiologySection;
+  section: SharedBiologySection;
   chapters: ChapterData[];
   classLevel: string;
   onChapterClick: (chapter: ChapterData) => void;
@@ -312,9 +231,12 @@ function BiologySectionComponent({
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const sectionChapters = chapters.filter(
-    (c) => categorizeChapter(c) === section.name
-  );
+  const sectionChapters = chapters.filter((c) => {
+    if (c.subject !== "Biology") return false;
+    return (
+      categorizeBiologyChapter(c.chapterTitle, c.chapterNumber, classLevel) === section.name
+    );
+  });
 
   const completedCount = sectionChapters.filter((c) => c.progress === 100).length;
   const sectionProgress = sectionChapters.length > 0
@@ -480,7 +402,7 @@ function LoadingSkeleton() {
   );
 }
 
-export default function Biology() {
+export default function Biology({ initialSection }: BiologyProps = {}) {
   const [, setLocation] = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const [selectedClass, setSelectedClass] = useState<"11" | "12">("11");
@@ -555,6 +477,30 @@ export default function Biology() {
     }
   };
 
+  const sectionsToRender = initialSection
+    ? biologySections.filter((section) => section.name === initialSection)
+    : biologySections;
+
+  const heroTitle = initialSection ?? "Biology";
+  const heroSubtitle =
+    initialSection === "Botany"
+      ? "NEET Botany Mastery for Class 11 & 12"
+      : initialSection === "Zoology"
+      ? "NEET Zoology Mastery for Class 11 & 12"
+      : "NEET 2025 Complete Syllabus";
+  const heroGradient =
+    initialSection === "Botany"
+      ? "from-emerald-600 via-lime-600 to-emerald-500"
+      : initialSection === "Zoology"
+      ? "from-orange-500 via-amber-500 to-yellow-500"
+      : "from-green-600 via-emerald-600 to-teal-700";
+  const quickPracticeGradient =
+    initialSection === "Botany"
+      ? "from-emerald-600 to-lime-500"
+      : initialSection === "Zoology"
+      ? "from-orange-500 to-amber-500"
+      : "from-green-600 to-emerald-600";
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -593,7 +539,7 @@ export default function Biology() {
           initial={prefersReducedMotion ? {} : { opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
-          className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 p-4 sm:p-6 md:p-8 text-white"
+          className={`relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br ${heroGradient} p-4 sm:p-6 md:p-8 text-white`}
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
           
@@ -619,9 +565,9 @@ export default function Biology() {
                   </motion.div>
                   <div>
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-biology-title">
-                      Biology
+                      {heroTitle}
                     </h1>
-                    <p className="text-white/80 text-sm sm:text-base">NEET 2025 Complete Syllabus</p>
+                    <p className="text-white/80 text-sm sm:text-base">{heroSubtitle}</p>
                   </div>
                 </div>
                 
@@ -729,7 +675,7 @@ export default function Biology() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
               className="space-y-6"
             >
-              {biologySections.map((section) => (
+              {sectionsToRender.map((section) => (
                 <BiologySectionComponent
                   key={section.name}
                   section={section}
@@ -794,7 +740,7 @@ export default function Biology() {
         >
           <Button
             size="lg"
-            className="rounded-full w-14 h-14 p-0 shadow-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            className={`rounded-full w-14 h-14 p-0 shadow-lg bg-gradient-to-r ${quickPracticeGradient} hover:from-green-700 hover:to-emerald-700`}
             onClick={() => setPracticeModalOpen(true)}
             title="Quick Practice"
             data-testid="button-quick-practice"

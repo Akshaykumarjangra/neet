@@ -1,0 +1,25 @@
+import { ReactNode } from "react";
+import { Redirect } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+
+export function OwnerRoute({ children }: { children: ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  if (!user.isOwner && !user.isAdmin) {
+    return <Redirect to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+}

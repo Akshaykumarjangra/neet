@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import crypto from "crypto";
 import { storage } from "./storage";
 import { db } from "./db";
-import { questions, contentTopics, subscriptionPlans, users, questionPreviewLimits, questionTags, userPerformance } from "@shared/schema";
+import { questions, contentTopics, chapterContent, subscriptionPlans, users, questionPreviewLimits, questionTags, userPerformance, dailyChallenges, userDailyChallenges } from "@shared/schema";
+import { GamificationService } from "./gamification";
 import { nanoid } from "nanoid";
-import { sql, eq, inArray } from "drizzle-orm";
+import { sql, eq, inArray, and } from "drizzle-orm";
 import {
   insertQuestionSchema,
   insertContentTopicSchema,
@@ -15,6 +16,9 @@ import {
 import authRoutes from "./auth-routes";
 import learningPathRoutes from "./learning-path-routes";
 import mockTestRoutes from "./mock-test-routes";
+import mockTestAdminRoutes from "./mock-test-admin-routes";
+import mockExamRoutes from "./mock-exam-routes";
+import mockExamAdminRoutes from "./mock-exam-admin-routes";
 import gameRoutes from "./game-routes";
 import adminRoutes from "./admin-routes";
 import adminContentRoutes from "./admin-content-routes";
@@ -30,17 +34,82 @@ import announcementRoutes from "./announcement-routes";
 import chatRoutes from "./chat-routes";
 import { requireActiveSubscription, requireOwner, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 import taskRoutes from "./task-routes";
-import { queueJob } from "./job-service";
 import questionTagRoutes from "./question-tag-routes";
 import analyticsRoutes from "./analytics-routes";
+import telemetryRoutes from "./telemetry-routes";
 import profileRoutes from "./profile-routes";
 import explainRoutes from "./explain-routes";
 import chapterChatRoutes from "./chapter-chat-routes";
+import adminImpersonationRoutes from "./admin-impersonation-routes";
 
 type ContentTopicInsert = typeof contentTopics.$inferInsert;
 type QuestionPreviewLimitInsert = typeof questionPreviewLimits.$inferInsert;
 type QuestionInsert = typeof questions.$inferInsert;
 type UserPerformanceInsert = typeof userPerformance.$inferInsert;
+
+async function updateDailyChallengeProgress(userId: string, isCorrect: boolean) {
+  type ChallengeRow = {
+    id: number;
+    title: string;
+    target_type: string;
+    target_value: number | null;
+    xp_reward: number | null;
+  };
+
+  const challenges = await db.execute(
+    sql`SELECT id, title, target_type, target_value, xp_reward FROM daily_challenges WHERE challenge_date::date = CURRENT_DATE`
+  );
+  const rows = (challenges.rows ?? []) as ChallengeRow[];
+
+  for (const ch of rows) {
+    if (ch.target_type !== "questions_solved") continue;
+    const targetValue = Number(ch.target_value ?? 0);
+    const xpReward = Number(ch.xp_reward ?? 0);
+
+    const [existing] = await db
+      .select()
+      .from(userDailyChallenges)
+      .where(
+        and(
+          eq(userDailyChallenges.userId, userId),
+          eq(userDailyChallenges.challengeId, ch.id)
+        )
+      )
+      .limit(1);
+
+    const prevProgress = existing?.progress ?? 0;
+    const newProgress = Math.min(prevProgress + 1, targetValue);
+    const wasCompleted = existing?.completed ?? false;
+    const isCompleted = newProgress >= targetValue;
+
+    if (existing) {
+      await db
+        .update(userDailyChallenges)
+        .set({
+          progress: newProgress,
+          completed: isCompleted,
+          completedAt: isCompleted && !wasCompleted ? new Date() : existing.completedAt,
+        })
+        .where(eq(userDailyChallenges.id, existing.id));
+    } else {
+      await db.insert(userDailyChallenges).values({
+        userId,
+        challengeId: ch.id,
+        progress: newProgress,
+        completed: isCompleted,
+        completedAt: isCompleted ? new Date() : null,
+      } as any);
+    }
+
+    if (isCompleted && !wasCompleted && xpReward) {
+      await GamificationService.awardXp(userId, xpReward, {
+        type: "challenge",
+        sourceId: String(ch.id),
+        description: ch.title ? `Daily challenge: ${ch.title}` : "Daily challenge complete",
+      });
+    }
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
@@ -71,21 +140,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mock Test routes
   app.use("/api/mock-tests", mockTestRoutes);
+  app.use("/api/mock-exams", mockExamRoutes);
+  app.use("/api/admin/mock-exams", mockExamAdminRoutes);
 
   // Game/Gamification routes
   app.use("/api/game", requireActiveSubscription(), gameRoutes);
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
-  
+  app.use("/api/admin/mock-tests-v2", mockTestAdminRoutes);
+  app.use("/api/admin", adminImpersonationRoutes);
+
   // Admin Content Management routes
   app.use("/api/admin", adminContentRoutes);
 
   // Chapter Content routes
-  app.use("/api/chapters", chapterContentRoutes);
-  
+  app.use("/api/chapters", requireActiveSubscription(), chapterContentRoutes);
+
   // Chapter Chat routes (context-aware chatbot)
   app.use("/api/chapters", chapterChatRoutes);
+
+  // Protect generic chapter routes check below
+  // app.use("/api/chapters", chapterContentRoutes); - This is already defined above, ensuring it handles auth internally OR we wrap it here.
+  // Ideally, chapterContentRoutes should export a router that we can wrap.
+
+  // Checking usage line 158: app.use("/api/chapters", chapterContentRoutes);
+  // We should apply middleware there if chapterContentRoutes doesn't have it.
+
+
 
   // LMS routes (Library, Progress, Bookmarks, Notes)
   app.use("/api/lms", lmsRoutes);
@@ -94,9 +176,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", mentorRoutes);
 
   // Community Discussion routes
-  app.use("/api/discussions", discussionRoutes);
-  app.use("/api/replies", replyRoutes);
-  
+  app.use("/api/discussions", requireActiveSubscription(), discussionRoutes);
+  app.use("/api/replies", requireActiveSubscription(), replyRoutes);
+
   // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
   app.use("/api/learn", requireActiveSubscription(), lmsLearningRoutes);
 
@@ -104,17 +186,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/search", searchRoutes);
 
   app.use("/api/billing", billingRoutes);
-  app.use("/api/automation", lmsAutomationRoutes);
+
   app.use("/api/admin/tasks", taskRoutes);
   app.use("/api/announcements", announcementRoutes);
   app.use("/api/chat", chatRoutes);
   app.use("/api/question-tags", questionTagRoutes);
   app.use("/api/analytics", analyticsRoutes);
+  app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/profile", profileRoutes);
   app.use("/api/explain", explainRoutes);
 
   // ============ PUBLIC SUBSCRIPTION PLANS ============
-  
+
   // Get all active subscription plans (public)
   app.get("/api/subscription-plans", async (_req, res) => {
     try {
@@ -320,12 +403,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(questions)
         .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
         .limit(5);
-      
+
       const formattedQuestions = previewQuestions.map(r => ({
         ...r.question,
         topic: r.topic
       }));
-      
+
       res.json({
         questions: formattedQuestions,
         total: 5,
@@ -345,33 +428,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startedAt = Date.now();
       // Authentication required for main questions endpoint
       if (!req.session?.userId) {
-        return res.status(401).json({ 
-          message: "Authentication required", 
-          requiresAuth: true 
+        return res.status(401).json({
+          message: "Authentication required",
+          requiresAuth: true
         });
       }
 
-      const { subject, topicId, difficulty, limit, pyqOnly, pyqYear, search, page } = req.query;
+      const {
+        subject: subjectParam,
+        topicId,
+        difficulty,
+        limit,
+        pyqOnly,
+        pyqYear,
+        search,
+        page,
+        chapterContentId,
+      } = req.query;
+
+      const rawSubject = subjectParam ? String(subjectParam).trim() : "";
+      const subjectLower = rawSubject.toLowerCase();
+      let effectiveSubject = rawSubject;
+      let implicitTag: string | null = null;
+      if (subjectLower === "botany" || subjectLower === "zoology") {
+        effectiveSubject = "Biology";
+        implicitTag = subjectLower;
+      }
 
       const FREE_QUESTION_LIMIT = 10;
       const userId = req.session.userId;
-      
+
       // Get user premium status
       const [currentUser] = await db
-        .select({ isPaidUser: users.isPaidUser })
+        .select({
+          isPaidUser: users.isPaidUser,
+          isAdmin: users.isAdmin,
+          isOwner: users.isOwner,
+        })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
-      const isPremiumUser = currentUser?.isPaidUser || false;
-      
+      const isPremiumUser = !!(
+        currentUser?.isPaidUser ||
+        currentUser?.isAdmin ||
+        currentUser?.isOwner
+      );
+
       let previewedIds: Set<number> = new Set();
-      
+
       // For free users, use DB-backed tracking
       if (!isPremiumUser) {
         const existing = await db.select().from(questionPreviewLimits).where(eq(questionPreviewLimits.userId, userId)).limit(1);
         const dbPreviewedIds = existing[0]?.previewedQuestionIds || [];
         previewedIds = new Set(dbPreviewedIds);
-        
+
         // Check if quota exhausted for free users
         if (previewedIds.size >= FREE_QUESTION_LIMIT) {
           return res.json({
@@ -387,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       // Determine limits based on access tier
       const isLimited = !isPremiumUser;
 
@@ -399,39 +509,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MIN_LIMIT = 1;
       limitNum = Math.min(Math.max(limitNum, MIN_LIMIT), MAX_LIMIT);
       let offset = (pageNum - 1) * limitNum;
-      
+
       // For non-premium users, we need to enforce limits
       // Premium users use the page/limit params as provided for proper pagination
-      const fetchLimit = isPremiumUser ? limitNum : 50;
-      const fetchOffset = isPremiumUser ? offset : 0;
+      // CRITICAL SECURITY FIX: Never allow free users to fetch more than the free limit
+      const fetchLimit = isPremiumUser ? limitNum : Math.min(limitNum, FREE_QUESTION_LIMIT);
+      const fetchOffset = isPremiumUser ? offset : 0; // Free users always start at 0 to avoid pagination bypass
 
       const rawTagFilter = req.query.tags;
       const requestedTags = Array.isArray(rawTagFilter)
         ? rawTagFilter
         : rawTagFilter
-        ? [rawTagFilter]
-        : [];
+          ? [rawTagFilter]
+          : [];
       const normalizedTags = requestedTags
         .map((value) => String(value).trim())
         .filter(Boolean);
+      if (implicitTag && !normalizedTags.includes(implicitTag)) {
+        normalizedTags.push(implicitTag);
+      }
       let includedQuestionIds: number[] | null = null;
       const responseLimit = isPremiumUser ? limitNum : FREE_QUESTION_LIMIT;
 
-      if (normalizedTags.length > 0) {
-        const countExpression = sql<number>`count(*)`;
-        const matchedQuestions = await db
+      let chapterTopicIds: number[] | null = null;
+      if (chapterContentId) {
+        const chapterId = parseInt(chapterContentId as string);
+        if (Number.isNaN(chapterId)) {
+          return res.status(400).json({
+            error: "Invalid chapterContentId",
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: responseLimit,
+            totalPages: 0,
+            isLimited,
+            requiresSignup: false,
+          });
+        }
+
+        const [chapter] = await db
           .select({
-            questionId: questionTags.questionId,
-            matchCount: countExpression,
+            subject: chapterContent.subject,
+            classLevel: chapterContent.classLevel,
+            chapterNumber: chapterContent.chapterNumber,
+            chapterTitle: chapterContent.chapterTitle,
           })
-          .from(questionTags)
-          .where(inArray(questionTags.tag, normalizedTags))
-          .groupBy(questionTags.questionId)
-          .having(sql`${countExpression} >= ${normalizedTags.length}`);
+          .from(chapterContent)
+          .where(eq(chapterContent.id, chapterId))
+          .limit(1);
 
-        includedQuestionIds = matchedQuestions.map((row) => row.questionId);
+        if (!chapter) {
+          return res.status(404).json({
+            error: "Chapter not found",
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: responseLimit,
+            totalPages: 0,
+            isLimited,
+            requiresSignup: false,
+          });
+        }
 
-        if (includedQuestionIds.length === 0) {
+        const chapterLabel = `Chapter ${chapter.chapterNumber}`;
+        const classLevelMatches = new Set<string>();
+        if (chapter.classLevel) {
+          classLevelMatches.add(chapter.classLevel);
+          const numericClassLevel = String(chapter.classLevel).match(/\d+/)?.[0];
+          if (numericClassLevel) {
+            classLevelMatches.add(`Class ${numericClassLevel}`);
+          }
+        }
+
+        const classLevelConditions = Array.from(classLevelMatches).map(
+          (level) => sql`${contentTopics.classLevel} = ${level}`,
+        );
+        const classLevelClause = classLevelConditions.length === 0
+          ? sql`true`
+          : classLevelConditions.length === 1
+            ? classLevelConditions[0]
+            : sql`(${sql.join(classLevelConditions, sql` OR `)})`;
+
+        const titleMatchRows = await db
+          .select({ id: contentTopics.id })
+          .from(contentTopics)
+          .where(
+            sql`${contentTopics.subject} = ${chapter.subject}
+              AND ${classLevelClause}
+              AND ${contentTopics.topicName} ILIKE ${chapter.chapterTitle}`
+          );
+
+        if (titleMatchRows.length > 0) {
+          chapterTopicIds = titleMatchRows.map((row) => row.id);
+        } else {
+          const topicRows = await db
+            .select({ id: contentTopics.id })
+            .from(contentTopics)
+            .where(
+              sql`${contentTopics.subject} = ${chapter.subject}
+                AND ${classLevelClause}
+                AND ${contentTopics.ncertChapter} ILIKE ${chapterLabel}`
+            );
+
+          chapterTopicIds = topicRows.map((row) => row.id);
+        }
+
+        if (chapterTopicIds.length === 0) {
+          return res.json({
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: responseLimit,
+            totalPages: 0,
+            isLimited,
+            requiresSignup: false,
+            message: "No questions mapped to this chapter yet",
+          });
+        }
+      }
+
+      if (normalizedTags.length > 0) {
+        try {
+          const countExpression = sql<number>`count(*)`;
+          const matchedQuestions = await db
+            .select({
+              questionId: questionTags.questionId,
+              matchCount: countExpression,
+            })
+            .from(questionTags)
+            .where(inArray(questionTags.tag, normalizedTags))
+            .groupBy(questionTags.questionId)
+            .having(sql`${countExpression} >= ${normalizedTags.length}`);
+
+          includedQuestionIds = matchedQuestions.map((row) => row.questionId);
+
+          if (includedQuestionIds.length === 0) {
+            return res.json({
+              questions: [],
+              total: 0,
+              page: 1,
+              limit: responseLimit,
+              totalPages: 0,
+              isLimited: !isPremiumUser,
+              requiresSignup: false,
+              message: "No questions match the selected tags",
+            });
+          }
+        } catch (error) {
+          console.warn("Question tags unavailable; tag filters skipped.", error);
           return res.json({
             questions: [],
             total: 0,
@@ -440,18 +665,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalPages: 0,
             isLimited: !isPremiumUser,
             requiresSignup: false,
-            message: "No questions match the selected tags",
+            message: "Tag filters are temporarily unavailable.",
           });
         }
       }
 
       // Build query conditions
       const conditions: any[] = [];
-      
+
+      if (chapterTopicIds) {
+        conditions.push(inArray(questions.topicId, chapterTopicIds));
+      }
+
       if (topicId) {
         conditions.push(eq(questions.topicId, parseInt(topicId as string)));
       }
-      
+
       if (difficulty) {
         conditions.push(eq(questions.difficultyLevel, parseInt(difficulty as string)));
       }
@@ -475,10 +704,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let questionsList: any[];
       let totalCount: number;
 
-      if (subject) {
+      if (effectiveSubject) {
         // Query with subject filter (need to join with contentTopics)
-        const subjectCondition = eq(contentTopics.subject, subject as string);
-        const allConditions = conditions.length > 0 
+        const subjectCondition = eq(contentTopics.subject, effectiveSubject);
+        const allConditions = conditions.length > 0
           ? sql`${subjectCondition} AND ${sql.join(conditions, sql` AND `)}`
           : subjectCondition;
 
@@ -499,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(allConditions)
           .limit(fetchLimit)
           .offset(fetchOffset);
-        
+
         questionsList = results.map(r => ({
           ...r.question,
           topic: r.topic
@@ -509,7 +738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const whereClause = conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
 
         // Get total count
-        const countQuery = whereClause 
+        const countQuery = whereClause
           ? db.select({ count: sql<number>`count(*)` }).from(questions).where(whereClause)
           : db.select({ count: sql<number>`count(*)` }).from(questions);
         const countResult = await countQuery;
@@ -522,11 +751,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
           .from(questions)
           .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id));
-        
+
         if (whereClause) {
           resultsQuery = resultsQuery.where(whereClause) as typeof resultsQuery;
         }
-        
+
         const results = await resultsQuery.limit(fetchLimit).offset(fetchOffset);
         questionsList = results.map(r => ({
           ...r.question,
@@ -536,16 +765,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Attach tags for every question returned
       const questionIds = questionsList.map((q) => q.id);
-      const rawTagRows = questionIds.length
-        ? await db
+      let rawTagRows: { questionId: number; tag: string; category: string }[] = [];
+      if (questionIds.length) {
+        try {
+          rawTagRows = await db
             .select({
               questionId: questionTags.questionId,
               tag: questionTags.tag,
               category: questionTags.category,
             })
             .from(questionTags)
-            .where(inArray(questionTags.questionId, questionIds))
-        : [];
+            .where(inArray(questionTags.questionId, questionIds));
+        } catch (error) {
+          console.warn("Question tags unavailable; returning questions without tags.", error);
+          rawTagRows = [];
+        }
+      }
 
       const tagMap = new Map<number, { tag: string; category: string }[]>();
       rawTagRows.forEach((row) => {
@@ -562,32 +797,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle free users (non-premium) - DB-backed tracking for 10 questions
       if (isLimited) {
+        // Double check quota before returning any data
+        const currentPreviewCount = previewedIds.size;
+        if (currentPreviewCount >= FREE_QUESTION_LIMIT) {
+          return res.json({
+            questions: [],
+            total: 0,
+            page: 1,
+            limit: FREE_QUESTION_LIMIT,
+            totalPages: 0,
+            isLimited: true,
+            quotaExhausted: true,
+            quotaRemaining: 0,
+            requiresSignup: false,
+            message: "Free preview limit reached. Please upgrade to continue."
+          });
+        }
+
         const newQuestions = questionsList.filter(q => !previewedIds.has(q.id));
         const remainingQuota = FREE_QUESTION_LIMIT - previewedIds.size;
         const questionsToShow = newQuestions.slice(0, remainingQuota);
-        
+
         // Track viewed questions in database with deduplication
         const newIds = questionsToShow.map(q => q.id);
         if (newIds.length > 0) {
           const uniqueIds = [...new Set([...Array.from(previewedIds), ...newIds])].slice(0, FREE_QUESTION_LIMIT);
-          
+
           await db.insert(questionPreviewLimits)
-            .values({ 
-              userId, 
+            .values({
+              userId,
               previewedQuestionIds: uniqueIds,
               lastAccessedAt: new Date()
             } as QuestionPreviewLimitInsert)
-            .onConflictDoUpdate({ 
-              target: questionPreviewLimits.userId, 
-              set: { 
-                previewedQuestionIds: uniqueIds, 
-                lastAccessedAt: new Date() 
+            .onConflictDoUpdate({
+              target: questionPreviewLimits.userId,
+              set: {
+                previewedQuestionIds: uniqueIds,
+                lastAccessedAt: new Date()
               } as Partial<QuestionPreviewLimitInsert>
             });
         }
-        
+
         const totalUsed = previewedIds.size + newIds.length;
-        
+
         return res.json({
           questions: attachTags(questionsToShow),
           total: totalCount,
@@ -612,7 +864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const etag = `"${crypto.createHash("md5").update(etagBase).digest("hex")}"`;
       res.setHeader("ETag", etag);
       res.setHeader("Last-Modified", new Date().toUTCString());
-      
+
       // Add cache control headers for better performance
       res.setHeader("Cache-Control", `public, max-age=${isPremiumUser ? 300 : 60}, stale-while-revalidate=600`);
 
@@ -632,7 +884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isLimited: false,
         requiresSignup: false
       });
-      
+
       const duration = Date.now() - startedAt;
       if (duration > 800) {
         console.warn(`[SLOW] /api/questions took ${duration}ms (user=${userId}, premium=${isPremiumUser}, limit=${limitNum}, page=${pageNum})`);
@@ -640,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching questions:", error);
       // Return consistent error format
-      res.status(500).json({ 
+      res.status(500).json({
         error: error.message || "Failed to fetch questions",
         questions: [],
         total: 0,
@@ -719,16 +971,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const adaptiveQuestions = await questionQuery.orderBy(sql`RANDOM()`).limit(30);
 
       const questionIds = adaptiveQuestions.map((row) => row.question.id);
-      const tagRows = questionIds.length
-        ? await db
+      let tagRows: { questionId: number; tag: string; category: string }[] = [];
+      if (questionIds.length) {
+        try {
+          tagRows = await db
             .select({
               questionId: questionTags.questionId,
               tag: questionTags.tag,
               category: questionTags.category,
             })
             .from(questionTags)
-            .where(inArray(questionTags.questionId, questionIds))
-        : [];
+            .where(inArray(questionTags.questionId, questionIds));
+        } catch (error) {
+          console.warn("Question tags unavailable for adaptive questions.", error);
+          tagRows = [];
+        }
+      }
 
       const tagMap = new Map<number, { tag: string; category: string }[]>();
       tagRows.forEach((row) => {
@@ -751,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error generating adaptive questions:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to generate adaptive practice set",
         requiresPremium: false,
         weakTopics: [],
@@ -809,46 +1067,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session?.userId) {
         return res.status(401).json({ message: "Authentication required", requiresAuth: true });
       }
-      
+
       const userId = req.session.userId;
       const id = parseInt(req.params.id);
-      
+
       // Check if user is premium
       const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       const isPremiumUser = user[0]?.isPaidUser || false;
-      
+
       const question = await storage.getQuestionById(id);
 
       if (!question) {
         return res.status(404).json({ error: "Question not found" });
       }
-      
+
       // For non-premium users, enforce quota (only after verifying question exists)
       if (!isPremiumUser) {
         const FREE_QUESTION_LIMIT = 10;
-        
+
         // Get existing preview record
         const existing = await db.select()
           .from(questionPreviewLimits)
           .where(eq(questionPreviewLimits.userId, userId))
           .limit(1);
-        
+
         const previewedIds: Set<number> = new Set(existing[0]?.previewedQuestionIds || []);
-        
+
         // Check if this question is already in their quota
         if (!previewedIds.has(id)) {
           // Check if quota is exhausted
           if (previewedIds.size >= FREE_QUESTION_LIMIT) {
-            return res.status(403).json({ 
+            return res.status(403).json({
               message: "Question quota exhausted. Upgrade to Premium for unlimited access.",
               quotaExhausted: true
             });
           }
-          
+
           // Add this question to their quota (only for valid questions)
           previewedIds.add(id);
           const updatedIds = [...previewedIds].slice(0, FREE_QUESTION_LIMIT);
-          
+
           await db.insert(questionPreviewLimits)
             .values({ userId, previewedQuestionIds: updatedIds } as QuestionPreviewLimitInsert)
             .onConflictDoUpdate({
@@ -870,7 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session?.userId) {
         return res.status(401).json({ message: "Authentication required", requiresAuth: true });
       }
-      
+
       const validatedData = insertQuestionSchema.parse(req.body) as QuestionInsert;
       const question = await storage.createQuestion(validatedData);
       res.status(201).json(question);
@@ -884,7 +1142,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertUserPerformanceSchema.parse(req.body) as UserPerformanceInsert;
       const attempt = await storage.recordAttempt(validatedData);
-      res.status(201).json(attempt);
+
+      // Award XP for the attempt (more for correct answers) and check achievements
+      let xpAwarded = 0;
+      try {
+        xpAwarded = validatedData.isCorrect ? 10 : 2;
+        await GamificationService.awardXp(validatedData.userId, xpAwarded, {
+          type: "question",
+          sourceId: String(validatedData.questionId),
+          description: validatedData.isCorrect
+            ? "Correct practice question"
+            : "Practice attempt",
+        });
+        // Refresh leaderboard entry for global/all-time
+        await db.execute(sql`
+          DELETE FROM leaderboard_entries 
+          WHERE user_id = ${validatedData.userId}
+            AND leaderboard_type = 'global'
+            AND period = 'all_time'
+        `);
+        await db.execute(sql`
+          INSERT INTO leaderboard_entries (user_id, leaderboard_type, score, rank, period, updated_at)
+          SELECT id, 'global', total_points, NULL, 'all_time', NOW()
+          FROM users WHERE id = ${validatedData.userId}
+        `);
+        await GamificationService.checkAchievements(validatedData.userId);
+        await updateDailyChallengeProgress(validatedData.userId, validatedData.isCorrect);
+      } catch (err) {
+        console.warn("Gamification award failed", err);
+      }
+
+      res.status(201).json({ attempt, xpAwarded });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -1020,24 +1308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Bulk question generation endpoints
   app.post("/api/questions/generate-bulk", requireOwner, async (req, res) => {
-    try {
-      const job = await queueJob("question_generation", {
-        name: "Generate NEET practice questions",
-        payload: {
-          triggeredBy: req.session?.userId || null,
-        },
-      });
-
-      res.json({
-        success: true,
-        job,
-        message:
-          "Question generation job queued. Track progress in the task queue dashboard.",
-      });
-    } catch (error) {
-      console.error("Error starting bulk generation:", error);
-      res.status(500).json({ error: "Failed to start generation" });
-    }
+    res.status(503).json({
+      error: "Background jobs are disabled on this environment.",
+    });
   });
 
   // ========== GAMIFICATION ROUTES ==========

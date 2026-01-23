@@ -12,108 +12,86 @@ const chapters = [
 
 ## Work
 
-**Definition:**
-Work is done when a force causes displacement in the direction of the force.
+Work is done when a force produces displacement in the direction of the force.
 
-**Mathematical Definition:**
-- W = F · s = Fs cos θ
-- Where θ is the angle between force and displacement
-- SI Unit: Joule (J) = N·m
+**Constant force:**
+- W = F s cos theta
+- Unit: Joule (J) = N m
 
-**Special Cases:**
-- When θ = 0°: W = Fs (maximum positive work)
-- When θ = 90°: W = 0 (no work done)
-- When θ = 180°: W = -Fs (negative work)
-
-### Work Done by Variable Force
-
-For variable force:
-- W = ∫F·ds
-- Area under F-s graph gives work done
+**Variable force:**
+- W = integral F . ds
+- Area under the F-s graph gives work done
 
 ## Energy
 
-**Kinetic Energy:**
-- Energy possessed due to motion
-- KE = ½mv²
-- Work-Energy Theorem: W_net = ΔKE = KE_f - KE_i
+**Kinetic energy:**
+- KE = 0.5 m v^2
+- Work-energy theorem: W_net = delta KE
 
-**Potential Energy:**
-Energy possessed due to position or configuration
-
-**Gravitational PE:**
-- PE = mgh (near Earth's surface)
-- PE = -GMm/r (general form)
-
-**Elastic PE:**
-- PE = ½kx² (for spring with spring constant k)
+**Potential energy:**
+- Gravitational: PE = m g h (near Earth)
+- Elastic: PE = 0.5 k x^2
 
 ### Conservation of Mechanical Energy
 
-For conservative forces:
-- Total ME = KE + PE = constant
-- KE₁ + PE₁ = KE₂ + PE₂
+For conservative forces only:
+- KE + PE = constant
+- KE_i + PE_i = KE_f + PE_f
 
-**Conservative Forces:**
-- Work done is path-independent
-- Examples: Gravitational, elastic, electrostatic
-
-**Non-Conservative Forces:**
-- Work done depends on path
-- Examples: Friction, air resistance
+Conservative forces: gravitational, elastic, electrostatic
+Non-conservative forces: friction, air resistance
 
 ## Power
 
-**Definition:**
-Rate at which work is done or energy is transferred
+Power is the rate of doing work.
+- P = W/t
+- P = dW/dt
+- P = F v cos theta
 
-**Formulas:**
-- P = W/t (average power)
-- P = dW/dt (instantaneous power)
-- P = F·v = Fv cos θ
-- SI Unit: Watt (W) = J/s
+## Collisions
 
-**Commercial Unit:**
-- 1 kWh = 3.6 × 10⁶ J
+**Momentum is always conserved** in an isolated system.
 
-### Collisions
-
-**Elastic Collision:**
-- Both momentum and KE are conserved
-- e = 1 (coefficient of restitution)
-- Relative velocity of separation = -Relative velocity of approach
-
-**Inelastic Collision:**
-- Momentum conserved, KE not conserved
-- 0 < e < 1
-
-**Perfectly Inelastic:**
-- Objects stick together
-- e = 0
-- Maximum KE loss
-
-## Applications
-
-- Machines and efficiency
-- Energy transformations
-- Power calculations in real-world scenarios`,
+**Elastic collision:** momentum and KE conserved (e = 1)
+**Inelastic collision:** momentum conserved, KE not conserved (0 < e < 1)
+**Perfectly inelastic:** objects stick together (e = 0)` ,
     keyConcepts: [
-      "Work done by constant and variable forces",
-      "Kinetic energy and work-energy theorem",
-      "Potential energy (gravitational and elastic)",
-      "Conservation of mechanical energy",
-      "Power and its applications",
-      "Elastic and inelastic collisions",
+      {
+        title: "Work by Constant Force",
+        description: "Work equals the component of force along displacement times distance.",
+        formula: "W = F s cos theta",
+      },
+      {
+        title: "Work-Energy Theorem",
+        description: "Net work equals the change in kinetic energy.",
+        formula: "W_net = delta KE",
+      },
+      {
+        title: "Potential Energy",
+        description: "Energy stored due to position or configuration.",
+        formula: "PE = m g h, PE_spring = 0.5 k x^2",
+      },
+      {
+        title: "Power",
+        description: "Rate of doing work or transferring energy.",
+        formula: "P = W/t = F v cos theta",
+      },
+      {
+        title: "Collisions",
+        description: "Momentum conservation applies to all collisions; energy depends on type.",
+        formula: "m1 u1 + m2 u2 = m1 v1 + m2 v2",
+      },
     ],
     formulas: [
-      "W = F·s cos θ",
-      "KE = ½mv²",
-      "PE_gravity = mgh",
-      "PE_spring = ½kx²",
-      "Work-Energy Theorem: W_net = ΔKE",
-      "P = W/t = F·v",
-      "Conservation: KE₁ + PE₁ = KE₂ + PE₂",
-      "For elastic collision: v₁ - v₂ = -(u₁ - u₂)",
+      "W = F s cos theta",
+      "W = integral F . ds",
+      "KE = 0.5 m v^2",
+      "W_net = delta KE",
+      "PE = m g h",
+      "PE_spring = 0.5 k x^2",
+      "P = W/t = F v cos theta",
+      "m1 u1 + m2 u2 = m1 v1 + m2 v2",
+      "e = (speed of separation)/(speed of approach)",
     ],
     importantTopics: [
       "Work done by constant and variable forces",
@@ -139,13 +117,28 @@ Rate at which work is done or energy is transferred
     ncertChapterRef: "Class 11 Physics - Chapter 6",
     visualizationsData: [
       {
-        type: "projectile-motion",
-        title: "Energy Conservation in Projectile Motion",
-        description: "Visualize how kinetic and potential energy transform during projectile motion",
+        type: "concept",
+        title: "Spring Energy Bar",
+        description: "See energy conversion between kinetic and elastic potential energy.",
         config: {
-          initialVelocity: 25,
-          launchAngle: 60
-        }
+          visualizationName: "spring-energy-bar",
+        },
+      },
+      {
+        type: "concept",
+        title: "Collision Lab",
+        description: "Test elastic and inelastic collisions and compare momentum/energy.",
+        config: {
+          visualizationName: "collision-lab",
+        },
+      },
+      {
+        type: "concept",
+        title: "Work on an Incline",
+        description: "Compare work done by gravity, normal force, and friction.",
+        config: {
+          visualizationName: "block-on-ramp",
+        },
       },
     ],
     difficultyLevel: 4,
@@ -162,110 +155,95 @@ Rate at which work is done or energy is transferred
 
 ## Center of Mass
 
-**Definition:**
-Point where entire mass of system can be assumed to be concentrated
+**Discrete particles:**
+- r_cm = (sum m_i r_i) / (sum m_i)
 
-**For Discrete Particles:**
-- x_cm = (Σm_ix_i)/(Σm_i)
-- r_cm = (Σm_ir_i)/(Σm_i)
-
-**For Continuous Bodies:**
-- r_cm = (∫r dm)/(∫dm)
-
-**Motion of Center of Mass:**
-- M·a_cm = F_ext (internal forces cancel)
-- v_cm = (Σm_iv_i)/M
+**Motion of CM:**
+- M a_cm = F_ext
+- Internal forces cancel in a system
 
 ## Rotational Kinematics
 
-**Angular Quantities:**
-- Angular displacement: θ (radians)
-- Angular velocity: ω = dθ/dt
-- Angular acceleration: α = dω/dt
+Angular quantities:
+- Angular displacement: theta (rad)
+- Angular velocity: omega = d theta / dt
+- Angular acceleration: alpha = d omega / dt
 
-**Relation with Linear Quantities:**
-- v = rω (linear velocity)
-- a_t = rα (tangential acceleration)
-- a_c = rω² (centripetal acceleration)
+Relations with linear motion:
+- v = r omega
+- a_t = r alpha
+- a_c = r omega^2
 
-**Equations of Rotational Motion:**
-- ω = ω₀ + αt
-- θ = ω₀t + ½αt²
-- ω² = ω₀² + 2αθ
+Rotational equations (constant alpha):
+- omega = omega0 + alpha t
+- theta = omega0 t + 0.5 alpha t^2
+- omega^2 = omega0^2 + 2 alpha theta
+
+## Torque and Angular Momentum
+
+**Torque:**
+- tau = r x F
+- |tau| = r F sin theta
+
+**Angular momentum:**
+- L = r x p
+- For rigid body: L = I omega
+
+**Rotational form of Newton's second law:**
+- tau_net = I alpha
 
 ## Moment of Inertia
 
-**Definition:**
-Rotational analog of mass; resistance to rotational motion
+- I = sum m_i r_i^2
+- Larger I means more resistance to change in rotation
 
-**Formula:**
-- I = Σm_ir_i² (discrete particles)
-- I = ∫r² dm (continuous body)
+## Conservation of Angular Momentum
 
-**Parallel Axis Theorem:**
-- I = I_cm + Md²
+If net external torque is zero, angular momentum is conserved.
 
-**Perpendicular Axis Theorem:**
-- For planar bodies: I_z = I_x + I_y
+## Rolling Motion
 
-**Common Moments of Inertia:**
-- Ring: I = MR²
-- Disc: I = ½MR²
-- Sphere: I = (2/5)MR²
-- Rod (center): I = ML²/12
-- Rod (end): I = ML²/3
-
-## Torque
-
-**Definition:**
-Rotational analog of force
-
-**Formula:**
-- τ = r × F = rF sin θ
-- τ = Iα (rotational analog of F = ma)
-
-**Couple:**
-- Two equal and opposite forces with different lines of action
-- Net force = 0, but torque ≠ 0
-
-## Angular Momentum
-
-**Definition:**
-- L = r × p = mvr sin θ (for particle)
-- L = Iω (for rigid body)
-
-**Conservation:**
-- If τ_ext = 0, then L = constant
-- Applications: spinning ice skater, planetary motion
-
-## Rotational Kinetic Energy
-
-**Formula:**
-- KE_rot = ½Iω²
-
-**Total KE for Rolling:**
-- KE_total = ½Mv_cm² + ½I_cmω²
-
-**Rolling Without Slipping:**
-- v_cm = Rω
-- Condition: friction provides torque`,
+For rolling without slipping:
+- v = omega R` ,
     keyConcepts: [
-      "Center of mass and its motion",
-      "Rotational kinematics",
-      "Moment of inertia and theorems",
-      "Torque and angular momentum",
-      "Conservation of angular momentum",
-      "Rolling motion",
+      {
+        title: "Center of Mass",
+        description: "Point that represents average position of mass in a system.",
+        formula: "r_cm = (sum m_i r_i) / (sum m_i)",
+      },
+      {
+        title: "Torque",
+        description: "Turning effect of a force about an axis.",
+        formula: "tau = r x F",
+      },
+      {
+        title: "Moment of Inertia",
+        description: "Rotational analog of mass; depends on mass distribution.",
+        formula: "I = sum m_i r_i^2",
+      },
+      {
+        title: "Angular Momentum",
+        description: "Rotational analog of linear momentum.",
+        formula: "L = I omega",
+      },
+      {
+        title: "Rotational Dynamics",
+        description: "Net torque produces angular acceleration.",
+        formula: "tau_net = I alpha",
+      },
     ],
     formulas: [
-      "r_cm = (Σm_ir_i)/M",
-      "v = rω, a_t = rα",
-      "I = Σm_ir_i² or ∫r² dm",
-      "Parallel Axis: I = I_cm + Md²",
-      "τ = r × F = Iα",
-      "L = Iω",
-      "KE_rot = ½Iω²",
-      "For rolling: v_cm = Rω",
+      "r_cm = (sum m_i r_i) / (sum m_i)",
+      "v = r omega",
+      "a_t = r alpha",
+      "a_c = r omega^2",
+      "omega = omega0 + alpha t",
+      "theta = omega0 t + 0.5 alpha t^2",
+      "omega^2 = omega0^2 + 2 alpha theta",
+      "tau = r x F",
+      "L = I omega",
+      "tau_net = I alpha",
+      "v = omega R",
     ],
     importantTopics: [
       "Center of mass calculations",
@@ -291,13 +269,20 @@ Rotational analog of force
     ncertChapterRef: "Class 11 Physics - Chapter 7",
     visualizationsData: [
       {
-        type: "circular-motion",
-        title: "Rotational Motion Demonstration",
-        description: "Visualize angular velocity, centripetal acceleration, and rotational dynamics",
+        type: "concept",
+        title: "Angular Momentum Explorer",
+        description: "See how torque and angular velocity change angular momentum.",
         config: {
-          radius: 3,
-          angularVelocity: 1.5
-        }
+          visualizationName: "angular-momentum",
+        },
+      },
+      {
+        type: "concept",
+        title: "Torque and Lever Arm",
+        description: "Observe how changing force and distance affects torque.",
+        config: {
+          visualizationName: "torque-wrench",
+        },
       },
     ],
     difficultyLevel: 5,
@@ -314,117 +299,96 @@ Rotational analog of force
 
 ## Newton's Law of Universal Gravitation
 
-**Statement:**
-Every particle attracts every other particle with a force proportional to product of masses and inversely proportional to square of distance
+Every particle attracts every other particle with a force proportional to the product of their masses and inversely proportional to the square of the distance between them.
 
 **Formula:**
-- F = G(m₁m₂)/r²
-- G = 6.67 × 10⁻¹¹ N·m²/kg²
-
-**Vector Form:**
-- F⃗₁₂ = -G(m₁m₂/r²)r̂₁₂
+- F = G m1 m2 / r^2
+- G = 6.67e-11 N m^2 / kg^2
 
 ## Gravitational Field
 
-**Field Intensity:**
-- g⃗ = F⃗/m = -GM/r² r̂
+Gravitational field intensity at distance r from mass M:
+- g = GM / r^2 (toward the mass)
 
-**At Earth's Surface:**
-- g = GM/R² ≈ 9.8 m/s²
+At Earth's surface:
+- g = GM / R^2
 
-**Variation with Height:**
-- g_h = g(1 - 2h/R) for h << R
-- g_h = g(R/(R+h))² (general)
+**Variation with height:**
+- g_h = g (R/(R+h))^2
 
-**Variation with Depth:**
-- g_d = g(1 - d/R)
+**Variation with depth (uniform density):**
+- g_d = g (1 - d/R)
 
 ## Gravitational Potential Energy
 
-**Definition:**
-- PE = -GMm/r
-- Zero at infinity
-- Always negative (attractive force)
-
-**Change in PE:**
-- ΔPE = GMm(1/r₁ - 1/r₂)
-
-**At Earth's Surface:**
-- PE = -GMm/R
+- U = -GMm/r
+- Zero at infinity, negative for bound systems
+- delta U = GMm (1/r1 - 1/r2)
 
 ## Escape Velocity
 
-**Definition:**
-Minimum velocity to escape Earth's gravitational field
-
-**Formula:**
-- v_e = √(2GM/R) = √(2gR)
-- For Earth: v_e ≈ 11.2 km/s
+Minimum speed to escape Earth's gravity (neglecting atmosphere):
+- v_e = sqrt(2GM/R) = sqrt(2 g R)
 
 ## Orbital Motion
 
-**Orbital Velocity:**
-- v_o = √(GM/r) = √(gR²/r)
+**Orbital speed (circular):**
+- v_o = sqrt(GM/r)
+
+**Time period:**
+- T = 2 pi sqrt(r^3/GM)
 
 **Relation:**
-- v_e = √2 × v_o
+- v_e = sqrt(2) * v_o
 
-**Time Period:**
-- T = 2π√(r³/GM)
+## Kepler's Laws
 
-**Kepler's Laws:**
+1. Planets move in ellipses with the Sun at one focus.
+2. Equal areas are swept in equal times (constant areal velocity).
+3. T^2 is proportional to r^3 for planets around the same central mass.
 
-1. **Law of Orbits:**
-   - Planets move in elliptical orbits with Sun at one focus
+## Satellites
 
-2. **Law of Areas:**
-   - Radius vector sweeps equal areas in equal times
-   - L = constant (angular momentum conservation)
-
-3. **Law of Periods:**
-   - T² ∝ r³
-   - T² = (4π²/GM)r³
-
-## Satellite Motion
-
-**Geostationary Satellite:**
-- T = 24 hours
-- Height ≈ 36,000 km
-- Fixed position relative to Earth
-
-**Polar Satellite:**
-- Passes over poles
-- Lower orbit (~500-800 km)
-- Used for weather, surveillance
-
-**Energy of Satellite:**
-- KE = GMm/2r
-- PE = -GMm/r
-- Total E = -GMm/2r (negative, indicating bound state)
-
-## Weightlessness
-
-Occurs when:
-- In free fall
-- In orbiting satellite
-- At null point between Earth and Moon`,
+**Geostationary orbit:**
+- T = 24 h, orbit in equatorial plane, same direction as Earth` ,
     keyConcepts: [
-      "Newton's law of universal gravitation",
-      "Gravitational field and potential",
-      "Variation of g with height and depth",
-      "Escape velocity and orbital velocity",
-      "Kepler's laws of planetary motion",
-      "Satellite orbits and energy",
+      {
+        title: "Universal Gravitation",
+        description: "Gravitational force between two masses is proportional to m1 m2 and inversely proportional to r^2.",
+        formula: "F = G m1 m2 / r^2",
+      },
+      {
+        title: "Gravitational Field",
+        description: "Field intensity due to a mass M at distance r.",
+        formula: "g = GM / r^2",
+      },
+      {
+        title: "Potential Energy",
+        description: "Gravitational potential energy of a mass m at distance r.",
+        formula: "U = -GMm/r",
+      },
+      {
+        title: "Escape Velocity",
+        description: "Minimum speed to escape a planet's gravity.",
+        formula: "v_e = sqrt(2 g R)",
+      },
+      {
+        title: "Orbital Motion",
+        description: "Speed and period for circular orbit around mass M.",
+        formula: "v_o = sqrt(GM/r), T = 2 pi sqrt(r^3/GM)",
+      },
     ],
     formulas: [
-      "F = Gm₁m₂/r²",
-      "g = GM/R²",
-      "g_h = g(R/(R+h))²",
-      "g_d = g(1 - d/R)",
-      "PE = -GMm/r",
-      "v_e = √(2GM/R)",
-      "v_o = √(GM/r)",
-      "T² = (4π²/GM)r³",
+      "F = G m1 m2 / r^2",
+      "g = GM / r^2",
+      "U = -GMm/r",
+      "delta U = GMm (1/r1 - 1/r2)",
+      "v_e = sqrt(2GM/R) = sqrt(2 g R)",
+      "v_o = sqrt(GM/r)",
+      "T = 2 pi sqrt(r^3/GM)",
+      "g_h = g (R/(R+h))^2",
+      "g_d = g (1 - d/R)",
+      "T^2 = (4 pi^2 / GM) r^3",
     ],
     importantTopics: [
       "Universal law of gravitation",
@@ -450,13 +414,20 @@ Occurs when:
     ncertChapterRef: "Class 11 Physics - Chapter 8",
     visualizationsData: [
       {
-        type: "circular-motion",
-        title: "Orbital Motion Simulation",
-        description: "Visualize satellite orbits and understand orbital velocity",
+        type: "concept",
+        title: "Planetary Orbit Simulator",
+        description: "Explore orbits and see how orbital speed changes with radius.",
         config: {
-          radius: 4,
-          angularVelocity: 0.8
-        }
+          visualizationName: "planetary-orbit",
+        },
+      },
+      {
+        type: "concept",
+        title: "Angular Momentum in Orbits",
+        description: "Equal areas in equal times from conservation of angular momentum.",
+        config: {
+          visualizationName: "angular-momentum",
+        },
       },
     ],
     difficultyLevel: 4,
@@ -471,140 +442,91 @@ Occurs when:
     introduction: "This chapter introduces elasticity, stress, strain, and deformation in solids. We study Hooke's law, elastic moduli, and stress-strain relationships.",
     detailedNotes: `# Mechanical Properties of Solids
 
-## Elasticity
-
-**Definition:**
-Property of materials to regain original shape after deforming forces are removed
-
-**Types of Materials:**
-- **Elastic:** Return to original shape (rubber, steel)
-- **Plastic:** Permanent deformation (clay, putty)
-- **Brittle:** Break without much deformation (glass, chalk)
-
-**Elastic Limit:**
-Maximum stress within which material remains elastic
-
 ## Stress
 
-**Definition:**
-Internal restoring force per unit area
-
-**Formula:**
+Stress is the internal restoring force per unit area.
 - Stress = F/A
-- SI Unit: N/m² or Pascal (Pa)
+- Unit: N/m^2 (Pa)
 
-**Types:**
-
-1. **Tensile Stress:**
-   - Force perpendicular to area (stretching)
-   - σ = F/A
-
-2. **Compressive Stress:**
-   - Force perpendicular to area (compression)
-
-3. **Shearing Stress:**
-   - Force parallel to area
-   - τ = F_tangential/A
+Types of stress:
+- Tensile: stretching
+- Compressive: squeezing
+- Shear: tangential force
 
 ## Strain
 
-**Definition:**
-Fractional change in dimension
-
-**Types:**
-
-1. **Longitudinal Strain:**
-   - ε = ΔL/L (change in length)
-
-2. **Volumetric Strain:**
-   - ε_v = ΔV/V (change in volume)
-
-3. **Shearing Strain:**
-   - φ = Δx/L = tan θ (angular deformation)
+Strain is the fractional change in dimension (dimensionless).
+- Longitudinal strain = delta L / L
+- Volumetric strain = delta V / V
+- Shear strain = delta x / L (approx tan theta for small angles)
 
 ## Hooke's Law
 
-**Statement:**
-Within elastic limit, stress ∝ strain
-
-**Formula:**
-- Stress = E × Strain (for normal stress)
-- E is the elastic modulus
+Within elastic limit, stress is proportional to strain.
+- stress = modulus * strain
 
 ## Elastic Moduli
 
-**1. Young's Modulus (Y):**
-- For longitudinal stress and strain
-- Y = (F/A)/(ΔL/L) = Stress/Strain
-- Units: N/m² or Pa
+**Young's modulus (Y):**
+- Y = (normal stress)/(longitudinal strain)
 
-**2. Bulk Modulus (K):**
-- For volumetric stress and strain
-- K = -(ΔP)/(ΔV/V) = -V(ΔP/ΔV)
-- Negative sign: volume decreases with pressure increase
+**Bulk modulus (K):**
+- K = - delta P / (delta V / V)
 
-**Compressibility:**
-- C = 1/K
+**Shear modulus (G):**
+- G = (shear stress)/(shear strain)
 
-**3. Shear Modulus (G or η):**
-- For shearing stress and strain
-- G = (F/A)/(Δx/L) = τ/φ
-
-**Relations:**
-- Y = 2G(1 + σ) where σ is Poisson's ratio
-- Y = 3K(1 - 2σ)
-
-## Poisson's Ratio
-
-**Definition:**
-Ratio of lateral strain to longitudinal strain
-
-**Formula:**
-- σ = -(Lateral strain)/(Longitudinal strain)
-- σ = -(ΔD/D)/(ΔL/L)
-
-**Range:**
-- For most materials: 0 < σ < 0.5
-- Theoretical maximum: 0.5 (incompressible)
+**Poisson's ratio (nu):**
+- nu = lateral strain / longitudinal strain
 
 ## Stress-Strain Curve
 
-**Regions:**
+- Proportional limit: linear region
+- Elastic limit: deformation still reversible
+- Yield point: plastic deformation starts
+- Ultimate strength and breaking point
 
-1. **Proportional Limit:** Hooke's law valid
-2. **Elastic Limit:** Maximum elastic deformation
-3. **Yield Point:** Permanent deformation begins
-4. **Plastic Region:** Large deformation
-5. **Breaking Point:** Material fractures
+## Elastic Energy
 
-**Ductile vs Brittle:**
-- Ductile: Large plastic region (copper, aluminum)
-- Brittle: Small plastic region (glass, cast iron)
-
-## Elastic Potential Energy
-
-**In stretched wire:**
-- PE = ½ × Stress × Strain × Volume
-- PE = ½(F·ΔL) = ½YA(ΔL)²/L
-
-**Energy Density:**
-- u = ½ × Stress × Strain = ½Y(Strain)²`,
+Energy stored per unit volume in a stretched wire:
+- U = 0.5 * stress * strain` ,
     keyConcepts: [
-      "Elasticity and Hooke's law",
-      "Stress and strain (types)",
-      "Young's modulus, bulk modulus, shear modulus",
-      "Poisson's ratio",
-      "Stress-strain curve",
-      "Elastic potential energy",
+      {
+        title: "Stress",
+        description: "Internal restoring force per unit area.",
+        formula: "stress = F / A",
+      },
+      {
+        title: "Strain",
+        description: "Fractional change in dimension (dimensionless).",
+        formula: "strain = delta L / L",
+      },
+      {
+        title: "Young's Modulus",
+        description: "Measures stiffness for longitudinal deformation.",
+        formula: "Y = (stress)/(strain)",
+      },
+      {
+        title: "Bulk Modulus",
+        description: "Resistance to uniform compression.",
+        formula: "K = - delta P / (delta V / V)",
+      },
+      {
+        title: "Shear Modulus",
+        description: "Resistance to shape change at constant volume.",
+        formula: "G = (shear stress)/(shear strain)",
+      },
     ],
     formulas: [
-      "Stress = F/A",
-      "Strain = ΔL/L (longitudinal)",
-      "Young's Modulus: Y = Stress/Strain",
-      "Bulk Modulus: K = -V(ΔP/ΔV)",
-      "Shear Modulus: G = τ/φ",
-      "Poisson's ratio: σ = -(Δr/r)/(ΔL/L)",
-      "Elastic PE = ½(F·ΔL) = ½Y(ΔL²/L)A",
+      "stress = F / A",
+      "longitudinal strain = delta L / L",
+      "volumetric strain = delta V / V",
+      "shear strain = delta x / L",
+      "Y = (stress)/(strain)",
+      "K = - delta P / (delta V / V)",
+      "G = (shear stress)/(shear strain)",
+      "nu = lateral strain / longitudinal strain",
+      "U = 0.5 * stress * strain",
     ],
     importantTopics: [
       "Elastic behavior of materials",
@@ -627,7 +549,24 @@ Ratio of lateral strain to longitudinal strain
       "Energy concepts",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 9",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Stress-Strain Curve",
+        description: "Elastic and plastic regions for a typical material.",
+        config: {
+          visualizationName: "stress-strain-curve",
+        },
+      },
+      {
+        type: "concept",
+        title: "Elastic Energy Storage",
+        description: "See how energy builds up as a solid is stretched or compressed.",
+        config: {
+          visualizationName: "spring-energy-bar",
+        },
+      },
+    ],
     difficultyLevel: 3,
     estimatedStudyMinutes: 300,
     status: "published" as const,
@@ -642,155 +581,85 @@ Ratio of lateral strain to longitudinal strain
 
 ## Pressure in Fluids
 
-**Definition:**
-Force per unit area exerted by fluid
-
-**Formula:**
-- P = F/A
-- For fluid column: P = ρgh
-
-**Atmospheric Pressure:**
-- P_atm ≈ 1.013 × 10⁵ Pa = 1 atm
-- 1 atm = 76 cm Hg = 760 mm Hg
-
-**Absolute and Gauge Pressure:**
-- P_absolute = P_atmospheric + P_gauge
-- P_gauge = ρgh
+- Pressure is force per unit area: P = F/A
+- In a fluid at rest: P = rho g h
 
 ## Pascal's Law
 
-**Statement:**
-Pressure applied to enclosed fluid is transmitted equally in all directions
-
-**Applications:**
-- Hydraulic lift
-- Hydraulic brakes
-- Hydraulic press
-
-**Mechanical Advantage:**
-- F₂/F₁ = A₂/A₁
+Pressure applied to a confined fluid is transmitted equally in all directions.
+- Hydraulic press: F2/F1 = A2/A1
 
 ## Archimedes' Principle
 
-**Statement:**
-Upward buoyant force equals weight of displaced fluid
+Buoyant force equals the weight of displaced fluid.
+- F_b = rho_fluid V g
+- Apparent weight: W_app = W - F_b
 
-**Formula:**
-- F_buoyant = ρ_fluid × V_displaced × g
+## Continuity Equation
 
-**Apparent Weight:**
-- W_apparent = W_actual - F_buoyant
-
-**Floatation:**
-- Object floats if ρ_object < ρ_fluid
-- Fraction submerged: V_submerged/V_total = ρ_object/ρ_fluid
-
-## Fluid Flow
-
-**Types of Flow:**
-
-1. **Streamline (Laminar) Flow:**
-   - Smooth, orderly flow
-   - Velocity at each point constant
-   - No turbulence
-
-2. **Turbulent Flow:**
-   - Chaotic, irregular flow
-   - Eddies and vortices form
-
-**Reynolds Number:**
-- R_e = ρvD/η
-- R_e < 2000: Laminar
-- R_e > 3000: Turbulent
-
-## Equation of Continuity
-
-**For incompressible fluid:**
-- A₁v₁ = A₂v₂
-- Volume flow rate is constant
-
-**Mass Flow Rate:**
-- dm/dt = ρAv = constant
+For incompressible flow:
+- A1 v1 = A2 v2
 
 ## Bernoulli's Equation
 
-**Statement:**
-For streamline flow of ideal fluid
-
-**Formula:**
-- P + ½ρv² + ρgh = constant
-
-**Forms:**
-- P₁ + ½ρv₁² + ρgh₁ = P₂ + ½ρv₂² + ρgh₂
-
-**Applications:**
-
-1. **Torricelli's Theorem:**
-   - Velocity of efflux: v = √(2gh)
-
-2. **Venturi Meter:**
-   - Measures fluid flow rate
-
-3. **Lift on Aircraft Wing:**
-   - Faster flow over top creates lower pressure
+Along a streamline for ideal flow:
+- P + 0.5 rho v^2 + rho g h = constant
 
 ## Viscosity
 
-**Definition:**
-Internal friction in fluids resisting flow
+- Coefficient of viscosity: eta
+- Reynolds number: Re = rho v D / eta
+  - Re < 2000: laminar
+  - Re > 3000: turbulent
 
-**Newton's Law of Viscosity:**
-- F = -ηA(dv/dx)
-- η is coefficient of viscosity
+**Stokes' law (small sphere):**
+- F_viscous = 6 pi eta r v
 
-**Terminal Velocity:**
-- v_t = (2r²(ρ - σ)g)/(9η)
-- For sphere falling through fluid
+**Terminal velocity:**
+- v_t = 2 r^2 (rho_s - rho_f) g / (9 eta)
 
-**Stokes' Law:**
-- F_viscous = 6πηrv
+## Surface Tension and Capillarity
 
-**Poiseuille's Formula:**
-- Volume flow rate through pipe
-- Q = (πPr⁴)/(8ηl)
-
-## Surface Tension
-
-**Definition:**
-Force per unit length on liquid surface
-
-**Formula:**
-- T = F/L
-- Unit: N/m
-
-**Surface Energy:**
-- E = T × A
-
-**Pressure Difference:**
-- Across spherical drop: ΔP = 2T/r
-- Across bubble: ΔP = 4T/r
-
-**Capillarity:**
-- h = (2T cos θ)/(ρgr)
-- Rise in capillary tube`,
+- Surface tension: T = F / L
+- Capillary rise: h = 2 T cos theta / (rho g r)` ,
     keyConcepts: [
-      "Pressure in fluids and Pascal's law",
-      "Archimedes' principle and buoyancy",
-      "Streamline and turbulent flow",
-      "Equation of continuity",
-      "Bernoulli's equation and applications",
-      "Viscosity and terminal velocity",
-      "Surface tension and capillarity",
+      {
+        title: "Hydrostatic Pressure",
+        description: "Pressure increases linearly with depth in a fluid at rest.",
+        formula: "P = rho g h",
+      },
+      {
+        title: "Buoyancy",
+        description: "Upward force equals weight of displaced fluid.",
+        formula: "F_b = rho_fluid V g",
+      },
+      {
+        title: "Continuity",
+        description: "For incompressible flow, area and speed are inversely related.",
+        formula: "A1 v1 = A2 v2",
+      },
+      {
+        title: "Bernoulli's Equation",
+        description: "Pressure, kinetic, and potential terms sum to a constant along a streamline.",
+        formula: "P + 0.5 rho v^2 + rho g h = constant",
+      },
+      {
+        title: "Viscosity",
+        description: "Fluid friction; determines laminar vs turbulent flow.",
+        formula: "Re = rho v D / eta",
+      },
     ],
     formulas: [
-      "P = ρgh",
-      "F_buoyant = ρVg",
-      "Continuity: A₁v₁ = A₂v₂",
-      "Bernoulli: P + ½ρv² + ρgh = constant",
-      "Torricelli: v = √(2gh)",
-      "Terminal velocity: v_t = 2r²(ρ-σ)g/(9η)",
-      "Stokes: F = 6πηrv",
-      "Surface tension: ΔP = 2T/r (drop)",
+      "P = F / A",
+      "P = rho g h",
+      "F_b = rho_fluid V g",
+      "A1 v1 = A2 v2",
+      "P + 0.5 rho v^2 + rho g h = constant",
+      "Re = rho v D / eta",
+      "F_viscous = 6 pi eta r v",
+      "v_t = 2 r^2 (rho_s - rho_f) g / (9 eta)",
+      "T = F / L",
+      "h = 2 T cos theta / (rho g r)",
     ],
     importantTopics: [
       "Pressure in fluids",
@@ -814,7 +683,24 @@ Force per unit length on liquid surface
       "Forces and motion",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 10",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Pressure vs Depth",
+        description: "Hydrostatic pressure increases linearly with depth.",
+        config: {
+          visualizationName: "pressure-depth-graph",
+        },
+      },
+      {
+        type: "concept",
+        title: "Venturi Tube (Bernoulli)",
+        description: "See how fluid speed and pressure change in a constricted pipe.",
+        config: {
+          visualizationName: "venturi-tube",
+        },
+      },
+    ],
     difficultyLevel: 4,
     estimatedStudyMinutes: 360,
     status: "published" as const,

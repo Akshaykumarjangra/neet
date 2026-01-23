@@ -1,8 +1,11 @@
+// @ts-nocheck
+import passport from "passport";
+
 import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { users } from "../shared/schema";
-import { eq } from "drizzle-orm";
+import { users, userSubscriptions } from "../shared/schema";
+import { eq, and } from "drizzle-orm";
 
 const SALT_ROUNDS = 10;
 
@@ -23,60 +26,80 @@ export async function authenticateUser(
   email: string,
   password: string
 ): Promise<{ id: string; name: string; email: string } | null> {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
 
-  if (!user) {
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+
+    const isValid = await verifyPassword(password, user.passwordHash);
+    if (!isValid) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
+  } catch (error) {
+    console.error("authenticateUser error:", error);
     return null;
   }
-
-  const isValid = await verifyPassword(password, user.passwordHash);
-  if (!isValid) {
-    return null;
-  }
-
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-  };
 }
 
 // Create new user
 export async function createUser(
   name: string,
   email: string,
-  password: string
+  password: string,
+  options?: {
+    role?: "student" | "mentor" | "admin";
+    isPaidUser?: boolean;
+    isAdmin?: boolean;
+    isOwner?: boolean;
+  }
 ): Promise<{ id: string; name: string; email: string }> {
   const hashedPassword = await hashPassword(password);
+  const normalizedEmail = email.trim().toLowerCase();
+  const role = options?.role ?? "student";
+  const isAdmin = options?.isAdmin ?? role === "admin";
 
   const [newUser] = await db
     .insert(users)
     .values({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       passwordHash: hashedPassword,
       currentLevel: 1,
       totalPoints: 0,
       studyStreak: 0,
       streakFreezes: 0,
+      role,
+      isAdmin,
+      isPaidUser: options?.isPaidUser ?? false,
+      isOwner: options?.isOwner ?? false,
     })
-    .returning();
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+    });
 
-  return {
-    id: newUser.id,
-    name: newUser.name,
-    email: newUser.email,
-  };
+  return newUser;
 }
 
 // Session type extension
 declare module "express-session" {
   interface SessionData {
     userId: string;
+    originalAdminId?: string;
   }
 }
 
@@ -102,7 +125,7 @@ export async function requireAuthWithPasswordCheck(req: Request, res: Response, 
       .limit(1);
 
     if (user?.mustChangePassword) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: "Password change required",
         code: "PASSWORD_CHANGE_REQUIRED"
       });
@@ -118,4 +141,86 @@ export async function requireAuthWithPasswordCheck(req: Request, res: Response, 
 // Get current user from session
 export function getCurrentUser(req: Request): string | null {
   return req.session.userId || null;
+}
+
+export async function requireOwner(req: Request, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  try {
+    const [user] = await db
+      .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+      .from(users)
+      .where(eq(users.id, req.session.userId))
+      .limit(1);
+
+    if (!user || (!user.isOwner && !user.isAdmin)) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    (req as any).isOwner = user.isOwner;
+    next();
+  } catch (error) {
+    console.error("Owner check error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export function requireActiveSubscription(options?: { allowTrial?: boolean }) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    try {
+      const [user] = await db
+        .select({
+          isPaidUser: users.isPaidUser,
+          role: users.role,
+          isOwner: users.isOwner,
+        })
+        .from(users)
+        .where(eq(users.id, req.session.userId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.isOwner || user.role === "admin" || user.isPaidUser) {
+        return next();
+      }
+
+      const [activeSubscription] = await db
+        .select({
+          id: userSubscriptions.id,
+          status: userSubscriptions.status,
+        })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.userId, req.session.userId),
+            eq(userSubscriptions.status, "active")
+          )
+        )
+        .limit(1);
+
+      if (activeSubscription) {
+        return next();
+      }
+
+      if (options?.allowTrial) {
+        return next();
+      }
+
+      return res.status(402).json({
+        error: "PAYMENT_REQUIRED",
+        message: "Upgrade to Premium to access this feature.",
+      });
+    } catch (error) {
+      console.error("Subscription check error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
 }

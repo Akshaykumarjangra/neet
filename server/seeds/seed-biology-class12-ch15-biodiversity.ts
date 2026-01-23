@@ -420,14 +420,68 @@ Harvesting species faster than they can reproduce
 6. In-situ conservation (national parks, sanctuaries, biosphere reserves) protects species in natural habitat
 7. Ex-situ conservation (zoos, botanical gardens, seed banks, cryopreservation) preserves species outside natural habitat
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Levels of Biodiversity',
+        description: 'Genetic, species, ecosystem.'
+      },
+      {
+        type: 'graph',
+        title: 'Species-Area Relationship',
+        description: 'S = cA^z curve.'
+      },
+      {
+        type: 'table',
+        title: 'Biodiversity Hotspots',
+        description: 'Regions and key traits.'
+      },
+      {
+        type: 'comparison',
+        title: 'In-situ vs Ex-situ',
+        description: 'Conservation approaches.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Conservation Strategy',
+        description: 'Assess -> protect -> monitor.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Biodiversity and Conservation',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Levels of Biodiversity',
+          description: 'Genetic, species, ecosystem.'
+        },
+        {
+          type: 'graph',
+          title: 'Species-Area Relationship',
+          description: 'S = cA^z curve.'
+        },
+        {
+          type: 'table',
+          title: 'Biodiversity Hotspots',
+          description: 'Regions and key traits.'
+        },
+        {
+          type: 'comparison',
+          title: 'In-situ vs Ex-situ',
+          description: 'Conservation approaches.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Conservation Strategy',
+          description: 'Assess -> protect -> monitor.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 15: Biodiversity and Conservation');

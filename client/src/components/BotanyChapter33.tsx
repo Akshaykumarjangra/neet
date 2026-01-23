@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Wheat, CheckCircle2, XCircle, Brain, Sprout, Award } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter33() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,7 +19,7 @@ export function BotanyChapter33() {
       id: 1,
       question: "Which breeding method involves crossing two genetically different varieties?",
       options: ["Mutation breeding", "Hybridization", "Pure line selection", "Mass selection"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Hybridization involves crossing two genetically different parent plants to combine desirable traits from both parents in the offspring."
     },
     {
@@ -30,14 +31,14 @@ export function BotanyChapter33() {
         "Biofortification",
         "Tissue culture"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "The Green Revolution (1960s-1970s) involved the development and use of high-yielding varieties (HYVs) of wheat and rice, along with modern agricultural practices."
     },
     {
       id: 3,
       question: "Which scientist is known as the 'Father of Green Revolution in India'?",
       options: ["Norman Borlaug", "M.S. Swaminathan", "Verghese Kurien", "B.P. Pal"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Dr. M.S. Swaminathan is known as the Father of Green Revolution in India for his role in developing high-yielding varieties of wheat and rice."
     },
     {
@@ -49,7 +50,7 @@ export function BotanyChapter33() {
         "Nutritional quality",
         "Shelf life"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Biofortification is the process of breeding crops to increase their nutritional value, such as increasing vitamin A in Golden Rice or iron in pearl millet."
     },
     {
@@ -61,14 +62,14 @@ export function BotanyChapter33() {
         "Flavr Savr tomato (delayed ripening)",
         "Roundup Ready soybean (herbicide tolerant)"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Golden Rice is biofortified with β-carotene (provitamin A) to address vitamin A deficiency. Other options are examples of genetic modification for pest/herbicide resistance."
     },
     {
       id: 6,
       question: "Semi-dwarf varieties of wheat were developed using genes from:",
       options: ["Norin 10 (Japanese variety)", "Sonora 64", "Lerma Rojo", "Kalyan Sona"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Norman Borlaug used dwarfing genes from the Japanese wheat variety Norin 10 to develop semi-dwarf high-yielding wheat varieties."
     },
     {
@@ -80,7 +81,7 @@ export function BotanyChapter33() {
         "Crop rotation",
         "Resistant varieties"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "IPM emphasizes using chemical pesticides only as a last resort. It prioritizes biological control, cultural practices, and resistant varieties first."
     },
     {
@@ -92,7 +93,7 @@ export function BotanyChapter33() {
         "Conservation of germplasm",
         "All of the above"
       ],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Micropropagation (tissue culture) allows rapid multiplication of superior plants, production of pathogen-free plants, and conservation of rare/endangered species."
     }
   ];
@@ -109,7 +110,7 @@ export function BotanyChapter33() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -651,7 +652,7 @@ export function BotanyChapter33() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -659,13 +660,13 @@ export function BotanyChapter33() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

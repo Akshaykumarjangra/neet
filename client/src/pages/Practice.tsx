@@ -20,7 +20,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ChevronLeft, Loader2, Filter, RefreshCw, Timer, Clock, Flag, AlertTriangle, HelpCircle, BookmarkCheck, MessageSquare, Trophy, Target, Zap, TrendingUp, Star, Sparkles, PartyPopper, Calendar, X, Award, Minus, Plus, GraduationCap } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Question, ContentTopic } from "@shared/schema";
+import type { Question, ContentTopic, ChapterContent } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useGamification } from "@/hooks/useGamification";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +53,16 @@ interface SessionStats {
 const FLAGGED_QUESTIONS_KEY = "neet-flagged-questions";
 const formatINR = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 
+function normalizeSubjectParam(value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed
+    .split(" ")
+    .map((part) => (part ? part[0].toUpperCase() + part.slice(1).toLowerCase() : ""))
+    .join(" ");
+}
+
 function getFlaggedQuestions(): FlaggedQuestion[] {
   const stored = localStorage.getItem(FLAGGED_QUESTIONS_KEY);
   return stored ? JSON.parse(stored) : [];
@@ -66,23 +76,29 @@ export default function Practice() {
   const [, setLocation] = useLocation();
 
   const urlParams = new URLSearchParams(window.location.search);
+  const subjectFromUrl = urlParams.get('subject');
+  const chapterFromUrl = urlParams.get('chapter');
+  const classLevelFromUrl = urlParams.get('classLevel') ?? urlParams.get('class');
   const topicIdFromUrl = urlParams.get('topicId');
+  const normalizedSubjectFromUrl = normalizeSubjectParam(subjectFromUrl);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
   const [showKillCam, setShowKillCam] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<string>("all");
+  const [selectedSubject, setSelectedSubject] = useState<string>(normalizedSubjectFromUrl ?? "all");
   const [selectedTopic, setSelectedTopic] = useState<string>(topicIdFromUrl || "all");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [currentCombo, setCurrentCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
+  const [quotaExhausted, setQuotaExhausted] = useState(false);
+  const [authRequired, setAuthRequired] = useState(false);
   const [showXpGain, setShowXpGain] = useState(false);
   const [xpGainAmount, setXpGainAmount] = useState(0);
   const { points, level, streak, addPoints, updateStreak } = useGamification();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   const [timedModeEnabled, setTimedModeEnabled] = useState(false);
   const [timerDuration, setTimerDuration] = useState(60);
@@ -156,14 +172,65 @@ export default function Practice() {
     setFlaggedQuestions(getFlaggedQuestions());
   }, []);
 
+  useEffect(() => {
+    if (user?.id) {
+      setAuthRequired(false);
+    }
+  }, [user?.id]);
+
   const { data: topics = [] } = useQuery<ContentTopic[]>({
     queryKey: ['/api/topics'],
     placeholderData: (prev) => prev,
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: chapterLookup, isLoading: chapterLookupLoading } = useQuery<ChapterContent | null>({
+    queryKey: ['/api/chapters/by-chapter', normalizedSubjectFromUrl, classLevelFromUrl, chapterFromUrl],
+    queryFn: async () => {
+      if (!chapterFromUrl || !normalizedSubjectFromUrl) return null;
+      const chapterNumber = Number.parseInt(chapterFromUrl, 10);
+      if (!Number.isFinite(chapterNumber)) return null;
+
+      try {
+        if (classLevelFromUrl) {
+          return await apiRequest(
+            "GET",
+            `/api/chapters/by-chapter/${normalizedSubjectFromUrl.toLowerCase()}/${classLevelFromUrl}/${chapterNumber}`,
+          );
+        }
+
+        const chapters = await apiRequest(
+          "GET",
+          `/api/chapters?subject=${encodeURIComponent(normalizedSubjectFromUrl)}`,
+        );
+
+        if (!Array.isArray(chapters)) return null;
+        const matches = chapters.filter(
+          (chapter: ChapterContent) => chapter.chapterNumber === chapterNumber,
+        );
+        if (matches.length === 0) return null;
+        matches.sort((a, b) => Number(a.classLevel) - Number(b.classLevel));
+        return matches[0];
+      } catch (err) {
+        console.warn("Chapter lookup failed:", err);
+        return null;
+      }
+    },
+    enabled: !!chapterFromUrl && !!normalizedSubjectFromUrl,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (chapterLookup?.subject && chapterLookup.subject !== selectedSubject && subjectFromUrl) {
+      setSelectedSubject(chapterLookup.subject);
+    }
+  }, [chapterLookup, selectedSubject, subjectFromUrl]);
+
+  const chapterContentId = chapterLookup?.id ? String(chapterLookup.id) : null;
+
   const buildQueryParams = () => {
     const params = new URLSearchParams();
+    if (chapterContentId) params.append("chapterContentId", chapterContentId);
     if (selectedSubject !== "all") params.append("subject", selectedSubject);
     if (selectedTopic !== "all") params.append("topicId", selectedTopic);
     if (selectedDifficulty !== "all") params.append("difficulty", selectedDifficulty);
@@ -173,13 +240,22 @@ export default function Practice() {
     return params.toString();
   };
 
+  const shouldFetchStandardQuestions = !chapterFromUrl || !!chapterContentId;
   const { data: questions = [], isLoading: standardLoading, error, refetch } = useQuery<Question[]>({
-    queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty, pyqOnly, pyqYear],
+    queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty, pyqOnly, pyqYear, chapterContentId, user?.id],
     queryFn: async () => {
       try {
       const queryParams = buildQueryParams();
       const url = `/api/questions${queryParams ? '?' + queryParams : ''}`;
       const payload = await apiRequest("GET", url);
+      setAuthRequired(false);
+      const quotaHit = Boolean(
+        payload &&
+          typeof payload === 'object' &&
+          'quotaExhausted' in payload &&
+          payload.quotaExhausted
+      );
+      setQuotaExhausted(quotaHit);
         
         // Handle both array and object response formats
         let list: Question[] = [];
@@ -192,15 +268,18 @@ export default function Practice() {
           } else if (payload.error) {
             // If there's an error but still a questions array, use it
             list = Array.isArray(payload.questions) ? payload.questions : [];
-            if (payload.quotaExhausted) {
-              toast({
-                title: "Question Limit Reached",
-                description: payload.message || "You've reached your free question limit. Upgrade to Premium for unlimited access.",
-                variant: "destructive",
-                duration: 5000,
-              });
-            }
           }
+        }
+
+        if (quotaHit) {
+          toast({
+            title: "Question Limit Reached",
+            description:
+              payload?.message ||
+              "You've reached your free question limit. Upgrade to Premium for unlimited access.",
+            variant: "destructive",
+            duration: 5000,
+          });
         }
         
         // Shuffle questions for variety
@@ -208,8 +287,12 @@ export default function Practice() {
       return shuffled;
       } catch (err: any) {
         console.error("Error fetching questions:", err);
+        setQuotaExhausted(false);
+        const message = typeof err?.message === "string" ? err.message : "";
+        const needsAuth = message.includes("401") || message.includes("Authentication");
+        setAuthRequired(needsAuth);
         // If it's a 401, show auth error
-        if (err.message?.includes('401') || err.message?.includes('Authentication')) {
+        if (needsAuth) {
           toast({
             title: "Authentication Required",
             description: "Please log in to access questions.",
@@ -225,6 +308,7 @@ export default function Practice() {
         return [];
       }
     },
+    enabled: shouldFetchStandardQuestions && !!user?.id,
     refetchOnMount: false, // Changed to false for better performance
     refetchOnWindowFocus: false, // Changed to false to prevent unnecessary refetches
     placeholderData: (prev) => prev,
@@ -465,14 +549,15 @@ export default function Practice() {
     },
   });
 
-  const handleSubmit = (answer: string) => {
+  const handleSubmit = (answer: string | number) => {
     if (!currentQuestion) return;
+    const normalizedAnswer = String(answer);
 
     const timeTaken = timedModeEnabled
       ? Math.round((Date.now() - questionStartTimeRef.current) / 1000)
       : 60;
 
-    const isCorrect = answer === currentQuestion.correctAnswer;
+    const isCorrect = normalizedAnswer === currentQuestion.correctAnswer;
     const difficultyMultiplier = currentQuestion.difficultyLevel;
     const basePoints = 10;
 
@@ -492,7 +577,7 @@ export default function Practice() {
 
     submitAnswerMutation.mutate({
       questionId: currentQuestion.id,
-      selectedAnswer: answer,
+      selectedAnswer: normalizedAnswer,
       isCorrect,
       timeTaken,
       prevCombo,
@@ -749,7 +834,10 @@ export default function Practice() {
     ? Math.round(sessionStats.timePerQuestion.reduce((a, b) => a + b, 0) / sessionStats.timePerQuestion.length)
     : 0;
 
-  if (isPracticeLoading) {
+  const chapterLookupFailed = !!chapterFromUrl && !!normalizedSubjectFromUrl && !chapterLookupLoading && !chapterContentId;
+  const isInitialLoading = isPracticeLoading || (!!chapterFromUrl && chapterLookupLoading) || authLoading;
+
+  if (isInitialLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -776,12 +864,27 @@ export default function Practice() {
           <Card>
             <CardContent className="p-8 text-center space-y-4">
               <p className="text-lg text-muted-foreground">
-                {error ? '❌ Error loading questions' : showFlaggedOnly ? 'No flagged questions found.' : 'No questions available for the selected filters.'}
+                {!user?.id || authRequired
+                  ? 'Please log in to access practice questions.'
+                  : chapterLookupFailed
+                  ? 'Chapter not found for the selected subject/class.'
+                  : quotaExhausted
+                  ? 'Free question limit reached. Upgrade to access more questions.'
+                  : error
+                  ? '❌ Error loading questions'
+                  : showFlaggedOnly
+                  ? 'No flagged questions found.'
+                  : 'No questions available for the selected filters.'}
               </p>
               {error && (
                 <p className="text-sm text-destructive">{String(error)}</p>
               )}
               <div className="flex gap-2 justify-center flex-wrap">
+                {!user?.id && (
+                  <Button onClick={() => setLocation("/login")}>
+                    Log In
+                  </Button>
+                )}
                 <Button onClick={() => {
                   setSelectedSubject("all");
                   setSelectedTopic("all");

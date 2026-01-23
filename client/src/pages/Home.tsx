@@ -24,13 +24,22 @@ import {
   Atom,
   FlaskConical,
   Leaf,
+  Bug,
   ChevronRight,
   Quote,
   Moon,
   Sun,
+  Menu,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -119,14 +128,24 @@ const subjects = [
     borderColor: "border-purple-500/20",
   },
   {
-    name: "Biology",
+    name: "Botany",
     icon: Leaf,
-    chapters: 38,
-    totalChapters: 38,
-    color: "from-green-500 to-emerald-500",
-    bgColor: "bg-green-500/10",
-    iconColor: "text-green-500",
-    borderColor: "border-green-500/20",
+    chapters: 19,
+    totalChapters: 19,
+    color: "from-emerald-500 to-lime-500",
+    bgColor: "bg-emerald-500/10",
+    iconColor: "text-emerald-500",
+    borderColor: "border-emerald-500/20",
+  },
+  {
+    name: "Zoology",
+    icon: Bug,
+    chapters: 19,
+    totalChapters: 19,
+    color: "from-orange-500 to-amber-500",
+    bgColor: "bg-orange-500/10",
+    iconColor: "text-orange-500",
+    borderColor: "border-orange-500/20",
   },
 ];
 
@@ -200,9 +219,8 @@ function LiveStatsTicker() {
         {liveStats.map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 w-1.5 rounded-full transition-all ${
-              i === currentIndex ? "bg-primary" : "bg-muted"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full transition-all ${i === currentIndex ? "bg-primary" : "bg-muted"
+              }`}
           />
         ))}
       </div>
@@ -212,6 +230,13 @@ function LiveStatsTicker() {
 
 export default function Home() {
   const { theme, setTheme } = useTheme();
+
+  useQuery({
+    queryKey: ["/api/questions/preview"],
+    queryFn: async () => apiRequest("GET", "/api/questions/preview"),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,7 +249,7 @@ export default function Home() {
             <span className="font-bold text-xl hidden sm:block">NEET Prep</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/enroll" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
               Explore
             </Link>
             <Link href="/mentors" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -267,13 +292,70 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </header>
+
+        {/* Mobile Menu Trigger */}
+        <div className="md:hidden flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <div className="flex flex-col gap-6 mt-10">
+                <div className="flex flex-col gap-4">
+                  <Link href="/login">
+                    <Button variant="outline" className="w-full">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="w-full">
+                      Sign Up Free
+                    </Button>
+                  </Link>
+                </div>
+                <nav className="flex flex-col gap-4 text-lg">
+                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Explore
+                  </Link>
+                  <Link href="/mentors" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Find Mentors
+                  </Link>
+                  <Link href="/simulations" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Simulations
+                  </Link>
+                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Pricing
+                  </Link>
+                  <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Features
+                  </a>
+                  <a href="#syllabus" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Syllabus
+                  </a>
+                  <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Testimonials
+                  </a>
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </header >
 
       <main>
         <section className="relative overflow-hidden py-20 md:py-32">
           <div className="absolute inset-0 gradient-mesh-bg" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-          
+
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -299,8 +381,8 @@ export default function Home() {
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto" data-testid="text-hero-subheadline">
-                Experience personalized learning with adaptive AI, expert mentors, 
-                gamified progress tracking, and 50,000+ practice questions. 
+                Experience personalized learning with adaptive AI, expert mentors,
+                gamified progress tracking, and 50,000+ practice questions.
                 Join 10,000+ aspirants achieving their medical dreams.
               </p>
 
@@ -312,7 +394,7 @@ export default function Home() {
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/enroll">
+                <Link href="/pricing">
                   <Button size="lg" variant="outline" className="gap-2 text-base px-8" data-testid="button-explore-content">
                     <BookOpen className="h-5 w-5" />
                     Explore Content
@@ -367,7 +449,7 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Our comprehensive platform combines cutting-edge AI technology with proven 
+                Our comprehensive platform combines cutting-edge AI technology with proven
                 teaching methods to maximize your NEET preparation.
               </p>
             </motion.div>
@@ -402,6 +484,40 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 p-8 text-white shadow-2xl">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.5em] text-emerald-300">NEET Blast</p>
+                  <h2 className="mt-2 text-3xl font-bold leading-tight">
+                    50,000+ QA, 10 Years of Trends, One Deep Analytics Desk
+                  </h2>
+                  <p className="mt-3 text-white/80 max-w-2xl">
+                    Dive into the NEET Blast experience to measure your mock-test momentum,
+                    unlock decade-long question insights, and track subject streaks with
+                    precision-grade analytics.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/neet-blast">
+                    <Button className="bg-gradient-to-r from-emerald-500 to-teal-400 gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Explore NEET Blast
+                    </Button>
+                  </Link>
+                  <Link href="/mock-tests">
+                    <Button variant="outline" className="gap-2 border-white/30 text-white">
+                      <Award className="h-4 w-4" />
+                      Start Mock Test
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="syllabus" className="py-20">
           <div className="container mx-auto px-4">
             <motion.div
@@ -422,7 +538,7 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Complete coverage of Class 11 and Class 12 syllabus as per the latest NTA guidelines. 
+                Complete coverage of Class 11 and Class 12 syllabus as per the latest NTA guidelines.
                 Every chapter, every concept, every question type covered.
               </p>
             </motion.div>
@@ -471,7 +587,7 @@ export default function Home() {
               transition={{ delay: 0.3, duration: 0.5 }}
               className="text-center mt-10"
             >
-              <Link href="/enroll">
+              <Link href="/pricing">
                 <Button variant="outline" size="lg" className="gap-2" data-testid="button-view-syllabus">
                   View Complete Syllabus
                   <ArrowRight className="h-4 w-4" />
@@ -585,6 +701,66 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="py-20 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="grid gap-8 md:grid-cols-2 items-center"
+            >
+              <div>
+                <Badge className="mb-4" variant="secondary">
+                  New • Public preview
+                </Badge>
+                <h2 className="text-3xl font-bold mb-3">Explainer Chatbot (English/Hindi)</h2>
+                <p className="text-muted-foreground mb-4">
+                  Ask any topic, keyword, or formula. Get simple answers, quick notes, and formulas with an optional deep dive—no login required.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge variant="outline">Formulas</Badge>
+                  <Badge variant="outline">Hindi + English</Badge>
+                  <Badge variant="outline">Examples</Badge>
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/explain">
+                    <Button className="gap-2">
+                      Try the Explainer
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/pricing">
+                    <Button variant="outline">See all features</Button>
+                  </Link>
+                </div>
+              </div>
+              <Card className="border-dashed border-primary/40">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Live preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="rounded-lg border p-3 bg-muted/50 text-sm">
+                    <div className="text-xs uppercase text-muted-foreground mb-1">You</div>
+                    Explain Doppler effect in Hindi with one example
+                  </div>
+                  <div className="rounded-lg border p-3 bg-background text-sm">
+                    <div className="text-xs uppercase text-muted-foreground mb-1">Explainer</div>
+                    डॉप्लर प्रभाव वह परिवर्तन है जो तरंग के स्रोत और प्रेक्षक के सापेक्ष गतिमान होने पर आवृत्ति में दिखता है...
+                  </div>
+                  <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                    <div className="font-semibold mb-1">Formula</div>
+                    <div className="font-mono bg-background p-2 rounded">f&apos; = f (c ± vₒ) / (c ∓ vₛ)</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+
         <section className="py-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10" />
           <div className="container mx-auto px-4 relative z-10">
@@ -606,7 +782,7 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Join thousands of students already preparing for NEET with our AI-powered platform. 
+                Join thousands of students already preparing for NEET with our AI-powered platform.
                 Start free today and see the difference.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -652,7 +828,8 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/physics" className="hover:text-foreground transition-colors">Physics</Link></li>
                 <li><Link href="/chemistry" className="hover:text-foreground transition-colors">Chemistry</Link></li>
-                <li><Link href="/biology" className="hover:text-foreground transition-colors">Biology</Link></li>
+                <li><Link href="/botany" className="hover:text-foreground transition-colors">Botany</Link></li>
+                <li><Link href="/zoology" className="hover:text-foreground transition-colors">Zoology</Link></li>
               </ul>
             </div>
             <div>
@@ -677,6 +854,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </div >
   );
 }

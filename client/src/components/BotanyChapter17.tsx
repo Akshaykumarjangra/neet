@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter17() {
   // Fetch questions from database for Evolution (topicId: 81)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,7 +33,7 @@ export function BotanyChapter17() {
       id: 1,
       question: "Who proposed the theory of 'Inheritance of Acquired Characters'?",
       options: ["Darwin", "Lamarck", "Hugo de Vries", "Weismann"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Jean-Baptiste Lamarck proposed the theory of inheritance of acquired characters (Lamarckism), suggesting that organisms can pass on traits acquired during their lifetime to offspring."
     },
     {
@@ -44,21 +45,21 @@ export function BotanyChapter17() {
         "Mutation theory",
         "Germplasm theory"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Darwin's theory emphasizes 'survival of the fittest' - individuals with favorable variations survive and reproduce, passing these traits to offspring through natural selection."
     },
     {
       id: 3,
       question: "The process by which new species arise is called:",
       options: ["Evolution", "Speciation", "Natural selection", "Adaptation"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Speciation is the evolutionary process by which populations evolve to become distinct species, often through geographic isolation or reproductive isolation."
     },
     {
       id: 4,
       question: "Which of the following is an example of vestigial organ in humans?",
       options: ["Appendix", "Heart", "Liver", "Kidney"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "The appendix is a vestigial organ in humans - a structure that has lost most or all of its ancestral function through evolution but remains present."
     },
     {
@@ -70,14 +71,14 @@ export function BotanyChapter17() {
         "Parallel evolution",
         "Coevolution"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Analogous organs (similar function, different origin) like wings of birds and insects provide evidence for convergent evolution - unrelated organisms evolving similar features independently."
     },
     {
       id: 6,
       question: "The first life on Earth appeared approximately:",
       options: ["3.8 billion years ago", "1 billion years ago", "500 million years ago", "100 million years ago"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "The first life on Earth appeared approximately 3.8 billion years ago, likely in the form of simple prokaryotic cells in the primordial ocean."
     },
     {
@@ -89,7 +90,7 @@ export function BotanyChapter17() {
         "No evolution is occurring",
         "Migration is happening"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Hardy-Weinberg equilibrium occurs when no evolution is happening - allele frequencies remain constant across generations in the absence of evolutionary forces."
     },
     {
@@ -101,7 +102,7 @@ export function BotanyChapter17() {
         "Sexual selection",
         "Genetic drift"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Industrial melanism in peppered moths demonstrates natural selection - dark moths had better survival in polluted areas due to better camouflage against predators."
     }
   ];
@@ -118,7 +119,7 @@ export function BotanyChapter17() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -449,7 +450,7 @@ export function BotanyChapter17() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -469,10 +470,10 @@ export function BotanyChapter17() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

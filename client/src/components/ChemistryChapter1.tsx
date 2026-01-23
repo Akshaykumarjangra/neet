@@ -167,16 +167,16 @@ export function ChemistryChapter1() {
 
   const practiceQuestions = dbQuestions || [];
 
-  
 
-  
+
+
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleAnswerSelect = (questionId: number, answerId: string) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: answerId }));
   };
 
   const checkAnswers = () => {
@@ -188,12 +188,10 @@ export function ChemistryChapter1() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answerId]) => {
+    const question = practiceQuestions.find(q => q.id === Number(qId));
+    return question && answerId === question.correctAnswer;
+  }).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -223,7 +221,7 @@ export function ChemistryChapter1() {
             <Play className="h-4 w-4 mr-2" />
             Simulations
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Zap className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -374,11 +372,11 @@ export function ChemistryChapter1() {
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ThreeDViewer 
-                title="Water Molecule (H₂O) - Molecular Structure" 
+              <ThreeDViewer
+                title="Water Molecule (H₂O) - Molecular Structure"
                 modelType="molecule"
               />
-              
+
               <div className="grid md:grid-cols-2 gap-4">
                 <Card className="border-purple-500/20">
                   <CardHeader>
@@ -495,97 +493,13 @@ export function ChemistryChapter1() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="practice" className="space-y-6">
-          {questionsLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mr-3" />
-                <span>Loading questions from database...</span>
-              </CardContent>
-            </Card>
-          ) : practiceQuestions.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center text-muted-foreground">
-                <p>No questions available for this chapter yet.</p>
-              </CardContent>
-            </Card>
-          ) : (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Practice Questions</CardTitle>
-                {showSolutions && (
-                  <Badge variant={score >= 12 ? "default" : score >= 8 ? "secondary" : "destructive"}>
-                    Score: {score}/{practiceQuestions.length}
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {practiceQuestions.map((q, index) => (
-                <Card key={q.id} className="border-purple-500/20">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <Badge variant="outline" className="mb-2">{q.difficultyLevel === 1 ? 'Easy' : q.difficultyLevel === 2 ? 'Medium' : 'Hard'}</Badge>
-                        <p className="font-medium">Q{index + 1}. {q.questionText}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      {q.options.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant={
-                            showSolutions
-                              ? index === q.correctAnswer
-                                ? "default"
-                                : userAnswers[q.id] === index
-                                ? "destructive"
-                                : "outline"
-                              : userAnswers[q.id] === index
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
-                          disabled={showSolutions}
-                        >
-                          <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                          {typeof option === "string" ? option : option.text}
-                        </Button>
-                      ))}
-                    </div>
-                    {showSolutions && (
-                      <div className="bg-muted p-4 rounded-lg mt-4">
-                        <p className="font-semibold mb-2 text-purple-600 dark:text-purple-400">Solution:</p>
-                        <p className="text-sm">{q.solutionDetail}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-
-              <div className="flex gap-3">
-                {!showSolutions ? (
-                  <Button 
-                    onClick={checkAnswers} 
-                    className="flex-1"
-                    disabled={Object.keys(userAnswers).length === 0}
-                  >
-                    Check Answers
-                  </Button>
-                ) : (
-                  <Button onClick={resetQuiz} variant="outline" className="flex-1">
-                    Try Again
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        
-          )}</TabsContent>
+        <TabsContent value="quiz" className="space-y-6">
+          <ChapterQuiz
+            topicId={4}
+            subject="Chemistry"
+            chapterTitle="Some Basic Concepts of Chemistry"
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );

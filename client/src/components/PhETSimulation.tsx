@@ -9,7 +9,7 @@ interface PhETSimulationProps {
   simulationId: string;
   title: string;
   description?: string;
-  subject?: "Physics" | "Chemistry" | "Biology" | "Math";
+  subject?: "Physics" | "Chemistry" | "Biology" | "Botany" | "Zoology" | "Math";
   height?: number;
 }
 
@@ -17,6 +17,8 @@ const subjectColors: Record<string, string> = {
   Physics: "bg-blue-500",
   Chemistry: "bg-purple-500",
   Biology: "bg-green-500",
+  Botany: "bg-emerald-500",
+  Zoology: "bg-orange-500",
   Math: "bg-orange-500",
 };
 

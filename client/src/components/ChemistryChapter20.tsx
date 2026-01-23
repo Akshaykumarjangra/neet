@@ -140,7 +140,7 @@ export function ChemistryChapter20() {
   const practiceQuestions = dbQuestions || [];
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
@@ -156,12 +156,10 @@ export function ChemistryChapter20() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answerId]) => {
+    const question = practiceQuestions.find(q => q.id === Number(qId));
+    return question && answerId === question.correctAnswer;
+  }).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -187,7 +185,7 @@ export function ChemistryChapter20() {
             <Atom className="h-4 w-4 mr-2" />
             3D Models
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Zap className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -321,7 +319,7 @@ export function ChemistryChapter20() {
             <CardContent className="space-y-6">
               <ThreeDViewer
                 title="Chloromethane (CH₃Cl) - Haloalkane"
-                modelType="chloromethane"
+                modelType="molecule"
               />
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -403,28 +401,33 @@ export function ChemistryChapter20() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
-                      {q.options.map((option, index) => (
+                      {q.options.map((option, index) => {
+                        const optionId = typeof option === "string" ? String(index) : option.id;
+                        const optionText = typeof option === "string" ? option : option.text;
+
+                        return (
                         <Button
                           key={index}
                           variant={
                             showSolutions
-                              ? index === q.correctAnswer
+                              ? optionId === q.correctAnswer
                                 ? "default"
-                                : userAnswers[q.id] === index
-                                  ? "destructive"
-                                  : "outline"
-                              : userAnswers[q.id] === index
-                                ? "secondary"
+                                : userAnswers[q.id] === optionId
+                                ? "destructive"
                                 : "outline"
+                              : userAnswers[q.id] === optionId
+                              ? "secondary"
+                              : "outline"
                           }
                           className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
+                          onClick={() => !showSolutions && handleAnswerSelect(q.id, optionId)}
                           disabled={showSolutions}
                         >
                           <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                          {typeof option === "string" ? option : option.text}
+                          {optionText}
                         </Button>
-                      ))}
+                        );
+                      })}
                     </div>
                     {showSolutions && (
                       <div className="bg-muted p-4 rounded-lg mt-4">

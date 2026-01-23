@@ -524,14 +524,68 @@ Develops during lifetime, specific to particular pathogens
 6. Cancer results from uncontrolled cell division; caused by carcinogens, oncogenic viruses, and genetic mutations
 7. Drug and alcohol abuse leads to addiction, organ damage, mental health issues, and social problems
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Immune System Overview',
+        description: 'Innate and adaptive components.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Inflammatory Response',
+        description: 'Injury -> cytokines -> leukocyte recruitment.'
+      },
+      {
+        type: 'table',
+        title: 'Pathogens and Diseases',
+        description: 'Bacteria, viruses, protozoa, and helminths.'
+      },
+      {
+        type: 'comparison',
+        title: 'Vaccine Types',
+        description: 'Live, killed, toxoid, and subunit.'
+      },
+      {
+        type: 'graph',
+        title: 'Antibody Titer Over Time',
+        description: 'Primary vs secondary immune response.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Human Health and Disease',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Immune System Overview',
+          description: 'Innate and adaptive components.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Inflammatory Response',
+          description: 'Injury -> cytokines -> leukocyte recruitment.'
+        },
+        {
+          type: 'table',
+          title: 'Pathogens and Diseases',
+          description: 'Bacteria, viruses, protozoa, and helminths.'
+        },
+        {
+          type: 'comparison',
+          title: 'Vaccine Types',
+          description: 'Live, killed, toxoid, and subunit.'
+        },
+        {
+          type: 'graph',
+          title: 'Antibody Titer Over Time',
+          description: 'Primary vs secondary immune response.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 8: Human Health and Disease');

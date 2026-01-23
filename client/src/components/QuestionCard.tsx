@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, ChevronRight, ChevronLeft, SkipForward, Bookmark, BookmarkCheck, Calendar } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface QuestionCardProps {
@@ -11,13 +11,15 @@ interface QuestionCardProps {
   subject: string;
   topic: string;
   question: string;
-  options: { id: string; text: string }[];
+  options: { id: string | number; label?: string; text: string }[];
   isBookmarked?: boolean;
   pyqYear?: number | null;
   onToggleBookmark?: () => void;
-  onSubmit: (answer: string) => void;
+  onSubmit: (answer: string | number) => void;
   onSkip?: () => void;
   onPrevious?: () => void;
+  selectedAnswer?: string | number | null;
+  lockOnSubmit?: boolean;
 }
 
 export function QuestionCard({
@@ -33,13 +35,25 @@ export function QuestionCard({
   onSubmit,
   onSkip,
   onPrevious,
+  selectedAnswer: selectedAnswerProp = null,
+  lockOnSubmit = true,
 }: QuestionCardProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | number | null>(selectedAnswerProp);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  useEffect(() => {
+    setSelectedAnswer(selectedAnswerProp);
+  }, [selectedAnswerProp, questionNumber]);
+
+  useEffect(() => {
+    setIsSubmitted(false);
+  }, [questionNumber]);
+
   const handleSubmit = () => {
-    if (selectedAnswer) {
-      setIsSubmitted(true);
+    if (selectedAnswer != null) {
+      if (lockOnSubmit) {
+        setIsSubmitted(true);
+      }
       onSubmit(selectedAnswer);
     }
   };
@@ -106,18 +120,18 @@ export function QuestionCard({
           <AnimatePresence mode="wait">
             {options.map((option, index) => (
               <motion.button
-                key={option.id}
+                key={String(option.id)}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                onClick={() => !isSubmitted && setSelectedAnswer(option.id)}
-                disabled={isSubmitted}
+                onClick={() => !(lockOnSubmit && isSubmitted) && setSelectedAnswer(option.id)}
+                disabled={lockOnSubmit && isSubmitted}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
                   selectedAnswer === option.id
                     ? "border-primary bg-primary/10 shadow-sm"
                     : "border-border hover:border-primary/50 hover:bg-muted/50"
-                } ${isSubmitted ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
-                data-testid={`option-${option.id.toLowerCase()}`}
+                } ${lockOnSubmit && isSubmitted ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
+                data-testid={`option-${String(option.label ?? option.id).toLowerCase()}`}
               >
                 <div className="flex items-center gap-3">
                   <span
@@ -127,7 +141,7 @@ export function QuestionCard({
                         : "border-muted-foreground/30"
                     }`}
                   >
-                    {option.id}
+                    {option.label ?? option.id}
                   </span>
                   <span className="flex-1 text-sm">{option.text}</span>
                 </div>
@@ -143,7 +157,7 @@ export function QuestionCard({
                 variant="outline"
                 size="sm"
                 onClick={onPrevious}
-                disabled={isSubmitted}
+                disabled={lockOnSubmit && isSubmitted}
                 data-testid="button-previous"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
@@ -158,7 +172,7 @@ export function QuestionCard({
                 variant="ghost"
                 size="sm"
                 onClick={onSkip}
-                disabled={isSubmitted}
+                disabled={lockOnSubmit && isSubmitted}
                 data-testid="button-skip"
               >
                 Skip
@@ -168,7 +182,7 @@ export function QuestionCard({
 
             <Button
               onClick={handleSubmit}
-              disabled={!selectedAnswer || isSubmitted}
+              disabled={selectedAnswer == null || (lockOnSubmit && isSubmitted)}
               size="sm"
               data-testid="button-submit-answer"
             >

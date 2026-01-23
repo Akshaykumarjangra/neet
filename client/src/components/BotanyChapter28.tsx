@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Scissors, TestTubes } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter28() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,35 +19,35 @@ export function BotanyChapter28() {
       id: 1,
       question: "The first restriction endonuclease discovered was:",
       options: ["EcoRI", "Hind II", "BamHI", "Pst I"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Hind II was the first restriction endonuclease discovered from Haemophilus influenzae. It recognizes and cuts specific DNA sequences."
     },
     {
       id: 2,
       question: "Which enzyme is used to join DNA fragments in recombinant DNA technology?",
       options: ["DNA polymerase", "DNA ligase", "Restriction endonuclease", "Helicase"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "DNA ligase acts as a molecular glue that joins DNA fragments by forming phosphodiester bonds between adjacent nucleotides."
     },
     {
       id: 3,
       question: "The Ti plasmid used in genetic engineering is obtained from:",
       options: ["E. coli", "Agrobacterium tumefaciens", "Bacillus thuringiensis", "Saccharomyces"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Ti (Tumor-inducing) plasmid is naturally found in Agrobacterium tumefaciens and is used as a vector for plant genetic engineering."
     },
     {
       id: 4,
       question: "PCR technique was developed by:",
       options: ["Paul Berg", "Kary Mullis", "Stanley Cohen", "Herbert Boyer"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Kary Mullis developed the Polymerase Chain Reaction (PCR) technique in 1983, for which he received the Nobel Prize in 1993."
     },
     {
       id: 5,
       question: "In gel electrophoresis, DNA moves towards:",
       options: ["Negative pole", "Positive pole", "Remains stationary", "Moves randomly"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "DNA is negatively charged due to phosphate groups in its backbone, so it moves towards the positive (anode) pole in an electric field."
     }
   ];
@@ -63,7 +64,7 @@ export function BotanyChapter28() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -434,7 +435,7 @@ export function BotanyChapter28() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -442,13 +443,13 @@ export function BotanyChapter28() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

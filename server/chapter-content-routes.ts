@@ -1,28 +1,49 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { chapterContent, insertChapterContentSchema, users, type InsertChapterContent, type ChapterContent } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  chapterContent,
+  insertChapterContentSchema,
+  users,
+  chapterContentVersions,
+  mentors,
+  contentAssets
+} from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
+
+type ChapterContentInsert = typeof chapterContent.$inferInsert;
+type ChapterContentUpdate = typeof chapterContent.$inferSelect;
 
 const router = Router();
 
+const normalizeSubject = (value?: string) => {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  const normalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+  if (normalized === "Botany" || normalized === "Zoology") {
+    return "Biology";
+  }
+  return normalized;
+};
+
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.session?.userId;
-  
+
   if (!userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
-  
+
   try {
     const [user] = await db
       .select({ isAdmin: users.isAdmin, id: users.id })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
-    
+
     if (!user || !user.isAdmin) {
       return res.status(403).json({ error: "Admin access required" });
     }
-    
+
     req.user = user;
     next();
   } catch (error) {
@@ -34,12 +55,15 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, status } = req.query;
-    
+
     let query = db.select().from(chapterContent);
-    
+
     const conditions = [];
     if (subject) {
-      conditions.push(eq(chapterContent.subject, subject as string));
+      const mappedSubject = normalizeSubject(subject as string);
+      if (mappedSubject) {
+        conditions.push(eq(chapterContent.subject, mappedSubject));
+      }
     }
     if (classLevel) {
       conditions.push(eq(chapterContent.classLevel, classLevel as string));
@@ -47,11 +71,11 @@ router.get("/", async (req: Request, res: Response) => {
     if (status) {
       conditions.push(eq(chapterContent.status, status as any));
     }
-    
+
     const chapters = conditions.length > 0
       ? await query.where(and(...conditions))
       : await query;
-    
+
     res.json(chapters);
   } catch (error) {
     console.error("Error fetching chapters:", error);
@@ -62,9 +86,9 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, chapterNumber } = req.params;
-    
-    const normalizedSubject = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
-    
+
+    const normalizedSubject = normalizeSubject(subject) ?? subject;
+
     const [chapter] = await db
       .select()
       .from(chapterContent)
@@ -76,11 +100,11 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
         )
       )
       .limit(1);
-    
+
     if (!chapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
-    
+
     res.json(chapter);
   } catch (error) {
     console.error("Error fetching chapter:", error);
@@ -91,17 +115,17 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const [chapter] = await db
       .select()
       .from(chapterContent)
       .where(eq(chapterContent.id, parseInt(id)))
       .limit(1);
-    
+
     if (!chapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
-    
+
     res.json(chapter);
   } catch (error) {
     console.error("Error fetching chapter:", error);
@@ -111,13 +135,13 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const validatedData = insertChapterContentSchema.parse(req.body) as InsertChapterContent;
-    
+    const validatedData = insertChapterContentSchema.parse(req.body) as ChapterContentInsert;
+
     const [newChapter] = await db
       .insert(chapterContent)
-      .values(validatedData)
+      .values(validatedData as ChapterContentInsert)
       .returning();
-    
+
     res.status(201).json(newChapter);
   } catch (error: any) {
     console.error("Error creating chapter:", error);
@@ -134,21 +158,21 @@ router.post("/", requireAdmin, async (req: Request, res: Response) => {
 router.put("/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const validatedData = insertChapterContentSchema.partial().parse(req.body) as Partial<InsertChapterContent>;
-    
+    const validatedData: Partial<ChapterContentInsert> = insertChapterContentSchema.partial().parse(req.body);
+
     const [updatedChapter] = await db
       .update(chapterContent)
       .set({
         ...validatedData,
         updatedAt: new Date(),
-      })
+      } as Partial<ChapterContentUpdate>)
       .where(eq(chapterContent.id, parseInt(id)))
       .returning();
-    
+
     if (!updatedChapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
-    
+
     res.json(updatedChapter);
   } catch (error: any) {
     console.error("Error updating chapter:", error);
@@ -162,16 +186,16 @@ router.put("/:id", requireAdmin, async (req: Request, res: Response) => {
 router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const [deletedChapter] = await db
       .delete(chapterContent)
       .where(eq(chapterContent.id, parseInt(id)))
       .returning();
-    
+
     if (!deletedChapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
-    
+
     res.json({ success: true, message: "Chapter deleted successfully" });
   } catch (error) {
     console.error("Error deleting chapter:", error);
@@ -179,4 +203,128 @@ router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
   }
 });
 
+router.get("/:id/assets", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const chapterId = parseInt(id);
+
+    // Optional: filter by type e.g. ?type=video
+    const { type } = req.query;
+
+    const conditions: any[] = [
+      eq(chapterContent.id, chapterId),
+      // Only show public assets or verified mentor content
+      eq(contentAssets.isPublic, true)
+    ];
+
+    if (type) {
+      conditions.push(eq(contentAssets.type, type as any));
+    }
+
+    // Join with mentors and users to get author names
+    const assets = await db
+      .select({
+        id: contentAssets.id,
+        title: contentAssets.title,
+        description: contentAssets.description,
+        type: contentAssets.type,
+        url: contentAssets.url,
+        thumbnailUrl: contentAssets.thumbnailUrl,
+        durationSeconds: contentAssets.durationSeconds,
+        pageCount: contentAssets.pageCount,
+        mentorName: users.name,
+        mentorAvatar: users.avatarUrl,
+        createdAt: contentAssets.createdAt
+      })
+      .from(contentAssets)
+      .leftJoin(chapterContent, eq(contentAssets.chapterContentId, chapterContent.id))
+      .leftJoin(mentors, eq(contentAssets.mentorId, mentors.id))
+      .leftJoin(users, eq(mentors.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(contentAssets.createdAt));
+
+    res.json(assets);
+  } catch (error) {
+    console.error("Error fetching chapter assets:", error);
+    res.status(500).json({ error: "Failed to fetch chapter assets" });
+  }
+});
+
 export default router;
+
+// Submit a new version of chapter content (Mentor/Admin)
+router.post("/:chapterId/versions", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  const user = req.user as any;
+  // Allow if admin or mentor
+  // Note: 'role' check is basic, ideally check db if not in session
+  if (!user.isAdmin && user.role !== "mentor") {
+    return res.status(403).json({ error: "Only mentors and admins can submit content updates" });
+  }
+
+  const { chapterId } = req.params;
+  const contentId = parseInt(chapterId);
+
+  if (isNaN(contentId)) {
+    return res.status(400).json({ error: "Invalid chapter ID" });
+  }
+
+  try {
+    // Verify chapter exists
+    const [chapter] = await db
+      .select()
+      .from(chapterContent)
+      .where(eq(chapterContent.id, contentId))
+      .limit(1);
+
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    const submission = req.body;
+    let mentorId = submission.mentorId;
+
+    if (user.role === 'mentor') {
+      const [mentor] = await db
+        .select()
+        .from(mentors)
+        .where(eq(mentors.userId, user.id))
+        .limit(1);
+
+      if (!mentor) {
+        return res.status(403).json({ error: "Mentor profile not found" });
+      }
+      mentorId = mentor.id;
+    } else if (!mentorId) {
+      // If admin, try to find their mentor profile or require ID
+      const [m] = await db.select().from(mentors).where(eq(mentors.userId, user.id)).limit(1);
+      mentorId = m ? m.id : null;
+    }
+
+    if (!mentorId) {
+      return res.status(400).json({ error: "Mentor ID required" });
+    }
+
+    const versionPayload: typeof chapterContentVersions.$inferInsert = {
+      chapterContentId: contentId,
+      mentorId: mentorId,
+      detailedNotes: submission.detailedNotes ?? null,
+      keyConcepts: submission.keyConcepts ?? null,
+      formulas: submission.formulas ?? null,
+      status: "pending",
+    };
+
+    const [newVersion] = await db
+      .insert(chapterContentVersions)
+      .values(versionPayload as any)
+      .returning();
+
+    res.status(201).json(newVersion);
+  } catch (error) {
+    console.error("Submit version error:", error);
+    res.status(500).json({ error: "Failed to submit version" });
+  }
+});

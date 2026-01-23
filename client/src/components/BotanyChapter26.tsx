@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Users, CheckCircle2, XCircle, Brain, TrendingUp, BarChart3 , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter26() {
   // Fetch questions from database for Environmental Issues (topicId: 90)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -37,7 +38,7 @@ export function BotanyChapter26() {
         "All plants and animals in a forest",
         "All biotic and abiotic components of a lake"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "A population consists of individuals of the same species living in a defined geographical area at a given time."
     },
     {
@@ -49,14 +50,14 @@ export function BotanyChapter26() {
         "Immigration - Emigration",
         "Carrying capacity / Population size"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Population density = Number of individuals (N) / Area (or volume). It represents the number of individuals per unit area."
     },
     {
       id: 3,
       question: "In a population showing exponential growth, the growth curve is:",
       options: ["Linear", "J-shaped", "S-shaped", "Bell-shaped"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Exponential growth produces a J-shaped curve when resources are unlimited, following the equation dN/dt = rN."
     },
     {
@@ -68,14 +69,14 @@ export function BotanyChapter26() {
         "Minimum population size for survival",
         "Rate of immigration"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Carrying capacity is the maximum population size that an environment can sustain indefinitely given available resources."
     },
     {
       id: 5,
       question: "Which interaction benefits both species involved?",
       options: ["Predation", "Parasitism", "Mutualism", "Competition"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Mutualism is an interaction where both species benefit. Examples include pollination, lichens, and mycorrhizae."
     }
   ];
@@ -92,7 +93,7 @@ export function BotanyChapter26() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -404,7 +405,7 @@ export function BotanyChapter26() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -424,10 +425,10 @@ export function BotanyChapter26() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

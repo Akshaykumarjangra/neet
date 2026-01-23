@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Microscope, CheckCircle2, XCircle, Brain, Droplets, Factory } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter34() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -17,63 +18,63 @@ export function BotanyChapter34() {
       id: 1,
       question: "Which microorganism is used in the production of citric acid?",
       options: ["Aspergillus niger", "Lactobacillus", "Penicillium", "Rhizobium"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Aspergillus niger is a fungus widely used in industrial production of citric acid through fermentation processes."
     },
     {
       id: 2,
       question: "The 'Ganga Action Plan' uses which bacteria for sewage treatment?",
       options: ["E. coli", "Bacillus subtilis", "Streptococcus", "Anabaena"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Bacillus subtilis and other heterotrophic bacteria are used in bioremediation and sewage treatment to decompose organic matter."
     },
     {
       id: 3,
       question: "Cyclosporin A, an immunosuppressant drug, is produced by:",
       options: ["Trichoderma polysporum", "Penicillium notatum", "Aspergillus niger", "Monascus purpureus"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Cyclosporin A is obtained from the fungus Trichoderma polysporum and is used to suppress immune reactions in organ transplant patients."
     },
     {
       id: 4,
       question: "Swiss cheese gets its characteristic large holes due to production of:",
       options: ["Lactic acid", "Carbon dioxide", "Methane", "Ethanol"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Propionibacterium shermanii produces large amounts of CO₂ during fermentation, creating the characteristic holes in Swiss cheese."
     },
     {
       id: 5,
       question: "Which of the following is a nitrogen-fixing cyanobacterium?",
       options: ["Rhizobium", "Nostoc", "Azotobacter", "Clostridium"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Nostoc is a cyanobacterium (blue-green alga) capable of fixing atmospheric nitrogen, often found in symbiotic associations."
     },
     {
       id: 6,
       question: "Statins used to lower blood cholesterol are produced by:",
       options: ["Monascus purpureus", "Lactobacillus", "Streptococcus", "Saccharomyces"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Statins are produced by the yeast Monascus purpureus and act as competitive inhibitors of the enzyme HMG-CoA reductase involved in cholesterol synthesis."
     },
     {
       id: 7,
       question: "The insecticide 'Bt toxin' is produced by:",
       options: ["Bacillus thuringiensis", "Pseudomonas", "Trichoderma", "Agrobacterium"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Bacillus thuringiensis produces Bt toxin (cry proteins) that are toxic to specific insects, used in biological pest control and GM crops."
     },
     {
       id: 8,
       question: "Methanogens are found in:",
       options: ["Acidic soils", "Rumen of cattle", "Ocean surface", "Desert sand"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Methanogens are archaebacteria found in anaerobic environments like cattle rumen and biogas plants, where they produce methane from organic matter."
     },
     {
       id: 9,
       question: "Which microbe is used in production of streptokinase (clot buster)?",
       options: ["Streptococcus", "Clostridium", "Lactobacillus", "Azotobacter"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Streptokinase is produced by Streptococcus and is used as a 'clot buster' to dissolve blood clots in patients with myocardial infarction."
     },
     {
@@ -85,7 +86,7 @@ export function BotanyChapter34() {
         "Chemical oxygen demand",
         "Dissolved oxygen"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "BOD is the amount of oxygen required by aerobic microorganisms to decompose organic matter in water. High BOD indicates high pollution levels."
     }
   ];
@@ -102,7 +103,7 @@ export function BotanyChapter34() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -620,7 +621,7 @@ export function BotanyChapter34() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -628,13 +629,13 @@ export function BotanyChapter34() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

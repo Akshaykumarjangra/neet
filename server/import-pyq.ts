@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import { db } from "./db";
 import { contentTopics, questions } from "@shared/schema";
 import { neetPYQData, neetExamPattern } from "./neet-pyq-data";

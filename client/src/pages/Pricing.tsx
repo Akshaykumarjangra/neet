@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,10 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 import type { SubscriptionPlan } from "@shared/schema";
+import { Seo } from "@/components/Seo";
+import { apiRequest } from "@/lib/queryClient";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -74,6 +77,8 @@ const features: PlanFeature[] = [
 ];
 
 interface DisplayPlan {
+  planId?: number | string | null;
+  planType?: "free" | "premium" | "organization";
   name: string;
   slug: string;
   description: string;
@@ -84,10 +89,18 @@ interface DisplayPlan {
   buttonVariant: "outline" | "default" | "secondary";
   popular: boolean;
   features: string[];
+  currency?: string;
+  displayPrice?: string;
+  displayPeriod?: string;
+  billingNote?: string;
+  ctaLabel?: string;
+  intervalOverride?: "monthly" | "yearly" | "quarterly";
 }
 
 const fallbackPlans: DisplayPlan[] = [
   {
+    planId: null,
+    planType: "free",
     name: "Free",
     slug: "free",
     description: "Get started with basic NEET preparation",
@@ -106,11 +119,13 @@ const fallbackPlans: DisplayPlan[] = [
     ],
   },
   {
-    name: "Premium",
-    slug: "premium",
-    description: "Complete NEET preparation for serious aspirants",
-    priceMonthly: 999,
-    priceYearly: 7999,
+    planId: "quarterly-starter",
+    planType: "premium",
+    name: "Quarterly Starter",
+    slug: "quarterly-starter",
+    description: "Complete NEET preparation with a budget-friendly quarterly plan",
+    priceMonthly: 333,
+    priceYearly: null,
     icon: Crown,
     color: "from-purple-500 to-pink-500",
     buttonVariant: "default",
@@ -125,8 +140,16 @@ const fallbackPlans: DisplayPlan[] = [
       "Priority doubt support",
       "Downloadable materials",
     ],
+    currency: "INR",
+    displayPrice: "₹1,000",
+    displayPeriod: "/ 3 months (best value)",
+    billingNote: "₹1,000 billed every 3 months. Cancel anytime.",
+    ctaLabel: "Start at ₹1,000 / 3mo",
+    intervalOverride: "quarterly",
   },
   {
+    planId: null,
+    planType: "organization",
     name: "Organization",
     slug: "organization",
     description: "For schools, coaching centers & institutions",
@@ -181,6 +204,8 @@ const getPlanConfig = (planType: string): { icon: LucideIcon; color: string; but
 const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
   const config = getPlanConfig(apiPlan.planType);
   return {
+    planId: apiPlan.id,
+    planType: apiPlan.planType as "free" | "premium" | "organization",
     name: apiPlan.name,
     slug: apiPlan.slug,
     description: apiPlan.description || "",
@@ -191,6 +216,7 @@ const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
     buttonVariant: config.buttonVariant,
     popular: apiPlan.isPopular,
     features: apiPlan.features || [],
+    currency: apiPlan.currency || "INR",
   };
 };
 
@@ -226,27 +252,30 @@ function PlanCardSkeleton() {
 export default function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [, navigate] = useLocation();
+  const { user } = useAuth();
 
-  const { data: apiPlans, isLoading, isError } = useQuery<SubscriptionPlan[]>({
+  const { data: apiPlans = [], isLoading, isError } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
-    queryFn: async () => {
-      const response = await fetch("/api/subscription-plans");
-      if (!response.ok) {
-        throw new Error("Failed to fetch subscription plans");
-      }
-      return response.json();
-    },
+    queryFn: async () => apiRequest("GET", "/api/subscription-plans"),
     staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const plans: DisplayPlan[] = apiPlans && apiPlans.length > 0
     ? apiPlans.map(transformApiPlan)
     : fallbackPlans;
 
+  const formatINR = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  });
+
   const formatPrice = (price: number | null) => {
     if (price === null) return "Custom";
     if (price === 0) return "Free";
-    return `₹${price.toLocaleString("en-IN")}`;
+    return formatINR.format(price);
   };
 
   const renderFeatureValue = (value: boolean | string) => {
@@ -261,6 +290,10 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Pricing | NEET Prep"
+        description="Choose the right NEET prep plan: start free, quarterly at ₹1,000/3 months, or talk to sales for institutions."
+      />
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/">
@@ -317,6 +350,9 @@ export default function Pricing() {
               </Badge>
             </Label>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Quarterly Starter is ₹1,000 billed every 3 months (best value). Yearly toggle applies to other plans.
+          </p>
         </motion.div>
 
         {isError && (
@@ -336,7 +372,7 @@ export default function Pricing() {
           </motion.div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto mb-16">
+        <div className="grid gap-8 md:gap-6 md:grid-cols-3 max-w-6xl mx-auto mb-16">
           {isLoading ? (
             <>
               <PlanCardSkeleton />
@@ -352,17 +388,16 @@ export default function Pricing() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card
-                  className={`relative h-full flex flex-col ${
-                    plan.popular
-                      ? "border-2 border-primary shadow-xl shadow-primary/20"
-                      : ""
-                  }`}
+                  className={`relative h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${plan.popular
+                      ? "border-2 border-primary shadow-lg shadow-primary/10"
+                      : "hover:border-primary/50"
+                    }`}
                   data-testid={`card-plan-${plan.slug}`}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 w-max">
+                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 shadow-md text-sm">
+                        <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
                         Most Popular
                       </Badge>
                     </div>
@@ -378,20 +413,38 @@ export default function Pricing() {
                   </CardHeader>
                   <CardContent className="flex-1">
                     <div className="text-center mb-6">
-                      <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-4xl font-bold">
-                          {formatPrice(isYearly ? plan.priceYearly : plan.priceMonthly)}
-                        </span>
-                        {plan.priceMonthly !== null && plan.priceMonthly > 0 && (
-                          <span className="text-muted-foreground">
-                            /{isYearly ? "year" : "month"}
-                          </span>
-                        )}
-                      </div>
-                      {isYearly && plan.priceMonthly && plan.priceMonthly > 0 && plan.priceYearly && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          ₹{Math.round(plan.priceYearly / 12)}/month billed yearly
-                        </p>
+                      {plan.displayPrice ? (
+                        <>
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-4xl font-bold">
+                              {plan.displayPrice}
+                            </span>
+                            {plan.displayPeriod && (
+                              <span className="text-muted-foreground">{plan.displayPeriod}</span>
+                            )}
+                          </div>
+                          {plan.billingNote && (
+                            <p className="text-sm text-muted-foreground mt-1">{plan.billingNote}</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-4xl font-bold">
+                              {formatPrice(isYearly ? plan.priceYearly : plan.priceMonthly)}
+                            </span>
+                            {plan.priceMonthly !== null && plan.priceMonthly > 0 && (
+                              <span className="text-muted-foreground">
+                                /{isYearly ? "year" : "month"}
+                              </span>
+                            )}
+                          </div>
+                          {isYearly && plan.priceMonthly && plan.priceMonthly > 0 && plan.priceYearly && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              ₹{Math.round(plan.priceYearly / 12)}/month billed yearly
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
 
@@ -406,14 +459,29 @@ export default function Pricing() {
                   </CardContent>
                   <CardFooter>
                     <Button
-                      className={`w-full ${
-                        plan.popular
+                      className={`w-full ${plan.popular
                           ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
                           : ""
-                      }`}
+                        }`}
                       variant={plan.buttonVariant}
                       size="lg"
                       data-testid={`button-select-${plan.slug}`}
+                      onClick={() => {
+                        if (plan.priceMonthly === null || plan.planType === "organization") {
+                          navigate("/contact");
+                          return;
+                        }
+                        if (plan.priceMonthly === 0) {
+                          navigate("/signup");
+                          return;
+                        }
+                        const interval = plan.intervalOverride ?? (isYearly ? "yearly" : "monthly");
+                        if (user) {
+                          navigate(`/checkout?plan=${plan.slug}&interval=${interval}`);
+                        } else {
+                          navigate(`/signup?redirect=${encodeURIComponent(`/checkout?plan=${plan.slug}&interval=${interval}`)}`);
+                        }
+                      }}
                     >
                       {plan.priceMonthly === null ? (
                         <>Contact Sales</>
@@ -421,7 +489,7 @@ export default function Pricing() {
                         <>Get Started Free</>
                       ) : (
                         <>
-                          Start Free Trial
+                          {plan.ctaLabel ?? "Start Free Trial"}
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </>
                       )}
@@ -595,3 +663,5 @@ export default function Pricing() {
     </div>
   );
 }
+
+

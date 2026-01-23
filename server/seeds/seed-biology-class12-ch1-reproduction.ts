@@ -487,7 +487,39 @@ async function seedBiologyClass12Chapter1() {
       chapterTitle: 'Reproduction in Organisms',
       estimatedStudyMinutes: 300,
       difficultyLevel: 3,
-      status: 'published'
+      status: 'published',
+      visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Binary Fission in Amoeba',
+        description: 'Step-by-step division process showing nuclear and cytoplasmic division'
+      },
+      {
+        type: 'diagram',
+        title: 'Budding in Yeast',
+        description: 'Parent cell with bud formation and detachment'
+      },
+      {
+        type: 'comparison',
+        title: 'Asexual vs Sexual Reproduction',
+        description: 'Comparison of characteristics, advantages, and examples'
+      },
+      {
+        type: 'diagram',
+        title: 'Types of Gametes',
+        description: 'Isogamy, anisogamy, and oogamy illustrations'
+      },
+      {
+        type: 'flowchart',
+        title: 'Events in Sexual Reproduction',
+        description: 'Pre-fertilization → Fertilization → Post-fertilization'
+      },
+      {
+        type: 'diagram',
+        title: 'Vegetative Propagation Methods',
+        description: 'Runners, rhizomes, tubers, bulbs, cuttings, grafting'
+      }
+    ]
     }
   });
 

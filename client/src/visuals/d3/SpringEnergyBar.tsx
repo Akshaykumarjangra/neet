@@ -66,7 +66,7 @@ export default function SpringEnergyBar() {
     // Y-axis for energy
     energyGroup
       .append("g")
-      .call(d3.axisLeft(yScale).ticks(5).tickFormat(d => `${d.toFixed(1)}J`))
+      .call(d3.axisLeft(yScale).ticks(5).tickFormat((d) => `${Number(d).toFixed(1)}J`))
       .style("color", "#64748b");
 
     // Energy bars placeholders

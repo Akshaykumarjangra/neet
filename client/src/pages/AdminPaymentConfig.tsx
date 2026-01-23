@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { Header } from "@/components/Header";
 import {
   CreditCard,
   Settings,
@@ -244,8 +245,9 @@ export default function AdminPaymentConfig() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <header className="border-b sticky top-0 bg-background z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin">
               <Button variant="ghost" size="icon" data-testid="button-back-admin">
@@ -334,13 +336,13 @@ export default function AdminPaymentConfig() {
                     Create Plan
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl w-[calc(100%-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New Plan</DialogTitle>
                     <DialogDescription>Add a new subscription plan for your users</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Plan Name</Label>
                         <Input
@@ -369,7 +371,7 @@ export default function AdminPaymentConfig() {
                         data-testid="input-new-plan-description"
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>Plan Type</Label>
                         <Select value={newPlan.planType} onValueChange={(v) => setNewPlan({ ...newPlan, planType: v })}>
@@ -410,7 +412,7 @@ export default function AdminPaymentConfig() {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Trial Days</Label>
                         <Input
@@ -515,13 +517,13 @@ export default function AdminPaymentConfig() {
                             Edit
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="max-w-2xl w-[calc(100%-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Edit Plan: {plan.name}</DialogTitle>
                           </DialogHeader>
                           {editingPlan && editingPlan.id === plan.id && (
                             <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label>Plan Name</Label>
                                   <Input
@@ -543,7 +545,7 @@ export default function AdminPaymentConfig() {
                                   data-testid="input-edit-plan-description"
                                 />
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label>Monthly Price (paise)</Label>
                                   <Input
@@ -569,7 +571,7 @@ export default function AdminPaymentConfig() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label>Trial Days</Label>
                                   <Input

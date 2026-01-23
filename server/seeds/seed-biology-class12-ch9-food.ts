@@ -299,14 +299,68 @@ Mating between unrelated animals
 6. Biofortification enhances nutritional quality of crops (iron, vitamin A, protein)
 7. Tissue culture enables rapid multiplication and production of disease-free plants through totipotency
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Plant Breeding Cycle',
+        description: 'Selection -> crossing -> evaluation.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Animal Husbandry Pipeline',
+        description: 'Breed selection -> feeding -> disease control.'
+      },
+      {
+        type: 'table',
+        title: 'High Yield Varieties',
+        description: 'Crop traits and examples.'
+      },
+      {
+        type: 'comparison',
+        title: 'Traditional vs Modern Breeding',
+        description: 'Techniques and outcomes.'
+      },
+      {
+        type: 'graph',
+        title: 'Yield vs Input',
+        description: 'Productivity changes with inputs.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Strategies for Enhancement in Food Production',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Plant Breeding Cycle',
+          description: 'Selection -> crossing -> evaluation.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Animal Husbandry Pipeline',
+          description: 'Breed selection -> feeding -> disease control.'
+        },
+        {
+          type: 'table',
+          title: 'High Yield Varieties',
+          description: 'Crop traits and examples.'
+        },
+        {
+          type: 'comparison',
+          title: 'Traditional vs Modern Breeding',
+          description: 'Techniques and outcomes.'
+        },
+        {
+          type: 'graph',
+          title: 'Yield vs Input',
+          description: 'Productivity changes with inputs.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 9: Strategies for Enhancement in Food Production');

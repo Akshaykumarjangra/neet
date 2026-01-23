@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Flower, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter12() {
   // Fetch questions from database for Plant Growth and Development (topicId: 76)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,14 +33,14 @@ export function BotanyChapter12() {
       id: 1,
       question: "In which part of the flower does microsporogenesis occur?",
       options: ["Ovary", "Anther", "Stigma", "Style"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Microsporogenesis (formation of microspores/pollen grains) occurs in the anther, specifically within the pollen sacs (microsporangia)."
     },
     {
       id: 2,
       question: "The functional megaspore in angiosperms is:",
       options: ["First megaspore", "Second megaspore", "Third megaspore", "Fourth megaspore (chalazal)"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "In most angiosperms, the chalazal megaspore (fourth one, farthest from the micropyle) is functional and develops into the embryo sac, while the other three degenerate."
     },
     {
@@ -51,56 +52,56 @@ export function BotanyChapter12() {
         "Two endosperms",
         "Embryo and seed coat"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Double fertilization involves: (1) one male gamete fusing with egg to form zygote (embryo), and (2) another male gamete fusing with two polar nuclei to form primary endosperm nucleus (3n endosperm)."
     },
     {
       id: 4,
       question: "The mature embryo sac of angiosperms is typically:",
       options: ["4-nucleate", "6-nucleate", "7-nucleate", "8-nucleate"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The mature embryo sac (female gametophyte) is 7-celled and 8-nucleate: 3 antipodal cells, 1 egg cell, 2 synergids, and 1 central cell with 2 polar nuclei."
     },
     {
       id: 5,
       question: "Filiform apparatus is present in:",
       options: ["Antipodal cells", "Synergids", "Egg cell", "Central cell"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The filiform apparatus is a finger-like projection at the micropylar end of synergid cells that helps guide the pollen tube toward the egg cell."
     },
     {
       id: 6,
       question: "The outer covering of the ovule is called:",
       options: ["Nucellus", "Integument", "Chalaza", "Funicle"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The integuments are the outer protective layers of the ovule. Most angiosperms have two integuments (bitegmic), which later develop into the seed coat."
     },
     {
       id: 7,
       question: "In a mature pollen grain, the vegetative cell is:",
       options: ["Smaller with dense cytoplasm", "Larger with abundant food reserve", "Absent", "Equal to generative cell"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The vegetative cell is larger and has abundant food reserves and a large irregular nucleus. It forms the pollen tube during germination."
     },
     {
       id: 8,
       question: "Polyembryony is commonly observed in:",
       options: ["Mango", "Citrus", "Rice", "Wheat"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Polyembryony (formation of multiple embryos in a single seed) is commonly observed in Citrus due to formation of nucellar embryos in addition to zygotic embryo."
     },
     {
       id: 9,
       question: "The phenomenon of development of fruit without fertilization is called:",
       options: ["Apomixis", "Parthenocarpy", "Parthenogenesis", "Apogamy"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Parthenocarpy is the development of fruit without fertilization, resulting in seedless fruits. Examples: banana, pineapple, grapes."
     },
     {
       id: 10,
       question: "Perisperm is the remnant of:",
       options: ["Nucellus", "Integument", "Endosperm", "Embryo sac"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Perisperm is the persistent nucellus in some seeds (e.g., black pepper, beet) that stores food. It's different from endosperm which develops after fertilization."
     }
   ];
@@ -117,7 +118,7 @@ export function BotanyChapter12() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -480,7 +481,7 @@ export function BotanyChapter12() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -500,10 +501,10 @@ export function BotanyChapter12() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

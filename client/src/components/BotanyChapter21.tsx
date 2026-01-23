@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Users, CheckCircle2, XCircle, Brain, Lightbulb, TreePine, TrendingUp , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter21() {
   // Fetch questions from database for Biotechnology Principles and Processes (topicId: 85)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,28 +33,28 @@ export function BotanyChapter21() {
       id: 1,
       question: "The interaction between two species where one is benefited and the other is harmed is:",
       options: ["Mutualism", "Parasitism", "Commensalism", "Competition"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Parasitism is an interaction where one organism (parasite) benefits at the expense of another (host)."
     },
     {
       id: 2,
       question: "The population growth curve that shows carrying capacity is:",
       options: ["J-shaped", "S-shaped (Sigmoid)", "Linear", "Exponential"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "S-shaped or sigmoid growth curve shows logistic growth with carrying capacity (K), where growth slows as population approaches K."
     },
     {
       id: 3,
       question: "Which is NOT an ectoparasite?",
       options: ["Lice", "Ticks", "Tapeworm", "Mosquito"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Tapeworm is an endoparasite that lives inside the host's intestine. Lice, ticks, and mosquitoes are ectoparasites."
     },
     {
       id: 4,
       question: "The formula for population density is:",
       options: ["N/S", "B+I/D+E", "dN/dt = rN", "Nt = N0e^rt"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Population density = N/S, where N is population size and S is the area or volume occupied."
     },
     {
@@ -65,28 +66,28 @@ export function BotanyChapter21() {
         "Organisms maintain constant body temperature",
         "Population grows exponentially"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Allen's Rule states that mammals in colder climates have shorter ears and limbs to minimize heat loss."
     },
     {
       id: 6,
       question: "Mycorrhizae represent which type of interaction?",
       options: ["Mutualism", "Parasitism", "Commensalism", "Amensalism"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Mycorrhizae is a mutualistic association between fungi and plant roots where both benefit - fungi get food, plants get water and minerals."
     },
     {
       id: 7,
       question: "The maximum number of individuals that an environment can support is:",
       options: ["Biotic potential", "Carrying capacity", "Population density", "Natality"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Carrying capacity (K) is the maximum population size that an environment can sustain indefinitely."
     },
     {
       id: 8,
       question: "Brood parasitism is shown by:",
       options: ["Cuckoo bird", "Plasmodium", "Cuscuta", "Orobanche"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Cuckoo bird lays eggs in the nest of other birds (like crow), which is called brood parasitism."
     }
   ];
@@ -103,7 +104,7 @@ export function BotanyChapter21() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -616,7 +617,7 @@ export function BotanyChapter21() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -636,10 +637,10 @@ export function BotanyChapter21() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

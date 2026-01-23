@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,11 +26,14 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
+  role: z.enum(["student", "mentor"]).default("student"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -42,6 +45,11 @@ export default function Signup() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const redirectParam = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const value = new URLSearchParams(window.location.search).get("redirect");
+    return value && value.startsWith("/") ? value : null;
+  }, []);
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -50,6 +58,7 @@ export default function Signup() {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "student",
     },
   });
 
@@ -64,7 +73,11 @@ export default function Signup() {
         title: "Account created",
         description: "Welcome to NEET Prep! Let's start studying.",
       });
-      setLocation("/dashboard");
+      if (redirectParam) {
+        setLocation(redirectParam);
+      } else {
+        setLocation("/dashboard");
+      }
     },
     onError: (error: any) => {
       toast({
@@ -93,7 +106,7 @@ export default function Signup() {
             Create Account
           </CardTitle>
           <CardDescription className="text-center">
-            Start your NEET preparation journey today
+            Create your NEET Prep account to start learning.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -178,6 +191,41 @@ export default function Signup() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>I am a...</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="student" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Student (Prepare for NEET)
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="mentor" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Mentor (Help students learn)
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 data-testid="button-signup"
                 type="submit"
@@ -192,7 +240,7 @@ export default function Signup() {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login">
+            <Link href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login"}>
               <a data-testid="link-login" className="text-primary hover:underline font-medium">
                 Log in
               </a>

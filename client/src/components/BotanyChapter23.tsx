@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CloudRain, CheckCircle2, XCircle, Brain, Lightbulb, AlertTriangle, Recycle , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter23() {
   // Fetch questions from database for Organisms and Populations (topicId: 87)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -37,7 +38,7 @@ export function BotanyChapter23() {
         "Carbon dioxide",
         "Argon"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Carbon dioxide (CO₂) is a major greenhouse gas that traps heat in the atmosphere, contributing to global warming. Other greenhouse gases include methane, nitrous oxide, and water vapor."
     },
     {
@@ -49,7 +50,7 @@ export function BotanyChapter23() {
         "Sulfur dioxide",
         "Carbon monoxide"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Chlorofluorocarbons (CFCs) are the primary cause of ozone layer depletion. When CFCs reach the stratosphere, UV radiation breaks them down, releasing chlorine atoms that catalytically destroy ozone molecules."
     },
     {
@@ -61,7 +62,7 @@ export function BotanyChapter23() {
         "Soil pollution",
         "Noise pollution"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "BOD measures the amount of dissolved oxygen needed by aerobic organisms to decompose organic matter in water. High BOD indicates high organic pollution and low water quality."
     },
     {
@@ -73,7 +74,7 @@ export function BotanyChapter23() {
         "CH₄ and N₂",
         "O₃ and Cl₂"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Sulfur dioxide (SO₂) and nitrogen oxides (NO₂) react with water in the atmosphere to form sulfuric acid and nitric acid, causing acid rain with pH less than 5.6."
     },
     {
@@ -85,7 +86,7 @@ export function BotanyChapter23() {
         "Heavy metals",
         "Pesticides"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Eutrophication is nutrient enrichment of water bodies, primarily by nitrogen and phosphorus from agricultural runoff and sewage. This leads to excessive algal growth (algal bloom) and oxygen depletion."
     },
     {
@@ -97,7 +98,7 @@ export function BotanyChapter23() {
         "Biodiversity conservation",
         "Nuclear weapons"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The Montreal Protocol (1987) is an international treaty to phase out substances that deplete the ozone layer, particularly CFCs. It is considered one of the most successful environmental agreements."
     },
     {
@@ -109,7 +110,7 @@ export function BotanyChapter23() {
         "Blue baby syndrome",
         "Itai-itai disease"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Minamata disease is caused by mercury poisoning through biomagnification in the food chain. It was first discovered in Minamata, Japan, where people consumed fish contaminated with methylmercury."
     },
     {
@@ -121,7 +122,7 @@ export function BotanyChapter23() {
         "Radioactive waste",
         "Biological pollutants"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Electrostatic precipitators use electrical charge to remove particulate matter (dust, smoke) from industrial exhaust. Particles are charged and collected on oppositely charged plates, achieving over 99% efficiency."
     }
   ];
@@ -138,7 +139,7 @@ export function BotanyChapter23() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -700,7 +701,7 @@ export function BotanyChapter23() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -720,10 +721,10 @@ export function BotanyChapter23() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

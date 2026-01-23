@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sprout, Sun, Droplet, Leaf, Activity, TestTubes , Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 const growthOverview = {
   definition: "Irreversible permanent increase in size, weight, and number of cells accompanied by metabolic processes",
   phases: [
@@ -406,7 +407,7 @@ export function BotanyChapter11() {
             <Sprout className="h-4 w-4 mr-2" />
             Movements
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <TestTubes className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -662,7 +663,7 @@ export function BotanyChapter11() {
                 <AccordionTrigger className="text-left">
                   <div className="flex items-start gap-3">
                     <Badge>{idx + 1}</Badge>
-                    <span>{q.questionText}</span>
+                    <span>{getQuestionLabel(q)}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4">
@@ -670,7 +671,7 @@ export function BotanyChapter11() {
                     {q.options.map((option, oIdx) => (
                       <Card key={oIdx} className={option.startsWith(q.correct) ? "border-green-500/50 bg-green-500/10" : ""}>
                         <CardContent className="pt-4">
-                          <p className="text-sm">{typeof option === "string" ? option : option.text}</p>
+                          <p className="text-sm">{getOptionLabel(option)}</p>
                         </CardContent>
                       </Card>
                     ))}

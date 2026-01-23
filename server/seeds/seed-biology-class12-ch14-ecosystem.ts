@@ -412,14 +412,68 @@ Shows energy content at each trophic level
 6. Phosphorus cycle lacks gaseous phase; reservoir is rocks and sediments
 7. Ecological succession progresses from pioneer species to climax community; primary succession starts on bare rock, secondary on disturbed soil
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Ecosystem Structure',
+        description: 'Biotic and abiotic components.'
+      },
+      {
+        type: 'graph',
+        title: 'Energy Pyramid',
+        description: 'Energy flow across trophic levels.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Nutrient Cycles',
+        description: 'Carbon and nitrogen circulation.'
+      },
+      {
+        type: 'comparison',
+        title: 'Food Chain vs Food Web',
+        description: 'Linear vs network feeding links.'
+      },
+      {
+        type: 'table',
+        title: 'Productivity Types',
+        description: 'GPP, NPP, and secondary productivity.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Ecosystem',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Ecosystem Structure',
+          description: 'Biotic and abiotic components.'
+        },
+        {
+          type: 'graph',
+          title: 'Energy Pyramid',
+          description: 'Energy flow across trophic levels.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Nutrient Cycles',
+          description: 'Carbon and nitrogen circulation.'
+        },
+        {
+          type: 'comparison',
+          title: 'Food Chain vs Food Web',
+          description: 'Linear vs network feeding links.'
+        },
+        {
+          type: 'table',
+          title: 'Productivity Types',
+          description: 'GPP, NPP, and secondary productivity.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 14: Ecosystem');

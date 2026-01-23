@@ -384,14 +384,68 @@ Using **pUC vectors**:
 6. Bioreactors provide controlled environment for large-scale production of recombinant proteins
 7. Gel electrophoresis separates DNA fragments by size using electric field through agarose gel
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Recombinant DNA Steps',
+        description: 'Cut -> ligate -> transform -> select.'
+      },
+      {
+        type: 'flowchart',
+        title: 'PCR Cycle',
+        description: 'Denaturation -> annealing -> extension.'
+      },
+      {
+        type: 'table',
+        title: 'Restriction Enzymes',
+        description: 'Name, site, and cut type.'
+      },
+      {
+        type: 'comparison',
+        title: 'Plasmid vs Viral Vectors',
+        description: 'Capacity and delivery differences.'
+      },
+      {
+        type: 'diagram',
+        title: 'Gel Electrophoresis',
+        description: 'Separation of DNA fragments by size.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Biotechnology: Principles and Processes',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Recombinant DNA Steps',
+          description: 'Cut -> ligate -> transform -> select.'
+        },
+        {
+          type: 'flowchart',
+          title: 'PCR Cycle',
+          description: 'Denaturation -> annealing -> extension.'
+        },
+        {
+          type: 'table',
+          title: 'Restriction Enzymes',
+          description: 'Name, site, and cut type.'
+        },
+        {
+          type: 'comparison',
+          title: 'Plasmid vs Viral Vectors',
+          description: 'Capacity and delivery differences.'
+        },
+        {
+          type: 'diagram',
+          title: 'Gel Electrophoresis',
+          description: 'Separation of DNA fragments by size.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 11: Biotechnology: Principles and Processes');

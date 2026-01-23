@@ -149,11 +149,11 @@ export function ChemistryChapter13() {
   const practiceQuestions = dbQuestions || [];
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleAnswerSelect = (questionId: number, answerId: string) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: answerId }));
   };
 
   const checkAnswers = () => {
@@ -165,12 +165,10 @@ export function ChemistryChapter13() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answerId]) => {
+    const question = practiceQuestions.find(q => q.id === Number(qId));
+    return question && answerId === question.correctAnswer;
+  }).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -192,7 +190,7 @@ export function ChemistryChapter13() {
             <Lightbulb className="h-4 w-4 mr-2" />
             Topics
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Calculator className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -416,26 +414,31 @@ export function ChemistryChapter13() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
-                      {q.options.map((option, idx) => (
+                      {q.options.map((option, idx) => {
+                        const optionId = typeof option === "string" ? String.fromCharCode(65 + idx) : option.id;
+                        const optionText = typeof option === "string" ? option : option.text;
+
+                        return (
                         <div
                           key={idx}
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, String.fromCharCode(65 + idx))}
+                          onClick={() => !showSolutions && handleAnswerSelect(q.id, optionId)}
                           className={`p-3 rounded-lg border cursor-pointer transition-all ${
                             showSolutions
-                              ? String.fromCharCode(65 + idx) === q.correctAnswer
+                              ? optionId === q.correctAnswer
                                 ? 'bg-green-100 border-green-500 dark:bg-green-900/20'
-                                : userAnswers[q.id] === String.fromCharCode(65 + idx)
+                                : userAnswers[q.id] === optionId
                                   ? 'bg-red-100 border-red-500 dark:bg-red-900/20'
                                   : ''
-                              : userAnswers[q.id] === String.fromCharCode(65 + idx)
+                              : userAnswers[q.id] === optionId
                                 ? 'bg-primary/10 border-primary'
                                 : 'hover:bg-muted'
                           }`}
                         >
                           <span className="font-semibold mr-2">{String.fromCharCode(65 + idx)}.</span>
-                          {typeof option === "string" ? option : option.text}
+                          {optionText}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {showSolutions && (

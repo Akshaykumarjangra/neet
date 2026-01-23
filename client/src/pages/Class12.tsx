@@ -15,6 +15,8 @@ import {
   Eye,
   FlaskConical,
   Microscope,
+  Leaf,
+  Bug,
   ChevronDown,
   ChevronUp,
   Lightbulb,
@@ -23,6 +25,7 @@ import {
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { categorizeBiologyChapter } from "@/lib/biologySections";
 
 interface KeyConcept {
   title: string;
@@ -47,10 +50,12 @@ interface ChapterContent {
   lastAccessed: string | null;
 }
 
+type Class12Subject = "All" | "Physics" | "Chemistry" | "Botany" | "Zoology";
+
 export default function Class12() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSubject, setActiveSubject] = useState<"All" | "Physics" | "Chemistry" | "Biology">("All");
+  const [activeSubject, setActiveSubject] = useState<Class12Subject>("All");
   const [filterDifficulty, setFilterDifficulty] = useState<string>("All");
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
   const prefersReducedMotion = useReducedMotion();
@@ -84,7 +89,16 @@ export default function Class12() {
       chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chapter.introduction.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesSubject = activeSubject === "All" || chapter.subject === activeSubject;
+    const matchesSubject =
+      activeSubject === "All" ||
+      (activeSubject === "Botany" || activeSubject === "Zoology"
+        ? chapter.subject === "Biology" &&
+          categorizeBiologyChapter(
+            chapter.chapterTitle,
+            chapter.chapterNumber,
+            chapter.classLevel
+          ) === activeSubject
+        : chapter.subject === activeSubject);
     const matchesDifficulty = filterDifficulty === "All" || getDifficultyLabel(chapter.difficultyLevel) === filterDifficulty;
     
     return matchesSearch && matchesSubject && matchesDifficulty;
@@ -102,6 +116,10 @@ export default function Class12() {
         return <Sparkles className="h-4 w-4" />;
       case "Chemistry":
         return <FlaskConical className="h-4 w-4" />;
+      case "Botany":
+        return <Leaf className="h-4 w-4" />;
+      case "Zoology":
+        return <Bug className="h-4 w-4" />;
       case "Biology":
         return <Microscope className="h-4 w-4" />;
       default:
@@ -115,6 +133,10 @@ export default function Class12() {
         return "text-blue-600 dark:text-blue-400";
       case "Chemistry":
         return "text-purple-600 dark:text-purple-400";
+      case "Botany":
+        return "text-emerald-600 dark:text-emerald-400";
+      case "Zoology":
+        return "text-orange-600 dark:text-orange-400";
       case "Biology":
         return "text-green-600 dark:text-green-400";
       default:
@@ -122,13 +144,26 @@ export default function Class12() {
     }
   };
 
-  const getSubjectChapterCount = (subject: string) => {
+  const getSubjectChapterCount = (subject: Class12Subject) => {
+    if (subject === "Botany" || subject === "Zoology") {
+      return class12Chapters.filter(
+        (ch) =>
+          ch.subject === "Biology" &&
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === subject
+      ).length;
+    }
+
+    if (subject === "All") {
+      return class12Chapters.length;
+    }
+
     return class12Chapters.filter(ch => ch.subject === subject).length;
   };
 
   const physicsCount = getSubjectChapterCount("Physics");
   const chemistryCount = getSubjectChapterCount("Chemistry");
-  const biologyCount = getSubjectChapterCount("Biology");
+  const botanyCount = getSubjectChapterCount("Botany");
+  const zoologyCount = getSubjectChapterCount("Zoology");
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +186,7 @@ export default function Class12() {
             </h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Master all Class 12 chapters across Physics ({physicsCount}), Chemistry ({chemistryCount}), and Biology ({biologyCount})
+            Master all Class 12 chapters across Physics ({physicsCount}), Chemistry ({chemistryCount}), Botany ({botanyCount}), and Zoology ({zoologyCount})
           </p>
         </motion.div>
 
@@ -188,7 +223,7 @@ export default function Class12() {
         <div className="w-full">
           <div className="flex justify-center mb-6">
             <div className="inline-flex rounded-lg bg-muted p-1" data-testid="tabs-subjects">
-              {(["All", "Physics", "Chemistry", "Biology"] as const).map((subject) => (
+              {(["All", "Physics", "Chemistry", "Botany", "Zoology"] as const).map((subject) => (
                 <Button
                   key={subject}
                   variant={activeSubject === subject ? "default" : "ghost"}

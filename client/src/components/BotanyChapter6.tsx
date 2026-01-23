@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BookOpen, Lightbulb, Calculator, Leaf, Zap , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 interface Topic {
   id: string;
   title: string;
@@ -285,7 +286,7 @@ export function BotanyChapter6() {
   const practiceQuestions = dbQuestions || [];
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
@@ -332,7 +333,7 @@ export function BotanyChapter6() {
             <Calculator className="h-4 w-4 mr-2" />
             Comparisons
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Zap className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -611,34 +612,42 @@ export function BotanyChapter6() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <Badge variant="outline" className="mb-2">{q.difficultyLevel === 1 ? 'Easy' : q.difficultyLevel === 2 ? 'Medium' : 'Hard'}</Badge>
-                        <p className="font-medium">Q{index + 1}. {q.questionText}</p>
+                        <p className="font-medium">Q{index + 1}. {getQuestionLabel(q)}</p>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
-                      {q.options.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant={
-                            showSolutions
-                              ? index === q.correctAnswer
-                                ? "default"
-                                : userAnswers[q.id] === index
-                                ? "destructive"
+                      {q.options.map((option, index) => {
+                        const optionKey =
+                          typeof option === "string"
+                            ? String.fromCharCode(65 + index)
+                            : option.id ?? String.fromCharCode(65 + index);
+                        const isSelected = userAnswers[q.id] === optionKey;
+                        const isCorrectOption = optionKey === q.correctAnswer;
+                        return (
+                          <Button
+                            key={optionKey}
+                            variant={
+                              showSolutions
+                                ? isCorrectOption
+                                  ? "default"
+                                  : isSelected
+                                  ? "destructive"
+                                  : "outline"
+                                : isSelected
+                                ? "secondary"
                                 : "outline"
-                              : userAnswers[q.id] === index
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
-                          disabled={showSolutions}
-                        >
-                          <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                          {typeof option === "string" ? option : option.text}
-                        </Button>
-                      ))}
+                            }
+                            className="w-full justify-start text-left h-auto py-3"
+                            onClick={() => !showSolutions && handleAnswerSelect(q.id, optionKey)}
+                            disabled={showSolutions}
+                          >
+                            <span className="mr-3">{optionKey}.</span>
+                            {getOptionLabel(option)}
+                          </Button>
+                        );
+                      })}
                     </div>
                     {showSolutions && (
                       <div className="bg-muted p-4 rounded-lg mt-4">

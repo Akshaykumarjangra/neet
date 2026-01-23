@@ -45,6 +45,7 @@ import { ChemistryChapter41 } from "@/components/ChemistryChapter41";
 import { ChemistryChapter42 } from "@/components/ChemistryChapter42";
 import { ChemistryChapter43 } from "@/components/ChemistryChapter43";
 import { ChemistryChapter44 } from "@/components/ChemistryChapter44";
+import { ChemistryChapter45 } from "@/components/ChemistryChapter45";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const chapters = [
   { id: 6, title: "Thermodynamics", status: "available", questions: 60 },
   { id: 7, title: "Equilibrium", status: "available", questions: 55 },
   { id: 8, title: "Redox Reactions", status: "available", questions: 55 },
+  { id: 45, title: "The Solid State", label: "Class XII Chapter 1: The Solid State", status: "available", questions: 50 },
   { id: 9, title: "Solutions", status: "available", questions: 60 },
   { id: 10, title: "Electrochemistry", status: "available", questions: 55 },
   { id: 11, title: "Chemical Kinetics", status: "available", questions: 55 },
@@ -254,6 +256,26 @@ export default function ChemistryContent() {
               ← Back to Chapters
             </Button>
             <ChemistryChapter8 />
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (selectedChapter === 45) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="container mx-auto p-6">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedChapter(null)}
+              className="mb-4"
+            >
+              ← Back to Chapters
+            </Button>
+            <ChemistryChapter45 />
           </div>
         </div>
       </ThemeProvider>
@@ -1010,7 +1032,7 @@ export default function ChemistryContent() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-lg font-semibold">
-                            Chapter {chapter.id}: {chapter.title}
+                            {chapter.label ?? `Chapter ${chapter.id}: ${chapter.title}`}
                           </h3>
                           {chapter.status === "available" && (
                             <Badge variant="secondary">Available</Badge>

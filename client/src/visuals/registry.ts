@@ -114,6 +114,158 @@ export const visualizationRegistry: Record<string, VisualizationConfig> = {
     description: 'Acid-base titration visualization',
     category: 'chemistry'
   },
+  'adsorption-isotherm': {
+    component: lazyLoad(() => import('./d3/AdsorptionIsotherm')),
+    title: 'Adsorption Isotherms',
+    description: 'Freundlich and Langmuir adsorption curves',
+    category: 'chemistry'
+  },
+  'ellingham-diagram': {
+    component: lazyLoad(() => import('./d3/EllinghamDiagram')),
+    title: 'Ellingham Diagram',
+    description: 'Oxide stability vs temperature',
+    category: 'chemistry'
+  },
+  'pblock-trends': {
+    component: lazyLoad(() => import('./d3/PBlockTrends')),
+    title: 'p-Block Trends Explorer',
+    description: 'Group-wise trends for radius and ionization energy',
+    category: 'chemistry'
+  },
+  'transition-oxidation-map': {
+    component: lazyLoad(() => import('./d3/TransitionOxidationMap')),
+    title: 'Transition Oxidation Map',
+    description: 'Common oxidation states for 3d metals',
+    category: 'chemistry'
+  },
+  'colloid-classifier': {
+    component: lazyLoad(() => import('./d3/ColloidClassifier')),
+    title: 'Colloid Type Explorer',
+    description: 'Classify colloids by dispersed phase and medium',
+    category: 'chemistry'
+  },
+  'lanthanoid-contraction': {
+    component: lazyLoad(() => import('./d3/LanthanoidContraction')),
+    title: 'Lanthanoid Contraction',
+    description: 'Atomic radius trend across lanthanoids',
+    category: 'chemistry'
+  },
+  'sn1-sn2-profile': {
+    component: lazyLoad(() => import('./d3/SN1SN2Profile')),
+    title: 'SN1 vs SN2 Energy Profile',
+    description: 'Reaction coordinate comparison for substitution mechanisms',
+    category: 'chemistry'
+  },
+  'amine-basicity-chart': {
+    component: lazyLoad(() => import('./d3/AminesBasicityChart')),
+    title: 'Amines Basicity Chart',
+    description: 'Relative basicity trends for amines',
+    category: 'chemistry'
+  },
+  'biomolecule-map': {
+    component: lazyLoad(() => import('./d3/BiomoleculeMap')),
+    title: 'Biomolecule Map',
+    description: 'Overview of carbohydrates, proteins, nucleic acids, and vitamins',
+    category: 'chemistry'
+  },
+  'polymer-classification-tree': {
+    component: lazyLoad(() => import('./d3/PolymerClassificationTree')),
+    title: 'Polymer Classification Tree',
+    description: 'Classification by source, structure, and polymerization',
+    category: 'chemistry'
+  },
+  'everyday-chemistry-compare': {
+    component: lazyLoad(() => import('./d3/EverydayChemistryCompare')),
+    title: 'Everyday Chemistry Comparisons',
+    description: 'Drug and cleaning agent comparisons',
+    category: 'chemistry'
+  },
+  'crystal-field-splitting': {
+    component: lazyLoad(() => import('./d3/CrystalFieldSplitting')),
+    title: 'Crystal Field Splitting',
+    description: 'd orbital splitting across geometries',
+    category: 'chemistry'
+  },
+  'carbonyl-reaction-map': {
+    component: lazyLoad(() => import('./d3/CarbonylReactionMap')),
+    title: 'Carbonyl Reaction Map',
+    description: 'Key reaction pathways for aldehydes and ketones',
+    category: 'chemistry'
+  },
+
+  // Physics Concept Visualizations
+  'fundamental-forces-comparison': {
+    component: lazyLoad(() => import('./physics/FundamentalForcesComparison')),
+    title: 'Fundamental Forces Comparison',
+    description: 'Relative strengths and ranges of the four fundamental forces',
+    category: 'physics'
+  },
+  'physics-scale-overview': {
+    component: lazyLoad(() => import('./physics/PhysicsScaleOverview')),
+    title: 'Scale of the Physical World',
+    description: 'From subatomic particles to galaxies and beyond',
+    category: 'physics'
+  },
+  'scientific-method-flow': {
+    component: lazyLoad(() => import('./physics/ScientificMethodFlow')),
+    title: 'Scientific Method Flow',
+    description: 'Observation to conclusion in a repeatable cycle',
+    category: 'physics'
+  },
+  'conservation-laws-summary': {
+    component: lazyLoad(() => import('./physics/ConservationLawsSummary')),
+    title: 'Conservation Laws Summary',
+    description: 'Energy, momentum, angular momentum, and charge',
+    category: 'physics'
+  },
+  'physics-discoveries-timeline': {
+    component: lazyLoad(() => import('./physics/PhysicsDiscoveriesTimeline')),
+    title: 'Timeline of Physics Discoveries',
+    description: 'Milestones from classical mechanics to modern physics',
+    category: 'physics'
+  },
+  'si-units-map': {
+    component: lazyLoad(() => import('./physics/SIUnitsMap')),
+    title: 'SI Base Units Map',
+    description: 'Seven base quantities with SI units and symbols',
+    category: 'physics'
+  },
+  'metric-prefix-scale': {
+    component: lazyLoad(() => import('./physics/MetricPrefixScale')),
+    title: 'Metric Prefix Scale',
+    description: 'Powers of ten from pico to tera',
+    category: 'physics'
+  },
+  'dimensional-analysis-checker': {
+    component: lazyLoad(() => import('./physics/DimensionalAnalysisChecker')),
+    title: 'Dimensional Analysis Checker',
+    description: 'Quick dimensional validity checks for equations',
+    category: 'physics'
+  },
+  'physics-unification-ladder': {
+    component: lazyLoad(() => import('./physics/PhysicsUnificationLadder')),
+    title: 'Unification Ladder',
+    description: 'Key milestones in unifying physical laws',
+    category: 'physics'
+  },
+  'physics-technology-map': {
+    component: lazyLoad(() => import('./physics/PhysicsTechnologyMap')),
+    title: 'Physics and Technology Map',
+    description: 'How physics powers real-world tools and systems',
+    category: 'physics'
+  },
+  'range-angle-graph': {
+    component: lazyLoad(() => import('./physics/RangeAngleGraph')),
+    title: 'Range vs Angle',
+    description: 'Range of a projectile as a function of launch angle',
+    category: 'physics'
+  },
+  'pressure-depth-graph': {
+    component: lazyLoad(() => import('./physics/PressureDepthGraph')),
+    title: 'Pressure vs Depth',
+    description: 'Hydrostatic pressure variation with depth',
+    category: 'physics'
+  },
 
   // Three.js Visualizations (20)
   'angular-momentum': {
@@ -315,6 +467,74 @@ export const visualizationRegistry: Record<string, VisualizationConfig> = {
     title: 'Wheatstone Circuit',
     description: 'Bridge circuit for resistance measurement',
     category: 'physics'
+  },
+
+  // Biology Visualizations
+  'cell-structure': {
+    component: lazyLoad(() => import('./biology/CellStructureDiagram')),
+    title: 'Cell Structure',
+    description: 'Diagram of key cell organelles and their locations',
+    category: 'biology'
+  },
+  'plant-anatomy': {
+    component: lazyLoad(() => import('./biology/PlantAnatomyDiagram')),
+    title: 'Flower Anatomy',
+    description: 'Flower structure with key reproductive parts',
+    category: 'biology'
+  },
+  'tissue-anatomy': {
+    component: lazyLoad(() => import('./biology/TissueAnatomyDiagram')),
+    title: 'Plant Tissue Cross Section',
+    description: 'Layered stem cross-section with vascular tissues',
+    category: 'biology'
+  },
+  'animal-anatomy': {
+    component: lazyLoad(() => import('./biology/AnimalAnatomyDiagram')),
+    title: 'Animal Anatomy Overview',
+    description: 'Major organs and systems in a frog body plan',
+    category: 'biology'
+  },
+  'comparative-anatomy': {
+    component: lazyLoad(() => import('./biology/ComparativeAnatomyPanel')),
+    title: 'Comparative Anatomy',
+    description: 'Side-by-side comparison of animal phyla',
+    category: 'biology'
+  },
+  'diagram': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Diagram',
+    description: 'General biology diagram preview',
+    category: 'biology'
+  },
+  'flowchart': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Flowchart',
+    description: 'Stepwise flow for biology processes',
+    category: 'biology'
+  },
+  'graph': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Graph',
+    description: 'Graph view of biology trends',
+    category: 'biology'
+  },
+  'table': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Table',
+    description: 'Structured biology table layout',
+    category: 'biology'
+  },
+  'comparison': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Comparison',
+    description: 'Side-by-side biology comparison layout',
+    category: 'biology'
+  },
+  'animation': {
+    component: lazyLoad(() => import('./biology/BiologyDiagramKit')),
+    title: 'Biology Animation',
+    description: 'Animated biology process preview',
+    category: 'biology'
   },
 };
 

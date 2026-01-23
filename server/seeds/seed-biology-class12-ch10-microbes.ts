@@ -326,14 +326,68 @@ async function seedBiologyClass12Chapter10() {
 6. Biofertilizers like *Rhizobium* (nitrogen fixation) and mycorrhiza (phosphorus absorption) enrich soil
 7. Cyclosporin A (immunosuppressant) and statins (cholesterol-lowering) are produced by microbes
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Fermentation Setup',
+        description: 'Microbe, substrate, and product flow.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Biogas Production',
+        description: 'Organic waste -> anaerobic digestion -> methane.'
+      },
+      {
+        type: 'table',
+        title: 'Microbes and Products',
+        description: 'Bacteria, fungi, and their uses.'
+      },
+      {
+        type: 'comparison',
+        title: 'Antibiotics vs Enzymes',
+        description: 'Use cases and production.'
+      },
+      {
+        type: 'graph',
+        title: 'Microbial Growth Curve',
+        description: 'Lag, log, stationary, decline phases.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Microbes in Human Welfare',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Fermentation Setup',
+          description: 'Microbe, substrate, and product flow.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Biogas Production',
+          description: 'Organic waste -> anaerobic digestion -> methane.'
+        },
+        {
+          type: 'table',
+          title: 'Microbes and Products',
+          description: 'Bacteria, fungi, and their uses.'
+        },
+        {
+          type: 'comparison',
+          title: 'Antibiotics vs Enzymes',
+          description: 'Use cases and production.'
+        },
+        {
+          type: 'graph',
+          title: 'Microbial Growth Curve',
+          description: 'Lag, log, stationary, decline phases.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 10: Microbes in Human Welfare');

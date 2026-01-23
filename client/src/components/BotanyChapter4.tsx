@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Leaf, CheckCircle2, XCircle, Brain , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter4() {
   // Fetch questions from database for Morphology of Flowering Plants (topicId: 68)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,35 +33,35 @@ export function BotanyChapter4() {
       id: 1,
       question: "Tap root system is characteristic of:",
       options: ["Monocots", "Dicots", "Both monocots and dicots", "Neither monocots nor dicots"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Dicots have a tap root system with a prominent primary root and lateral roots, while monocots have fibrous roots."
     },
     {
       id: 2,
       question: "Reticulate venation is found in:",
       options: ["Monocot leaves", "Dicot leaves", "All leaves", "Stem"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Dicot leaves show reticulate (net-like) venation, while monocot leaves show parallel venation."
     },
     {
       id: 3,
       question: "A modified stem that grows horizontally below the soil is called:",
       options: ["Tuber", "Rhizome", "Bulb", "Corm"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Rhizome is an underground stem that grows horizontally (e.g., ginger, turmeric). It has nodes, internodes, and scale leaves."
     },
     {
       id: 4,
       question: "In China rose, the type of aestivation is:",
       options: ["Valvate", "Twisted", "Imbricate", "Vexillary"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "China rose (Hibiscus) shows twisted aestivation where petals overlap each other in a regular direction."
     },
     {
       id: 5,
       question: "The floral formula ⚥ ♀ K₅ C₅ A∞ G₁ represents which family?",
       options: ["Solanaceae", "Fabaceae", "Rosaceae", "Liliaceae"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "This formula represents Rosaceae family. Features: bisexual, actinomorphic, 5 sepals, 5 petals, many stamens, 1 carpel."
     }
   ];
@@ -77,7 +78,7 @@ export function BotanyChapter4() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -339,7 +340,7 @@ export function BotanyChapter4() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -359,10 +360,10 @@ export function BotanyChapter4() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

@@ -1,370 +1,365 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
-import { sql } from 'drizzle-orm';
 
 async function seedPhysicsClass12WavesOptics() {
-  console.log('Seeding Physics Class 12 Chapters 7-9...');
+  console.log('Seeding Physics Class 12 Chapters 7-9: AC, EM Waves, and Ray Optics...');
 
-  // Chapter 7
-  await db.insert(chapterContent).values({
-    subject: 'Physics',
-    classLevel: '12',
-    chapterNumber: 7,
-    chapterTitle: 'Alternating Current',
-    introduction: `Alternating current (AC) periodically reverses direction, powering most electrical grids and devices worldwide. This chapter explores AC voltage and current represented as sinusoidal functions, phasor diagrams for circuit analysis, behavior of resistors, inductors, and capacitors in AC circuits, impedance and resonance in LCR circuits, power in AC circuits distinguishing between average and apparent power, and transformers for voltage conversion. Understanding AC circuits is vital for NEET as medical equipment extensively uses AC power and signal processing.`,
-    detailedNotes: `
-# Alternating Current
+  const chapters = [
+    {
+      subject: 'Physics',
+      classLevel: '12',
+      chapterNumber: 7,
+      chapterTitle: 'Alternating Current',
+      introduction: 'Alternating current varies sinusoidally with time. This chapter covers AC emf and current, RMS values, reactance, impedance in LCR circuits, resonance, power factor, and basic transformer ideas.',
+      detailedNotes: `# Alternating Current
 
 ## AC Voltage and Current
-**V = V₀ sin ωt** (instantaneous voltage)
-**I = I₀ sin(ωt ± φ)** (instantaneous current)
-- V₀, I₀: Peak (amplitude) values
-- ω = 2πf: Angular frequency
-- φ: Phase difference
 
-**RMS (Root Mean Square) values**:
-**V_rms = V₀/√2**, **I_rms = I₀/√2**
-- Used for power calculations
-- AC meters show RMS values
+- AC voltage: v = V0 sin(omega t).
+- AC current: i = I0 sin(omega t + phi).
 
-## AC Circuit Elements
+## RMS Values
 
-**1. Resistor (R)**:
-- V and I in phase (φ = 0)
-- **V_R = IR**
-- Power dissipated: P = I²R
+- V_rms = V0 / sqrt(2).
+- I_rms = I0 / sqrt(2).
 
-**2. Inductor (L)**:
-- I lags V by 90° (φ = -90°)
-- **Inductive reactance**: X_L = ωL = 2πfL
-- **V_L = IX_L**
-- No power dissipation (energy stored/released)
+## Reactance and Impedance
 
-**3. Capacitor (C)**:
-- I leads V by 90° (φ = +90°)
-- **Capacitive reactance**: X_C = 1/(ωC) = 1/(2πfC)
-- **V_C = IX_C**
-- No power dissipation
-
-## LCR Series Circuit
-**Impedance**: Z = √(R² + (X_L - X_C)²)
-**Current**: I = V/Z
-**Phase angle**: tan φ = (X_L - X_C)/R
-
-**Conditions**:
-- X_L > X_C: Inductive (I lags V)
-- X_C > X_L: Capacitive (I leads V)
-- X_L = X_C: Resonance (I in phase with V)
+- Inductive reactance: X_L = omega L.
+- Capacitive reactance: X_C = 1 / (omega C).
+- Impedance: Z = sqrt(R^2 + (X_L - X_C)^2).
 
 ## Resonance
-**Resonant frequency**: **f₀ = 1/(2π√(LC))**
-At resonance:
-- X_L = X_C
-- Z = R (minimum)
-- I = V/R (maximum)
-- φ = 0 (in phase)
-- Power maximum
 
-**Sharpness**: Q = ωL/R = 1/(ωCR)
+- In series LCR, resonance when X_L = X_C.
+- Resonant frequency: omega0 = 1 / sqrt(L C).
 
-## Power in AC Circuit
-**Instantaneous**: p = vi = V₀I₀ sin ωt sin(ωt - φ)
-**Average**: **P = V_rms I_rms cos φ**
-- cos φ: **Power factor**
-- φ: Phase angle between V and I
+## Power in AC
 
-**Power factor**:
-- **Resistive**: cos φ = 1 (φ = 0)
-- **Purely inductive/capacitive**: cos φ = 0
-- **LCR**: cos φ = R/Z
+- Average power: P = V_rms I_rms cos phi.
+- cos phi is the power factor.
 
-**Apparent power**: S = V_rms I_rms (VA)
-**True power**: P = S cos φ (W)
+## Transformer (idea)
 
-## Wattless Current
-**In pure L or C**: Average power = 0
-Current flows but no energy consumed (stored/returned each cycle)
-
-## LC Oscillations
-**Frequency**: f = 1/(2π√(LC))
-Energy oscillates between electric and magnetic
-
-## Summary
-1. AC: V = V₀ sin ωt; RMS values V_rms = V₀/√2, I_rms = I₀/√2
-2. Inductive reactance X_L = ωL; capacitive X_C = 1/(ωC)
-3. LCR impedance Z = √(R² + (X_L - X_C)²); current I = V/Z
-4. Resonance at f₀ = 1/(2π√LC): Z minimum, I maximum
-5. Power P = V_rms I_rms cos φ where cos φ is power factor
+- Works on mutual induction with alternating current.
 `,
-  }).onConflictDoUpdate({
-    target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
-    set: {
-      chapterTitle: 'Alternating Current',
-      introduction: sql`EXCLUDED.introduction`,
-      detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
-  });
+      keyConcepts: [
+        {
+          title: 'RMS Values',
+          description: 'Effective values of AC voltage and current.',
+          formula: 'V_rms = V0 / sqrt(2), I_rms = I0 / sqrt(2)',
+        },
+        {
+          title: 'Reactance',
+          description: 'Opposition offered by L and C to AC.',
+          formula: 'X_L = omega L, X_C = 1 / (omega C)',
+        },
+        {
+          title: 'Impedance',
+          description: 'Total opposition in LCR circuits.',
+          formula: 'Z = sqrt(R^2 + (X_L - X_C)^2)',
+        },
+        {
+          title: 'Resonance',
+          description: 'Circuit is purely resistive at resonance.',
+          formula: 'omega0 = 1 / sqrt(L C)',
+        },
+        {
+          title: 'Average Power',
+          description: 'Depends on power factor cos phi.',
+          formula: 'P = V_rms I_rms cos phi',
+        },
+      ],
+      formulas: [
+        'v = V0 sin(omega t)',
+        'i = I0 sin(omega t + phi)',
+        'V_rms = V0 / sqrt(2)',
+        'I_rms = I0 / sqrt(2)',
+        'X_L = omega L',
+        'X_C = 1 / (omega C)',
+        'Z = sqrt(R^2 + (X_L - X_C)^2)',
+        'omega0 = 1 / sqrt(L C)',
+        'P = V_rms I_rms cos phi',
+      ],
+      importantTopics: [
+        'AC waveforms',
+        'RMS values',
+        'Reactance and impedance',
+        'Series LCR resonance',
+        'Power factor',
+      ],
+      learningObjectives: [
+        'Compute RMS values for sinusoidal AC',
+        'Analyze LCR circuits and resonance',
+        'Determine impedance and phase angle',
+        'Calculate average power in AC circuits',
+      ],
+      prerequisites: [
+        'Current electricity basics',
+        'Trigonometric functions',
+      ],
+      ncertChapterRef: 'Class 12 Physics - Chapter 7',
+      visualizationsData: [
+        {
+          type: 'concept',
+          title: 'AC Circuit Phasors',
+          description: 'Visualize phase relations and impedance.',
+          config: {
+            visualizationName: 'ac-circuit',
+          },
+        },
+        {
+          type: 'concept',
+          title: 'Transformer Basics',
+          description: 'Mutual induction and turns ratio.',
+          config: {
+            visualizationName: 'transformer-3d',
+          },
+        },
+      ],
+      difficultyLevel: 4,
+      estimatedStudyMinutes: 330,
+      status: 'published' as const,
+    },
+    {
+      subject: 'Physics',
+      classLevel: '12',
+      chapterNumber: 8,
+      chapterTitle: 'Electromagnetic Waves',
+      introduction: 'Electromagnetic waves are transverse waves of electric and magnetic fields that propagate without a medium. This chapter covers wave properties, speed of light, energy transport, and the electromagnetic spectrum.',
+      detailedNotes: `# Electromagnetic Waves
 
-  // Chapter 8
-  await db.insert(chapterContent).values({
-    subject: 'Physics',
-    classLevel: '12',
-    chapterNumber: 8,
-    chapterTitle: 'Electromagnetic Waves',
-    introduction: `Electromagnetic waves are self-propagating oscillations of electric and magnetic fields carrying energy through space. This chapter explores Maxwell's equations unifying electricity and magnetism, electromagnetic wave generation from accelerating charges, properties including transverse nature and speed in vacuum, the electromagnetic spectrum from radio waves to gamma rays with their applications, and energy transport by EM waves. Understanding electromagnetic waves is essential for NEET as they include visible light, X-rays used in medical imaging, and ultraviolet radiation affecting biological tissues.`,
-    detailedNotes: `
-# Electromagnetic Waves
+## Nature of EM Waves
 
-## Displacement Current
-**Maxwell's correction to Ampere's law**:
-**I_d = ε₀ dΦ_E/dt**
-- Explains current through capacitor gap
-- Changing electric flux acts like current
+- EM waves are transverse: E and B are perpendicular to each other and to direction of propagation.
+- Do not require a material medium.
 
-**Modified Ampere's law**:
-**∮ B·dl = μ₀(I + I_d)**
+## Speed of EM Waves
 
-## Maxwell's Equations
-**Complete description of electromagnetism**:
+- Speed in vacuum: c = 1 / sqrt(mu0 epsilon0).
+- Relation: E0 / B0 = c.
 
-**1. Gauss's law (electric)**: ∮ E·dA = Q/ε₀
-**2. Gauss's law (magnetic)**: ∮ B·dA = 0 (no monopoles)
-**3. Faraday's law**: ∮ E·dl = -dΦ_B/dt
-**4. Ampere-Maxwell law**: ∮ B·dl = μ₀(I + ε₀ dΦ_E/dt)
+## Energy Transport
 
-**Prediction**: EM waves travel at **c = 1/√(μ₀ε₀) ≈ 3 × 10⁸ m/s**
-
-## EM Wave Properties
-1. **Transverse**: E ⊥ B ⊥ direction of propagation
-2. **E and B in phase**: Peak together
-3. **E₀/B₀ = c** (amplitude ratio)
-4. **Speed in vacuum**: c = 3 × 10⁸ m/s
-5. **No medium required**: Can travel through vacuum
-6. **Carry energy and momentum**
-
-**Wave equation**: E = E₀ sin(kx - ωt)
-- k = 2π/λ (wave number)
-- ω = 2πf (angular frequency)
-- c = λf
-
-## Energy and Intensity
-**Energy density**: u = ½(ε₀E² + B²/μ₀)
-**Intensity**: I = uc = ½ε₀E₀²c
-**Radiation pressure**: p = I/c (for absorption)
+- Poynting vector: S = (1/mu0) (E x B).
+- Intensity is average magnitude of S.
 
 ## Electromagnetic Spectrum
 
-**Radio waves** (>0.1 m):
-- AM/FM broadcasting, TV, radar
-- Produced by oscillating circuits
-
-**Microwaves** (1 mm - 0.3 m):
-- Radar, mobile phones, microwave ovens
-- Molecular rotations
-
-**Infrared** (700 nm - 1 mm):
-- Heat radiation, night vision, remote controls
-- Molecular vibrations
-
-**Visible light** (400-700 nm):
-- VIBGYOR (400-700 nm)
-- Human eye sensitive
-- Emitted by excited atoms
-
-**Ultraviolet** (10-400 nm):
-- Tanning, sterilization, fluorescence
-- Damages DNA
-- Absorbed by ozone layer
-
-**X-rays** (0.01-10 nm):
-- Medical imaging, crystallography
-- Produced by electron bombardment
-- Penetrate soft tissue, absorbed by bones
-
-**Gamma rays** (<0.01 nm):
-- Radioactive decay, nuclear reactions
-- Cancer treatment, sterilization
-- Most penetrating, most energetic
-
-**Order (increasing frequency)**:
-Radio < Micro < IR < Visible < UV < X-ray < Gamma
-
-## Applications
-
-**Communication**: Radio, TV, mobile phones
-**Medicine**: X-ray imaging, radiation therapy
-**Astronomy**: Radio telescopes, infrared astronomy
-**Remote sensing**: Satellite imagery (IR, microwave)
-**Spectroscopy**: Identify elements (visible, UV)
-
-## Summary
-1. Maxwell's equations predict EM waves traveling at c = 1/√(μ₀ε₀) ≈ 3 × 10⁸ m/s
-2. EM waves are transverse with E ⊥ B ⊥ direction; E₀/B₀ = c
-3. Displacement current I_d = ε₀ dΦ_E/dt explains current in capacitor charging
-4. EM spectrum: Radio < Microwave < IR < Visible < UV < X-ray < Gamma
-5. Energy density u = ½(ε₀E² + B²/μ₀); Intensity I = uc
+- Radio, microwave, infrared, visible, ultraviolet, X-ray, gamma.
+- Wavelength decreases and frequency increases across the spectrum.
 `,
-  }).onConflictDoUpdate({
-    target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
-    set: {
-      chapterTitle: 'Electromagnetic Waves',
-      introduction: sql`EXCLUDED.introduction`,
-      detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
-  });
-
-  // Chapter 9
-  await db.insert(chapterContent).values({
-    subject: 'Physics',
-    classLevel: '12',
-    chapterNumber: 9,
-    chapterTitle: 'Ray Optics and Optical Instruments',
-    introduction: `Light behaves as rays traveling in straight lines, reflecting and refracting at surfaces to form images. This chapter explores reflection and refraction laws, image formation by plane and curved mirrors using mirror equation, refraction through lenses and lens maker's equation, optical instruments including microscopes and telescopes, defects of vision corrected by lenses, and dispersion of light into colors. Understanding ray optics is crucial for NEET as it applies to the human eye, corrective lenses, endoscopes, and microscopes used in medical diagnosis.`,
-    detailedNotes: `
-# Ray Optics and Optical Instruments
-
-## Reflection
-**Laws**:
-1. Incident ray, reflected ray, normal lie in same plane
-2. Angle of incidence = Angle of reflection (i = r)
-
-**Plane mirror**: Virtual, erect, same size image at equal distance behind
-
-## Spherical Mirrors
-**Concave** (converging): Reflects inward
-**Convex** (diverging): Reflects outward
-
-**Terms**:
-- **f**: Focal length
-- **R**: Radius of curvature (R = 2f)
-- **u**: Object distance (negative)
-- **v**: Image distance
-- **m**: Magnification = v/u = h'/h
-
-**Mirror equation**: **1/f = 1/v + 1/u**
-**m = -v/u**
-
-**Sign convention** (Cartesian):
-- Distances measured from pole
-- Left of mirror: Negative
-- Right of mirror: Positive
-
-## Refraction
-**n = c/v** (refractive index)
-- c: Speed in vacuum
-- v: Speed in medium
-
-**Snell's law**: **n₁ sin i = n₂ sin r**
-
-**Total internal reflection**:
-- When light goes from denser to rarer (n₁ > n₂)
-- **Critical angle**: sin i_c = n₂/n₁
-- i > i_c: Total reflection
-
-**Applications**: Optical fibers, prisms, diamonds
-
-## Refraction Through Prism
-**δ = i + e - A** (deviation)
-- A: Prism angle
-- i: Incident angle
-- e: Emergent angle
-
-**Minimum deviation**: i = e
-**δ_min = 2i - A**
-**n = sin((A + δ_min)/2) / sin(A/2)**
-
-## Lenses
-**Convex** (converging): Thicker at center
-**Concave** (diverging): Thinner at center
-
-**Lens equation**: **1/f = 1/v - 1/u**
-**m = v/u = h'/h**
-
-**Lens maker's equation**:
-**1/f = (n - 1)(1/R₁ - 1/R₂)**
-- n: Refractive index of lens material
-- R₁, R₂: Radii of curvature
-
-**Power**: P = 1/f (meter)
-**Unit**: Diopter (D) = m⁻¹
-
-**Combination**: P = P₁ + P₂ + P₃
-
-## Human Eye
-**Parts**: Cornea, pupil, lens, retina
-**Accommodation**: Lens changes curvature
-**Near point**: 25 cm (least distance of distinct vision)
-**Far point**: Infinity
-
-**Defects**:
-**1. Myopia** (near-sightedness):
-- Far point closer than infinity
-- **Correction**: Concave lens
-
-**2. Hypermetropia** (far-sightedness):
-- Near point beyond 25 cm
-- **Correction**: Convex lens
-
-**3. Presbyopia**: Age-related loss of accommodation
-- **Correction**: Bifocal lens
-
-**4. Astigmatism**: Different curvatures
-- **Correction**: Cylindrical lens
-
-## Simple Microscope
-**Magnifying glass**: Single convex lens
-**Magnification**: m = 1 + D/f (image at near point)
-- m = D/f (image at infinity, relaxed eye)
-- D = 25 cm
-
-## Compound Microscope
-**Two lenses**: Objective (small f) + Eyepiece
-**m = m_o × m_e = (v_o/u_o) × (D/f_e)**
-
-**At relaxed eye**: m ≈ (L × D)/(f_o × f_e)
-- L: Tube length
-
-## Astronomical Telescope
-**For distant objects**:
-**m = f_o/f_e** (magnifying power)
-- f_o: Objective focal length (large)
-- f_e: Eyepiece focal length (small)
-
-**Length**: L = f_o + f_e (normal adjustment)
-
-## Terrestrial Telescope
-**Erecting lens** to invert image (make it erect)
-**L = f_o + 4f + f_e**
-
-## Dispersion
-**White light → spectrum** (VIBGYOR)
-**n varies with λ**: Violet bent most, red least
-**Cause**: Different speeds for different colors
-
-**Angular dispersion**: δ_v - δ_r
-**Dispersive power**: ω = (δ_v - δ_r)/δ_y
-
-## Summary
-1. Mirror equation 1/f = 1/v + 1/u; magnification m = -v/u
-2. Snell's law n₁ sin i = n₂ sin r; total internal reflection when i > i_c
-3. Lens equation 1/f = 1/v - 1/u; lens maker's formula 1/f = (n-1)(1/R₁ - 1/R₂)
-4. Power P = 1/f in diopters; combined power P = P₁ + P₂
-5. Myopia corrected by concave lens; hypermetropia by convex lens
-6. Compound microscope m = (L×D)/(f_o×f_e); telescope m = f_o/f_e
-`,
-  }).onConflictDoUpdate({
-    target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
-    set: {
+      keyConcepts: [
+        {
+          title: 'Wave Speed',
+          description: 'Speed of EM waves in vacuum from constants.',
+          formula: 'c = 1 / sqrt(mu0 epsilon0)',
+        },
+        {
+          title: 'Field Relation',
+          description: 'Electric and magnetic fields are linked in EM waves.',
+          formula: 'E0 / B0 = c',
+        },
+        {
+          title: 'Poynting Vector',
+          description: 'Energy flow per unit area per unit time.',
+          formula: 'S = (1/mu0) (E x B)',
+        },
+        {
+          title: 'Transverse Nature',
+          description: 'E and B are perpendicular to each other and direction of travel.',
+          formula: 'E perpendicular to B and direction of travel',
+        },
+        {
+          title: 'Spectrum Order',
+          description: 'Wavelength decreases from radio to gamma rays.',
+          formula: 'c = lambda f',
+        },
+      ],
+      formulas: [
+        'c = 1 / sqrt(mu0 epsilon0)',
+        'E0 / B0 = c',
+        'S = (1/mu0) (E x B)',
+        'c = lambda f',
+      ],
+      importantTopics: [
+        'Transverse nature of EM waves',
+        'Speed of light from constants',
+        'Energy transport and Poynting vector',
+        'Electromagnetic spectrum',
+      ],
+      learningObjectives: [
+        'Relate E and B fields in EM waves',
+        'Compute speed from mu0 and epsilon0',
+        'Explain energy flow using Poynting vector',
+        'Identify regions of the EM spectrum',
+      ],
+      prerequisites: [
+        'Basic wave properties',
+        'Electric and magnetic fields',
+      ],
+      ncertChapterRef: 'Class 12 Physics - Chapter 8',
+      visualizationsData: [
+        {
+          type: 'concept',
+          title: 'Electromagnetic Wave',
+          description: 'Visualize oscillating E and B fields.',
+          config: {
+            visualizationName: 'em-wave',
+          },
+        },
+        {
+          type: 'concept',
+          title: 'Polarization',
+          description: 'Understand polarization of EM waves.',
+          config: {
+            visualizationName: 'polarization-light',
+          },
+        },
+      ],
+      difficultyLevel: 3,
+      estimatedStudyMinutes: 240,
+      status: 'published' as const,
+    },
+    {
+      subject: 'Physics',
+      classLevel: '12',
+      chapterNumber: 9,
       chapterTitle: 'Ray Optics and Optical Instruments',
-      introduction: sql`EXCLUDED.introduction`,
-      detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
-  });
+      introduction: 'Ray optics studies reflection and refraction of light using ray diagrams. This chapter covers mirrors, lenses, total internal reflection, and optical instruments like microscopes and telescopes.',
+      detailedNotes: `# Ray Optics and Optical Instruments
 
-  console.log('✓ Seeded Physics Class 12 Chapters 7-9');
+## Reflection and Refraction
+
+- Law of reflection: angle of incidence equals angle of reflection.
+- Snell's law: n1 sin i = n2 sin r.
+
+## Mirrors and Lenses
+
+- Mirror formula: 1/f = 1/v + 1/u.
+- Lens formula: 1/f = 1/v - 1/u.
+- Magnification: m = v/u.
+
+## Total Internal Reflection
+
+- Occurs when light goes from denser to rarer medium and i > i_c.
+- Critical angle: sin i_c = n2 / n1.
+
+## Optical Instruments
+
+- Compound microscope and astronomical telescope use lenses to magnify images.
+`,
+      keyConcepts: [
+        {
+          title: "Snell's Law",
+          description: 'Relates angles of incidence and refraction.',
+          formula: 'n1 sin i = n2 sin r',
+        },
+        {
+          title: 'Mirror Formula',
+          description: 'Image formation by spherical mirrors.',
+          formula: '1/f = 1/v + 1/u',
+        },
+        {
+          title: 'Lens Formula',
+          description: 'Image formation by thin lenses.',
+          formula: '1/f = 1/v - 1/u',
+        },
+        {
+          title: 'Magnification',
+          description: 'Size ratio of image to object.',
+          formula: 'm = v/u',
+        },
+        {
+          title: 'Total Internal Reflection',
+          description: 'Light reflects fully at an interface beyond critical angle.',
+          formula: 'sin i_c = n2 / n1',
+        },
+      ],
+      formulas: [
+        'n1 sin i = n2 sin r',
+        '1/f = 1/v + 1/u',
+        '1/f = 1/v - 1/u',
+        'm = v/u',
+        'sin i_c = n2 / n1',
+      ],
+      importantTopics: [
+        'Reflection and refraction laws',
+        'Image formation by mirrors and lenses',
+        'Total internal reflection',
+        'Optical instruments',
+      ],
+      learningObjectives: [
+        'Use ray diagrams to locate images',
+        'Apply lens and mirror formulas',
+        'Determine conditions for total internal reflection',
+        'Explain working of microscope and telescope',
+      ],
+      prerequisites: [
+        'Basic geometry and trigonometry',
+        'Wave basics',
+      ],
+      ncertChapterRef: 'Class 12 Physics - Chapter 9',
+      visualizationsData: [
+        {
+          type: 'concept',
+          title: 'Ray Optics',
+          description: 'Trace rays through mirrors and lenses.',
+          config: {
+            visualizationName: 'ray-optics',
+          },
+        },
+        {
+          type: 'concept',
+          title: 'Lens Maker Formula',
+          description: 'Explore how curvature affects focal length.',
+          config: {
+            visualizationName: 'lens-maker-formula',
+          },
+        },
+        {
+          type: 'concept',
+          title: 'Compound Microscope',
+          description: 'Visualize image formation in microscopes.',
+          config: {
+            visualizationName: 'compound-microscope',
+          },
+        },
+      ],
+      difficultyLevel: 4,
+      estimatedStudyMinutes: 360,
+      status: 'published' as const,
+    },
+  ];
+
+  for (const chapter of chapters) {
+    await db
+      .insert(chapterContent)
+      .values(chapter)
+      .onConflictDoUpdate({
+        target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
+        set: {
+          chapterTitle: chapter.chapterTitle,
+          introduction: chapter.introduction,
+          detailedNotes: chapter.detailedNotes,
+          keyConcepts: chapter.keyConcepts,
+          formulas: chapter.formulas,
+          importantTopics: chapter.importantTopics,
+          learningObjectives: chapter.learningObjectives,
+          prerequisites: chapter.prerequisites,
+          ncertChapterRef: chapter.ncertChapterRef,
+          visualizationsData: chapter.visualizationsData,
+          difficultyLevel: chapter.difficultyLevel,
+          estimatedStudyMinutes: chapter.estimatedStudyMinutes,
+          status: chapter.status,
+          updatedAt: new Date(),
+        },
+      });
+
+    console.log(`  Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle} upserted`);
+  }
+
+  console.log('Physics Class 12 chapters 7-9 seeding completed!');
 }
 
 seedPhysicsClass12WavesOptics().catch(console.error);

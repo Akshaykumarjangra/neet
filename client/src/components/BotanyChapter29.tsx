@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sprout, CheckCircle2, XCircle, Brain, Heart, Bug } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter29() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,21 +19,21 @@ export function BotanyChapter29() {
       id: 1,
       question: "Bt cotton is resistant to:",
       options: ["Bacterial diseases", "Fungal diseases", "Insect pests", "Viral diseases"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Bt cotton contains genes from Bacillus thuringiensis that produce Cry proteins toxic to insect pests, particularly bollworms."
     },
     {
       id: 2,
       question: "The first transgenic plant was:",
       options: ["Tobacco", "Cotton", "Rice", "Wheat"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Tobacco was the first transgenic plant, developed in 1982 by introducing an antibiotic resistance gene."
     },
     {
       id: 3,
       question: "Golden rice is enriched with:",
       options: ["Vitamin A", "Vitamin C", "Iron", "Calcium"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Golden rice is genetically modified to produce beta-carotene (provitamin A) in the endosperm, addressing vitamin A deficiency."
     },
     {
@@ -44,14 +45,14 @@ export function BotanyChapter29() {
         "Amplify DNA",
         "Cut DNA"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "RNAi is a biological process where RNA molecules inhibit gene expression by neutralizing targeted mRNA molecules, effectively silencing genes."
     },
     {
       id: 5,
       question: "The bacterium used to produce human insulin is:",
       options: ["Bacillus subtilis", "Agrobacterium", "Escherichia coli", "Pseudomonas"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "E. coli bacteria have been genetically engineered to produce human insulin (Humulin), which is used to treat diabetes."
     }
   ];
@@ -68,7 +69,7 @@ export function BotanyChapter29() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -410,7 +411,7 @@ export function BotanyChapter29() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -418,13 +419,13 @@ export function BotanyChapter29() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

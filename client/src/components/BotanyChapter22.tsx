@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TreePine, CheckCircle2, XCircle, Brain, Lightbulb, Recycle, TrendingUp , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter22() {
   // Fetch questions from database for Biotechnology and its Applications (topicId: 86)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -37,14 +38,14 @@ export function BotanyChapter22() {
         "Decomposers → Producers → Consumers",
         "Consumers → Producers → Decomposers"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Energy flows from producers (autotrophs) to consumers (herbivores and carnivores) and finally to decomposers, which break down dead organic matter."
     },
     {
       id: 2,
       question: "The percentage of energy transferred from one trophic level to the next is approximately:",
       options: ["1%", "10%", "50%", "90%"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "According to the 10% law (Lindeman's law), only about 10% of energy is transferred from one trophic level to the next. The remaining 90% is lost as heat during respiration and other metabolic processes."
     },
     {
@@ -56,7 +57,7 @@ export function BotanyChapter22() {
         "Pyramid of energy",
         "All can be inverted"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The pyramid of energy is always upright and can never be inverted because energy decreases at each trophic level due to the 10% law. Some energy is always lost as heat."
     },
     {
@@ -68,7 +69,7 @@ export function BotanyChapter22() {
         "Energy captured per unit area per unit time",
         "Both B and C"
       ],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Primary productivity can be measured as biomass produced per unit area per unit time or as energy captured per unit area per unit time. Both are valid measurements."
     },
     {
@@ -80,7 +81,7 @@ export function BotanyChapter22() {
         "Grassland",
         "Temperate forest"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Tropical rainforests have the highest net primary productivity among terrestrial ecosystems due to abundant sunlight, high temperature, and high rainfall throughout the year."
     },
     {
@@ -92,7 +93,7 @@ export function BotanyChapter22() {
         "Herbivores",
         "Carnivores"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The detritus food chain begins with dead organic matter (detritus) which is consumed by detritivores and decomposers, unlike the grazing food chain which starts with living plants."
     },
     {
@@ -104,7 +105,7 @@ export function BotanyChapter22() {
         "Food web",
         "Succession"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Nutrient cycling is called biogeochemical cycling because it involves the movement of nutrients through biotic (living) and abiotic (geological and chemical) components of the ecosystem."
     },
     {
@@ -116,7 +117,7 @@ export function BotanyChapter22() {
         "Rooted floating plants",
         "Marsh plants"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "In aquatic succession (hydrarch succession), phytoplankton are the pioneer species that colonize the water body first, followed by rooted submerged plants, floating plants, and finally marsh vegetation."
     }
   ];
@@ -133,7 +134,7 @@ export function BotanyChapter22() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -718,7 +719,7 @@ export function BotanyChapter22() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -738,10 +739,10 @@ export function BotanyChapter22() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

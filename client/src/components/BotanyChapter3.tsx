@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Leaf, CheckCircle2, XCircle, Brain, Lightbulb , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter3() {
   // Fetch questions from database for Genetics (topicId: 9)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -41,7 +42,7 @@ export function BotanyChapter3() {
         "They have vascular tissue",
         "They are autotrophic"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Bryophytes require water for the motile male gametes (antherozoids) to swim and fertilize the egg, similar to how amphibians need water for reproduction."
     },
     {
@@ -53,7 +54,7 @@ export function BotanyChapter3() {
         "Spore",
         "Zygote"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "In bryophytes, the gametophyte is the main plant body that is photosynthetic and independent. The sporophyte is dependent on the gametophyte."
     },
     {
@@ -65,7 +66,7 @@ export function BotanyChapter3() {
         "Vascular tissue",
         "Flagellated sperms"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Pteridophytes (ferns) have well-developed vascular tissue (xylem and phloem) while bryophytes lack true vascular tissue."
     },
     {
@@ -77,7 +78,7 @@ export function BotanyChapter3() {
         "They are very small",
         "They are exposed on leaves"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "In gymnosperms, ovules and seeds are not enclosed in an ovary/fruit wall. They are borne on cone scales (naked)."
     },
     {
@@ -89,7 +90,7 @@ export function BotanyChapter3() {
         "Pteridophytes",
         "Bryophytes"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Double fertilization (one sperm fuses with egg forming zygote, another fuses with polar nuclei forming endosperm) is unique to angiosperms."
     }
   ];
@@ -106,7 +107,7 @@ export function BotanyChapter3() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -374,7 +375,7 @@ export function BotanyChapter3() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -394,10 +395,10 @@ export function BotanyChapter3() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

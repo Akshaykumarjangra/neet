@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter17() {
   console.log('Seeding Biology Class 11 Chapter 17: Breathing and Exchange of Gases...');
@@ -530,7 +531,18 @@ Hb + 4O₂ ⇌ Hb(O₂)₄ (Oxyhemoglobin)
       chapterTitle: 'Breathing and Exchange of Gases',
       estimatedStudyMinutes: 360,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

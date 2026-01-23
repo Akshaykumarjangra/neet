@@ -371,14 +371,68 @@ Mechanisms preventing interbreeding between species:
 6. Human evolution shows progressive increase in brain size and bipedal locomotion
 7. Hardy-Weinberg principle describes equilibrium conditions when evolution is NOT occurring
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Evidence of Evolution',
+        description: 'Fossils, homologous organs, and molecular data.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Speciation Pathway',
+        description: 'Isolation -> divergence -> new species.'
+      },
+      {
+        type: 'graph',
+        title: 'Hardy-Weinberg Equilibrium',
+        description: 'Allele frequencies remain constant without forces.'
+      },
+      {
+        type: 'comparison',
+        title: 'Natural vs Artificial Selection',
+        description: 'Drivers, timescales, and outcomes.'
+      },
+      {
+        type: 'table',
+        title: 'Geological Time Scale',
+        description: 'Major eras and key evolutionary events.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Evolution',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Evidence of Evolution',
+          description: 'Fossils, homologous organs, and molecular data.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Speciation Pathway',
+          description: 'Isolation -> divergence -> new species.'
+        },
+        {
+          type: 'graph',
+          title: 'Hardy-Weinberg Equilibrium',
+          description: 'Allele frequencies remain constant without forces.'
+        },
+        {
+          type: 'comparison',
+          title: 'Natural vs Artificial Selection',
+          description: 'Drivers, timescales, and outcomes.'
+        },
+        {
+          type: 'table',
+          title: 'Geological Time Scale',
+          description: 'Major eras and key evolutionary events.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 7: Evolution');

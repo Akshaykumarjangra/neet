@@ -12,141 +12,74 @@ const chapters = [
 
 ## Temperature and Heat
 
-**Temperature:**
-- Measure of hotness or coldness
-- Average kinetic energy of molecules
-- SI Unit: Kelvin (K)
+**Temperature:** measure of hotness or coldness; related to average kinetic energy of molecules.
+**Heat:** energy transferred due to temperature difference.
 
-**Temperature Scales:**
-- Celsius: t°C = (T_K - 273.15)
-- Fahrenheit: t°F = (9/5)t°C + 32
-- Kelvin: Absolute temperature scale
-- Relation: K = °C + 273.15
-
-**Heat:**
-- Energy transferred due to temperature difference
-- SI Unit: Joule (J)
-- Flows from hot to cold body
-- Calorie: 1 cal = 4.186 J
+**Temperature scales:**
+- K = C + 273.15
+- F = (9/5) C + 32
 
 ## Thermal Expansion
 
-**Linear Expansion:**
-- ΔL = αL₀ΔT
-- α = coefficient of linear expansion (K⁻¹)
-- L = L₀(1 + αΔT)
+- delta L = alpha L0 delta T
+- delta A = beta A0 delta T (beta = 2 alpha)
+- delta V = gamma V0 delta T (gamma = 3 alpha)
 
-**Area Expansion:**
-- ΔA = βA₀ΔT
-- β = 2α (for isotropic solids)
-- A = A₀(1 + βΔT)
+**Anomalous expansion of water:** density is maximum at 4 C.
 
-**Volume Expansion:**
-- ΔV = γV₀ΔT
-- γ = 3α (for isotropic solids)
-- V = V₀(1 + γΔT)
+## Calorimetry
 
-**Anomalous Expansion of Water:**
-- Water contracts from 0°C to 4°C
-- Maximum density at 4°C
-- Expands above and below 4°C
-- Ice floats on water
-
-## Specific Heat and Calorimetry
-
-**Specific Heat Capacity:**
-- Q = mcΔT
-- c = Q/(mΔT)
-- Unit: J/(kg·K)
-- Water: c = 4186 J/(kg·K)
-
-**Molar Heat Capacity:**
-- C = Mc (M is molar mass)
-- Unit: J/(mol·K)
-
-**Water Equivalent:**
-- W = mc (mass × specific heat)
-- Thermal capacity of calorimeter
-
-**Principle of Calorimetry:**
-- Heat lost = Heat gained
-- Σ(mcΔT)_lost = Σ(mcΔT)_gained
-- Assumes no heat loss to surroundings
-
-## Change of State
-
-**Latent Heat:**
-- Energy required for phase change at constant temperature
-- Q = mL
-- No temperature change during phase transition
-
-**Latent Heat of Fusion:**
-- L_f: Solid ↔ Liquid
-- For ice: L_f = 334 kJ/kg
-- Ice at 0°C → Water at 0°C
-
-**Latent Heat of Vaporization:**
-- L_v: Liquid ↔ Gas
-- For water: L_v = 2260 kJ/kg
-- Water at 100°C → Steam at 100°C
-
-**Sublimation:**
-- Direct Solid → Gas transition
-- Examples: Dry ice, camphor, iodine
+- Q = m c delta T
+- Latent heat: Q = m L
+- Principle of heat exchange: sum Q = 0 (no heat loss to surroundings)
 
 ## Heat Transfer
 
-**1. Conduction:**
-- Heat transfer through material without bulk motion
-- Fourier's Law: Q/t = kA(T₁ - T₂)/x
-- k = thermal conductivity (W/(m·K))
-- Metals: high k, Insulators: low k
+- Conduction: Q/t = k A (T1 - T2) / L
+- Convection: heat transfer by bulk fluid motion
+- Radiation: P = sigma A (T^4 - T_env^4)
 
-**Thermal Resistance:**
-- R_th = x/(kA)
-- Analogous to electrical resistance
+## Newton's Law of Cooling
 
-**Series/Parallel Combination:**
-- Series: R_total = R₁ + R₂ + ...
-- Parallel: 1/R_total = 1/R₁ + 1/R₂ + ...
-
-**2. Convection:**
-- Heat transfer through bulk motion of fluid
-- Natural: Due to density differences
-- Forced: Using fans, pumps
-
-**3. Radiation:**
-- Energy transfer via electromagnetic waves
-- No medium required
-- Stefan-Boltzmann Law: E = σεAT⁴
-- σ = 5.67 × 10⁻⁸ W/(m²·K⁴)
-- ε = emissivity (0 to 1)
-
-**Wien's Displacement Law:**
-- λ_max × T = constant = 2.9 × 10⁻³ m·K
-
-**Newton's Law of Cooling:**
-- dT/dt = -k(T - T_s)
-- Rate of cooling ∝ Temperature difference
-- Valid for small temperature differences`,
+- dT/dt = -k (T - T_env)` ,
     keyConcepts: [
-      "Temperature scales and thermal equilibrium",
-      "Thermal expansion (linear, area, volume)",
-      "Specific heat and heat capacity",
-      "Calorimetry principle",
-      "Latent heat and phase changes",
-      "Heat transfer: conduction, convection, radiation",
-      "Anomalous expansion of water",
+      {
+        title: "Temperature Scales",
+        description: "Conversions between Celsius, Kelvin, and Fahrenheit.",
+        formula: "K = C + 273.15, F = (9/5) C + 32",
+      },
+      {
+        title: "Thermal Expansion",
+        description: "Solids expand when heated; expansion depends on alpha.",
+        formula: "delta L = alpha L0 delta T",
+      },
+      {
+        title: "Calorimetry",
+        description: "Heat exchange and specific heat capacity.",
+        formula: "Q = m c delta T",
+      },
+      {
+        title: "Latent Heat",
+        description: "Heat required for phase change at constant temperature.",
+        formula: "Q = m L",
+      },
+      {
+        title: "Heat Conduction",
+        description: "Rate of heat flow through a material.",
+        formula: "Q/t = k A (T1 - T2) / L",
+      },
     ],
     formulas: [
-      "Linear expansion: ΔL = αL₀ΔT",
-      "Area expansion: β = 2α",
-      "Volume expansion: γ = 3α",
-      "Heat transfer: Q = mcΔT",
-      "Latent heat: Q = mL",
-      "Conduction: Q/t = kA(T₁-T₂)/x",
-      "Stefan-Boltzmann: E = σεAT⁴",
-      "Wien's law: λ_max·T = 2.9×10⁻³ m·K",
+      "K = C + 273.15",
+      "F = (9/5) C + 32",
+      "delta L = alpha L0 delta T",
+      "delta A = beta A0 delta T",
+      "delta V = gamma V0 delta T",
+      "Q = m c delta T",
+      "Q = m L",
+      "Q/t = k A (T1 - T2) / L",
+      "P = sigma A (T^4 - T_env^4)",
+      "dT/dt = -k (T - T_env)",
     ],
     importantTopics: [
       "Temperature scales conversion",
@@ -170,7 +103,24 @@ const chapters = [
       "Basic algebra",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 11",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Thermal Expansion (Bimetallic Strip)",
+        description: "See how different metals expand with heat.",
+        config: {
+          visualizationName: "bimetallic-strip",
+        },
+      },
+      {
+        type: "concept",
+        title: "Calorimetry Heat Exchange",
+        description: "Track heat flow and temperature changes during mixing.",
+        config: {
+          visualizationName: "calorimetry",
+        },
+      },
+    ],
     difficultyLevel: 3,
     estimatedStudyMinutes: 300,
     status: "published" as const,
@@ -185,165 +135,76 @@ const chapters = [
 
 ## Thermodynamic System
 
-**Types of Systems:**
-1. **Open System:** Exchanges matter and energy
-2. **Closed System:** Exchanges energy only
-3. **Isolated System:** No exchange of matter or energy
+- Open system: exchanges matter and energy
+- Closed system: exchanges energy only
+- Isolated system: no exchange
 
-**State Variables:**
-- Pressure (P), Volume (V), Temperature (T)
-- Internal energy (U), Entropy (S)
-- Extensive: depend on amount (V, U, S)
-- Intensive: independent of amount (P, T)
+## Zeroth Law
 
-**Equilibrium:**
-- Thermal: Same temperature throughout
-- Mechanical: Same pressure throughout
-- Chemical: No chemical reactions
+If two systems are each in thermal equilibrium with a third, they are in thermal equilibrium with each other.
 
-## Zeroth Law of Thermodynamics
+## First Law
 
-**Statement:**
-If A is in thermal equilibrium with C, and B is in thermal equilibrium with C, then A and B are in thermal equilibrium with each other
+Energy conservation:
+- delta Q = delta U + W
+- Work done by the system is positive
 
-**Significance:**
-- Basis for temperature measurement
-- Defines temperature scale
-- Allows thermometer calibration
+**Processes:**
+- Isothermal (T constant): delta U = 0, W = n R T ln(V2/V1)
+- Isochoric (V constant): W = 0
+- Isobaric (P constant): W = P delta V
+- Adiabatic: Q = 0, P V^gamma = constant
 
-## First Law of Thermodynamics
+## Second Law
 
-**Statement:**
-Energy is conserved in thermodynamic processes
+- Heat cannot spontaneously flow from cold to hot
+- No engine can convert all heat into work
 
-**Mathematical Form:**
-- ΔQ = ΔU + ΔW
-- Heat supplied = Change in internal energy + Work done by system
+**Entropy:**
+- delta S = Q_rev / T
 
-**Sign Conventions:**
-- ΔQ > 0: Heat absorbed by system
-- ΔW > 0: Work done by system
-- ΔU > 0: Internal energy increases
+## Heat Engines and Refrigerators
 
-**Special Processes:**
-
-**1. Isothermal (T = constant):**
-- ΔU = 0 (for ideal gas)
-- Q = W = nRT ln(V₂/V₁) = nRT ln(P₁/P₂)
-- PV = constant
-- Slow process (heat exchange with surroundings)
-
-**2. Adiabatic (Q = 0):**
-- ΔU = -W
-- No heat exchange with surroundings
-- PVᵞ = constant
-- TVᵞ⁻¹ = constant
-- TᵞP^(1-γ) = constant
-- Fast/insulated process
-
-**3. Isochoric (V = constant):**
-- W = 0 (no volume change)
-- Q = ΔU = nCᵥΔT
-- Heating at constant volume
-
-**4. Isobaric (P = constant):**
-- W = PΔV = nRΔT
-- Q = nCₚΔT
-- ΔU = nCᵥΔT
-
-**5. Cyclic Process:**
-- ΔU = 0 (returns to initial state)
-- Q = W (heat absorbed = work done)
-
-## Heat Capacities of Gases
-
-**Molar Heat Capacities:**
-- Cᵥ = (f/2)R (at constant volume)
-- Cₚ = ((f+2)/2)R (at constant pressure)
-- f = degrees of freedom
-
-**Degrees of Freedom:**
-- Monatomic: f = 3 (translational only)
-- Diatomic: f = 5 (3 translational + 2 rotational)
-- Polyatomic: f = 6 (3 trans + 3 rot)
-
-**Relations:**
-- Cₚ - Cᵥ = R (Mayer's equation)
-- γ = Cₚ/Cᵥ
-- Monatomic: γ = 5/3 = 1.67
-- Diatomic: γ = 7/5 = 1.4
-
-**Internal Energy:**
-- U = nCᵥT = (f/2)nRT
-
-## Second Law of Thermodynamics
-
-**Kelvin-Planck Statement:**
-No heat engine can convert all heat absorbed into work (η < 100%)
-
-**Clausius Statement:**
-Heat cannot spontaneously flow from cold to hot body without external work
-
-**Entropy (S):**
-- dS = dQ/T (reversible process)
-- Measure of disorder/randomness
-- For isolated system: ΔS ≥ 0
-- Increases in irreversible processes
-
-**Reversible vs Irreversible:**
-- Reversible: Quasi-static, no entropy increase
-- Irreversible: Real processes, entropy increases
-
-## Heat Engines
-
-**Efficiency:**
-- η = W/Q₁ = (Q₁ - Q₂)/Q₁
-- η = 1 - Q₂/Q₁
-- η = 1 - T₂/T₁ (Carnot engine)
-- Always η < 1 (< 100%)
-
-**Carnot Engine:**
-- Most efficient reversible heat engine
-- Four processes: 2 isothermal + 2 adiabatic
-- η_Carnot = 1 - T_cold/T_hot
-- Maximum theoretical efficiency
-
-**Carnot Cycle:**
-1. Isothermal expansion (absorb Q₁ at T₁)
-2. Adiabatic expansion
-3. Isothermal compression (reject Q₂ at T₂)
-4. Adiabatic compression
-
-## Refrigerator and Heat Pump
-
-**Refrigerator:**
-- Removes heat from cold reservoir
-- Coefficient of Performance: COP = Q₂/W = Q₂/(Q₁ - Q₂)
-- COP_Carnot = T₂/(T₁ - T₂)
-- Higher COP is better
-
-**Heat Pump:**
-- Delivers heat to hot reservoir
-- COP_HP = Q₁/W = Q₁/(Q₁ - Q₂)
-- COP_HP = T₁/(T₁ - T₂)
-- COP_HP = COP_refrigerator + 1`,
+- Efficiency: eta = W / Qh = 1 - Qc/Qh
+- Carnot efficiency: eta = 1 - Tc/Th
+- Refrigerator COP: K = Qc / W = Tc / (Th - Tc)` ,
     keyConcepts: [
-      "Thermodynamic systems and state variables",
-      "First law of thermodynamics",
-      "Thermodynamic processes (isothermal, adiabatic, etc.)",
-      "Heat capacities and Mayer's equation",
-      "Second law and entropy",
-      "Heat engines and Carnot cycle",
-      "Refrigerators and heat pumps",
+      {
+        title: "First Law",
+        description: "Heat supplied equals increase in internal energy plus work done.",
+        formula: "delta Q = delta U + W",
+      },
+      {
+        title: "Thermodynamic Processes",
+        description: "Isothermal, adiabatic, isobaric, and isochoric processes.",
+        formula: "Isothermal: W = n R T ln(V2/V1); Adiabatic: P V^gamma = constant",
+      },
+      {
+        title: "Entropy",
+        description: "Measure of disorder; defined for reversible processes.",
+        formula: "delta S = Q_rev / T",
+      },
+      {
+        title: "Heat Engine Efficiency",
+        description: "Efficiency depends on heat absorbed and rejected.",
+        formula: "eta = 1 - Qc/Qh",
+      },
+      {
+        title: "Carnot Cycle",
+        description: "Ideal reversible engine sets the maximum efficiency.",
+        formula: "eta = 1 - Tc/Th",
+      },
     ],
     formulas: [
-      "First Law: ΔQ = ΔU + ΔW",
-      "Isothermal: W = nRT ln(V₂/V₁)",
-      "Adiabatic: PVᵞ = constant, TVᵞ⁻¹ = constant, TᵞP^(1-γ) = constant",
-      "Mayer's equation: Cₚ - Cᵥ = R",
-      "γ = Cₚ/Cᵥ",
-      "Carnot efficiency: η = 1 - T₂/T₁",
-      "COP_refrigerator = Q₂/W",
+      "delta Q = delta U + W",
+      "W = P delta V",
+      "W = n R T ln(V2/V1)",
+      "P V^gamma = constant",
+      "T V^(gamma-1) = constant",
+      "U = (f/2) n R T",
+      "eta = 1 - Qc/Qh",
+      "eta_carnot = 1 - Tc/Th",
+      "K = Qc / W = Tc / (Th - Tc)",
     ],
     importantTopics: [
       "Laws of thermodynamics",
@@ -366,10 +227,27 @@ Heat cannot spontaneously flow from cold to hot body without external work
       "Ideal gas equation",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 12",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Carnot Cycle (P-V Diagram)",
+        description: "Explore reversible processes and efficiency limits.",
+        config: {
+          visualizationName: "carnot-cycle",
+        },
+      },
+      {
+        type: "concept",
+        title: "Calorimetry Heat Exchange",
+        description: "Track heat flow and temperature changes during mixing.",
+        config: {
+          visualizationName: "calorimetry",
+        },
+      },
+    ],
     difficultyLevel: 5,
     estimatedStudyMinutes: 420,
-    status: "draft" as const,
+    status: "published" as const,
   },
   {
     subject: "Physics",
@@ -379,130 +257,72 @@ Heat cannot spontaneously flow from cold to hot body without external work
     introduction: "This chapter connects macroscopic thermodynamic properties to microscopic molecular motion. We study ideal gas behavior, kinetic interpretation of temperature, and mean free path.",
     detailedNotes: `# Kinetic Theory
 
-## Molecular Nature of Matter
+## Assumptions of Ideal Gas
 
-**Assumptions:**
-- Matter made of tiny particles (atoms/molecules)
-- Continuous random motion
-- Attractive forces between particles
-- Average separation >> molecular size
-
-**States of Matter:**
-- Solid: Strong forces, fixed positions
-- Liquid: Moderate forces, can flow
-- Gas: Weak forces, free motion
-
-## Kinetic Theory of Ideal Gas
-
-**Postulates:**
 1. Large number of molecules in random motion
-2. Volume of molecules << container volume
-3. Obey Newton's laws
-4. No intermolecular forces (except during collision)
-5. Collisions perfectly elastic
-6. Time of collision << time between collisions
+2. Molecular volume is negligible compared to container volume
+3. No intermolecular forces except during collisions
+4. Collisions are perfectly elastic
 
-**Pressure from Kinetic Theory:**
-- P = (1/3)ρv̄² = (1/3)nmv̄²/V
-- P = (1/3)(Nm/V)v̄²
-- ρ = density, v̄² = mean square speed
+## Pressure from Kinetic Theory
 
-**Kinetic Interpretation of Temperature:**
-- Average KE per molecule = (3/2)kT
-- (1/2)mv̄² = (3/2)kT
-- k = Boltzmann constant = 1.38 × 10⁻²³ J/K
+- P = (1/3) rho v_rms^2
+- rho = mass density of gas
 
-**Internal Energy:**
-- U = (f/2)NkT = (f/2)nRT
-- For ideal gas, U depends only on T
-- f = degrees of freedom
+## Temperature and Kinetic Energy
+
+- Average KE per molecule = (3/2) k T
+- For one mole: (1/2) m v_rms^2 = (3/2) R T
+
+## Degrees of Freedom and Internal Energy
+
+- U = (f/2) n R T
+- f is degrees of freedom
 
 ## Molecular Speeds
 
-**Root Mean Square Speed:**
-- v_rms = √(v̄²) = √(3kT/m) = √(3RT/M)
-
-**Average Speed:**
-- v_avg = √(8kT/πm) = √(8RT/πM)
-
-**Most Probable Speed:**
-- v_mp = √(2kT/m) = √(2RT/M)
-
-**Relation:**
-- v_rms : v_avg : v_mp = √3 : √(8/π) : √2
-- v_rms > v_avg > v_mp
-
-## Degrees of Freedom
-
-**Definition:**
-Number of independent ways molecule can have energy
-
-**Types:**
-- Translational: 3 (x, y, z directions)
-- Rotational: 2 (diatomic), 3 (polyatomic)
-- Vibrational: (activated at high T)
-
-**Monatomic Gas:** f = 3
-- Only translational motion
-- Examples: He, Ne, Ar
-
-**Diatomic Gas:** f = 5 (at moderate T)
-- 3 translational + 2 rotational
-- Examples: H₂, N₂, O₂
-
-**Polyatomic Gas:** f = 6
-- 3 translational + 3 rotational
-- Examples: CO₂, CH₄
-
-## Law of Equipartition of Energy
-
-**Statement:**
-Energy associated with each degree of freedom = (1/2)kT per molecule
-
-**Applications:**
-- Average energy per molecule = (f/2)kT
-- Internal energy: U = (f/2)NkT = (f/2)nRT
-
-**Specific Heat Predictions:**
-- Cᵥ = (f/2)R
-- Cₚ = ((f+2)/2)R
-- γ = (f+2)/f
+- v_rms = sqrt(3 R T / M)
+- v_avg = sqrt(8 R T / (pi M))
+- v_mp = sqrt(2 R T / M)
 
 ## Mean Free Path
 
-**Definition:**
-Average distance traveled between successive collisions
-
-**Formula:**
-- λ = 1/(√2πd²n)
-- d = molecular diameter
-- n = number density (N/V)
-
-**Properties:**
-- λ ∝ T (at constant P)
-- λ ∝ 1/P (at constant T)
-- λ ∝ 1/d² (molecular size)
-
-**Collision Frequency:**
-- f = v_avg/λ
-- Number of collisions per second`,
+- lambda = 1 / (sqrt(2) pi d^2 n)` ,
     keyConcepts: [
-      "Kinetic theory postulates",
-      "Pressure and kinetic energy",
-      "Kinetic interpretation of temperature",
-      "Molecular speeds (rms, average, most probable)",
-      "Degrees of freedom",
-      "Law of equipartition of energy",
-      "Mean free path",
+      {
+        title: "Pressure Relation",
+        description: "Macroscopic pressure arises from molecular collisions.",
+        formula: "P = (1/3) rho v_rms^2",
+      },
+      {
+        title: "Temperature and KE",
+        description: "Temperature measures average molecular kinetic energy.",
+        formula: "Average KE = (3/2) k T",
+      },
+      {
+        title: "Internal Energy",
+        description: "Depends only on temperature for an ideal gas.",
+        formula: "U = (f/2) n R T",
+      },
+      {
+        title: "Molecular Speeds",
+        description: "RMS, average, and most probable speeds.",
+        formula: "v_rms = sqrt(3 R T / M)",
+      },
+      {
+        title: "Mean Free Path",
+        description: "Average distance between collisions.",
+        formula: "lambda = 1 / (sqrt(2) pi d^2 n)",
+      },
     ],
     formulas: [
-      "Pressure: P = (1/3)ρv̄²",
-      "KE-Temperature: (1/2)mv̄² = (3/2)kT",
-      "v_rms = √(3RT/M)",
-      "v_avg = √(8RT/πM)",
-      "v_mp = √(2RT/M)",
-      "Internal energy: U = (f/2)nRT",
-      "Mean free path: λ = 1/(√2πd²n)",
+      "P = (1/3) rho v_rms^2",
+      "Average KE = (3/2) k T",
+      "U = (f/2) n R T",
+      "v_rms = sqrt(3 R T / M)",
+      "v_avg = sqrt(8 R T / (pi M))",
+      "v_mp = sqrt(2 R T / M)",
+      "lambda = 1 / (sqrt(2) pi d^2 n)",
     ],
     importantTopics: [
       "Kinetic theory assumptions",
@@ -525,7 +345,24 @@ Average distance traveled between successive collisions
       "Basic statistics",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 13",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Gas Molecules Simulator",
+        description: "Visualize random molecular motion and temperature effects.",
+        config: {
+          visualizationName: "gas-molecules",
+        },
+      },
+      {
+        type: "concept",
+        title: "Avogadro Jar",
+        description: "Explore gas volume, particle count, and pressure.",
+        config: {
+          visualizationName: "avogadro-jar",
+        },
+      },
+    ],
     difficultyLevel: 4,
     estimatedStudyMinutes: 360,
     status: "published" as const,
@@ -538,158 +375,78 @@ Average distance traveled between successive collisions
     introduction: "This chapter studies periodic motion, focusing on simple harmonic motion (SHM). We explore oscillations in springs, pendulums, and energy in SHM.",
     detailedNotes: `# Oscillations
 
-## Periodic Motion
-
-**Definition:**
-Motion that repeats after equal intervals of time
-
-**Period (T):**
-- Time for one complete oscillation
-- Unit: seconds (s)
-
-**Frequency (ν or f):**
-- Number of oscillations per unit time
-- ν = 1/T
-- Unit: Hertz (Hz) = s⁻¹
-
-**Examples:**
-- Pendulum, vibrating string, AC current, planetary motion
-
 ## Simple Harmonic Motion (SHM)
 
-**Definition:**
-Periodic motion where restoring force is proportional to displacement from equilibrium
+SHM is periodic motion where the restoring force is proportional to displacement and directed toward equilibrium.
 
-**Condition for SHM:**
-- F = -kx (Hooke's law)
-- a = -ω²x
-- Restoring force ∝ displacement
+- F = -k x
+- a = -omega^2 x
 
 **Displacement:**
-- x = A sin(ωt + φ)
-- or x = A cos(ωt + φ)
-- A = amplitude, ω = angular frequency, φ = phase constant
+- x = A sin(omega t + phi)
 
 **Velocity:**
-- v = dx/dt = Aω cos(ωt + φ)
-- v = ±ω√(A² - x²)
-- Maximum at equilibrium: v_max = Aω
+- v = dx/dt
+- v_max = omega A
 
 **Acceleration:**
-- a = -ω²x
-- a = -ω²A sin(ωt + φ)
-- Maximum at extremes: a_max = ω²A
-
-**Angular Frequency:**
-- ω = 2πν = 2π/T
-- Unit: rad/s
+- a = -omega^2 x
 
 ## Energy in SHM
 
-**Potential Energy:**
-- PE = (1/2)kx² = (1/2)mω²x²
-- PE = (1/2)kA²sin²(ωt + φ)
-- Maximum at extremes
-
-**Kinetic Energy:**
-- KE = (1/2)mv² = (1/2)mω²(A² - x²)
-- KE = (1/2)kA²cos²(ωt + φ)
-- Maximum at equilibrium
-
-**Total Energy:**
-- E = KE + PE = (1/2)kA² = constant
-- E = (1/2)mω²A²
-- Independent of time (conserved)
-
-**Energy Distribution:**
-- At x = 0: KE = max, PE = 0
-- At x = ±A: KE = 0, PE = max
-- At x = ±A/√2: KE = PE
+- PE = 0.5 k x^2
+- KE = 0.5 m v^2
+- Total energy: E = 0.5 k A^2 = 0.5 m omega^2 A^2 (constant)
 
 ## Spring-Mass System
 
-**Horizontal Spring:**
-- F = -kx
-- ω = √(k/m)
-- T = 2π√(m/k)
+- omega = sqrt(k/m)
+- T = 2 pi sqrt(m/k)
 
-**Vertical Spring:**
-- Same formula as horizontal
-- Equilibrium at extension x₀ = mg/k
-- Oscillates about new equilibrium
+## Simple Pendulum (small angle)
 
-**Series Combination:**
-- 1/k_eq = 1/k₁ + 1/k₂
+- T = 2 pi sqrt(L/g)
 
-**Parallel Combination:**
-- k_eq = k₁ + k₂
+## Damping and Resonance
 
-## Simple Pendulum
-
-**For small angles (θ < 10°):**
-- Restoring force: F = -mg sin θ ≈ -mgθ
-- ω = √(g/L)
-- T = 2π√(L/g)
-- Independent of mass and amplitude
-
-**Factors Affecting Period:**
-- T ∝ √L (increases with length)
-- T ∝ 1/√g (decreases with gravity)
-- Independent of mass, amplitude
-
-**Effective Length:**
-- Distance from point of suspension to center of gravity
-
-## Damped Oscillations
-
-**Definition:**
-Oscillations with decreasing amplitude due to dissipative forces
-
-**Equation:**
-- x = A₀e^(-bt/2m) cos(ωt + φ)
-- b = damping constant
-
-**Types:**
-- Underdamped: Oscillates with decreasing amplitude
-- Critically damped: Returns to equilibrium fastest
-- Overdamped: Slow return, no oscillation
-
-**Energy Loss:**
-- E = E₀e^(-bt/m)
-- Exponential decay
-
-## Forced Oscillations and Resonance
-
-**Forced Oscillations:**
-- External periodic force applied
-- System oscillates at driving frequency
-
-**Resonance:**
-- Maximum amplitude when driving frequency = natural frequency
-- ω_driving = ω_natural
-- Amplitude depends on damping
-
-**Applications:**
-- Musical instruments
-- Earthquake resistance
-- Radio tuning`,
+- Damping reduces amplitude over time
+- Resonance occurs when driving frequency matches natural frequency` ,
     keyConcepts: [
-      "Periodic motion and SHM definition",
-      "Displacement, velocity, acceleration in SHM",
-      "Energy conservation in SHM",
-      "Spring-mass system",
-      "Simple pendulum",
-      "Damped oscillations",
-      "Forced oscillations and resonance",
+      {
+        title: "SHM Condition",
+        description: "Restoring force proportional to displacement.",
+        formula: "F = -k x, a = -omega^2 x",
+      },
+      {
+        title: "Spring-Mass System",
+        description: "Angular frequency and time period for a spring.",
+        formula: "omega = sqrt(k/m), T = 2 pi sqrt(m/k)",
+      },
+      {
+        title: "Simple Pendulum",
+        description: "Small-angle oscillations have fixed period.",
+        formula: "T = 2 pi sqrt(L/g)",
+      },
+      {
+        title: "Energy in SHM",
+        description: "Total energy remains constant in ideal SHM.",
+        formula: "E = 0.5 k A^2",
+      },
+      {
+        title: "Resonance",
+        description: "Large amplitude when driving frequency equals natural frequency.",
+        formula: "f_drive = f_natural",
+      },
     ],
     formulas: [
-      "SHM: x = A sin(ωt + φ)",
-      "v = ±ω√(A² - x²)",
-      "a = -ω²x",
-      "Spring: T = 2π√(m/k)",
-      "Pendulum: T = 2π√(L/g)",
-      "Total energy: E = (1/2)kA²",
-      "Damped: x = A₀e^(-bt/2m)cos(ωt)",
+      "x = A sin(omega t + phi)",
+      "v_max = omega A",
+      "a = -omega^2 x",
+      "omega = sqrt(k/m)",
+      "T = 2 pi sqrt(m/k)",
+      "T = 2 pi sqrt(L/g)",
+      "E = 0.5 k A^2",
+      "E = 0.5 m omega^2 A^2",
     ],
     importantTopics: [
       "SHM equations and graphs",
@@ -712,7 +469,24 @@ Oscillations with decreasing amplitude due to dissipative forces
       "Calculus basics",
     ],
     ncertChapterRef: "Class 11 Physics - Chapter 14",
-    visualizationsData: [],
+    visualizationsData: [
+      {
+        type: "concept",
+        title: "Simple Pendulum Phase",
+        description: "Explore SHM in phase space (theta vs omega).",
+        config: {
+          visualizationName: "simple-pendulum-phase",
+        },
+      },
+      {
+        type: "concept",
+        title: "Spring Energy Bar",
+        description: "See energy exchange between kinetic and potential energy.",
+        config: {
+          visualizationName: "spring-energy-bar",
+        },
+      },
+    ],
     difficultyLevel: 4,
     estimatedStudyMinutes: 360,
     status: "published" as const,
@@ -727,196 +501,74 @@ Oscillations with decreasing amplitude due to dissipative forces
 
 ## Wave Motion
 
-**Definition:**
-Transfer of energy and momentum without transfer of matter
+Wave motion transfers energy without transporting matter over long distances.
 
-**Characteristics:**
-- Periodic disturbance
-- Propagates through medium
-- Energy transfer
-- Speed depends on medium properties
+**Wave equation:**
+- y(x,t) = A sin(k x - omega t + phi)
+- k = 2 pi / lambda
+- omega = 2 pi f
+- v = lambda f = omega / k
 
-**Types of Waves:**
+## Types of Waves
 
-**1. Mechanical Waves:**
-- Require medium
-- Examples: Sound, water waves, seismic waves
+- Transverse: particle motion perpendicular to wave direction
+- Longitudinal: particle motion parallel to wave direction
 
-**2. Electromagnetic Waves:**
-- No medium required
-- Examples: Light, radio, X-rays
+## Waves on a String
 
-**Based on Particle Motion:**
+- v = sqrt(T / mu)
+- Standing waves: f_n = n v / (2 L)
 
-**Transverse Waves:**
-- Particle motion ⊥ wave direction
-- Crests and troughs
-- Examples: Light, string vibrations
-- Cannot travel in fluids (gases/liquids)
+## Sound Waves in Pipes
 
-**Longitudinal Waves:**
-- Particle motion ∥ wave direction
-- Compressions and rarefactions
-- Examples: Sound waves
-- Can travel in all media
+- Open pipe: f_n = n v / (2 L)
+- Closed pipe: f_n = (2n - 1) v / (4 L)
 
-## Wave Equation
+## Interference and Beats
 
-**General Form:**
-- y(x,t) = A sin(kx - ωt + φ)
-- y = displacement
-- A = amplitude
-- k = wave number = 2π/λ
-- ω = angular frequency = 2πν
-- φ = initial phase
-
-**Wave Speed:**
-- v = λν = ω/k
-- v = √(T/μ) (for string, T=tension, μ=mass/length)
-- v = √(E/ρ) (for solid rod)
-- v = √(B/ρ) (for fluid, B=bulk modulus)
-
-**Relations:**
-- λ = v/ν = vT
-- k = 2π/λ
-- ω = 2πν
-
-## Properties of Waves
-
-**Wavelength (λ):**
-- Distance between consecutive crests/troughs
-- Unit: meter (m)
-
-**Amplitude (A):**
-- Maximum displacement from equilibrium
-- Determines intensity
-
-**Frequency (ν):**
-- Number of oscillations per second
-- Unit: Hz
-
-**Phase:**
-- State of oscillation at given time
-- φ = kx - ωt
-
-## Superposition of Waves
-
-**Principle:**
-Net displacement = algebraic sum of individual displacements
-
-**Interference:**
-
-**Constructive:**
-- Waves in phase (Δφ = 2nπ)
-- Amplitude: A = A₁ + A₂
-- Maximum intensity
-
-**Destructive:**
-- Waves out of phase (Δφ = (2n+1)π)
-- Amplitude: A = |A₁ - A₂|
-- Minimum intensity
-
-## Standing Waves
-
-**Formation:**
-- Superposition of two identical waves traveling in opposite directions
-- y = 2A sin(kx) cos(ωt)
-
-**Nodes:**
-- Points of zero amplitude
-- Distance between nodes = λ/2
-
-**Antinodes:**
-- Points of maximum amplitude
-- Distance between antinodes = λ/2
-
-**String Fixed at Both Ends:**
-- L = nλ/2 (n = 1, 2, 3...)
-- ν_n = nv/(2L)
-- Fundamental: n = 1, ν₁ = v/(2L)
-- Harmonics: ν_n = nν₁
-
-## Sound Waves
-
-**Nature:**
-- Longitudinal mechanical waves
-- Compressions and rarefactions
-- Require medium
-
-**Speed of Sound:**
-- In air: v ≈ 343 m/s (at 20°C)
-- v = √(γRT/M) (in gases)
-- v ∝ √T (temperature dependence)
-- Faster in solids > liquids > gases
-
-**Characteristics:**
-
-**1. Pitch:**
-- Related to frequency
-- High frequency = high pitch
-
-**2. Loudness:**
-- Related to amplitude/intensity
-- I = P/A (W/m²)
-- Loudness ∝ log(I)
-
-**3. Quality (Timbre):**
-- Distinguishes sources
-- Depends on harmonics
-
-**Intensity Level:**
-- β = 10 log₁₀(I/I₀) dB
-- I₀ = 10⁻¹² W/m² (threshold)
-
-## Beats
-
-**Definition:**
-Periodic variation in amplitude due to interference of two waves of slightly different frequencies
-
-**Beat Frequency:**
-- ν_beat = |ν₁ - ν₂|
-- Number of beats per second
-
-**Condition:**
-- Frequencies very close
-- Usually ν₁ - ν₂ < 10 Hz
+- Superposition leads to interference
+- Beats frequency: f_beat = |f1 - f2|
 
 ## Doppler Effect
 
-**Definition:**
-Apparent change in frequency due to relative motion between source and observer
-
-**Formulas:**
-- ν' = ν[(v ± v₀)/(v ∓ v_s)]
-- v = speed of sound
-- v₀ = observer speed
-- v_s = source speed
-
-**Sign Convention:**
-- Approaching: + for observer, - for source
-- Receding: - for observer, + for source
-
-**Applications:**
-- Speed measurement (radar)
-- Astronomy (redshift/blueshift)
-- Medical ultrasound`,
+- f' = f (v +/- v_o) / (v -/+ v_s)` ,
     keyConcepts: [
-      "Wave motion and types",
-      "Transverse and longitudinal waves",
-      "Wave equation and parameters",
-      "Superposition and interference",
-      "Standing waves and harmonics",
-      "Sound wave properties",
-      "Beats and Doppler effect",
+      {
+        title: "Wave Parameters",
+        description: "Relationship between wavelength, frequency, and speed.",
+        formula: "v = lambda f",
+      },
+      {
+        title: "Standing Waves",
+        description: "Allowed frequencies on a string or in air columns.",
+        formula: "f_n = n v / (2 L)",
+      },
+      {
+        title: "Beats",
+        description: "Interference of close frequencies causes beats.",
+        formula: "f_beat = |f1 - f2|",
+      },
+      {
+        title: "Doppler Effect",
+        description: "Observed frequency changes due to relative motion.",
+        formula: "f' = f (v +/- v_o) / (v -/+ v_s)",
+      },
+      {
+        title: "Wave Speed on String",
+        description: "Depends on tension and mass per length.",
+        formula: "v = sqrt(T / mu)",
+      },
     ],
     formulas: [
-      "Wave equation: y = A sin(kx - ωt)",
-      "Wave speed: v = λν",
-      "String: v = √(T/μ)",
-      "Sound in gas: v = √(γRT/M)",
-      "Standing wave: L = nλ/2",
-      "Beat frequency: ν_beat = |ν₁ - ν₂|",
-      "Doppler: ν' = ν[(v±v₀)/(v∓v_s)]",
+      "y(x,t) = A sin(k x - omega t + phi)",
+      "k = 2 pi / lambda",
+      "omega = 2 pi f",
+      "v = lambda f",
+      "v = sqrt(T / mu)",
+      "f_n = n v / (2 L)",
+      "f_n(closed) = (2n - 1) v / (4 L)",
+      "f_beat = |f1 - f2|",
+      "f' = f (v +/- v_o) / (v -/+ v_s)",
     ],
     importantTopics: [
       "Wave types and motion",
@@ -943,15 +595,36 @@ Apparent change in frequency due to relative motion between source and observer
     ncertChapterRef: "Class 11 Physics - Chapter 15",
     visualizationsData: [
       {
-        type: "wave-motion",
-        title: "Wave Motion Visualization",
-        description: "Interactive visualization of transverse and longitudinal waves",
+        type: "concept",
+        title: "Standing Waves",
+        description: "Visualize nodes, antinodes, and harmonics.",
         config: {
-          waveType: "transverse",
-          amplitude: 1,
-          frequency: 1,
-          wavelength: 2
-        }
+          visualizationName: "standing-wave",
+        },
+      },
+      {
+        type: "concept",
+        title: "Resonance Tube",
+        description: "Explore resonance in air columns and harmonics.",
+        config: {
+          visualizationName: "resonance-tube",
+        },
+      },
+      {
+        type: "concept",
+        title: "Doppler Effect",
+        description: "See frequency shift with relative motion.",
+        config: {
+          visualizationName: "doppler-effect",
+        },
+      },
+      {
+        type: "concept",
+        title: "Interference Pattern",
+        description: "Constructive and destructive interference patterns.",
+        config: {
+          visualizationName: "interference-pattern",
+        },
       },
     ],
     difficultyLevel: 4,

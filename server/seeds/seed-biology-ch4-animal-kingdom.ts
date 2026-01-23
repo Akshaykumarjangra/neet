@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter4() {
   console.log("Seeding Biology Class 11 Chapter 4: Animal Kingdom...");
@@ -408,12 +409,14 @@ Animals are classified based on several fundamental criteria that reflect their 
       estimatedStudyMinutes: 300,
       status: "published",
 
-      visualizationsData: {
-        type: "comparative-anatomy",
-        title: "Animal Phyla Comparison",
-        description:
-          "Interactive comparison showing body organization, symmetry, and key features across major animal phyla from Porifera to Chordata",
-      },
+      visualizationsData: [
+        {
+          type: "comparative-anatomy",
+          title: "Animal Phyla Comparison",
+          description:
+            "Interactive comparison showing body organization, symmetry, and key features across major animal phyla from Porifera to Chordata",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -746,6 +749,20 @@ Animals are classified based on several fundamental criteria that reflect their 
 5. **Medical significance**: Understanding parasites and disease vectors
 6. **Conservation**: Identifying endangered species and ecosystems
 `,
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+            type: "comparative-anatomy",
+            title: "Animal Phyla Comparison",
+            description:
+              "Interactive comparison showing body organization, symmetry, and key features across major animal phyla from Porifera to Chordata",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

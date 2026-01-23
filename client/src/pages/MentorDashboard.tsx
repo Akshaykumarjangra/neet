@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EarningsChart } from "@/components/mentors/EarningsChart";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -70,6 +71,7 @@ import {
   Upload,
   Eye,
   Edit,
+  AlertCircle,
 } from "lucide-react";
 
 const SUBJECTS = ["Physics", "Chemistry", "Botany", "Zoology"] as const;
@@ -221,22 +223,25 @@ export default function MentorDashboard() {
   const [topics, setTopics] = useState<string[]>([]);
   const [meetingLinkInput, setMeetingLinkInput] = useState<Record<number, string>>({});
 
-  const { data: mentorStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery<{ status: string; hasMentor: boolean; mentor?: MentorData }>({
+  const {
+    data: mentorStatus,
+    isLoading: statusLoading,
+    isError: statusError,
+    error: statusErrorData,
+    refetch: refetchStatus,
+  } = useQuery<{ status: string; hasMentor: boolean; mentor?: MentorData }>({
     queryKey: ["/api/mentors/status"],
     queryFn: async () => {
-      try {
-        const response = await fetch("/api/mentors/status", { credentials: "include" });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.status === "not_applied") {
-            return { status: "not_applied", hasMentor: false };
-          }
-          return { status: data.status, hasMentor: true, mentor: data.mentor };
-        }
-        return { status: "not_applied", hasMentor: false };
-      } catch {
+      const response = await fetch("/api/mentors/status", { credentials: "include" });
+      if (!response.ok) {
+        const message = (await response.text()) || "Failed to load mentor status";
+        throw new Error(message);
+      }
+      const data = await response.json();
+      if (data.status === "not_applied") {
         return { status: "not_applied", hasMentor: false };
       }
+      return { status: data.status, hasMentor: true, mentor: data.mentor };
     },
     enabled: !!user,
   });
@@ -308,7 +313,7 @@ export default function MentorDashboard() {
       });
       setTopics(m.topics || []);
     }
-  }, [mentorStatus]);
+  }, [mentorStatus, profileForm]);
 
   const applyMutation = useMutation({
     mutationFn: async (data: MentorApplication) => {
@@ -390,6 +395,19 @@ export default function MentorDashboard() {
     },
   });
 
+  const completeBookingMutation = useMutation({
+    mutationFn: async ({ id, paymentStatus }: { id: number; paymentStatus?: "paid" | "pending" }) => {
+      return apiRequest("PUT", `/api/bookings/${id}/complete`, { paymentStatus });
+    },
+    onSuccess: () => {
+      toast({ title: "Booking marked completed!" });
+      refetchBookings();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to complete booking", variant: "destructive" });
+    },
+  });
+
   const handleAddTopic = () => {
     if (topicInput.trim() && !topics.includes(topicInput.trim())) {
       setTopics([...topics, topicInput.trim()]);
@@ -405,6 +423,31 @@ export default function MentorDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (statusError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto p-6">
+          <Card className="max-w-lg mx-auto mt-12 border-destructive/40">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
+                <AlertCircle className="h-10 w-10 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold">Unable to load mentor dashboard</h3>
+              <p className="text-muted-foreground">
+                {statusErrorData instanceof Error ? statusErrorData.message : "Please try again."}
+              </p>
+              <Button onClick={() => refetchStatus()} className="gap-2" data-testid="button-retry-mentor-status">
+                <Loader2 className="h-4 w-4" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -458,6 +501,66 @@ export default function MentorDashboard() {
     return mentor.subjects;
   }, [mentor]);
 
+  if (authLoading || statusLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading mentor workspace...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (statusError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="max-w-lg w-full">
+            <CardHeader className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                Mentor data unavailable
+              </CardTitle>
+              <CardDescription>{statusErrorData instanceof Error ? statusErrorData.message : "Unable to load mentor status. Please try again."}</CardDescription>
+            </CardHeader>
+            <CardFooter className="flex gap-2">
+              <Button variant="outline" onClick={() => setLocation("/")}>Go home</Button>
+              <Button onClick={() => refetchStatus()}>Retry</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate chart data (last 7 days or months)
+  const chartData = useMemo(() => {
+    const data: Record<string, number> = {};
+    const now = new Date();
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      data[d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })] = 0;
+    }
+
+    bookings.forEach(b => {
+      if (b.status === 'completed') {
+        const date = new Date(b.startAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (data[date] !== undefined) {
+          data[date] += (b.priceCents || 0);
+        }
+      }
+    });
+
+    return Object.entries(data).map(([date, amount]) => ({ date, amount }));
+  }, [bookings]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -466,6 +569,33 @@ export default function MentorDashboard() {
           <GraduationCap className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Mentor Dashboard</h1>
         </div>
+
+        {isMentor && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <EarningsChart data={chartData} totalEarnings={mentor.totalEarningsCents} />
+
+            {/* Stats Cards */}
+            <Card className="glass-panel">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{mentor.totalSessionsCompleted}</div>
+                <p className="text-xs text-muted-foreground">+2 this week</p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-panel">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Students</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{uniqueStudents}</div>
+                <p className="text-xs text-muted-foreground">Retained</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {!mentorStatus?.hasMentor && (
           <Card className="mb-6">
@@ -1398,30 +1528,48 @@ export default function MentorDashboard() {
                             )}
 
                             {booking.status === "confirmed" && (
-                              <div className="flex gap-2 items-center">
-                                <Input
-                                  placeholder="Meeting link"
-                                  value={meetingLinkInput[booking.id] || booking.meetingLink || ""}
-                                  onChange={(e) =>
-                                    setMeetingLinkInput({ ...meetingLinkInput, [booking.id]: e.target.value })
-                                  }
-                                  className="w-48"
-                                  data-testid={`input-meeting-link-${booking.id}`}
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    updateBookingMutation.mutate({
-                                      id: booking.id,
-                                      status: "confirmed",
-                                      meetingLink: meetingLinkInput[booking.id],
-                                    })
-                                  }
-                                  data-testid={`button-save-link-${booking.id}`}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                </Button>
+                              <div className="flex flex-wrap gap-2 items-center">
+                                <div className="flex gap-2 items-center">
+                                  <Input
+                                    placeholder="Meeting link"
+                                    value={meetingLinkInput[booking.id] || booking.meetingLink || ""}
+                                    onChange={(e) =>
+                                      setMeetingLinkInput({ ...meetingLinkInput, [booking.id]: e.target.value })
+                                    }
+                                    className="w-48"
+                                    data-testid={`input-meeting-link-${booking.id}`}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const nextMeetingLink = meetingLinkInput[booking.id]?.trim();
+                                      updateBookingMutation.mutate({
+                                        id: booking.id,
+                                        status: "confirmed",
+                                        meetingLink: nextMeetingLink || undefined,
+                                      });
+                                    }}
+                                    data-testid={`button-save-link-${booking.id}`}
+                                  >
+                                    <LinkIcon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {new Date(booking.endAt) <= new Date() && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => completeBookingMutation.mutate({ id: booking.id, paymentStatus: "paid" })}
+                                    disabled={completeBookingMutation.isPending}
+                                    data-testid={`button-complete-booking-${booking.id}`}
+                                  >
+                                    {completeBookingMutation.isPending ? (
+                                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    ) : (
+                                      <Check className="h-4 w-4 mr-1" />
+                                    )}
+                                    Mark completed
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1432,8 +1580,8 @@ export default function MentorDashboard() {
                                 {step.label} · {new Date(step.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
                               </Badge>
                             )) || (
-                              <Badge variant="outline">Requested</Badge>
-                            )}
+                                <Badge variant="outline">Requested</Badge>
+                              )}
                           </div>
                         </div>
                       ))}

@@ -3,14 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PhysicsChapter1 } from "@/components/PhysicsChapter1";
-import { PhysicsChapter2 } from "@/components/PhysicsChapter2";
-import { PhysicsChapter3 } from "@/components/PhysicsChapter3";
-import { PhysicsChapter4 } from "@/components/PhysicsChapter4";
-import { PhysicsChapter5 } from "@/components/PhysicsChapter5";
-import { PhysicsChapter6 } from "@/components/PhysicsChapter6";
-import { PhysicsChapter7 } from "@/components/PhysicsChapter7";
-import { PhysicsChapter8 } from "@/components/PhysicsChapter8";
-import { PhysicsChapter9 } from "@/components/PhysicsChapter9";
 import { PhysicsChapter10 } from "@/components/PhysicsChapter10";
 import { PhysicsChapter11 } from "@/components/PhysicsChapter11";
 import { PhysicsChapter12 } from "@/components/PhysicsChapter12";
@@ -19,17 +11,11 @@ import { PhysicsChapter14 } from "@/components/PhysicsChapter14";
 import { PhysicsChapter15 } from "@/components/PhysicsChapter15";
 import { PhysicsChapter16 } from "@/components/PhysicsChapter16";
 import { PhysicsChapter17 } from "@/components/PhysicsChapter17";
-import { PhysicsChapter18 } from "@/components/PhysicsChapter18";
-import { PhysicsChapter19 } from "@/components/PhysicsChapter19";
-import { PhysicsChapter20 } from "@/components/PhysicsChapter20";
-import { PhysicsChapter21 } from "@/components/PhysicsChapter21";
-import { PhysicsChapter22 } from "@/components/PhysicsChapter22";
-import { PhysicsChapter23 } from "@/components/PhysicsChapter23";
-import { ChemistryChapter1 } from "@/components/ChemistryChapter1";
+import { ChapterPlaceholder } from "@/components/ChapterPlaceholder";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 const chapters = [
   { id: 1, title: "Physical World and Measurement", status: "available", questions: 45 },
@@ -56,6 +42,20 @@ const chapters = [
   { id: 22, title: "Electromagnetic Waves", status: "available", questions: 55 },
   { id: 23, title: "Dual Nature of Radiation and Matter", status: "available", questions: 60 },
 ];
+
+type ChapterComponent = () => JSX.Element;
+
+const chapterComponents: Record<number, ChapterComponent> = {
+  1: PhysicsChapter1,
+  10: PhysicsChapter10,
+  11: PhysicsChapter11,
+  12: PhysicsChapter12,
+  13: PhysicsChapter13,
+  14: PhysicsChapter14,
+  15: PhysicsChapter15,
+  16: PhysicsChapter16,
+  17: PhysicsChapter17,
+};
 
 export default function PhysicsContent() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null); // Initialize to null to show chapters first
@@ -106,467 +106,58 @@ export default function PhysicsContent() {
   // Get total questions available
   const totalPhysicsQuestions = topicsWithCounts?.reduce((sum, topic) => sum + topic.questionCount, 0) || 0;
 
-  if (selectedChapter === 1) {
+
+  if (selectedChapter) {
+    const SelectedChapterComponent = chapterComponents[selectedChapter];
+    const chapterMeta = chapters.find((chapter) => chapter.id === selectedChapter) || null;
+    const questionCount = getQuestionCountForChapter(selectedChapter);
+    const topicId = chapterToTopicMap[selectedChapter];
+    const practiceHref = topicId ? `/practice?topicId=${topicId}` : undefined;
+    const hasInteractiveContent = Boolean(SelectedChapterComponent);
+
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background">
           <Header />
-          <div className="container mx-auto p-6">
+          <div className="container mx-auto p-6 space-y-6">
             <Button
               variant="ghost"
               onClick={() => setSelectedChapter(null)}
-              className="mb-4"
+              className="w-fit"
             >
-              ← Back to Chapters
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to chapters
             </Button>
-            <PhysicsChapter1 />
+
+            <div>
+              <p className="text-sm text-muted-foreground">Class XI / Physics</p>
+              <h1 className="text-3xl font-bold mt-1">
+                Chapter {selectedChapter}: {chapterMeta?.title ?? "Coming soon"}
+              </h1>
+              {!hasInteractiveContent && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  We're finalizing the detailed reading experience for this chapter. Practice remains available below.
+                </p>
+              )}
+            </div>
+
+            {hasInteractiveContent && SelectedChapterComponent ? (
+              <SelectedChapterComponent />
+            ) : (
+              <ChapterPlaceholder
+                subject="Physics"
+                chapterNumber={selectedChapter}
+                title={chapterMeta?.title}
+                questionCount={questionCount}
+                practiceHref={practiceHref}
+              />
+            )}
           </div>
         </div>
       </ThemeProvider>
     );
   }
 
-  if (selectedChapter === 2) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter2 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 3) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter3 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 4) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter4 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 5) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter5 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // New conditional rendering for Chapter 6
-  if (selectedChapter === 6) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter6 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 7) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter7 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // New conditional rendering for Chapter 8
-  if (selectedChapter === 8) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter8 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 9) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter9 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 10) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter10 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 11) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter11 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 12) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter12 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 13) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter13 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 14) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter14 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 15) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter15 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 16) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter16 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 17) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter17 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 18) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter18 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 19) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter19 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 20) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter20 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 21) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter21 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 22) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter22 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 23) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <PhysicsChapter23 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
 
   return (
     <ThemeProvider>
@@ -577,7 +168,7 @@ export default function PhysicsContent() {
             <h1 className="text-4xl font-bold mb-2">Physics - Class XI</h1>
             <p className="text-muted-foreground">
               Complete NEET syllabus with interactive 3D visualizations
-              {totalPhysicsQuestions > 0 && ` • ${totalPhysicsQuestions} practice questions available`}
+              {totalPhysicsQuestions > 0 && ` - ${totalPhysicsQuestions} practice questions available`}
             </p>
           </div>
 
@@ -585,20 +176,15 @@ export default function PhysicsContent() {
             {/* Show all chapters */}
             {chapters.map((chapter) => {
               const questionCount = getQuestionCountForChapter(chapter.id);
-              const hasQuestions = questionCount > 0;
               const topicId = chapterToTopicMap[chapter.id];
+              const hasInteractiveContent = Boolean(chapterComponents[chapter.id]);
+              const practiceHref = topicId ? `/practice?topicId=${topicId}` : undefined;
 
               return (
                 <Card
                   key={chapter.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
-                    }`}
-                  onClick={() => {
-                    if (chapter.status === "available") {
-                      // Always go to chapter content when clicking the card
-                      setSelectedChapter(chapter.id);
-                    }
-                  }}
+                  className={`cursor-pointer transition-all hover:shadow-lg ${hasInteractiveContent ? "" : "opacity-70"}`}
+                  onClick={() => setSelectedChapter(chapter.id)}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -611,46 +197,30 @@ export default function PhysicsContent() {
                             <h3 className="text-lg font-semibold">
                               Chapter {chapter.id}: {chapter.title}
                             </h3>
-                            {chapter.status === "available" && (
-                              <Badge variant="secondary">Available</Badge>
-                            )}
-                            {chapter.status === "coming-soon" && (
-                              <Badge variant="outline">Coming Soon</Badge>
-                            )}
+                            <Badge variant={hasInteractiveContent ? "secondary" : "outline"}>
+                              {hasInteractiveContent ? "Interactive" : "Reading soon"}
+                            </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {(() => {
-                              const realCount = getQuestionCountForChapter(chapter.id);
-                              if (realCount > 0) {
-                                return `${realCount} practice questions available`;
-                              }
-                              return "Questions being prepared";
-                            })()}
+                            {questionCount > 0 ? `${questionCount} practice questions available` : "Questions being prepared"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {(() => {
-                          const qCount = getQuestionCountForChapter(chapter.id);
-                          const tId = chapterToTopicMap[chapter.id];
-
-                          return qCount > 0 && tId ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.location.href = `/practice?topicId=${tId}`;
-                              }}
-                            >
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Practice
-                            </Button>
-                          ) : null
-                        })()}
-                        {chapter.status === "available" && (
-                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        {questionCount > 0 && practiceHref && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = practiceHref;
+                            }}
+                          >
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Practice
+                          </Button>
                         )}
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </div>
                   </CardContent>

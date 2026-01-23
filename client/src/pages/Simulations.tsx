@@ -11,6 +11,7 @@ import {
   Atom,
   FlaskConical,
   Leaf,
+  Bug,
   Play,
   ExternalLink,
   Zap,
@@ -29,7 +30,7 @@ interface SimulationItem {
   id: string;
   title: string;
   description: string;
-  subject: "Physics" | "Chemistry" | "Biology";
+  subject: "Physics" | "Chemistry" | "Botany" | "Zoology";
   type: "phet" | "custom";
   phetId?: string;
   component?: string;
@@ -176,7 +177,7 @@ const simulations: SimulationItem[] = [
     id: "natural-selection",
     title: "Natural Selection",
     description: "Observe how natural selection changes bunny populations over time based on environmental factors.",
-    subject: "Biology",
+    subject: "Zoology",
     type: "phet",
     phetId: "natural-selection",
     topics: ["Evolution", "Natural Selection", "Genetics"],
@@ -189,13 +190,15 @@ const simulations: SimulationItem[] = [
 const subjectColors: Record<string, { bg: string; text: string; border: string }> = {
   Physics: { bg: "bg-blue-500/10", text: "text-blue-600", border: "border-blue-500/30" },
   Chemistry: { bg: "bg-purple-500/10", text: "text-purple-600", border: "border-purple-500/30" },
-  Biology: { bg: "bg-green-500/10", text: "text-green-600", border: "border-green-500/30" },
+  Botany: { bg: "bg-emerald-500/10", text: "text-emerald-600", border: "border-emerald-500/30" },
+  Zoology: { bg: "bg-amber-500/10", text: "text-amber-600", border: "border-amber-500/30" },
 };
 
 const subjectIcons: Record<string, React.ReactNode> = {
   Physics: <Atom className="h-4 w-4" />,
   Chemistry: <FlaskConical className="h-4 w-4" />,
-  Biology: <Leaf className="h-4 w-4" />,
+  Botany: <Leaf className="h-4 w-4" />,
+  Zoology: <Bug className="h-4 w-4" />,
 };
 
 export default function Simulations() {
@@ -294,7 +297,7 @@ export default function Simulations() {
                   Interactive Simulations
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Explore physics, chemistry, and biology concepts through interactive simulations
+                  Explore physics, chemistry, botany, and zoology concepts through interactive simulations
                 </p>
               </div>
             </div>
@@ -316,7 +319,7 @@ export default function Simulations() {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         <Tabs value={activeSubject} onValueChange={setActiveSubject}>
-          <TabsList className="grid w-full max-w-md grid-cols-4">
+          <TabsList className="grid w-full max-w-md grid-cols-5">
             <TabsTrigger value="all" data-testid="tab-all">
               All
             </TabsTrigger>
@@ -328,9 +331,13 @@ export default function Simulations() {
               <FlaskConical className="h-4 w-4 mr-1" />
               Chemistry
             </TabsTrigger>
-            <TabsTrigger value="Biology" data-testid="tab-biology">
+            <TabsTrigger value="Botany" data-testid="tab-botany">
               <Leaf className="h-4 w-4 mr-1" />
-              Biology
+              Botany
+            </TabsTrigger>
+            <TabsTrigger value="Zoology" data-testid="tab-zoology">
+              <Bug className="h-4 w-4 mr-1" />
+              Zoology
             </TabsTrigger>
           </TabsList>
 

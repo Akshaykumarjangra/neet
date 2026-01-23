@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sprout, CheckCircle2, XCircle, Brain, Lightbulb, TrendingUp } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter30() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -17,7 +18,7 @@ export function BotanyChapter30() {
       id: 1,
       question: "Which hormone is known as the 'stress hormone' in plants?",
       options: ["Auxin", "Gibberellin", "Abscisic acid", "Cytokinin"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Abscisic acid (ABA) is called the stress hormone as it helps plants respond to stress conditions like drought by closing stomata and promoting seed dormancy."
     },
     {
@@ -29,28 +30,28 @@ export function BotanyChapter30() {
         "Increasing cell wall plasticity via acid growth theory",
         "Decreasing water uptake"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "According to the acid growth theory, auxin increases cell wall plasticity by activating H+ pumps, which lowers pH and activates enzymes that loosen cell walls."
     },
     {
       id: 3,
       question: "Which plant hormone is responsible for breaking seed dormancy?",
       options: ["Abscisic acid", "Ethylene", "Gibberellin", "Auxin"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Gibberellin breaks seed dormancy by stimulating the production of enzymes like α-amylase that mobilize food reserves during germination."
     },
     {
       id: 4,
       question: "Richmond-Lang effect is associated with:",
       options: ["Auxin", "Cytokinin", "Ethylene", "Gibberellin"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Richmond-Lang effect demonstrates that cytokinins delay senescence. Leaves treated with cytokinin remain green longer than untreated leaves."
     },
     {
       id: 5,
       question: "Bolting in rosette plants is promoted by:",
       options: ["Auxin", "Gibberellin", "Cytokinin", "ABA"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Gibberellin promotes bolting (rapid stem elongation) in rosette plants and long-day plants, enabling them to flower."
     },
     {
@@ -62,21 +63,21 @@ export function BotanyChapter30() {
         "Accelerate fruit ripening",
         "Induce seed dormancy"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Ethylene is the fruit ripening hormone. It's used commercially to ripen fruits like bananas and tomatoes during transport and storage."
     },
     {
       id: 7,
       question: "Apical dominance is maintained by:",
       options: ["High auxin in apical bud", "High cytokinin in lateral buds", "Low auxin in apical bud", "High ethylene production"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "High auxin concentration in the apical bud suppresses lateral bud growth, maintaining apical dominance. Removing the apical bud allows lateral buds to grow."
     },
     {
       id: 8,
       question: "The 'foolish seedling' disease in rice is caused by:",
       options: ["Excessive auxin", "Excessive gibberellin", "Fungal toxin producing gibberellin", "Lack of cytokinin"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The fungus Gibberella fujikuroi produces excessive gibberellin, causing rice seedlings to grow abnormally tall and weak (bakanae disease)."
     }
   ];
@@ -93,7 +94,7 @@ export function BotanyChapter30() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -441,7 +442,7 @@ export function BotanyChapter30() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -449,13 +450,13 @@ export function BotanyChapter30() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

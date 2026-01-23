@@ -3,15 +3,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, BookOpen, Beaker, Atom } from "lucide-react";
 
+type VisualizationItem =
+  | string
+  | {
+      id: string;
+      label: string;
+      content: React.ReactNode;
+      icon?: React.ReactNode;
+    };
+
 interface VisualizationTabProps {
   title?: string;
-  visualizations?: {
-    id: string;
-    label: string;
-    content: React.ReactNode;
-    icon?: React.ReactNode;
-  }[];
+  visualizations?: VisualizationItem[];
   defaultTab?: string;
+  description?: string;
+  chapterId?: string;
+  layout?: string;
 }
 
 export function VisualizationTab({
@@ -50,7 +57,24 @@ export function VisualizationTab({
   ],
   defaultTab = "overview",
 }: VisualizationTabProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const normalizedVisualizations = visualizations.map((viz) => {
+    if (typeof viz === "string") {
+      const label = viz.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return {
+        id: viz,
+        label,
+        content: (
+          <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+            <p className="text-muted-foreground">Visualization: {label}</p>
+          </div>
+        ),
+        icon: <Eye className="w-4 h-4" />,
+      };
+    }
+    return viz;
+  });
+
+  const [activeTab, setActiveTab] = useState(normalizedVisualizations[0]?.id ?? defaultTab);
 
   return (
     <Card data-testid="visualization-tabs">
@@ -62,8 +86,8 @@ export function VisualizationTab({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${visualizations.length}, 1fr)` }}>
-            {visualizations.map((viz) => (
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${normalizedVisualizations.length}, 1fr)` }}>
+            {normalizedVisualizations.map((viz) => (
               <TabsTrigger
                 key={viz.id}
                 value={viz.id}
@@ -75,7 +99,7 @@ export function VisualizationTab({
               </TabsTrigger>
             ))}
           </TabsList>
-          {visualizations.map((viz) => (
+          {normalizedVisualizations.map((viz) => (
             <TabsContent key={viz.id} value={viz.id} className="mt-4">
               {viz.content}
             </TabsContent>

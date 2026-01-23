@@ -643,7 +643,7 @@ export default function Profile() {
                             <DropdownMenuItem
                               onClick={() => setViewMode("mentor")}
                               className={displayRole === "mentor" ? "bg-accent" : ""}
-                              disabled={user?.role !== "mentor" && !user?.isOwner}
+                              disabled={user?.role !== "mentor" && !user?.isOwner && !user?.isAdmin}
                             >
                               <GraduationCap className="h-4 w-4 mr-2" />
                               Mentor Dashboard
@@ -653,7 +653,7 @@ export default function Profile() {
                             <DropdownMenuItem
                               onClick={() => setViewMode("admin")}
                               className={displayRole === "admin" ? "bg-accent" : ""}
-                              disabled={!user?.isOwner}
+                              disabled={!user?.isOwner && !user?.isAdmin}
                             >
                               <Shield className="h-4 w-4 mr-2" />
                               Admin Hub

@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter6() {
   console.log("Seeding Biology Class 11 Chapter 6: Anatomy of Flowering Plants...");
@@ -628,12 +629,14 @@ Composed of:
       estimatedStudyMinutes: 300,
       status: "published",
 
-      visualizationsData: {
-        type: "tissue-anatomy",
-        title: "Plant Tissue Systems 3D Model",
-        description:
-          "Interactive cross-section showing epidermal, ground, and vascular tissue systems in dicot and monocot stems with detailed labeling",
-      },
+      visualizationsData: [
+        {
+          type: "tissue-anatomy",
+          title: "Plant Tissue Systems 3D Model",
+          description:
+            "Interactive cross-section showing epidermal, ground, and vascular tissue systems in dicot and monocot stems with detailed labeling",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -645,6 +648,20 @@ Composed of:
         chapterTitle: "Anatomy of Flowering Plants",
         introduction:
           "Plant anatomy is the study of the internal structure of plants. While morphology deals with external features, anatomy reveals the intricate organization of tissues and cells within plant organs. Understanding plant anatomy is essential for comprehending how plants function - how they transport water and nutrients, provide mechanical support, carry out photosynthesis, and adapt to their environment. The arrangement of different tissue systems in roots, stems, and leaves reflects the division of labor among specialized cells, where each tissue performs specific functions that contribute to the plant's survival and growth. This chapter explores the fascinating microscopic world within plants, from the actively dividing meristematic tissues to the highly specialized permanent tissues that form the complex internal architecture of flowering plants.",
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+            type: "tissue-anatomy",
+            title: "Plant Tissue Systems 3D Model",
+            description:
+              "Interactive cross-section showing epidermal, ground, and vascular tissue systems in dicot and monocot stems with detailed labeling",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

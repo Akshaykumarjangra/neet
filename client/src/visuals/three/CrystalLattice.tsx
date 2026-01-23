@@ -158,7 +158,7 @@ export default function CrystalLattice() {
               {hindi ? 'विभिन्न क्रिस्टल संरचनाएं' : 'Different Crystal Structures'}
             </p>
           </div>
-          <HindiToggle enabled={hindi} onToggle={setHindi} />
+          <HindiToggle isHindi={hindi} onToggle={() => setHindi((prev) => !prev)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

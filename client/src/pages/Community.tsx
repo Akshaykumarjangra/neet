@@ -29,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Paywall } from "@/components/Paywall";
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -111,11 +112,28 @@ interface DiscussionDetail extends Discussion {
   } | null;
 }
 
+interface Announcement {
+  id: number;
+  title: string;
+  message: string;
+  audience: "all" | "premium";
+  actionLabel?: string;
+  actionUrl?: string;
+  bannerColor: string;
+  isPinned: boolean;
+}
+
+interface AnnouncementResponse {
+  announcements: Announcement[];
+  isPremium: boolean;
+}
+
 interface DiscussionsResponse {
   discussions: Discussion[];
   total: number;
   limit: number;
   offset: number;
+  requiresPremium?: boolean;
 }
 
 interface ChapterOption {
@@ -599,7 +617,20 @@ export default function Community() {
   const [newDiscussion, setNewDiscussion] = useState({
     title: "",
     content: "",
-    chapterId: "",
+    chapterId: "general",
+  });
+
+  const { data: announcementPayload, isLoading: announcementsLoading } = useQuery<AnnouncementResponse>({
+    queryKey: ["/api/announcements"],
+    queryFn: async () => {
+      const response = await fetch("/api/announcements", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to load announcements");
+      }
+      return response.json();
+    },
   });
 
   const { data: chaptersData } = useQuery<ChapterOption[]>({
@@ -624,13 +655,17 @@ export default function Community() {
     refetchInterval: 30000,
   });
 
+  const announcements = announcementPayload?.announcements ?? [];
+  const hasPremiumAccess = Boolean(user?.isPaidUser || user?.isOwner || announcementPayload?.isPremium);
+  const showPremiumReminder = Boolean(discussionsData?.requiresPremium && !hasPremiumAccess);
+
   const createDiscussionMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; chapterId?: number }) => {
       return apiRequest("POST", "/api/discussions", data);
     },
     onSuccess: (data) => {
       setIsCreateDialogOpen(false);
-      setNewDiscussion({ title: "", content: "", chapterId: "" });
+      setNewDiscussion({ title: "", content: "", chapterId: "general" });
       refetch();
       toast({
         title: "Discussion created",
@@ -661,7 +696,10 @@ export default function Community() {
     createDiscussionMutation.mutate({
       title: newDiscussion.title,
       content: newDiscussion.content,
-      chapterId: newDiscussion.chapterId ? parseInt(newDiscussion.chapterId) : undefined,
+      chapterId:
+        newDiscussion.chapterId && newDiscussion.chapterId !== "general"
+          ? parseInt(newDiscussion.chapterId, 10)
+          : undefined,
     });
   };
 
@@ -747,7 +785,7 @@ export default function Community() {
                               <SelectValue placeholder="Select a chapter" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">General Discussion</SelectItem>
+                              <SelectItem value="general">General Discussion</SelectItem>
                               {chaptersData?.map((chapter) => (
                                 <SelectItem key={chapter.id} value={chapter.id.toString()}>
                                   {chapter.subject} - Ch. {chapter.chapterNumber}: {chapter.chapterTitle}
@@ -793,6 +831,62 @@ export default function Community() {
             </div>
           </div>
         </motion.div>
+
+        {announcements.length > 0 && (
+          <div className="space-y-3">
+            {announcements.slice(0, 3).map((announcement) => {
+              const colorClass =
+                announcement.bannerColor === "primary"
+                  ? "border-primary/30 bg-primary/5"
+                  : announcement.bannerColor === "purple"
+                  ? "border-purple-300/70 bg-purple-50"
+                  : announcement.bannerColor === "pink"
+                  ? "border-pink-300/70 bg-pink-50"
+                  : "border-muted/30 bg-muted/5";
+
+              return (
+                <Card key={announcement.id} className={`border ${colorClass} shadow-sm`}>
+                  <CardHeader className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xl font-semibold">{announcement.title}</CardTitle>
+                      <Badge variant="outline" className="text-xs uppercase">
+                        {announcement.audience === "premium" ? "Premium" : "All"}
+                      </Badge>
+                    </div>
+                    {announcement.isPinned && (
+                      <Badge variant="secondary" className="text-xs">
+                        Pinned
+                      </Badge>
+                    )}
+                  </CardHeader>
+                  <CardContent className="pt-1 pb-4 text-sm text-muted-foreground">
+                    {announcement.message}
+                  </CardContent>
+                  {announcement.actionUrl && (
+                    <CardFooter className="pt-0">
+                      <Button asChild variant="ghost" className="gap-2">
+                        <a href={announcement.actionUrl} target="_blank" rel="noreferrer">
+                          {announcement.actionLabel || "Learn more"}
+                        </a>
+                      </Button>
+                    </CardFooter>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {showPremiumReminder && (
+          <div>
+            <Paywall
+              feature="Community Discussions"
+              description="Full forums are reserved for Premium members."
+              freeLimit="Guest previews only"
+              variant="inline"
+            />
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">

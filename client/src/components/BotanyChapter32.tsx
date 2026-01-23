@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TreePine, CheckCircle2, XCircle, Brain, Droplet, Wind } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter32() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,7 +19,7 @@ export function BotanyChapter32() {
       id: 1,
       question: "Which ecosystem service involves purification of air and water?",
       options: ["Provisioning", "Regulating", "Cultural", "Supporting"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Regulating services include air and water purification, climate regulation, disease control, and pollination - services that regulate environmental conditions."
     },
     {
@@ -30,7 +31,7 @@ export function BotanyChapter32() {
         "Energy available to consumers",
         "Net energy stored in biomass"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "GPP is the total rate of photosynthesis or total organic matter produced by plants, before any is used in respiration."
     },
     {
@@ -42,21 +43,21 @@ export function BotanyChapter32() {
         "Total production minus Recycling equals Net Production",
         "Green Production minus Resources equals New Production"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "NPP (Net Primary Productivity) is the energy left after plants use some through respiration. It's the actual biomass stored and available to herbivores."
     },
     {
       id: 4,
       question: "Which of the following is a provisioning ecosystem service?",
       options: ["Pollination", "Climate regulation", "Food production", "Soil formation"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Provisioning services are products obtained from ecosystems like food, fresh water, fuel, fiber, and medicinal resources."
     },
     {
       id: 5,
       question: "Carbon sequestration by forests is an example of:",
       options: ["Provisioning service", "Regulating service", "Cultural service", "Disservice"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Carbon sequestration is a regulating service where forests absorb and store CO2, helping regulate atmospheric composition and climate."
     },
     {
@@ -68,21 +69,21 @@ export function BotanyChapter32() {
         "10% of nutrients are recycled",
         "10% of biomass is consumed"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Lindeman's 10% law states that when energy is transferred from one trophic level to the next, only about 10% is stored as biomass; the rest is lost as heat through respiration."
     },
     {
       id: 7,
       question: "Which ecosystem typically has the highest Net Primary Productivity?",
       options: ["Desert", "Tropical rainforest", "Temperate grassland", "Tundra"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Tropical rainforests have the highest NPP (2200 g/m²/year) due to high temperature, abundant rainfall, and year-round growing conditions."
     },
     {
       id: 8,
       question: "Aesthetic and recreational values of ecosystems are:",
       options: ["Provisioning services", "Regulating services", "Cultural services", "Supporting services"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Cultural services are non-material benefits including recreation, spiritual values, aesthetic appreciation, and educational opportunities."
     }
   ];
@@ -99,7 +100,7 @@ export function BotanyChapter32() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -571,7 +572,7 @@ export function BotanyChapter32() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -579,13 +580,13 @@ export function BotanyChapter32() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

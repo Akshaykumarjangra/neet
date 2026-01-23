@@ -286,29 +286,51 @@ Understanding physics helps us appreciate the beauty and order in nature, make i
     visualizationsData: [
       {
         type: "concept",
-        title: "Timeline of Physics Discoveries",
-        description: "Interactive timeline showing major physics breakthroughs from ancient Greece to modern quantum computing",
+        title: "Scale of the Physical World",
+        description: "From subatomic particles to galaxies and beyond",
+        config: {
+          visualizationName: "physics-scale-overview"
+        }
       },
       {
         type: "concept",
         title: "Fundamental Forces Comparison",
-        description: "Visual comparison of the four fundamental forces showing their relative strengths and ranges",
-      },
-      {
-        type: "atomic-structure",
-        title: "Atomic Structure - Microscopic World",
-        description: "3D visualization of atomic structure showing the microscopic domain of physics",
+        description: "Relative strength and range of gravitational, electromagnetic, strong, and weak forces",
         config: {
-          protons: 6,
-          neutrons: 6,
-          electrons: 6,
-          showOrbits: true
+          visualizationName: "fundamental-forces-comparison"
         }
       },
       {
-        type: "planetary-orbit-3d",
-        title: "Planetary Motion - Astronomical Domain",
-        description: "3D simulation of planetary orbits demonstrating the astronomical scale of physics",
+        type: "concept",
+        title: "Scientific Method Flow",
+        description: "Observation to conclusion: the cycle used to build scientific laws",
+        config: {
+          visualizationName: "scientific-method-flow"
+        }
+      },
+      {
+        type: "concept",
+        title: "Conservation Laws Snapshot",
+        description: "Energy, momentum, angular momentum, and charge in one view",
+        config: {
+          visualizationName: "conservation-laws-summary"
+        }
+      },
+      {
+        type: "concept",
+        title: "Unification Ladder",
+        description: "Major milestones in unifying physical laws and forces",
+        config: {
+          visualizationName: "physics-unification-ladder"
+        }
+      },
+      {
+        type: "concept",
+        title: "Physics and Technology Map",
+        description: "How physics powers real-world tools, medicine, and communication",
+        config: {
+          visualizationName: "physics-technology-map"
+        }
       },
     ],
     difficultyLevel: 1,
@@ -319,83 +341,99 @@ Understanding physics helps us appreciate the beauty and order in nature, make i
     subject: "Physics",
     classLevel: "11",
     chapterNumber: 2,
-    chapterTitle: "Units and Measurement",
-    introduction: "Measurement is fundamental to science. This chapter introduces the International System of Units (SI), measurement techniques, dimensional analysis, and the treatment of experimental errors.",
-    detailedNotes: `# Units and Measurement
+    chapterTitle: "Units and Measurements",
+    introduction: "Measurement is the backbone of physics. This chapter covers SI units, measurement of length/time/mass, significant figures, dimensional analysis, and error propagation.",
+    detailedNotes: `# Units and Measurements
 
-## The Importance of Measurement
+## Why Measurement Matters
 
-Physics is a quantitative science - we measure physical quantities to describe and understand natural phenomena precisely.
+Physics is a quantitative science. Every law connects measurable quantities, so careful measurement is the starting point of good science.
 
-### Physical Quantities
+## Physical Quantities and SI Units
 
-**Fundamental Quantities** (7 in SI system):
-1. **Length** (meter, m) - Distance, size
-2. **Mass** (kilogram, kg) - Amount of matter
-3. **Time** (second, s) - Duration
-4. **Electric Current** (ampere, A) - Flow of charge
-5. **Temperature** (kelvin, K) - Thermal state
-6. **Amount of Substance** (mole, mol) - Number of particles
-7. **Luminous Intensity** (candela, cd) - Light intensity
+**Fundamental Quantities (SI base):**
+1. **Length** (meter, m)
+2. **Mass** (kilogram, kg)
+3. **Time** (second, s)
+4. **Electric Current** (ampere, A)
+5. **Temperature** (kelvin, K)
+6. **Amount of Substance** (mole, mol)
+7. **Luminous Intensity** (candela, cd)
 
-**Derived Quantities** are combinations of fundamental quantities:
-- Area = Length × Length (m²)
-- Volume = Length³ (m³)
-- Velocity = Length/Time (m/s)
-- Force = Mass × Acceleration (kg⋅m/s² = N)
+**Derived Quantities:**
+- Area = length x length (m^2)
+- Volume = length^3 (m^3)
+- Velocity = length/time (m/s)
+- Force = mass x acceleration (kg*m/s^2 = N)
+- Pressure = force/area (N/m^2 = Pa)
 
-### Dimensional Analysis
+## Measurement of Length
 
-Dimensions represent the nature of a physical quantity, expressed in terms of fundamental quantities.
+**Parallax error:** occurs when the eye is not in line with the pointer/scale. Minimize by viewing perpendicular to the scale.
 
-**Principle of Homogeneity:** In a valid physical equation, dimensions on both sides must be the same.
+**Vernier Caliper:**
+- Measures internal/external diameter and depth.
+- Least count = 1 MSD - 1 VSD.
+- Zero error correction: subtract positive error, add negative error.
 
-**Uses of Dimensional Analysis:**
-1. **Check validity** of physical equations
-2. **Derive relationships** between physical quantities
-3. **Convert units** from one system to another
+**Screw Gauge (Micrometer):**
+- Measures very small diameters (wire, sheet thickness).
+- Pitch = linear distance moved in one full rotation.
+- Least count = pitch / number of circular scale divisions.
+- Zero error correction: subtract positive error, add negative error.
+
+## Measurement of Time and Mass
+
+- **Time:** The SI second is defined by the Cs-133 atomic clock.
+- **Mass:** Measured using a beam balance; mass is independent of gravity.
+
+## Dimensional Analysis
+
+Dimensions show how a quantity depends on base quantities.
+
+**Principle of Homogeneity:** Dimensions on both sides of a valid equation must match.
+
+**Uses:**
+1. Check equation validity
+2. Convert units
+3. Derive relations (up to a constant)
 
 **Limitations:**
-- Cannot determine dimensionless constants
-- Cannot be used for equations with multiple terms
-- Not applicable to trigonometric, exponential functions
+- Cannot determine numerical constants
+- Not suitable for multi-term equations
+- Not valid for trigonometric or exponential functions
 
-### Significant Figures
+## Significant Figures
 
-Rules for determining significant figures:
-1. All non-zero digits are significant
-2. Zeros between non-zero digits are significant
-3. Trailing zeros after decimal point are significant
-4. Leading zeros are NOT significant
+Rules:
+1. All non-zero digits are significant.
+2. Zeros between non-zero digits are significant.
+3. Trailing zeros after a decimal point are significant.
+4. Leading zeros are not significant.
 
-**Rounding Rules:**
-- If digit to be dropped < 5, leave the preceding digit unchanged
-- If digit to be dropped ≥ 5, increase preceding digit by 1
+Rounding:
+- If the next digit < 5, keep the digit.
+- If the next digit >= 5, increase the digit by 1.
 
-### Errors in Measurement
+## Errors and Uncertainty
 
-**Types of Errors:**
+**Types of errors:**
+- Systematic (instrumental, personal, environmental)
+- Random (statistical fluctuations)
 
-1. **Systematic Errors** - Consistent, predictable errors
-   - Instrumental errors (faulty equipment)
-   - Personal errors (observer bias)
-   - Environmental errors (temperature, pressure variations)
+**Basic definitions:**
+Absolute error = |a_measured - a_true|
+Relative error = absolute error / true value
+Percentage error = (absolute error / true value) x 100%
 
-2. **Random Errors** - Unpredictable variations
-   - Can be reduced by taking multiple measurements
-   - Follow statistical laws
+**Error propagation (products/powers):**
+If Q = a^p b^q / c^r, then percentage error in Q = p%a + q%b + r%c.
 
-**Error Analysis:**
+## Accuracy vs Precision
 
-Absolute Error: Δa = |a_measured - a_true|
-Relative Error: Δa/a
-Percentage Error: (Δa/a) × 100%
-
-### Precision vs Accuracy
-
-- **Accuracy** - How close a measurement is to the true value
-- **Precision** - How close measurements are to each other
-- A measurement can be precise but not accurate, or vice versa`,
+- **Accuracy:** closeness to the true value.
+- **Precision:** closeness of repeated measurements to each other.
+- A set can be precise but inaccurate.`,
     keyConcepts: [
       {
         title: "SI Units",
@@ -407,54 +445,93 @@ Percentage Error: (Δa/a) × 100%
         formula: "[Force] = [M L T^(-2)]",
       },
       {
-        title: "Least Count",
-        description: "Smallest measurement that can be made accurately with a measuring instrument",
+        title: "Least Count and Zero Error",
+        description: "Instrument resolution and the correction needed for vernier caliper and screw gauge readings",
+      },
+      {
+        title: "Parallax Error",
+        description: "Reading error due to incorrect eye position relative to the scale",
       },
       {
         title: "Significant Figures",
         description: "Digits in a number that carry meaningful information about its precision",
       },
       {
-        title: "Percentage Error",
-        description: "Ratio of absolute error to true value, expressed as percentage",
-        formula: "% Error = (Δa/a) × 100%",
+        title: "Error Propagation",
+        description: "Percentage errors add with powers for products and quotients",
+        formula: "If Q = a^p b^q / c^r, then %Q = p%a + q%b + r%c",
       },
     ],
     formulas: [
-      "Dimensional Formula: [Physical Quantity] = [M^a L^b T^c I^d Θ^e N^f J^g]",
-      "Absolute Error: Δa = |a_measured - a_true|",
-      "Mean Absolute Error: Δa_mean = (Δa₁ + Δa₂ + ... + Δaₙ)/n",
-      "Relative Error: Δa/a",
-      "Percentage Error: (Δa/a) × 100%",
+      "Dimensional Formula: [Quantity] = [M^a L^b T^c I^d Theta^e N^f J^g]",
+      "Least Count (Vernier) = 1 MSD - 1 VSD",
+      "Least Count (Screw Gauge) = Pitch / Number of divisions",
+      "Absolute Error = |a_measured - a_true|",
+      "Mean Absolute Error = (sum of absolute errors)/n",
+      "Relative Error = absolute error / true value",
+      "Percentage Error = (absolute error / true value) x 100%",
+      "If Q = a^p b^q / c^r, percentage error = p%a + q%b + r%c",
     ],
     importantTopics: [
-      "SI Units and their definitions",
+      "SI units and their definitions",
       "Fundamental and derived quantities",
+      "Measurement of length (parallax, vernier, screw gauge)",
+      "Measurement of time and mass",
       "Dimensional analysis and its applications",
       "Significant figures and rounding",
-      "Types of errors (systematic and random)",
+      "Types of errors and error propagation",
       "Precision vs accuracy",
-      "Least count of instruments",
     ],
     learningObjectives: [
       "Master SI units and conversions",
       "Apply dimensional analysis to check equations",
-      "Determine significant figures correctly",
+      "Use vernier caliper and screw gauge readings correctly",
+      "Determine significant figures and rounding",
       "Calculate and minimize measurement errors",
       "Distinguish between precision and accuracy",
     ],
-    prerequisites: ["Basic algebra", "Understanding of physical quantities"],
+    prerequisites: ["Basic algebra", "Understanding of physical quantities and ratios"],
     ncertChapterRef: "Class 11 Physics - Chapter 2",
     visualizationsData: [
       {
         type: "concept",
-        title: "SI Units and Measurement Scales",
-        description: "Interactive visualization of SI units and their relationships",
+        title: "SI Base Units Map",
+        description: "Seven base quantities, their SI units, and common use cases",
+        config: {
+          visualizationName: "si-units-map"
+        }
       },
       {
         type: "concept",
-        title: "Dimensional Analysis Examples",
-        description: "Step-by-step demonstrations of dimensional analysis for verifying equations",
+        title: "Metric Prefix Scale",
+        description: "Power-of-ten prefixes from pico to tera with quick conversions",
+        config: {
+          visualizationName: "metric-prefix-scale"
+        }
+      },
+      {
+        type: "concept",
+        title: "Dimensional Analysis Checker",
+        description: "Validate equations using dimensional consistency",
+        config: {
+          visualizationName: "dimensional-analysis-checker"
+        }
+      },
+      {
+        type: "concept",
+        title: "Vernier Caliper Simulator",
+        description: "Least count and reading practice with a vernier caliper",
+        config: {
+          visualizationName: "vernier-caliper"
+        }
+      },
+      {
+        type: "concept",
+        title: "Screw Gauge Simulator",
+        description: "Pitch, least count, and accurate thickness measurements",
+        config: {
+          visualizationName: "screw-gauge"
+        }
       },
     ],
     difficultyLevel: 2,
@@ -477,50 +554,50 @@ Kinematics is the branch of mechanics that describes motion without considering 
 
 **Position and Displacement:**
 - **Position (x)** - Location of an object relative to a reference point
-- **Displacement (Δx)** - Change in position, a vector quantity
-- Displacement = Final position - Initial position = x₂ - x₁
+- **Displacement (delta x)** - Change in position, a vector quantity
+- Displacement = x2 - x1
 
 **Distance vs Displacement:**
 - Distance is scalar (magnitude only), always positive
-- Displacement is vector (magnitude + direction), can be positive or negative
+- Displacement is vector (magnitude + direction), can be positive, negative, or zero
 
 ### Velocity
 
 **Average Velocity:**
 - Rate of change of displacement with time
-- v_avg = Δx/Δt = (x₂ - x₁)/(t₂ - t₁)
+- v_avg = delta x / delta t = (x2 - x1)/(t2 - t1)
 - Vector quantity, can be positive or negative
 
 **Instantaneous Velocity:**
 - Velocity at a specific instant
-- v = lim(Δt→0) Δx/Δt = dx/dt
+- v = dx/dt
 - Slope of position-time graph at that point
 
 **Speed vs Velocity:**
 - Speed is magnitude of velocity (always positive)
-- Average speed = Total distance/Total time
+- Average speed = total distance/total time
 
 ### Acceleration
 
 **Average Acceleration:**
 - Rate of change of velocity with time
-- a_avg = Δv/Δt = (v₂ - v₁)/(t₂ - t₁)
+- a_avg = delta v / delta t = (v2 - v1)/(t2 - t1)
 
 **Instantaneous Acceleration:**
-- a = lim(Δt→0) Δv/Δt = dv/dt = d²x/dt²
+- a = dv/dt = d2x/dt2
 - Slope of velocity-time graph
 
 ### Equations of Motion (Uniform Acceleration)
 
 For motion with constant acceleration a:
 
-1. **First Equation:** v = u + at
+1. **First Equation:** v = u + a t
    - Links velocity, initial velocity, acceleration, time
 
-2. **Second Equation:** s = ut + ½at²
+2. **Second Equation:** s = u t + 0.5 a t^2
    - Links displacement, initial velocity, acceleration, time
 
-3. **Third Equation:** v² = u² + 2as
+3. **Third Equation:** v^2 = u^2 + 2 a s
    - Links velocities, acceleration, displacement (time-independent)
 
 Where:
@@ -548,14 +625,14 @@ Where:
 ### Free Fall
 
 Motion under gravity (neglecting air resistance):
-- Acceleration due to gravity: g = 9.8 m/s² (downward)
+- Acceleration due to gravity: g = 9.8 m/s^2 (downward)
 - For upward motion: a = -g
 - For downward motion: a = +g
 
 **At maximum height:**
 - Final velocity v = 0
 - Time to reach max height: t = u/g
-- Maximum height: h = u²/2g
+- Maximum height: h = u^2/(2g)
 
 ### Relative Motion
 
@@ -567,12 +644,12 @@ When two objects A and B are moving:
       {
         title: "Displacement",
         description: "Change in position, a vector quantity with magnitude and direction",
-        formula: "Δx = x₂ - x₁",
+        formula: "delta x = x2 - x1",
       },
       {
         title: "Average Velocity",
         description: "Rate of change of displacement with time",
-        formula: "v_avg = Δx/Δt",
+        formula: "v_avg = delta x / delta t",
       },
       {
         title: "Instantaneous Velocity",
@@ -582,22 +659,22 @@ When two objects A and B are moving:
       {
         title: "Acceleration",
         description: "Rate of change of velocity with time",
-        formula: "a = dv/dt = d²x/dt²",
+        formula: "a = dv/dt = d2x/dt2",
       },
       {
         title: "Equations of Motion",
         description: "Three fundamental equations for uniformly accelerated motion",
-        formula: "v = u + at, s = ut + ½at², v² = u² + 2as",
+        formula: "v = u + a t, s = u t + 0.5 a t^2, v^2 = u^2 + 2 a s",
       },
     ],
     formulas: [
-      "v = u + at",
-      "s = ut + ½at²",
-      "v² = u² + 2as",
-      "s = ½(u + v)t",
-      "sₙₜₕ = u + ½a(2n - 1)",
-      "Average velocity = (Initial velocity + Final velocity)/2 = (u + v)/2",
-      "Distance in nth second: sₙ = u + a(n - ½)",
+      "v = u + a t",
+      "s = u t + 0.5 a t^2",
+      "v^2 = u^2 + 2 a s",
+      "s = 0.5 (u + v) t",
+      "v_avg = (u + v) / 2",
+      "s_n = u + a (n - 0.5)",
+      "g = 9.8 m/s^2",
     ],
     importantTopics: [
       "Distance and displacement",
@@ -625,14 +702,20 @@ When two objects A and B are moving:
     ncertChapterRef: "Class 11 Physics - Chapter 3",
     visualizationsData: [
       {
-        type: "wave-motion",
-        title: "Wave Motion Demonstration",
-        description: "Interactive visualization of transverse and longitudinal waves showing motion principles",
+        type: "concept",
+        title: "Motion Graphs (s-t and v-t)",
+        description: "Interactive position-time and velocity-time graphs for uniform acceleration",
         config: {
-          waveType: "transverse",
-          amplitude: 1.2,
-          frequency: 1.5
-        }
+          visualizationName: "motion-graphs",
+        },
+      },
+      {
+        type: "concept",
+        title: "Position-Velocity-Time Graphs",
+        description: "Link slopes and areas to velocity, acceleration, and displacement",
+        config: {
+          visualizationName: "position-velocity-graph",
+        },
       },
     ],
     difficultyLevel: 3,
@@ -654,18 +737,19 @@ In plane motion, position, velocity, and acceleration are vector quantities with
 ### Vector Representation
 
 **Position Vector:**
-- r⃗ = x î + y ĵ
-- Magnitude: |r⃗| = √(x² + y²)
-- Direction: θ = tan⁻¹(y/x)
+- r = x i + y j
+- Magnitude: |r| = sqrt(x^2 + y^2)
+- Direction: theta = tan^-1(y/x)
 
 **Velocity Vector:**
-- v⃗ = vₓ î + vᵧ ĵ
-- v⃗ = dr⃗/dt
-- Components: vₓ = dx/dt, vᵧ = dy/dt
+- v = v_x i + v_y j
+- v = dr/dt
+- Components: v_x = dx/dt, v_y = dy/dt
 
 **Acceleration Vector:**
-- a⃗ = aₓ î + aᵧ ĵ
-- a⃗ = dv⃗/dt
+- a = a_x i + a_y j
+- a = dv/dt
+- Components: a_x = dv_x/dt, a_y = dv_y/dt
 
 ### Projectile Motion
 
@@ -677,31 +761,31 @@ Motion of an object thrown into the air, subject only to gravity and initial vel
 3. Motion is in a vertical plane
 
 **Horizontal Motion (x-direction):**
-- No acceleration (aₓ = 0)
-- Velocity is constant: vₓ = u cos θ
-- Displacement: x = (u cos θ)t
+- No acceleration (a_x = 0)
+- Velocity is constant: v_x = u cos theta
+- Displacement: x = (u cos theta) t
 
 **Vertical Motion (y-direction):**
 - Acceleration = -g (downward)
-- Initial velocity: vᵧ₀ = u sin θ
-- Velocity: vᵧ = u sin θ - gt
-- Displacement: y = (u sin θ)t - ½gt²
+- Initial velocity: v_y0 = u sin theta
+- Velocity: v_y = u sin theta - g t
+- Displacement: y = (u sin theta) t - 0.5 g t^2
 
 **Important Results:**
 
 1. **Time of Flight:**
-   T = (2u sin θ)/g
+   T = (2 u sin theta)/g
 
 2. **Maximum Height:**
-   H = (u² sin² θ)/(2g)
+   H = (u^2 sin^2 theta)/(2 g)
 
 3. **Range:**
-   R = (u² sin 2θ)/g
-   - Maximum range when θ = 45°
-   - Same range for complementary angles (θ and 90° - θ)
+   R = (u^2 sin 2 theta)/g
+   - Maximum range when theta = 45 deg
+   - Same range for complementary angles (theta and 90 - theta)
 
 4. **Equation of Trajectory:**
-   y = x tan θ - (gx²)/(2u² cos² θ)
+   y = x tan theta - (g x^2)/(2 u^2 cos^2 theta)
    - Parabolic path
 
 ### Uniform Circular Motion
@@ -713,22 +797,22 @@ Motion along a circular path with constant speed.
 - Acceleration is always directed toward center (centripetal)
 
 **Centripetal Acceleration:**
-- a_c = v²/r = ω²r
+- a_c = v^2/r = omega^2 r
 - Direction: Always toward center
 - Magnitude constant, direction continuously changing
 
 **Angular Quantities:**
-- Angular displacement: θ (radians)
-- Angular velocity: ω = dθ/dt = v/r
-- Angular acceleration: α = dω/dt
+- Angular displacement: theta (radians)
+- Angular velocity: omega = dtheta/dt = v/r
+- Angular acceleration: alpha = d omega/dt
 
 **Relation between linear and angular quantities:**
-- v = rω (linear velocity)
-- a_t = rα (tangential acceleration)
-- a_c = rω² (centripetal acceleration)
+- v = r omega (linear velocity)
+- a_t = r alpha (tangential acceleration)
+- a_c = r omega^2 (centripetal acceleration)
 
 **Centripetal Force:**
-- F_c = ma_c = mv²/r = mω²r
+- F_c = m a_c = m v^2/r = m omega^2 r
 - Directed toward center
 - Required to keep object moving in circle
 
@@ -737,16 +821,16 @@ Motion along a circular path with constant speed.
 When speed changes along circular path:
 - **Tangential acceleration (a_t)** - Changes speed
 - **Centripetal acceleration (a_c)** - Changes direction
-- **Net acceleration:** a = √(a_t² + a_c²)
+- **Net acceleration magnitude:** a = sqrt(a_t^2 + a_c^2)
 
 ### Relative Motion in a Plane
 
 **Relative Velocity:**
-- v⃗_AB = v⃗_A - v⃗_B
+- v_AB = v_A - v_B
 - Vector subtraction using components
 
 **River-Boat Problems:**
-- Velocity of boat relative to ground = v⃗_boat + v⃗_river
+- Velocity of boat relative to ground = v_boat + v_river
 - To cross perpendicular: boat must aim upstream
 - Shortest time: aim perpendicular to current
 - Shortest path: aim at angle to compensate for current`,
@@ -758,34 +842,34 @@ When speed changes along circular path:
       {
         title: "Range of Projectile",
         description: "Horizontal distance covered by projectile",
-        formula: "R = (u² sin 2θ)/g",
+        formula: "R = (u^2 sin 2 theta)/g",
       },
       {
         title: "Maximum Height",
         description: "Peak height reached by projectile",
-        formula: "H = (u² sin² θ)/(2g)",
+        formula: "H = (u^2 sin^2 theta)/(2 g)",
       },
       {
         title: "Centripetal Acceleration",
         description: "Acceleration directed toward center in circular motion",
-        formula: "a_c = v²/r = ω²r",
+        formula: "a_c = v^2/r = omega^2 r",
       },
       {
         title: "Angular Velocity",
         description: "Rate of change of angular displacement",
-        formula: "ω = dθ/dt = v/r",
+        formula: "omega = dtheta/dt = v/r",
       },
     ],
     formulas: [
-      "Range: R = (u² sin 2θ)/g",
-      "Maximum Height: H = (u² sin² θ)/(2g)",
-      "Time of Flight: T = (2u sin θ)/g",
-      "Trajectory: y = x tan θ - (gx²)/(2u² cos² θ)",
-      "Centripetal acceleration: a_c = v²/r = ω²r",
-      "Centripetal force: F_c = mv²/r = mω²r",
-      "Angular velocity: ω = v/r",
-      "Linear velocity: v = rω",
-      "Period of circular motion: T = 2πr/v = 2π/ω",
+      "Range: R = (u^2 sin 2 theta)/g",
+      "Maximum Height: H = (u^2 sin^2 theta)/(2 g)",
+      "Time of Flight: T = (2 u sin theta)/g",
+      "Trajectory: y = x tan theta - (g x^2)/(2 u^2 cos^2 theta)",
+      "Centripetal acceleration: a_c = v^2/r = omega^2 r",
+      "Centripetal force: F_c = m v^2/r = m omega^2 r",
+      "Angular velocity: omega = v/r",
+      "Linear velocity: v = r omega",
+      "Period of circular motion: T = 2 pi r / v = 2 pi / omega",
     ],
     importantTopics: [
       "Vector addition and subtraction",
@@ -793,7 +877,7 @@ When speed changes along circular path:
       "Trajectory of projectile",
       "Uniform circular motion",
       "Centripetal acceleration and force",
-      "Angular quantities (ω, α, θ)",
+      "Angular quantities (theta, omega, alpha)",
       "Relative velocity in 2D",
       "River-boat problems",
     ],
@@ -824,18 +908,20 @@ When speed changes along circular path:
         }
       },
       {
-        type: "circular-motion",
-        title: "Circular Motion",
-        description: "Animated demonstration of centripetal force and velocity in circular motion",
+        type: "concept",
+        title: "Circular Motion and Centripetal Acceleration",
+        description: "See how rotation relates to angular velocity and centripetal force",
         config: {
-          radius: 3,
-          angularVelocity: 1
-        }
+          visualizationName: "angular-momentum",
+        },
       },
       {
         type: "concept",
         title: "Range vs Angle",
-        description: "Graph showing how range varies with projection angle",
+        description: "Range depends on sin(2 theta) and peaks at 45 deg",
+        config: {
+          visualizationName: "range-angle-graph",
+        },
       },
     ],
     difficultyLevel: 4,
@@ -852,192 +938,110 @@ When speed changes along circular path:
 
 ## Introduction to Dynamics
 
-Dynamics is the study of motion and the forces that cause it. Newton's laws provide the fundamental framework.
+Dynamics studies motion along with the forces that cause it. Newton's laws provide the core framework.
 
-### Aristotle's Fallacy
+### Newton's First Law (Inertia)
 
-Aristotle believed that force is necessary to keep an object moving. This was proven wrong by Galileo and Newton, who showed that objects continue moving at constant velocity unless acted upon by a force.
+**Statement:** An object at rest stays at rest and an object in uniform motion continues in that state unless acted upon by a net external force.
 
-### Newton's First Law (Law of Inertia)
+**Key points:**
+- In an inertial frame, if sum F = 0, velocity is constant.
+- Inertia is proportional to mass.
 
-**Statement:** An object at rest stays at rest, and an object in motion stays in motion with constant velocity, unless acted upon by a net external force.
+### Newton's Second Law
 
-**Key Concepts:**
-- **Inertia** - Resistance to change in state of motion
-- Directly proportional to mass
-- Greater mass = greater inertia
+**Statement:** The rate of change of momentum is proportional to the net force and occurs in the direction of the force.
 
-**Inertial Frame of Reference:**
-- Frame in which Newton's first law holds true
-- Not accelerating relative to "fixed stars"
-- Most frames on Earth are approximately inertial
+**Mathematical form:**
+- F = dp/dt
+- For constant mass: F = m a
+- Momentum: p = m v
 
-### Newton's Second Law (Law of Acceleration)
-
-**Statement:** The rate of change of momentum is proportional to the applied force and occurs in the direction of the force.
-
-**Mathematical Form:**
-- F⃗ = dp⃗/dt = d(mv⃗)/dt
-- For constant mass: F⃗ = ma⃗
-- SI Unit of Force: Newton (N) = kg⋅m/s²
-
-**Important Points:**
-1. Force and acceleration are in the same direction
-2. Acceleration is proportional to force
-3. Acceleration is inversely proportional to mass
-4. Net force determines acceleration
-
-**Momentum:**
-- p⃗ = mv⃗
-- Vector quantity
-- SI unit: kg⋅m/s
-
-### Newton's Third Law (Law of Action-Reaction)
+### Newton's Third Law
 
 **Statement:** For every action, there is an equal and opposite reaction.
 
-**Characteristics:**
-1. Action and reaction forces are equal in magnitude
-2. Opposite in direction
-3. Act on different bodies
-4. Cannot cancel each other (different objects)
-5. Same type of force
+**Action-reaction pairs:**
+- Equal in magnitude, opposite in direction
+- Act on different bodies
 
-**Examples:**
-- Rocket propulsion (exhaust gases push back, rocket moves forward)
-- Walking (foot pushes ground backward, ground pushes foot forward)
-- Swimming (hands push water back, water pushes swimmer forward)
+### Common Forces
 
-### Conservation of Momentum
-
-**Statement:** Total momentum of an isolated system remains constant.
-
-**Mathematical Form:**
-- p⃗_initial = p⃗_final
-- m₁u⃗₁ + m₂u⃗₂ = m₁v⃗₁ + m₂v⃗₂
-
-**Applications:**
-- Collisions
-- Explosions
-- Rocket propulsion
-
-### Types of Forces
-
-**1. Contact Forces:**
-- Normal force (N) - Perpendicular to surface
-- Friction (f) - Opposes relative motion
-- Tension (T) - Force in a string/rope
-- Spring force - F = -kx (Hooke's law)
-
-**2. Field Forces (Action at a distance):**
-- Gravitational force
-- Electromagnetic force
-- Nuclear forces
+- Weight: W = m g (downward)
+- Normal reaction: N (perpendicular to surface)
+- Tension: T (along a string or rope)
+- Spring force: F = -k x
+- Friction: resists relative motion
 
 ### Friction
 
-**Static Friction (f_s):**
-- Acts when object is at rest
-- Opposes tendency to move
-- f_s ≤ μ_s N (maximum value)
-- Self-adjusting force
+**Static friction:**
+- f_s <= mu_s N
+- f_s(max) = mu_s N
 
-**Kinetic Friction (f_k):**
-- Acts when object is moving
-- Opposes motion
-- f_k = μ_k N (constant value)
-- μ_k < μ_s (kinetic coefficient less than static)
-
-**Advantages of Friction:**
-- Walking, running possible
-- Writing on paper
-- Brakes in vehicles
-- Holding objects
-
-**Disadvantages:**
-- Energy loss
-- Wear and tear
-- Heat generation
-
-**Reducing Friction:**
-- Lubrication
-- Polishing surfaces
-- Using ball bearings
-- Streamlining (reduce air resistance)
-
-### Equilibrium
-
-**Conditions for Equilibrium:**
-1. **Translational Equilibrium:** ΣF⃗ = 0 (no linear acceleration)
-2. **Rotational Equilibrium:** Στ = 0 (no angular acceleration)
-
-**Types:**
-- **Static Equilibrium** - Object at rest
-- **Dynamic Equilibrium** - Object moving with constant velocity
+**Kinetic friction:**
+- f_k = mu_k N
+- mu_k < mu_s
 
 ### Free Body Diagrams (FBD)
 
-A diagram showing all forces acting on a single object:
+Steps:
 1. Isolate the object
 2. Draw all external forces
-3. Choose coordinate system
-4. Resolve forces if necessary
-5. Apply Newton's laws
+3. Choose coordinate axes
+4. Resolve forces into components
+5. Apply sum F = m a
 
-### Impulse
+### Impulse and Momentum
 
-**Definition:** Change in momentum
-- J⃗ = Δp⃗ = F⃗Δt
-- Unit: N⋅s or kg⋅m/s
+- Impulse: J = F_avg * delta t
+- J = delta p
 
-**Impulse-Momentum Theorem:**
-- J⃗ = F⃗_avg Δt = Δp⃗
+### Conservation of Momentum
 
-**Applications:**
-- Airbags (increase time, reduce force)
-- Following through in sports
-- Bending knees when landing`,
+If net external force is zero, total momentum remains constant.
+
+### Equilibrium
+
+- Translational equilibrium: sum F = 0
+- Rotational equilibrium: sum tau = 0`,
     keyConcepts: [
       {
         title: "Newton's First Law",
-        description: "An object continues in its state of rest or uniform motion unless acted upon by a net external force",
+        description: "If net force is zero, velocity remains constant in an inertial frame.",
+        formula: "sum F = 0 => v = constant",
       },
       {
         title: "Newton's Second Law",
-        description: "Rate of change of momentum equals applied force",
-        formula: "F = ma or F = dp/dt",
+        description: "Net force equals mass times acceleration (or rate of change of momentum).",
+        formula: "F = m a = dp/dt",
       },
       {
         title: "Newton's Third Law",
-        description: "For every action, there is an equal and opposite reaction",
+        description: "Action and reaction forces are equal in magnitude and opposite in direction.",
         formula: "F_AB = -F_BA",
       },
       {
-        title: "Conservation of Momentum",
-        description: "Total momentum of isolated system remains constant",
-        formula: "p_initial = p_final",
-      },
-      {
         title: "Friction",
-        description: "Force that opposes relative motion between surfaces",
-        formula: "f_s ≤ μ_s N, f_k = μ_k N",
+        description: "Force that opposes relative motion between surfaces.",
+        formula: "f_s <= mu_s N, f_k = mu_k N",
       },
       {
-        title: "Impulse",
-        description: "Change in momentum, equal to force × time",
-        formula: "J = FΔt = Δp",
+        title: "Impulse-Momentum",
+        description: "Impulse changes momentum; useful in collisions and time-varying forces.",
+        formula: "J = F_avg * delta t = delta p",
       },
     ],
     formulas: [
-      "F = ma",
+      "F = m a",
       "F = dp/dt",
-      "p = mv",
-      "f_s ≤ μ_s N (static friction)",
-      "f_k = μ_k N (kinetic friction)",
-      "J = FΔt = Δp (impulse)",
-      "Conservation of momentum: m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂",
-      "Weight: W = mg",
-      "Hooke's law: F = -kx",
+      "p = m v",
+      "f_s <= mu_s N",
+      "f_k = mu_k N",
+      "J = F_avg * delta t = delta p",
+      "m1 u1 + m2 u2 = m1 v1 + m2 v2",
+      "W = m g",
+      "F = -k x",
     ],
     importantTopics: [
       "Newton's three laws of motion",
@@ -1069,18 +1073,27 @@ A diagram showing all forces acting on a single object:
     visualizationsData: [
       {
         type: "concept",
-        title: "Newton's Laws Demonstrations",
-        description: "Interactive animations showing each of Newton's three laws with real-world examples",
+        title: "Newton's Laws (Force & Motion)",
+        description: "Explore how net force changes acceleration on an incline.",
+        config: {
+          visualizationName: "block-on-ramp",
+        },
       },
       {
         type: "concept",
-        title: "Free Body Diagram Builder",
-        description: "Tool to practice drawing and analyzing free body diagrams",
+        title: "Action-Reaction and Momentum",
+        description: "See equal and opposite forces during collisions.",
+        config: {
+          visualizationName: "collision-lab",
+        },
       },
       {
         type: "concept",
-        title: "Friction Forces",
-        description: "Graph showing static and kinetic friction vs applied force",
+        title: "Friction on an Incline",
+        description: "Compare static and kinetic friction while changing the angle.",
+        config: {
+          visualizationName: "block-on-ramp",
+        },
       },
     ],
     difficultyLevel: 4,
@@ -1139,3 +1152,4 @@ seedPhysicsClass11()
     console.error("Seed failed:", error);
     process.exit(1);
   });
+

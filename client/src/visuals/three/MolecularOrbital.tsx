@@ -158,7 +158,7 @@ export default function MolecularOrbital() {
               {hindi ? 'बंधन और प्रतिबंधन कक्षक' : 'Bonding and Antibonding Orbitals'}
             </p>
           </div>
-          <HindiToggle enabled={hindi} onToggle={setHindi} />
+          <HindiToggle isHindi={hindi} onToggle={() => setHindi((prev) => !prev)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

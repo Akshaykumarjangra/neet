@@ -20,7 +20,7 @@ export default function MetreBridge() {
               {hindi ? 'व्हीटस्टोन सिद्धांत का उपयोग करके अज्ञात प्रतिरोध' : 'Unknown resistance using Wheatstone principle'}
             </p>
           </div>
-          <HindiToggle enabled={hindi} onToggle={setHindi} />
+          <HindiToggle isHindi={hindi} onToggle={() => setHindi((prev) => !prev)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -1,13 +1,34 @@
-
 import { useState } from "react";
 import type { Question } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BookOpen, Lightbulb, Calculator, TrendingUp , Loader2 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  BookOpen,
+  Lightbulb,
+  Calculator,
+  Layers,
+  Droplets,
+  Loader2,
+} from "lucide-react";
 
 interface Topic {
   id: string;
@@ -20,141 +41,115 @@ interface Topic {
 
 const chapter12Topics: Topic[] = [
   {
-    id: "rate-of-reaction",
-    title: "Rate of Reaction",
-    description: "Understanding how fast reactions proceed and factors affecting them.",
+    id: "adsorption-basics",
+    title: "Adsorption Basics",
+    description:
+      "Difference between adsorption and absorption plus factors that control surface activity.",
     keyPoints: [
-      "Rate = -Δ[Reactant]/Δt = +Δ[Product]/Δt",
-      "Units: mol L⁻¹ s⁻¹ (concentration/time)",
-      "Average rate: measured over time interval",
-      "Instantaneous rate: rate at specific moment (slope of tangent)",
-      "For aA + bB → cC + dD: Rate = -1/a(d[A]/dt) = -1/b(d[B]/dt) = +1/c(d[C]/dt)",
-      "Factors: concentration, temperature, catalyst, surface area"
+      "Adsorption = accumulation of molecules at a surface, absorption = penetration throughout the bulk.",
+      "Adsorbent (surface) examples: charcoal, silica gel, alumina; adsorbate: species being adsorbed.",
+      "Physisorption: weak van der Waals forces, multilayer, reversible, low enthalpy change (20-40 kJ mol^-1).",
+      "Chemisorption: formation of chemical bonds, monolayer, often irreversible, high enthalpy change (80-240 kJ mol^-1).",
+      "Extent of adsorption increases with surface area and pressure but generally decreases with temperature.",
     ],
     examples: [
-      "2HI → H₂ + I₂: Rate = -½(d[HI]/dt) = d[H₂]/dt",
-      "Higher temperature → faster rate (molecules have more energy)",
-      "Catalyst lowers activation energy → faster reaction",
-      "Powdered reactant → larger surface area → faster reaction"
+      "Gas masks rely on charcoal to adsorb toxic gases.",
+      "Hydrogenation of oils begins with H2 chemisorbing on Ni or Pt surfaces.",
+      "Silica gel sachets prevent moisture damage inside packages.",
     ],
     formulas: [
-      "Rate = -Δ[R]/Δt = +Δ[P]/Δt",
-      "For aA → products: Rate = -1/a × d[A]/dt",
-      "Arrhenius: k = Ae^(-Ea/RT)"
-    ]
+      "Extent of adsorption = x/m (mass adsorbate per gram adsorbent).",
+      "Delta H for physisorption < Delta H for chemisorption.",
+    ],
   },
   {
-    id: "rate-law",
-    title: "Rate Law and Order of Reaction",
-    description: "Mathematical relationship between rate and concentration.",
+    id: "adsorption-isotherms",
+    title: "Freundlich and Langmuir Isotherms",
+    description:
+      "Mathematical relationships that describe how much gas or solute is adsorbed at a given pressure or concentration.",
     keyPoints: [
-      "Rate law: Rate = k[A]^m[B]^n (k = rate constant)",
-      "Order of reaction: m + n (sum of exponents)",
-      "Order determined experimentally, NOT from stoichiometry",
-      "Zero order: Rate = k (independent of concentration)",
-      "First order: Rate = k[A] (directly proportional)",
-      "Second order: Rate = k[A]² or k[A][B]"
+      "Freundlich isotherm (empirical): x/m = k P^(1/n) where n > 1.",
+      "Log form: log(x/m) = log k + (1/n) log P gives a straight line with slope 1/n.",
+      "Langmuir isotherm assumes monolayer adsorption on identical sites: theta = (bP)/(1 + bP).",
+      "At low pressure theta is proportional to P, at high pressure theta approaches 1 (surface saturation).",
+      "Isotherms help compare adsorption capacity of different solids.",
     ],
     examples: [
-      "NH₄NO₂ → N₂ + 2H₂O: First order, Rate = k[NH₄NO₂]",
-      "2NO₂ → 2NO + O₂: Second order, Rate = k[NO₂]²",
-      "H₂ + I₂ → 2HI: Rate = k[H₂][I₂] (second order overall)",
-      "Zero order: decomposition on catalyst surface"
+      "Dyes on charcoal obey the linear Freundlich plot log(x/m) vs log P.",
+      "Ammonia on tungsten follows Langmuir behaviour characteristic of chemisorption.",
     ],
     formulas: [
-      "Rate = k[A]^m[B]^n",
-      "Order = m + n",
-      "Units of k depend on order",
-      "Zero order k: mol L⁻¹ s⁻¹",
-      "First order k: s⁻¹",
-      "Second order k: L mol⁻¹ s⁻¹"
-    ]
+      "Freundlich: log(x/m) = log k + (1/n) log P.",
+      "Langmuir: theta = (bP)/(1 + bP) and 1/(x/m) = (1/k) + (1/kb)(1/P).",
+    ],
   },
   {
-    id: "integrated-rate",
-    title: "Integrated Rate Equations",
-    description: "Concentration-time relationships for different orders.",
+    id: "catalysis",
+    title: "Heterogeneous and Enzyme Catalysis",
+    description:
+      "Surface catalysts provide an alternate pathway with lower activation energy and are critical in industry and biology.",
     keyPoints: [
-      "Zero order: [A] = [A]₀ - kt (linear plot [A] vs t)",
-      "First order: ln[A] = ln[A]₀ - kt (linear plot ln[A] vs t)",
-      "Second order: 1/[A] = 1/[A]₀ + kt (linear plot 1/[A] vs t)",
-      "t₁/₂ (half-life): time for concentration to become half",
-      "Zero order: t₁/₂ = [A]₀/2k (depends on initial concentration)",
-      "First order: t₁/₂ = 0.693/k (independent of concentration)"
+      "Heterogeneous catalyst mechanism: adsorption -> activation -> surface reaction -> desorption.",
+      "Haber process uses iron with K2O and Al2O3 promoters at roughly 450 deg C and 200 atm.",
+      "Contact process uses V2O5 to oxidise SO2 into SO3; catalytic converters rely on Pt/Rh coatings.",
+      "Promoters increase activity whereas poisons such as CO on Pt lower activity.",
+      "Enzymes obey Michaelis-Menten kinetics and show high specificity.",
     ],
     examples: [
-      "Radioactive decay: First order, t₁/₂ = 0.693/k",
-      "If t₁/₂ constant → first order reaction",
-      "If t₁/₂ increases with time → zero order",
-      "¹⁴C dating uses first order kinetics, t₁/₂ = 5730 years"
+      "Hydrogenation of vegetable oils on finely divided nickel.",
+      "Ziegler-Natta catalysts (TiCl4 + Al(C2H5)3) polymerise alkenes with controlled stereochemistry.",
+      "Urease enzyme catalyses hydrolysis of urea in the liver.",
     ],
     formulas: [
-      "Zero: [A] = [A]₀ - kt, t₁/₂ = [A]₀/2k",
-      "First: ln[A] = ln[A]₀ - kt, t₁/₂ = 0.693/k",
-      "Second: 1/[A] = 1/[A]₀ + kt, t₁/₂ = 1/k[A]₀",
-      "First order: log[A] = log[A]₀ - kt/2.303"
-    ]
+      "Rate for enzymes: v = (Vmax [S])/(Km + [S]).",
+      "Haber optimum: roughly 450 deg C, 200 atm and promoted Fe catalyst.",
+    ],
   },
   {
-    id: "temperature-effect",
-    title: "Temperature Dependence - Arrhenius Equation",
-    description: "How temperature affects reaction rate.",
+    id: "colloids",
+    title: "Colloids and Interfacial Properties",
+    description:
+      "Colloidal systems have particle size between true solution and suspensions giving unique optical and electrical behaviour.",
     keyPoints: [
-      "Arrhenius equation: k = Ae^(-Ea/RT)",
-      "A = frequency factor (pre-exponential factor)",
-      "Ea = activation energy (minimum energy needed)",
-      "Higher temperature → more molecules have Ea → faster rate",
-      "Rule of thumb: rate doubles for every 10°C rise",
-      "Log form: ln k = ln A - Ea/RT"
+      "Classification by physical state: sols, gels, aerosols, foams, emulsions.",
+      "Preparation: dispersion (Bredig arc, ultrasonic) or condensation (double decomposition, solvent change).",
+      "Tyndall effect and Brownian motion keep particles dispersed and prove kinetic nature.",
+      "Colloids carry charge and develop an electric double layer; zeta potential governs stability.",
+      "Protective colloids (gelatin) safeguard lyophobic sols; gold number compares efficiency.",
     ],
     examples: [
-      "Food spoilage slower in refrigerator (lower T)",
-      "Cooking faster at high temperature",
-      "For reaction with Ea = 50 kJ/mol, k increases ~100 times from 25°C to 100°C",
-      "Plot ln k vs 1/T gives straight line, slope = -Ea/R"
+      "Gold sols exhibit bright colours due to surface plasmon resonance.",
+      "Hydrophilic sols such as starch are more stable than hydrophobic metal sols.",
+      "Dialysis removes electrolytes from colloidal solutions and is used in haemodialysis.",
     ],
-    formulas: [
-      "k = Ae^(-Ea/RT)",
-      "ln k = ln A - Ea/RT",
-      "log k = log A - Ea/2.303RT",
-      "ln(k₂/k₁) = Ea/R(1/T₁ - 1/T₂)"
-    ]
   },
   {
-    id: "collision-theory",
-    title: "Collision Theory and Catalysis",
-    description: "Molecular basis of reaction rates and role of catalysts.",
+    id: "emulsions",
+    title: "Emulsions, Coagulation and Uses",
+    description:
+      "Liquid-in-liquid colloids and real-life technology based on surface chemistry.",
     keyPoints: [
-      "Reactions occur when molecules collide with sufficient energy",
-      "Effective collision: proper orientation + energy ≥ Ea",
-      "Only small fraction of collisions lead to reaction",
-      "Catalyst: increases rate without being consumed",
-      "Catalyst lowers Ea, provides alternate pathway",
-      "Homogeneous catalyst: same phase as reactants"
+      "Emulsion types: oil-in-water (milk, latex) and water-in-oil (butter, cold cream).",
+      "Emulsifying agents such as soaps, detergents and proteins reduce interfacial tension and stabilise droplets.",
+      "Hardy-Schulze rule: higher valence counter-ions coagulate lyophobic sols more effectively.",
+      "Micelle formation above the critical micelle concentration explains detergency.",
+      "Applications include detergents, froth flotation, photographic plates, drug delivery and lung surfactants.",
     ],
     examples: [
-      "V₂O₅ catalyzes SO₂ + O₂ → SO₃ (Contact process)",
-      "Fe catalyst in Haber process: N₂ + 3H₂ → 2NH₃",
-      "Enzymes: biological catalysts (highly specific)",
-      "Pt catalyst in automobile catalytic converter"
+      "Fe(OH)3 sol is best coagulated by Na3PO4 because PO4^3- has higher charge.",
+      "Pine oil assists froth flotation by making sulphide particles attach to air bubbles.",
+      "Sodium stearate micelles trap grease and allow washing with water.",
     ],
-    formulas: [
-      "Ea (uncatalyzed) > Ea (catalyzed)",
-      "Rate increases but ΔH unchanged",
-      "Catalyst recovered unchanged at end"
-    ]
-  }
+  },
 ];
 
-
-
 export function ChemistryChapter12() {
-  // Fetch questions from database for Organic Chemistry - Basic Principles (topicId: 47)
+  // Fetch questions from database for Surface Chemistry (topicId placeholder)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
-    queryKey: ['/api/questions', 'topicId', '47'],
+    queryKey: ["/api/questions", "topicId", "2102"],
     queryFn: async () => {
-      const response = await fetch('/api/questions?topicId=47');
-      if (!response.ok) throw new Error('Failed to fetch questions');
+      const response = await fetch("/api/questions?topicId=2102");
+      if (!response.ok) throw new Error("Failed to fetch questions");
       return response.json();
     },
   });
@@ -162,11 +157,11 @@ export function ChemistryChapter12() {
   const practiceQuestions = dbQuestions || [];
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+    setUserAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
   const checkAnswers = () => {
@@ -178,20 +173,20 @@ export function ChemistryChapter12() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answer]) => {
+    const question = practiceQuestions.find((q) => q.id === parseInt(qId));
+    return question && answer === question.correctAnswer;
+  }).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <TrendingUp className="h-8 w-8 text-orange-500" />
+        <Layers className="h-8 w-8 text-cyan-500" />
         <div>
-          <h1 className="text-4xl font-bold">Chapter 12: Chemical Kinetics</h1>
-          <p className="text-muted-foreground">Class XII Chemistry - NEET Syllabus</p>
+          <h1 className="text-4xl font-bold">Chapter 12: Surface Chemistry</h1>
+          <p className="text-muted-foreground">
+            Adsorption, catalysis, colloids and emulsions for NEET Chemistry
+          </p>
         </div>
       </div>
 
@@ -205,8 +200,8 @@ export function ChemistryChapter12() {
             <Lightbulb className="h-4 w-4 mr-2" />
             Topics
           </TabsTrigger>
-          <TabsTrigger value="practice">
-            <Calculator className="h-4 w-4 mr-2" />
+          <TabsTrigger value="quiz">
+            <Droplets className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
         </TabsList>
@@ -218,87 +213,78 @@ export function ChemistryChapter12() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold mb-2">What You'll Learn</h3>
+                <h3 className="text-lg font-semibold mb-2">What You Will Learn</h3>
                 <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li>Rate of chemical reactions and factors affecting it</li>
-                  <li>Rate law and order of reactions</li>
-                  <li>Integrated rate equations for zero, first, and second order</li>
-                  <li>Half-life and its significance</li>
-                  <li>Temperature dependence and Arrhenius equation</li>
-                  <li>Collision theory and catalysis</li>
+                  <li>Mechanism and energetics of physisorption versus chemisorption.</li>
+                  <li>Freundlich and Langmuir isotherms plus their assumptions.</li>
+                  <li>Heterogeneous and enzyme catalysis, promoters and poisons.</li>
+                  <li>Preparation and properties of colloidal sols, gels and aerosols.</li>
+                  <li>Tyndall effect, Brownian motion and zeta potential.</li>
+                  <li>Emulsions, micelles, detergency and coagulation rules.</li>
                 </ul>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4 mt-6">
-                <Card className="border-blue-500/20 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
+              <div className="grid md:grid-cols-2 gap-4 mt-6">
+                <Card className="border-cyan-500/20">
                   <CardHeader>
-                    <Badge className="w-fit mb-2 bg-blue-500">Order 0</Badge>
-                    <CardTitle className="text-lg">Zero Order</CardTitle>
+                    <Badge className="w-fit mb-2 bg-cyan-500">NEET Important</Badge>
+                    <CardTitle className="text-lg">Key Concepts</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
-                    <p className="font-mono">[A] = [A]₀ - kt</p>
-                    <p className="font-mono">t₁/₂ = [A]₀/2k</p>
-                    <p className="text-xs text-muted-foreground">Rate independent of [A]</p>
+                    <p>
+                      <strong>Adsorption:</strong> Always exothermic and favoured by large surface area.
+                    </p>
+                    <p>
+                      <strong>Isotherms:</strong> Freundlich is empirical, Langmuir assumes a monolayer.
+                    </p>
+                    <p>
+                      <strong>Catalysis:</strong> Active sites lower activation energy; promoters and poisons modify them.
+                    </p>
+                    <p>
+                      <strong>Colloids:</strong> Stability depends on charge and presence of protective colloids.
+                    </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-green-500/20 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+                <Card className="border-secondary/20">
                   <CardHeader>
-                    <Badge className="w-fit mb-2 bg-green-500">Order 1</Badge>
-                    <CardTitle className="text-lg">First Order</CardTitle>
+                    <Badge variant="secondary" className="w-fit mb-2">
+                      Quick Tips
+                    </Badge>
+                    <CardTitle className="text-lg">Common Mistakes</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
-                    <p className="font-mono">ln[A] = ln[A]₀ - kt</p>
-                    <p className="font-mono">t₁/₂ = 0.693/k</p>
-                    <p className="text-xs text-muted-foreground">Constant half-life</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-purple-500/20 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
-                  <CardHeader>
-                    <Badge className="w-fit mb-2 bg-purple-500">Order 2</Badge>
-                    <CardTitle className="text-lg">Second Order</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <p className="font-mono">1/[A] = 1/[A]₀ + kt</p>
-                    <p className="font-mono">t₁/₂ = 1/k[A]₀</p>
-                    <p className="text-xs text-muted-foreground">t₁/₂ ∝ 1/[A]₀</p>
+                    <p>(!) Writing absorption when the process is adsorption.</p>
+                    <p>(!) Using the Freundlich equation at very high pressure ranges.</p>
+                    <p>(!) Forgetting that initial chemisorption often increases with temperature.</p>
+                    <p>(!) Ignoring ionic charge when applying the Hardy-Schulze rule for coagulation.</p>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-500/20">
+              <Card className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-orange-500" />
-                    Arrhenius Equation
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5" />
+                    Important Relationships
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="font-mono text-lg">k = Ae^(-Ea/RT)</p>
-                  <div className="grid md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <p className="text-sm font-semibold">Higher Temperature</p>
-                      <p className="text-xs text-muted-foreground">More molecules have E ≥ Ea → Faster rate</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Catalyst Effect</p>
-                      <p className="text-xs text-muted-foreground">Lowers Ea → Increases k → Faster rate</p>
-                    </div>
-                  </div>
+                <CardContent className="space-y-2 text-sm font-mono">
+                  <p>log(x/m) = log k + (1/n) log P (Freundlich).</p>
+                  <p>theta = (bP)/(1 + bP) (Langmuir).</p>
+                  <p>v = (Vmax [S])/(Km + [S]) (Michaelis-Menten).</p>
+                  <p>Coagulating power proportional to valence^3 (Hardy-Schulze).</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-muted">
+              <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20">
                 <CardHeader>
-                  <CardTitle className="text-lg">NEET Quick Tips</CardTitle>
+                  <CardTitle>Real-World Interfaces</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <p>✓ First order t₁/₂ is constant (independent of concentration)</p>
-                  <p>✓ Units of k: Zero (mol L⁻¹ s⁻¹), First (s⁻¹), Second (L mol⁻¹ s⁻¹)</p>
-                  <p>✓ Linear plot identifies order: [A] vs t (0), ln[A] vs t (1), 1/[A] vs t (2)</p>
-                  <p>✓ Catalyst lowers Ea but doesn't change ΔH</p>
-                  <p>✓ Rate typically doubles for every 10°C temperature rise</p>
+                  <p>Lung surfactants lower surface tension to prevent alveolar collapse.</p>
+                  <p>Micelles in soaps and detergents emulsify oil and grease for washing.</p>
+                  <p>Froth flotation upgrades sulphide ores through selective adsorption.</p>
                 </CardContent>
               </Card>
             </CardContent>
@@ -317,7 +303,9 @@ export function ChemistryChapter12() {
                       </Badge>
                       <div>
                         <h3 className="text-lg font-semibold">{topic.title}</h3>
-                        <p className="text-sm text-muted-foreground">{topic.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {topic.description}
+                        </p>
                       </div>
                     </div>
                   </AccordionTrigger>
@@ -331,7 +319,7 @@ export function ChemistryChapter12() {
                         <ul className="space-y-2">
                           {topic.keyPoints.map((point, i) => (
                             <li key={i} className="flex items-start gap-2">
-                              <span className="text-primary mt-1">•</span>
+                              <span className="text-cyan-500 mt-1">*</span>
                               <span className="text-sm">{point}</span>
                             </li>
                           ))}
@@ -342,11 +330,14 @@ export function ChemistryChapter12() {
                         <div className="bg-muted p-4 rounded-lg">
                           <h4 className="font-semibold mb-3 flex items-center gap-2">
                             <Calculator className="h-4 w-4" />
-                            Important Formulas
+                            Equations
                           </h4>
                           <div className="space-y-2">
                             {topic.formulas.map((formula, i) => (
-                              <p key={i} className="font-mono text-sm bg-background p-2 rounded">
+                              <p
+                                key={i}
+                                className="font-mono text-sm bg-background p-2 rounded"
+                              >
                                 {formula}
                               </p>
                             ))}
@@ -355,10 +346,13 @@ export function ChemistryChapter12() {
                       )}
 
                       <div>
-                        <h4 className="font-semibold mb-3">Examples & Applications</h4>
+                        <h4 className="font-semibold mb-3">Examples</h4>
                         <div className="space-y-2">
                           {topic.examples.map((example, i) => (
-                            <div key={i} className="bg-secondary/10 p-3 rounded-lg border-l-4 border-primary">
+                            <div
+                              key={i}
+                              className="bg-cyan-50 dark:bg-cyan-950/20 p-3 rounded-lg border border-cyan-200 dark:border-cyan-800"
+                            >
                               <p className="text-sm">{example}</p>
                             </div>
                           ))}
@@ -373,109 +367,93 @@ export function ChemistryChapter12() {
         </TabsContent>
 
         <TabsContent value="practice" className="space-y-6">
-          {questionsLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mr-3" />
-                <span>Loading questions from database...</span>
-              </CardContent>
-            </Card>
-          ) : practiceQuestions.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center text-muted-foreground">
-                <p>No questions available for this chapter yet.</p>
-              </CardContent>
-            </Card>
-          ) : (
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Practice Questions</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Test your understanding with NEET-level questions
-                  </p>
-                </div>
-                {showSolutions && (
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">{score}/{practiceQuestions.length}</p>
-                    <p className="text-sm text-muted-foreground">Score</p>
-                  </div>
-                )}
-              </div>
+              <CardTitle>Surface Chemistry Practice</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {practiceQuestions.map((q, index) => (
-                <Card key={q.id} className={`${
-                  showSolutions 
-                    ? userAnswers[q.id] === q.correctAnswer 
-                      ? 'border-green-500' 
-                      : userAnswers[q.id] !== undefined 
-                        ? 'border-red-500' 
-                        : ''
-                    : ''
-                }`}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-base">Q{index + 1}. {q.questionText}</CardTitle>
-                      <Badge variant={
-                        q.difficultyLevel === 1 ? 'secondary' : 
-                        q.difficultyLevel === 2 ? 'default' : 
-                        'destructive'
-                      }>
-                        {q.difficultyLevel === 1 ? 'Easy' : q.difficultyLevel === 2 ? 'Medium' : 'Hard'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      {q.options.map((option, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, String.fromCharCode(65 + idx))}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                            showSolutions
-                              ? String.fromCharCode(65 + idx) === q.correctAnswer
-                                ? 'bg-green-100 border-green-500 dark:bg-green-900/20'
-                                : userAnswers[q.id] === String.fromCharCode(65 + idx)
-                                  ? 'bg-red-100 border-red-500 dark:bg-red-900/20'
-                                  : ''
-                              : userAnswers[q.id] === String.fromCharCode(65 + idx)
-                                ? 'bg-primary/10 border-primary'
-                                : 'hover:bg-muted'
-                          }`}
-                        >
-                          <span className="font-semibold mr-2">{String.fromCharCode(65 + idx)}.</span>
-                          {typeof option === "string" ? option : option.text}
-                        </div>
-                      ))}
-                    </div>
-
-                    {showSolutions && (
-                      <div className="mt-4 p-4 bg-muted rounded-lg">
-                        <h5 className="font-semibold mb-2">Solution:</h5>
-                        <p className="text-sm">{q.solutionDetail}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-
-              <div className="flex gap-3 pt-4">
-                {!showSolutions ? (
-                  <Button onClick={checkAnswers} className="flex-1" size="lg">
-                    Submit Answers
+            <CardContent>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Test your understanding of adsorption isotherms, catalysis and colloids.
+                  </p>
+                  <div className="mt-2">
+                    <p className="text-2xl font-bold text-primary">
+                      {score}/{practiceQuestions.length || 5}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Current Score</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={checkAnswers} disabled={practiceQuestions.length === 0}>
+                    Check Answers
                   </Button>
-                ) : (
-                  <Button onClick={resetQuiz} variant="outline" className="flex-1" size="lg">
-                    Try Again
+                  <Button variant="outline" onClick={resetQuiz}>
+                    Reset
                   </Button>
-                )}
+                </div>
               </div>
             </CardContent>
           </Card>
-        
-          )}</TabsContent>
+
+          {questionsLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : practiceQuestions.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Practice questions will appear here once they are added to the database.
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Attempt the Questions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {practiceQuestions.map((q, index) => (
+                  <div key={q.id} className="space-y-3 border-b pb-4 last:border-none">
+                    <div className="flex items-start gap-3">
+                      <Badge variant="secondary">{index + 1}</Badge>
+                      <div>
+                        <p className="font-medium">{q.questionText}</p>
+                        <div className="grid gap-2 mt-3">
+                          {q.options.map((option) => (
+                            <Button
+                              key={option.id}
+                              variant={
+                                showSolutions
+                                  ? option.id === q.correctAnswer
+                                    ? "default"
+                                    : userAnswers[q.id] === option.id
+                                    ? "destructive"
+                                    : "outline"
+                                  : userAnswers[q.id] === option.id
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className="justify-start text-left"
+                              onClick={() => handleAnswerSelect(q.id, option.id)}
+                              disabled={showSolutions}
+                            >
+                              {option.text}
+                            </Button>
+                          ))}
+                        </div>
+                        {showSolutions && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Correct: {q.correctAnswer} - {q.solutionDetail}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );

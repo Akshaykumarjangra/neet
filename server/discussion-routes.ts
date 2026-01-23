@@ -9,7 +9,7 @@ import {
   contentTopics,
 } from "@shared/schema";
 import { eq, and, desc, asc, sql, or } from "drizzle-orm";
-import { requireAuth } from "./auth";
+import { requireAuth, requireActiveSubscription } from "./auth";
 import { z } from "zod";
 
 const router = Router();
@@ -32,6 +32,16 @@ const voteSchema = z.object({
 router.get("/", async (req, res) => {
   try {
     const { chapterId, topicId, sortBy, resolved, search, limit = "20", offset = "0" } = req.query;
+    const userId = req.session?.userId;
+    let isPremiumViewer = false;
+    if (userId) {
+      const [user] = await db
+        .select({ isPaidUser: users.isPaidUser })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      isPremiumViewer = Boolean(user?.isPaidUser);
+    }
 
     let orderBy: any = desc(discussions.createdAt);
     if (sortBy === "votes") {
@@ -117,6 +127,7 @@ router.get("/", async (req, res) => {
       total: totalCountResult[0]?.count || 0,
       limit: parseInt(limit as string),
       offset: parseInt(offset as string),
+      requiresPremium: !isPremiumViewer,
     });
   } catch (error: any) {
     console.error("Error fetching discussions:", error);
@@ -124,7 +135,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const validatedData = createDiscussionSchema.parse(req.body);
@@ -313,7 +324,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/:id/replies", requireAuth, async (req, res) => {
+router.post("/:id/replies", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -364,7 +375,7 @@ router.post("/:id/replies", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/:id/vote", requireAuth, async (req, res) => {
+router.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -426,7 +437,7 @@ router.post("/:id/vote", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/:id/resolve", requireAuth, async (req, res) => {
+router.post("/:id/resolve", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -462,7 +473,7 @@ export default router;
 
 export const replyRoutes = Router();
 
-replyRoutes.post("/:id/vote", requireAuth, async (req, res) => {
+replyRoutes.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const replyId = parseInt(req.params.id);
@@ -524,7 +535,7 @@ replyRoutes.post("/:id/vote", requireAuth, async (req, res) => {
   }
 });
 
-replyRoutes.put("/:id/accept", requireAuth, async (req, res) => {
+replyRoutes.put("/:id/accept", requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const replyId = parseInt(req.params.id);

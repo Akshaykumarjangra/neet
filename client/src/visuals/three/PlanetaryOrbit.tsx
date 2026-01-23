@@ -70,9 +70,7 @@ export default function PlanetaryOrbit() {
     // Create sun
     const sunGeometry = new THREE.SphereGeometry(0.5, 32, 32);
     const sunMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 0.8
+      color: 0xffff00
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sun);

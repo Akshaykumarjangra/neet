@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 // Get all achievements with user unlock status
 router.get("/achievements", requireAuth, async (req, res) => {

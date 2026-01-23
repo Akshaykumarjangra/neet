@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Scissors, TestTubes } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter35() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -17,70 +18,70 @@ export function BotanyChapter35() {
       id: 1,
       question: "Which enzyme is used to cut DNA at specific recognition sequences?",
       options: ["DNA ligase", "Restriction endonuclease", "DNA polymerase", "Reverse transcriptase"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Restriction endonucleases (or restriction enzymes) are molecular scissors that cut DNA at specific palindromic recognition sequences."
     },
     {
       id: 2,
       question: "The first restriction endonuclease isolated was:",
       options: ["EcoRI", "Hind II", "BamHI", "Pst I"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Hind II was the first restriction endonuclease to be isolated from Haemophilus influenzae in 1970."
     },
     {
       id: 3,
       question: "Sticky ends are produced by:",
       options: ["Blunt-end restriction enzymes", "DNA ligase", "Staggered cut restriction enzymes", "Exonucleases"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Restriction enzymes that make staggered cuts produce sticky ends (overhanging single-stranded DNA) which can easily bind with complementary sequences."
     },
     {
       id: 4,
       question: "Which vector is most commonly used for cloning genes in bacteria?",
       options: ["Bacteriophage", "Cosmid", "Plasmid", "YAC"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Plasmids are small, circular, extrachromosomal DNA molecules that are the most commonly used vectors for cloning in bacteria."
     },
     {
       id: 5,
       question: "The origin of replication (ori) in a cloning vector is important for:",
       options: ["Cutting DNA", "Autonomous replication", "Antibiotic resistance", "Selecting recombinants"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The ori sequence allows the vector to replicate autonomously inside the host cell, independent of chromosomal DNA replication."
     },
     {
       id: 6,
       question: "Insertional inactivation is used for:",
       options: ["DNA cutting", "Selection of recombinants", "DNA amplification", "Gene sequencing"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Insertional inactivation involves inserting foreign DNA into a marker gene (like antibiotic resistance), disrupting it and allowing selection of recombinant clones."
     },
     {
       id: 7,
       question: "EcoRI cuts DNA between bases:",
       options: ["G and A in GAATTC", "A and A in GAATTC", "T and T in GAATTC", "C and G in GAATTC"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "EcoRI recognizes the palindromic sequence GAATTC and cuts between G and A on both strands, producing sticky ends with AATT overhangs."
     },
     {
       id: 8,
       question: "Which technique is used to introduce recombinant DNA into animal cells?",
       options: ["Electroporation", "Gene gun", "Microinjection", "All of the above"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "All three methods - electroporation (electric shock), gene gun (biolistics), and microinjection - can be used to introduce DNA into animal cells."
     },
     {
       id: 9,
       question: "The process of separating DNA fragments by size using electric current is called:",
       options: ["PCR", "Gel electrophoresis", "Blotting", "Centrifugation"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Gel electrophoresis separates DNA fragments based on size - smaller fragments move faster through the gel matrix toward the positive electrode."
     },
     {
       id: 10,
       question: "PCR requires which of the following?",
       options: ["Template DNA", "Primers", "DNA polymerase", "All of the above"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "PCR (Polymerase Chain Reaction) requires template DNA, primers (short oligonucleotides), heat-stable DNA polymerase (Taq), and deoxynucleotides to amplify DNA."
     }
   ];
@@ -97,7 +98,7 @@ export function BotanyChapter35() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -698,7 +699,7 @@ export function BotanyChapter35() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -706,13 +707,13 @@ export function BotanyChapter35() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

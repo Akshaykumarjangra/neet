@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter13() {
   // Fetch questions from database for Reproduction in Organisms (topicId: 77)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,14 +33,14 @@ export function BotanyChapter13() {
       id: 1,
       question: "In a monohybrid cross between two heterozygous plants (Tt × Tt), what is the phenotypic ratio in F₂ generation?",
       options: ["1:2:1", "3:1", "9:3:3:1", "1:1"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "In a monohybrid cross (Tt × Tt), the F₂ generation shows a 3:1 phenotypic ratio (3 tall : 1 dwarf), following Mendel's Law of Dominance."
     },
     {
       id: 2,
       question: "The law of independent assortment is applicable to genes located on:",
       options: ["Same chromosome", "Different chromosomes", "Sex chromosomes only", "Homologous chromosomes"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The law of independent assortment applies to genes located on different (non-homologous) chromosomes, as they segregate independently during meiosis."
     },
     {
@@ -51,7 +52,7 @@ export function BotanyChapter13() {
         "Intermediate phenotype",
         "Both parental phenotypes"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "In incomplete dominance, the heterozygous F₁ shows an intermediate phenotype. Example: Red × White = Pink in snapdragon (Antirrhinum)."
     },
     {
@@ -63,21 +64,21 @@ export function BotanyChapter13() {
         "Two F₁ hybrids",
         "Two homozygous dominant parents"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "A test cross is performed between an organism with unknown genotype (usually F₁) and a homozygous recessive parent to determine the genotype."
     },
     {
       id: 5,
       question: "The phenotypic ratio of a dihybrid cross (F₂) is:",
       options: ["3:1", "1:2:1", "9:3:3:1", "1:1:1:1"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "A dihybrid cross between two heterozygous individuals (AaBb × AaBb) gives a 9:3:3:1 phenotypic ratio in the F₂ generation."
     },
     {
       id: 6,
       question: "Multiple alleles control human ABO blood group system. How many alleles control this trait?",
       options: ["2", "3", "4", "6"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Three alleles (Iᴬ, Iᴮ, and i) control the ABO blood group system, though an individual can have only two of these alleles."
     },
     {
@@ -89,28 +90,28 @@ export function BotanyChapter13() {
         "Morgan",
         "Watson and Crick"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The chromosomal theory of inheritance was proposed by Walter Sutton and Theodor Boveri (1902), correlating Mendel's laws with chromosome behavior."
     },
     {
       id: 8,
       question: "Linkage was discovered by:",
       options: ["Mendel", "Morgan", "Bateson and Punnett", "Sutton"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Linkage was first discovered by Bateson and Punnett in sweet pea, but T.H. Morgan provided experimental evidence using Drosophila."
     },
     {
       id: 9,
       question: "The distance between two genes on a chromosome is measured in:",
       options: ["Angstroms", "Map units (centiMorgans)", "Nanometers", "Micrometers"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Map distance is measured in map units or centiMorgans (cM). 1 map unit = 1% recombination frequency between two genes."
     },
     {
       id: 10,
       question: "Which type of chromosomal aberration involves loss of a chromosome segment?",
       options: ["Duplication", "Deletion", "Inversion", "Translocation"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Deletion is the loss of a segment of chromosome. It can be terminal (at the end) or intercalary (in the middle)."
     }
   ];
@@ -127,7 +128,7 @@ export function BotanyChapter13() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -480,7 +481,7 @@ export function BotanyChapter13() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -500,10 +501,10 @@ export function BotanyChapter13() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

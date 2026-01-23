@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Users, CheckCircle2, XCircle, Brain, TrendingUp, Globe , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter24() {
   // Fetch questions from database for Ecosystem (topicId: 88)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -37,7 +38,7 @@ export function BotanyChapter24() {
         "Population density",
         "Natality"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Carrying capacity (K) is the maximum population size that an environment can sustain indefinitely given the available resources like food, water, and shelter."
     },
     {
@@ -49,7 +50,7 @@ export function BotanyChapter24() {
         "Zero growth",
         "Negative growth"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Logistic growth shows an S-shaped (sigmoid) curve with three phases: lag phase (slow growth), log phase (rapid growth), and stationary phase (growth levels off at carrying capacity)."
     },
     {
@@ -61,7 +62,7 @@ export function BotanyChapter24() {
         "Migration occurs in response to temperature",
         "Body size decreases with altitude"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Allen's rule states that endothermic animals from colder climates have shorter limbs and appendages to minimize heat loss. For example, polar bears have small ears compared to elephants."
     },
     {
@@ -73,7 +74,7 @@ export function BotanyChapter24() {
         "Cuscuta on host plant",
         "Rhizobium in legume roots"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Orchids growing on mango trees represent commensalism - the orchid benefits by getting support and sunlight, while the mango tree is neither harmed nor benefited."
     },
     {
@@ -85,7 +86,7 @@ export function BotanyChapter24() {
         "Expanding population",
         "Extinct population"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "A population with a larger proportion of pre-reproductive individuals (pyramid-shaped age structure) indicates an expanding or growing population."
     },
     {
@@ -97,7 +98,7 @@ export function BotanyChapter24() {
         "Mutualism",
         "Competition"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Mycorrhizae represent mutualism between fungi and plant roots. Fungi help plants absorb water and minerals, while plants provide carbohydrates to fungi."
     },
     {
@@ -109,7 +110,7 @@ export function BotanyChapter24() {
         "N = K",
         "r = b - d"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Exponential growth follows dN/dt = rN, where N is population size, t is time, and r is intrinsic rate of natural increase. This assumes unlimited resources."
     },
     {
@@ -121,7 +122,7 @@ export function BotanyChapter24() {
         "Competition increases biodiversity",
         "Only one species can exist in a habitat"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Gause's competitive exclusion principle states that two species competing for exactly the same limiting resources cannot stably coexist. One will outcompete and exclude the other."
     }
   ];
@@ -138,7 +139,7 @@ export function BotanyChapter24() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -651,7 +652,7 @@ export function BotanyChapter24() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -671,10 +672,10 @@ export function BotanyChapter24() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

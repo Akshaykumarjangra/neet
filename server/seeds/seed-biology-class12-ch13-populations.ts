@@ -429,14 +429,68 @@ One species harmed, other unaffected
 6. Predator-prey interactions drive evolution of defenses (camouflage, toxins, mimicry) and hunting strategies
 7. Mutualism benefits both species (lichens, mycorrhiza, Rhizobium-legume symbiosis)
 `,
+
+    visualizationsData: [
+      {
+        type: 'graph',
+        title: 'Population Growth Curves',
+        description: 'Exponential and logistic growth.'
+      },
+      {
+        type: 'diagram',
+        title: 'Population Interactions',
+        description: 'Predation, competition, mutualism.'
+      },
+      {
+        type: 'table',
+        title: 'Population Parameters',
+        description: 'N, r, K, birth and death rates.'
+      },
+      {
+        type: 'comparison',
+        title: 'r-selected vs K-selected',
+        description: 'Life history strategies.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Population Regulation',
+        description: 'Factors -> response -> equilibrium.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Organisms and Populations',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'graph',
+          title: 'Population Growth Curves',
+          description: 'Exponential and logistic growth.'
+        },
+        {
+          type: 'diagram',
+          title: 'Population Interactions',
+          description: 'Predation, competition, mutualism.'
+        },
+        {
+          type: 'table',
+          title: 'Population Parameters',
+          description: 'N, r, K, birth and death rates.'
+        },
+        {
+          type: 'comparison',
+          title: 'r-selected vs K-selected',
+          description: 'Life history strategies.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Population Regulation',
+          description: 'Factors -> response -> equilibrium.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 13: Organisms and Populations');

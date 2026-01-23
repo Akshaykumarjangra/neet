@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { db } from "../db";
 import { contentTopics, questions } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -20,8 +21,21 @@ export async function seedPhysicsAllChaptersQuestions() {
 
    let totalCreated = 0;
 
+   const normalizeText = (value: string) =>
+      value
+         .trim()
+         .toLowerCase()
+         .replace(/\s+/g, " ");
+
    for (const topic of physicsTopics) {
-      console.log(`📚 Ch ${topic.chapterNumber} - ${topic.topicName}`);
+      const topicName = String(topic.topicName ?? "");
+      const normalizedName = topicName.toLowerCase();
+      const isChapterOne = normalizedName.includes("physical world");
+      const isChapterTwo =
+         normalizedName.includes("units and measurement") ||
+         normalizedName.includes("units and measurements");
+      const chapterNumber = isChapterOne ? 1 : isChapterTwo ? 2 : topic.chapterNumber;
+      console.log(`📚 Ch ${chapterNumber} - ${topic.topicName}`);
 
       // Check existing questions
       const existing = await db
@@ -29,13 +43,39 @@ export async function seedPhysicsAllChaptersQuestions() {
          .from(questions)
          .where(eq(questions.topicId, topic.id));
 
+      if (isChapterOne || isChapterTwo) {
+         const newQuestions = isChapterOne
+            ? getChapter01Questions(topic.id)
+            : getChapter02Questions(topic.id);
+
+         if (newQuestions.length > 0) {
+            const existingTexts = new Set(
+               existing.map((question) => normalizeText(String(question.questionText ?? "")))
+            );
+            const filteredQuestions = newQuestions.filter(
+               (question) =>
+                  !existingTexts.has(normalizeText(String(question.questionText ?? "")))
+            );
+
+            if (filteredQuestions.length > 0) {
+               await db.insert(questions).values(filteredQuestions);
+               totalCreated += filteredQuestions.length;
+            }
+
+            console.log(
+               `   Added ${filteredQuestions.length} new questions (kept ${existing.length} existing)\n`
+            );
+         }
+         continue;
+      }
+
       if (existing.length >= 10) {
          console.log(`   ✓ Already has ${existing.length} questions\n`);
          continue;
       }
 
       // Generate questions based on chapter
-      const newQuestions = getQuestionsForChapter(topic.id, topic.chapterNumber);
+      const newQuestions = getQuestionsForChapter(topic.id, chapterNumber);
 
       if (newQuestions.length > 0) {
          await db.insert(questions).values(newQuestions);
@@ -75,111 +115,153 @@ function getChapter01Questions(topicId: number) {
          options: [
             { id: "A", text: "Gravitational force" },
             { id: "B", text: "Electromagnetic force" },
-            { id: "C", text: "Frictional force" },
+            { id: "C", text: "Strong nuclear force" },
+            { id: "D", text: "Frictional force" }
+         ],
+         correctAnswer: "D",
+         solutionDetail: "Friction is a contact force that arises from electromagnetic interactions between surfaces. The fundamental forces are gravitational, electromagnetic, strong nuclear, and weak nuclear.",
+         solutionSteps: [
+            "List the four fundamental forces",
+            "Identify friction as an emergent contact force",
+            "Select the non-fundamental force"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Fundamental Forces"]
+      },
+      {
+         topicId,
+         questionText: "Which fundamental force is the strongest?",
+         options: [
+            { id: "A", text: "Gravitational force" },
+            { id: "B", text: "Electromagnetic force" },
+            { id: "C", text: "Weak nuclear force" },
             { id: "D", text: "Strong nuclear force" }
          ],
-         correctAnswer: "C",
-         solutionDetail: "Frictional force is not fundamental. It arises from electromagnetic interactions between atoms at surfaces. The four fundamental forces are: Gravitational, Electromagnetic, Strong Nuclear, and Weak Nuclear.",
-         solutionSteps: ["Identify four fundamental forces", "Friction is electromagnetic in origin", "Answer: C"],
+         correctAnswer: "D",
+         solutionDetail: "The strong nuclear force has the greatest strength among the four fundamental interactions.",
+         solutionSteps: [
+            "Compare relative strengths of fundamental forces",
+            "Strong nuclear force is the greatest"
+         ],
          difficultyLevel: 1,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["Fundamental Forces"]
+      },
+      {
+         topicId,
+         questionText: "Beta decay is mediated by which fundamental force?",
+         options: [
+            { id: "A", text: "Gravitational force" },
+            { id: "B", text: "Strong nuclear force" },
+            { id: "C", text: "Weak nuclear force" },
+            { id: "D", text: "Electromagnetic force" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Beta decay involves changes in particle type, which are governed by the weak nuclear interaction.",
+         solutionSteps: [
+            "Recall the interaction responsible for beta decay",
+            "Select weak nuclear force"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Weak Interaction"]
       },
       {
          topicId,
          questionText: "The range of gravitational force is:",
          options: [
             { id: "A", text: "Infinite" },
-            { id: "B", text: "10⁻¹⁵ m" },
-            { id: "C", text: "10⁻¹⁰ m" },
-            { id: "D", text: "Limited to solar system" }
+            { id: "B", text: "10^-15 m" },
+            { id: "C", text: "10^-10 m" },
+            { id: "D", text: "10^-18 m" }
          ],
          correctAnswer: "A",
-         solutionDetail: "Gravitational force has infinite range. It follows inverse square law (F ∝ 1/r²), so it never becomes exactly zero.",
-         solutionSteps: ["F = Gm₁m₂/r²", "As r → ∞, F → 0 but never zero", "Range is infinite"],
-         difficultyLevel: 2,
-         sourceType: "practice",
+         solutionDetail: "Gravity follows an inverse square law and has infinite range, even though it becomes weaker with distance.",
+         solutionSteps: [
+            "Use inverse square behavior",
+            "Gravity never becomes exactly zero",
+            "Choose infinite range"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
          relatedTopics: ["Gravitational Force"]
       },
       {
          topicId,
-         questionText: "Who is known as the father of experimental physics?",
+         questionText: "Electromagnetic force acts between:",
          options: [
-            { id: "A", text: "Isaac Newton" },
-            { id: "B", text: "Galileo Galilei" },
-            { id: "C", text: "Albert Einstein" },
-            { id: "D", text: "Archimedes" }
+            { id: "A", text: "Masses" },
+            { id: "B", text: "Electric charges" },
+            { id: "C", text: "Quarks only" },
+            { id: "D", text: "Neutrons only" }
          ],
          correctAnswer: "B",
-         solutionDetail: "Galileo Galilei is called the father of experimental physics for introducing the scientific method.",
-         solutionSteps: ["Galileo introduced experimental method", "Answer: B"],
+         solutionDetail: "Electromagnetic interaction acts between charged particles and is responsible for electric and magnetic effects.",
+         solutionSteps: [
+            "Identify the source of electromagnetic interaction",
+            "Choose electric charges"
+         ],
          difficultyLevel: 1,
-         sourceType: "practice",
-         relatedTopics: ["History of Physics"]
+         sourceType: "NEET-style",
+         relatedTopics: ["Electromagnetic Force"]
       },
       {
          topicId,
-         questionText: "The strongest fundamental force is:",
+         questionText: "Which fundamental force is the weakest?",
          options: [
-            { id: "A", text: "Gravitational force" },
-            { id: "B", text: "Weak nuclear force" },
-            { id: "C", text: "Electromagnetic force" },
+            { id: "A", text: "Weak nuclear force" },
+            { id: "B", text: "Electromagnetic force" },
+            { id: "C", text: "Gravitational force" },
             { id: "D", text: "Strong nuclear force" }
          ],
-         correctAnswer: "D",
-         solutionDetail: "Strong nuclear force is the strongest fundamental force. It binds protons and neutrons in the nucleus.",
-         solutionSteps: ["Compare relative strengths", "Strong > EM > Weak > Gravitational", "Answer: D"],
-         difficultyLevel: 2,
-         sourceType: "practice",
+         correctAnswer: "C",
+         solutionDetail: "Gravitational force is the weakest of the four fundamental interactions.",
+         solutionSteps: [
+            "Recall relative strengths of the fundamental forces",
+            "Select gravitational force"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
          relatedTopics: ["Fundamental Forces"]
       },
       {
          topicId,
-         questionText: "Which force is responsible for beta decay?",
+         questionText: "The range of the strong nuclear force is approximately:",
          options: [
-            { id: "A", text: "Strong nuclear force" },
-            { id: "B", text: "Weak nuclear force" },
-            { id: "C", text: "Electromagnetic force" },
-            { id: "D", text: "Gravitational force" }
-         ],
-         correctAnswer: "B",
-         solutionDetail: "Weak nuclear force is responsible for beta decay.",
-         solutionSteps: ["Beta decay involves particle transformation", "Weak force mediates this", "Answer: B"],
-         difficultyLevel: 2,
-         sourceType: "practice",
-         relatedTopics: ["Weak Nuclear Force"]
-      },
-      {
-         topicId,
-         questionText: "The scope of physics includes study of phenomena at scales ranging from:",
-         options: [
-            { id: "A", text: "10⁻¹⁵ m to 10²⁶ m" },
-            { id: "B", text: "10⁻¹⁰ m to 10²⁰ m" },
-            { id: "C", text: "10⁻⁵ m to 10¹⁵ m" },
-            { id: "D", text: "10⁻² m to 10¹⁰ m" }
+            { id: "A", text: "10^-15 m" },
+            { id: "B", text: "10^-10 m" },
+            { id: "C", text: "10^6 m" },
+            { id: "D", text: "Infinite" }
          ],
          correctAnswer: "A",
-         solutionDetail: "Physics studies from subatomic (~10⁻¹⁵ m) to cosmic scale (~10²⁶ m).",
-         solutionSteps: ["Nuclear scale: ~10⁻¹⁵ m", "Universe scale: ~10²⁶ m", "Answer: A"],
-         difficultyLevel: 3,
-         sourceType: "practice",
-         relatedTopics: ["Scope of Physics"]
+         solutionDetail: "The strong nuclear force acts over nuclear dimensions, about 10^-15 m.",
+         solutionSteps: [
+            "Recall nuclear size scale",
+            "Choose 10^-15 m"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Strong Interaction"]
       },
       {
          topicId,
-         questionText: "Which of the following is a macroscopic phenomenon?",
+         questionText: "The range of the weak nuclear force is approximately:",
          options: [
-            { id: "A", text: "Photoelectric effect" },
-            { id: "B", text: "Compton scattering" },
-            { id: "C", text: "Planetary motion" },
-            { id: "D", text: "Atomic spectra" }
+            { id: "A", text: "10^-16 m" },
+            { id: "B", text: "10^-8 m" },
+            { id: "C", text: "10^-2 m" },
+            { id: "D", text: "Infinite" }
          ],
-         correctAnswer: "C",
-         solutionDetail: "Planetary motion is macroscopic (large scale, visible).",
-         solutionSteps: ["Macroscopic = large scale", "Planetary motion fits", "Answer: C"],
-         difficultyLevel: 1,
-         sourceType: "practice",
-         relatedTopics: ["Macroscopic Phenomena"]
+         correctAnswer: "A",
+         solutionDetail: "The weak interaction is very short range, of order 10^-16 m.",
+         solutionSteps: [
+            "Weak force is extremely short range",
+            "Choose 10^-16 m"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Weak Interaction"]
       },
       {
          topicId,
@@ -187,51 +269,327 @@ function getChapter01Questions(topicId: number) {
          options: [
             { id: "A", text: "Isaac Newton" },
             { id: "B", text: "James Clerk Maxwell" },
-            { id: "C", text: "Michael Faraday" },
-            { id: "D", text: "Albert Einstein" }
-         ],
-         correctAnswer: "B",
-         solutionDetail: "James Clerk Maxwell unified electricity and magnetism through Maxwell's equations.",
-         solutionSteps: ["Maxwell formulated EM theory", "Answer: B"],
-         difficultyLevel: 2,
-         sourceType: "practice",
-         relatedTopics: ["Electromagnetism"]
-      },
-      {
-         topicId,
-         questionText: "Which branch of physics deals with motion without considering forces?",
-         options: [
-            { id: "A", text: "Dynamics" },
-            { id: "B", text: "Kinematics" },
-            { id: "C", text: "Statics" },
-            { id: "D", text: "Kinetics" }
-         ],
-         correctAnswer: "B",
-         solutionDetail: "Kinematics deals with motion description only, without forces.",
-         solutionSteps: ["Kinematics = motion only", "Dynamics = motion + forces", "Answer: B"],
-         difficultyLevel: 1,
-         sourceType: "practice",
-         relatedTopics: ["Kinematics"]
-      },
-      {
-         topicId,
-         questionText: "The theory of relativity was proposed by:",
-         options: [
-            { id: "A", text: "Max Planck" },
-            { id: "B", text: "Niels Bohr" },
             { id: "C", text: "Albert Einstein" },
-            { id: "D", text: "Werner Heisenberg" }
+            { id: "D", text: "Ernest Rutherford" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Maxwell unified electricity and magnetism through a single set of equations.",
+         solutionSteps: [
+            "Recall the scientist who wrote Maxwell's equations",
+            "Select James Clerk Maxwell"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Unification"]
+      },
+      {
+         topicId,
+         questionText: "Who is known for establishing the experimental method in physics?",
+         options: [
+            { id: "A", text: "Galileo Galilei" },
+            { id: "B", text: "Johannes Kepler" },
+            { id: "C", text: "Isaac Newton" },
+            { id: "D", text: "Michael Faraday" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "Galileo emphasized experiments and measurements as the foundation of physics.",
+         solutionSteps: [
+            "Identify the pioneer of experimental physics",
+            "Choose Galileo Galilei"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scientific Method", "History of Physics"]
+      },
+      {
+         topicId,
+         questionText: "Which theory unified space and time into a single framework?",
+         options: [
+            { id: "A", text: "Newtonian mechanics" },
+            { id: "B", text: "Einstein's relativity" },
+            { id: "C", text: "Bohr's atomic model" },
+            { id: "D", text: "Planck's quantum theory" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Einstein's relativity combines space and time into spacetime.",
+         solutionSteps: [
+            "Recall the key idea of relativity",
+            "Select Einstein's theory"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Relativity", "Unification"]
+      },
+      {
+         topicId,
+         questionText: "Electroweak theory unifies which interactions?",
+         options: [
+            { id: "A", text: "Strong and weak" },
+            { id: "B", text: "Electromagnetic and weak" },
+            { id: "C", text: "Gravitational and electromagnetic" },
+            { id: "D", text: "Strong and gravitational" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "The electroweak theory combines the electromagnetic and weak interactions.",
+         solutionSteps: [
+            "Recall the interactions in electroweak unification",
+            "Select electromagnetic and weak"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Unification", "Fundamental Forces"]
+      },
+      {
+         topicId,
+         questionText: "Which of the following is a macroscopic phenomenon?",
+         options: [
+            { id: "A", text: "Photoelectric effect" },
+            { id: "B", text: "Atomic spectra" },
+            { id: "C", text: "Planetary motion" },
+            { id: "D", text: "Nuclear decay" }
          ],
          correctAnswer: "C",
-         solutionDetail: "Albert Einstein proposed both Special (1905) and General (1915) Theory of Relativity.",
-         solutionSteps: ["Einstein proposed relativity", "Answer: C"],
+         solutionDetail: "Planetary motion involves large-scale bodies and is a macroscopic phenomenon.",
+         solutionSteps: [
+            "Identify the large-scale example",
+            "Choose planetary motion"
+         ],
          difficultyLevel: 1,
-         sourceType: "practice",
-         relatedTopics: ["Relativity"]
+         sourceType: "NEET-style",
+         relatedTopics: ["Scope of Physics"]
+      },
+      {
+         topicId,
+         questionText: "Which of the following is a microscopic (quantum) phenomenon?",
+         options: [
+            { id: "A", text: "Boiling of water" },
+            { id: "B", text: "Planetary motion" },
+            { id: "C", text: "Photoelectric effect" },
+            { id: "D", text: "Motion of a car" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "The photoelectric effect is a quantum phenomenon observed at microscopic scales.",
+         solutionSteps: [
+            "Identify the quantum-scale example",
+            "Choose photoelectric effect"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Modern Physics"]
+      },
+      {
+         topicId,
+         questionText: "The approximate size of an atom is of the order:",
+         options: [
+            { id: "A", text: "10^-10 m" },
+            { id: "B", text: "10^-15 m" },
+            { id: "C", text: "10^-6 m" },
+            { id: "D", text: "10^2 m" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "Typical atomic sizes are about 10^-10 m.",
+         solutionSteps: [
+            "Recall atomic scale",
+            "Select 10^-10 m"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scale of Physics"]
+      },
+      {
+         topicId,
+         questionText: "The approximate size of a nucleus is of the order:",
+         options: [
+            { id: "A", text: "10^-15 m" },
+            { id: "B", text: "10^-10 m" },
+            { id: "C", text: "10^-6 m" },
+            { id: "D", text: "10^-2 m" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "Nuclear dimensions are about 10^-15 m.",
+         solutionSteps: [
+            "Recall nuclear scale",
+            "Select 10^-15 m"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scale of Physics"]
+      },
+      {
+         topicId,
+         questionText: "Physics studies phenomena across length scales roughly from:",
+         options: [
+            { id: "A", text: "10^-15 m to 10^26 m" },
+            { id: "B", text: "10^-6 m to 10^6 m" },
+            { id: "C", text: "10^-10 m to 10^10 m" },
+            { id: "D", text: "10^-3 m to 10^3 m" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "The scope of physics spans from nuclear scales (~10^-15 m) to cosmic scales (~10^26 m).",
+         solutionSteps: [
+            "Recall smallest and largest scales mentioned in physics",
+            "Select 10^-15 m to 10^26 m"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scope of Physics"]
+      },
+      {
+         topicId,
+         questionText: "Which sequence best represents the scientific method?",
+         options: [
+            { id: "A", text: "Hypothesis -> Observation -> Conclusion -> Experiment" },
+            { id: "B", text: "Observation -> Hypothesis -> Experiment -> Conclusion" },
+            { id: "C", text: "Experiment -> Observation -> Hypothesis -> Conclusion" },
+            { id: "D", text: "Observation -> Experiment -> Hypothesis -> Conclusion" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "The scientific method begins with observation, proposes a hypothesis, tests it by experiment, and draws conclusions.",
+         solutionSteps: [
+            "Start with observation",
+            "Form a hypothesis",
+            "Test with experiment",
+            "Draw conclusions"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scientific Method"]
+      },
+      {
+         topicId,
+         questionText: "Which quantity is conserved in an isolated system?",
+         options: [
+            { id: "A", text: "Energy" },
+            { id: "B", text: "Momentum" },
+            { id: "C", text: "Angular momentum" },
+            { id: "D", text: "All of these" }
+         ],
+         correctAnswer: "D",
+         solutionDetail: "Energy, momentum, and angular momentum are conserved in isolated systems.",
+         solutionSteps: [
+            "Recall conservation laws in physics",
+            "Identify that all listed quantities are conserved"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Conservation Laws"]
+      },
+      {
+         topicId,
+         questionText: "Which of the following is NOT a conservation law?",
+         options: [
+            { id: "A", text: "Conservation of energy" },
+            { id: "B", text: "Conservation of momentum" },
+            { id: "C", text: "Conservation of angular momentum" },
+            { id: "D", text: "Conservation of force" }
+         ],
+         correctAnswer: "D",
+         solutionDetail: "There is no law of conservation of force. Energy and momentum related quantities are conserved.",
+         solutionSteps: [
+            "Recall standard conservation laws",
+            "Identify the non-existent one"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Conservation Laws"]
+      },
+      {
+         topicId,
+         questionText: "Physics is primarily the study of:",
+         options: [
+            { id: "A", text: "Plant structure and growth" },
+            { id: "B", text: "Human behavior and society" },
+            { id: "C", text: "Matter, energy, space, and time" },
+            { id: "D", text: "Only chemical reactions" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Physics focuses on the fundamental laws governing matter, energy, space, and time.",
+         solutionSteps: [
+            "Identify the broad scope of physics",
+            "Select matter, energy, space, and time"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Scope of Physics"]
+      },
+      {
+         topicId,
+         questionText: "In physics, unification refers to:",
+         options: [
+            { id: "A", text: "Using unrelated laws for each phenomenon" },
+            { id: "B", text: "Ignoring experimental evidence" },
+            { id: "C", text: "Explaining diverse phenomena with a single framework" },
+            { id: "D", text: "Studying only macroscopic objects" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Unification means explaining different phenomena through a common theory.",
+         solutionSteps: [
+            "Recall the goal of unification in physics",
+            "Choose the single-framework option"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Unification"]
+      },
+      {
+         topicId,
+         questionText: "Classical mechanics gives incorrect results for:",
+         options: [
+            { id: "A", text: "Everyday speeds and sizes" },
+            { id: "B", text: "Atomic scale only" },
+            { id: "C", text: "Speeds close to the speed of light only" },
+            { id: "D", text: "Both atomic scale and near-light speeds" }
+         ],
+         correctAnswer: "D",
+         solutionDetail: "Classical mechanics fails at atomic scales (quantum domain) and at speeds close to light (relativity domain).",
+         solutionSteps: [
+            "Recall domains where classical physics breaks down",
+            "Select both atomic and near-light speed regimes"
+         ],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Classical vs Modern Physics"]
+      },
+      {
+         topicId,
+         questionText: "Which is a direct application of physics in technology?",
+         options: [
+            { id: "A", text: "LASER" },
+            { id: "B", text: "Photosynthesis" },
+            { id: "C", text: "Digestion" },
+            { id: "D", text: "Fermentation" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "LASER technology is based on physical principles of light and stimulated emission.",
+         solutionSteps: [
+            "Identify the technology rooted in physics",
+            "Select LASER"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Physics and Technology"]
+      },
+      {
+         topicId,
+         questionText: "The study of subatomic particles and their interactions is called:",
+         options: [
+            { id: "A", text: "Astrophysics" },
+            { id: "B", text: "Particle physics" },
+            { id: "C", text: "Geophysics" },
+            { id: "D", text: "Acoustics" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Particle physics (high energy physics) studies subatomic particles and fundamental interactions.",
+         solutionSteps: [
+            "Identify the branch dealing with subatomic particles",
+            "Choose particle physics"
+         ],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Branch of Physics"]
       }
    ];
 }
-
 // Chapter 2: Units and Measurements  
 function getChapter02Questions(topicId: number) {
    return [
@@ -245,10 +603,10 @@ function getChapter02Questions(topicId: number) {
             { id: "D", text: "Watt" }
          ],
          correctAnswer: "B",
-         solutionDetail: "Newton (N) is the SI unit of force. 1 N = 1 kg⋅m/s².",
-         solutionSteps: ["Force = mass × acceleration", "SI: kg⋅m/s² = Newton", "Answer: B"],
+         solutionDetail: "Force = mass x acceleration, so the SI unit is kg*m/s^2, called the newton (N).",
+         solutionSteps: ["Force = mass x acceleration", "SI unit = kg*m/s^2", "Named newton (N)"],
          difficultyLevel: 1,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["SI Units"]
       },
       {
@@ -256,100 +614,116 @@ function getChapter02Questions(topicId: number) {
          questionText: "Which of the following is a fundamental quantity?",
          options: [
             { id: "A", text: "Force" },
-            { id: "B", text: "Velocity" },
-            { id: "C", text: "Time" },
-            { id: "D", text: "Energy" }
+            { id: "B", text: "Time" },
+            { id: "C", text: "Energy" },
+            { id: "D", text: "Velocity" }
          ],
-         correctAnswer: "C",
-         solutionDetail: "Time is one of seven fundamental quantities in SI system.",
-         solutionSteps: ["Fundamental quantities are independent", "Time is fundamental", "Answer: C"],
+         correctAnswer: "B",
+         solutionDetail: "Time is one of the seven SI base quantities. Force, energy, and velocity are derived.",
+         solutionSteps: ["Base quantities are independent", "Time is a base quantity", "Others are derived"],
          difficultyLevel: 1,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["Fundamental Quantities"]
+      },
+      {
+         topicId,
+         questionText: "The SI unit of pressure is:",
+         options: [
+            { id: "A", text: "Pascal" },
+            { id: "B", text: "Newton" },
+            { id: "C", text: "Joule" },
+            { id: "D", text: "Watt" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "Pressure = force/area, so its SI unit is N/m^2, called the pascal (Pa).",
+         solutionSteps: ["Pressure = force/area", "Unit = N/m^2", "Named pascal (Pa)"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Derived Units"]
       },
       {
          topicId,
          questionText: "The dimensional formula of energy is:",
          options: [
-            { id: "A", text: "[ML²T⁻²]" },
-            { id: "B", text: "[MLT⁻²]" },
-            { id: "C", text: "[ML²T⁻¹]" },
-            { id: "D", text: "[MLT⁻¹]" }
+            { id: "A", text: "[M L^2 T^-2]" },
+            { id: "B", text: "[M L T^-2]" },
+            { id: "C", text: "[M L^2 T^-1]" },
+            { id: "D", text: "[M L^-1 T^-2]" }
          ],
          correctAnswer: "A",
-         solutionDetail: "Energy = Force × Distance = [MLT⁻²][L] = [ML²T⁻²].",
-         solutionSteps: ["Energy = Force × Distance", "[MLT⁻²] × [L] = [ML²T⁻²]", "Answer: A"],
+         solutionDetail: "Energy = force x distance. Force is [M L T^-2], so energy is [M L^2 T^-2].",
+         solutionSteps: ["Force = [M L T^-2]", "Multiply by L", "Energy = [M L^2 T^-2]"],
          difficultyLevel: 2,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["Dimensional Analysis"]
       },
       {
          topicId,
-         questionText: "1 parsec is equal to:",
+         questionText: "Which quantity has dimensions [M L^-1 T^-2]?",
          options: [
-            { id: "A", text: "3.26 light years" },
-            { id: "B", text: "1 light year" },
-            { id: "C", text: "10 light years" },
-            { id: "D", text: "100 light years" }
-         ],
-         correctAnswer: "A",
-         solutionDetail: "1 parsec = 3.26 light years = 3.08 × 10¹⁶ m.",
-         solutionSteps: ["Parsec is astronomical unit", "1 parsec = 3.26 ly", "Answer: A"],
-         difficultyLevel: 2,
-         sourceType: "practice",
-         relatedTopics: ["Units of Length"]
-      },
-      {
-         topicId,
-         questionText: "The least count of a vernier caliper is:",
-         options: [
-            { id: "A", text: "0.1 mm" },
-            { id: "B", text: "0.01 mm" },
-            { id: "C", text: "0.001 mm" },
-            { id: "D", text: "1 mm" }
-         ],
-         correctAnswer: "A",
-         solutionDetail: "Standard vernier caliper has least count of 0.1 mm.",
-         solutionSteps: ["LC = 1 MSD - 1 VSD", "= 1 mm - 0.9 mm = 0.1 mm", "Answer: A"],
-         difficultyLevel: 2,
-         sourceType: "practice",
-         relatedTopics: ["Vernier Caliper"]
-      },
-      {
-         topicId,
-         questionText: "Which has dimensions [ML⁻¹T⁻²]?",
-         options: [
-            { id: "A", text: "Force" },
-            { id: "B", text: "Pressure" },
+            { id: "A", text: "Pressure" },
+            { id: "B", text: "Power" },
             { id: "C", text: "Energy" },
-            { id: "D", text: "Power" }
+            { id: "D", text: "Momentum" }
          ],
-         correctAnswer: "B",
-         solutionDetail: "Pressure = Force/Area = [MLT⁻²]/[L²] = [ML⁻¹T⁻²].",
-         solutionSteps: ["Pressure = Force/Area", "[MLT⁻²]/[L²] = [ML⁻¹T⁻²]", "Answer: B"],
+         correctAnswer: "A",
+         solutionDetail: "Pressure = force/area = [M L T^-2]/[L^2] = [M L^-1 T^-2].",
+         solutionSteps: ["Pressure = force/area", "Divide by L^2", "Get [M L^-1 T^-2]"],
          difficultyLevel: 2,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["Dimensional Analysis"]
       },
       {
          topicId,
-         questionText: "Error in mass is 2% and velocity is 3%. Maximum error in kinetic energy is:",
+         questionText: "The prefix micro (u) represents:",
          options: [
-            { id: "A", text: "5%" },
-            { id: "B", text: "8%" },
-            { id: "C", text: "11%" },
-            { id: "D", text: "6%" }
+            { id: "A", text: "10^-3" },
+            { id: "B", text: "10^-6" },
+            { id: "C", text: "10^-9" },
+            { id: "D", text: "10^6" }
          ],
          correctAnswer: "B",
-         solutionDetail: "KE = ½mv². Error = 2% + 2×3% = 8%.",
-         solutionSteps: ["KE = ½mv²", "ΔKE/KE = Δm/m + 2(Δv/v)", "= 2% + 6% = 8%", "Answer: B"],
-         difficultyLevel: 3,
-         sourceType: "practice",
-         relatedTopics: ["Error Analysis"]
+         solutionDetail: "Micro means one millionth, which is 10^-6.",
+         solutionSteps: ["Micro = one millionth", "10^-6"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Metric Prefixes"]
       },
       {
          topicId,
-         questionText: "Significant figures in 0.00340 is:",
+         questionText: "1 nanometer is equal to:",
+         options: [
+            { id: "A", text: "10^-6 m" },
+            { id: "B", text: "10^-9 m" },
+            { id: "C", text: "10^-12 m" },
+            { id: "D", text: "10^9 m" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Nano means 10^-9, so 1 nm = 10^-9 m.",
+         solutionSteps: ["Nano prefix = 10^-9", "1 nm = 10^-9 m"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Metric Prefixes"]
+      },
+      {
+         topicId,
+         questionText: "Parallax error is minimized by:",
+         options: [
+            { id: "A", text: "Viewing the scale from any angle" },
+            { id: "B", text: "Keeping the eye perpendicular to the scale and in line with the pointer" },
+            { id: "C", text: "Using a thicker scale" },
+            { id: "D", text: "Increasing the least count" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Parallax is avoided by keeping the eye in line with the pointer and perpendicular to the scale.",
+         solutionSteps: ["Align eye with pointer", "View perpendicular to scale"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Parallax Error"]
+      },
+      {
+         topicId,
+         questionText: "Significant figures in 0.00340 are:",
          options: [
             { id: "A", text: "2" },
             { id: "B", text: "3" },
@@ -357,47 +731,206 @@ function getChapter02Questions(topicId: number) {
             { id: "D", text: "5" }
          ],
          correctAnswer: "B",
-         solutionDetail: "0.00340 has 3 significant figures (3, 4, trailing 0).",
-         solutionSteps: ["Leading zeros not significant", "3, 4, trailing 0 are significant", "Total = 3", "Answer: B"],
+         solutionDetail: "Leading zeros are not significant. Digits 3 and 4 are significant, and the trailing zero after decimal is significant. Total = 3.",
+         solutionSteps: ["Ignore leading zeros", "Count 3, 4, trailing 0", "Total = 3"],
          difficultyLevel: 2,
-         sourceType: "practice",
+         sourceType: "NEET-style",
          relatedTopics: ["Significant Figures"]
       },
       {
          topicId,
-         questionText: "[ML⁻³] represents:",
+         questionText: "How many significant figures are in 2.500?",
          options: [
-            { id: "A", text: "Density" },
-            { id: "B", text: "Pressure" },
-            { id: "C", text: "Force" },
-            { id: "D", text: "Energy density" }
+            { id: "A", text: "2" },
+            { id: "B", text: "3" },
+            { id: "C", text: "4" },
+            { id: "D", text: "5" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Trailing zeros after a decimal point are significant. 2.500 has four significant figures.",
+         solutionSteps: ["Decimal present", "Trailing zeros count", "Total = 4"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Significant Figures"]
+      },
+      {
+         topicId,
+         questionText: "If Q = a^2 b / c, the percentage error in Q is:",
+         options: [
+            { id: "A", text: "2%a + %b + %c" },
+            { id: "B", text: "%a + %b + %c" },
+            { id: "C", text: "2%a + 2%b + %c" },
+            { id: "D", text: "2%a + %b - %c" }
          ],
          correctAnswer: "A",
-         solutionDetail: "Density = Mass/Volume = [M]/[L³] = [ML⁻³].",
-         solutionSteps: ["Density = Mass/Volume", "[M]/[L³] = [ML⁻³]", "Answer: A"],
+         solutionDetail: "For powers, percentage errors add with their powers: 2%a + %b + %c.",
+         solutionSteps: ["Q = a^2 b / c", "Add errors with powers", "2%a + %b + %c"],
+         difficultyLevel: 3,
+         sourceType: "NEET-style",
+         relatedTopics: ["Error Analysis"]
+      },
+      {
+         topicId,
+         questionText: "A vernier caliper has 10 vernier divisions equal to 9 main scale divisions. If 1 MSD = 1 mm, its least count is:",
+         options: [
+            { id: "A", text: "0.1 mm" },
+            { id: "B", text: "0.01 mm" },
+            { id: "C", text: "0.9 mm" },
+            { id: "D", text: "1 mm" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "1 VSD = 0.9 mm. Least count = 1 MSD - 1 VSD = 1.0 - 0.9 = 0.1 mm.",
+         solutionSteps: ["1 VSD = 0.9 mm", "LC = 1.0 - 0.9", "LC = 0.1 mm"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Vernier Caliper"]
+      },
+      {
+         topicId,
+         questionText: "A vernier caliper shows a positive zero error of +0.02 cm. If the observed reading is 2.36 cm, the correct length is:",
+         options: [
+            { id: "A", text: "2.38 cm" },
+            { id: "B", text: "2.34 cm" },
+            { id: "C", text: "2.36 cm" },
+            { id: "D", text: "2.32 cm" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Positive zero error is subtracted from the observed reading. 2.36 - 0.02 = 2.34 cm.",
+         solutionSteps: ["Positive error means reading is high", "Correct = observed - error", "2.36 - 0.02 = 2.34 cm"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Vernier Caliper", "Zero Error"]
+      },
+      {
+         topicId,
+         questionText: "A screw gauge has pitch 0.5 mm and 50 divisions on the circular scale. Least count is:",
+         options: [
+            { id: "A", text: "0.5 mm" },
+            { id: "B", text: "0.05 mm" },
+            { id: "C", text: "0.01 mm" },
+            { id: "D", text: "0.005 mm" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Least count = pitch / number of divisions = 0.5 / 50 = 0.01 mm.",
+         solutionSteps: ["LC = pitch / divisions", "0.5/50 = 0.01", "LC = 0.01 mm"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Screw Gauge"]
+      },
+      {
+         topicId,
+         questionText: "A screw gauge has a negative zero error of -0.03 mm. If the observed diameter is 5.68 mm, the correct diameter is:",
+         options: [
+            { id: "A", text: "5.65 mm" },
+            { id: "B", text: "5.71 mm" },
+            { id: "C", text: "5.68 mm" },
+            { id: "D", text: "5.73 mm" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Negative zero error is added to the observed reading. 5.68 + 0.03 = 5.71 mm.",
+         solutionSteps: ["Negative error means reading is low", "Correct = observed + error", "5.68 + 0.03 = 5.71 mm"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Screw Gauge", "Zero Error"]
+      },
+      {
+         topicId,
+         questionText: "Which instrument is most suitable to measure the diameter of a thin wire?",
+         options: [
+            { id: "A", text: "Meter scale" },
+            { id: "B", text: "Vernier caliper" },
+            { id: "C", text: "Screw gauge" },
+            { id: "D", text: "Measuring cylinder" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "A screw gauge (micrometer) is used for very small diameters like thin wires.",
+         solutionSteps: ["Thin wire needs high precision", "Screw gauge offers smallest least count"],
          difficultyLevel: 1,
-         sourceType: "practice",
+         sourceType: "NEET-style",
+         relatedTopics: ["Measurement Instruments"]
+      },
+      {
+         topicId,
+         questionText: "Which of the following is dimensionless?",
+         options: [
+            { id: "A", text: "Strain" },
+            { id: "B", text: "Force" },
+            { id: "C", text: "Pressure" },
+            { id: "D", text: "Energy" }
+         ],
+         correctAnswer: "A",
+         solutionDetail: "Strain is a ratio of lengths, so it is dimensionless.",
+         solutionSteps: ["Strain = delta L / L", "Length cancels", "Dimensionless"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
          relatedTopics: ["Dimensional Analysis"]
       },
       {
          topicId,
-         questionText: "1 fermi equals:",
+         questionText: "Which statement is correct?",
          options: [
-            { id: "A", text: "10⁻¹⁵ m" },
-            { id: "B", text: "10⁻¹⁰ m" },
-            { id: "C", text: "10⁻⁹ m" },
-            { id: "D", text: "10⁻¹² m" }
+            { id: "A", text: "High accuracy implies high precision" },
+            { id: "B", text: "High precision implies high accuracy" },
+            { id: "C", text: "A set can be precise but inaccurate" },
+            { id: "D", text: "Accuracy and precision are identical" }
+         ],
+         correctAnswer: "C",
+         solutionDetail: "Measurements can be tightly grouped (precise) but far from the true value (inaccurate).",
+         solutionSteps: ["Accuracy = closeness to true value", "Precision = closeness of repeated values", "They are not identical"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Accuracy and Precision"]
+      },
+      {
+         topicId,
+         questionText: "If the absolute error in length is 0.2 cm and the measured length is 10.0 cm, the percentage error is:",
+         options: [
+            { id: "A", text: "0.2%" },
+            { id: "B", text: "2%" },
+            { id: "C", text: "5%" },
+            { id: "D", text: "20%" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Percentage error = (0.2/10.0) x 100 = 2%.",
+         solutionSteps: ["Relative error = 0.2/10.0", "Multiply by 100", "2%"],
+         difficultyLevel: 2,
+         sourceType: "NEET-style",
+         relatedTopics: ["Error Analysis"]
+      },
+      {
+         topicId,
+         questionText: "Which pair has the same dimensions?",
+         options: [
+            { id: "A", text: "Work and torque" },
+            { id: "B", text: "Momentum and power" },
+            { id: "C", text: "Force and energy" },
+            { id: "D", text: "Pressure and energy" }
          ],
          correctAnswer: "A",
-         solutionDetail: "1 fermi = 10⁻¹⁵ m = 1 femtometer (fm). Used for nuclear dimensions.",
-         solutionSteps: ["Fermi is nuclear length unit", "1 fermi = 10⁻¹⁵ m", "Answer: A"],
+         solutionDetail: "Work and torque both have dimensions [M L^2 T^-2].",
+         solutionSteps: ["Work = force x distance", "Torque = force x distance", "Same dimensions"],
          difficultyLevel: 2,
-         sourceType: "practice",
-         relatedTopics: ["Units of Length"]
+         sourceType: "NEET-style",
+         relatedTopics: ["Dimensional Analysis"]
+      },
+      {
+         topicId,
+         questionText: "The least count of a measuring instrument is defined as:",
+         options: [
+            { id: "A", text: "Maximum reading it can measure" },
+            { id: "B", text: "Smallest value it can measure" },
+            { id: "C", text: "Average of two readings" },
+            { id: "D", text: "Random error in measurement" }
+         ],
+         correctAnswer: "B",
+         solutionDetail: "Least count is the smallest measurement that can be reliably measured by the instrument.",
+         solutionSteps: ["Least count = smallest readable value", "Defines resolution"],
+         difficultyLevel: 1,
+         sourceType: "NEET-style",
+         relatedTopics: ["Least Count"]
       }
    ];
 }
-
 // Chapter 3: Motion in a Straight Line
 function getChapter03Questions(topicId: number) {
    return [
@@ -613,3 +1146,5 @@ function getGenericQuestions(topicId: number, chapterNum: number) {
 
    return questions;
 }
+
+

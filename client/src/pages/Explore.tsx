@@ -14,6 +14,8 @@ import {
   Sparkles,
   Eye,
   FlaskConical,
+  Leaf,
+  Bug,
   Microscope,
   ChevronDown,
   ChevronUp,
@@ -22,6 +24,8 @@ import {
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { categorizeBiologyChapter } from "@/lib/biologySections";
+import { apiRequest } from "@/lib/queryClient";
 
 interface KeyConcept {
   title: string;
@@ -46,10 +50,12 @@ interface ChapterContent {
   lastAccessed: string | null;
 }
 
+type ExploreSubject = "All" | "Physics" | "Chemistry" | "Botany" | "Zoology";
+
 export default function Explore() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSubject, setActiveSubject] = useState<"All" | "Physics" | "Chemistry" | "Biology">("All");
+  const [activeSubject, setActiveSubject] = useState<ExploreSubject>("All");
   const [filterDifficulty, setFilterDifficulty] = useState<string>("All");
   const [filterClass, setFilterClass] = useState<string>("All");
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
@@ -67,8 +73,11 @@ export default function Explore() {
     });
   };
 
-  const { data: chaptersData, isLoading } = useQuery<ChapterContent[]>({
+  const { data: chaptersData = [], isLoading } = useQuery<ChapterContent[]>({
     queryKey: ['/api/lms/library'],
+    queryFn: async () => apiRequest("GET", "/api/lms/library"),
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
   });
 
   const getDifficultyLabel = (level: number): string => {
@@ -82,7 +91,16 @@ export default function Explore() {
       chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chapter.introduction.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesSubject = activeSubject === "All" || chapter.subject === activeSubject;
+    const matchesSubject =
+      activeSubject === "All" ||
+      (activeSubject === "Botany" || activeSubject === "Zoology"
+        ? chapter.subject === "Biology" &&
+          categorizeBiologyChapter(
+            chapter.chapterTitle,
+            chapter.chapterNumber,
+            chapter.classLevel
+          ) === activeSubject
+        : chapter.subject === activeSubject);
     const matchesDifficulty = filterDifficulty === "All" || getDifficultyLabel(chapter.difficultyLevel) === filterDifficulty;
     const matchesClass = filterClass === "All" || chapter.classLevel === `Class ${filterClass}`;
 
@@ -101,6 +119,10 @@ export default function Explore() {
         return <Sparkles className="h-4 w-4" />; // Physics - energy/particles
       case "Chemistry":
         return <FlaskConical className="h-4 w-4" />; // Chemistry - lab flask
+      case "Botany":
+        return <Leaf className="h-4 w-4" />; // Botany - leaves
+      case "Zoology":
+        return <Bug className="h-4 w-4" />; // Zoology - bugs
       case "Biology":
         return <Microscope className="h-4 w-4" />; // Biology - microscope
       default:
@@ -114,6 +136,10 @@ export default function Explore() {
         return "text-blue-600 dark:text-blue-400";
       case "Chemistry":
         return "text-purple-600 dark:text-purple-400";
+      case "Botany":
+        return "text-emerald-600 dark:text-emerald-400";
+      case "Zoology":
+        return "text-orange-600 dark:text-orange-400";
       case "Biology":
         return "text-green-600 dark:text-green-400";
       default:
@@ -136,7 +162,7 @@ export default function Explore() {
             Explore Content
           </h1>
           <p className="text-muted-foreground text-lg">
-            Discover all 98 NCERT chapters across Physics, Chemistry, and Biology
+            Discover all 98 NCERT chapters across Physics, Chemistry, Botany, and Zoology
           </p>
         </motion.div>
 
@@ -187,7 +213,7 @@ export default function Explore() {
         <div className="w-full">
           <div className="flex justify-center mb-6">
             <div className="inline-flex rounded-lg bg-muted p-1" data-testid="tabs-subjects">
-              {(["All", "Physics", "Chemistry", "Biology"] as const).map((subject) => (
+              {(["All", "Physics", "Chemistry", "Botany", "Zoology"] as const).map((subject) => (
                 <Button
                   key={subject}
                   variant={activeSubject === subject ? "default" : "ghost"}

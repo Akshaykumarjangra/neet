@@ -697,7 +697,49 @@ async function seedBiologyClass12Chapter3() {
       chapterTitle: 'Human Reproduction',
       estimatedStudyMinutes: 420,
       difficultyLevel: 5,
-      status: 'published'
+      status: 'published',
+      visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Male Reproductive System',
+        description: 'Testes, epididymis, vas deferens, accessory glands, penis'
+      },
+      {
+        type: 'diagram',
+        title: 'Testis T.S.',
+        description: 'Seminiferous tubules, Sertoli cells, Leydig cells'
+      },
+      {
+        type: 'diagram',
+        title: 'Female Reproductive System',
+        description: 'Ovaries, Fallopian tubes, uterus, vagina'
+      },
+      {
+        type: 'flowchart',
+        title: 'Spermatogenesis',
+        description: 'Spermatogonium → Primary spermatocyte → Secondary spermatocytes → Spermatids → Sperms'
+      },
+      {
+        type: 'flowchart',
+        title: 'Oogenesis',
+        description: 'Oogonium → Primary oocyte → Secondary oocyte → Ovum + polar bodies'
+      },
+      {
+        type: 'graph',
+        title: 'Menstrual Cycle Hormones',
+        description: 'FSH, LH, estrogen, progesterone levels across 28 days'
+      },
+      {
+        type: 'diagram',
+        title: 'Fertilization and Implantation',
+        description: 'Zygote → Cleavage → Morula → Blastocyst → Implantation'
+      },
+      {
+        type: 'diagram',
+        title: 'Placenta Structure',
+        description: 'Chorionic villi, maternal blood sinuses, umbilical cord'
+      }
+    ]
     }
   });
 

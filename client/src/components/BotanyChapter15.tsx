@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Heart, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen, Shield , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter15() {
   // Fetch questions from database for Principles of Inheritance and Variation (topicId: 79)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,28 +33,28 @@ export function BotanyChapter15() {
       id: 1,
       question: "Which of the following is NOT a common disease caused by bacteria?",
       options: ["Typhoid", "Tuberculosis", "Malaria", "Cholera"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Malaria is caused by Plasmodium (a protozoan parasite), not bacteria. Typhoid (Salmonella typhi), Tuberculosis (Mycobacterium tuberculosis), and Cholera (Vibrio cholerae) are bacterial diseases."
     },
     {
       id: 2,
       question: "The causative agent of AIDS is:",
       options: ["Bacteria", "Retrovirus (HIV)", "Protozoa", "Fungus"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "AIDS (Acquired Immuno Deficiency Syndrome) is caused by HIV (Human Immunodeficiency Virus), which is a retrovirus that attacks the immune system."
     },
     {
       id: 3,
       question: "Which cells are primarily attacked by HIV?",
       options: ["Red blood cells", "T-helper cells (CD4+ cells)", "Platelets", "B-cells"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "HIV primarily attacks T-helper cells (CD4+ T-lymphocytes), which are crucial for immune response. This gradually weakens the immune system."
     },
     {
       id: 4,
       question: "Interferons are produced in response to:",
       options: ["Bacterial infection", "Viral infection", "Fungal infection", "Protozoan infection"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Interferons are proteins produced by virus-infected cells that help protect other cells from viral infection by interfering with viral replication."
     },
     {
@@ -65,7 +66,7 @@ export function BotanyChapter15() {
         "A vaccine for typhoid",
         "A treatment method"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "A carrier is a person who harbors disease-causing organisms without showing symptoms but can transmit the disease to others. 'Typhoid Mary' was a famous asymptomatic carrier."
     },
     {
@@ -77,14 +78,14 @@ export function BotanyChapter15() {
         "Injection of antibodies",
         "Antibiotics"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Active immunity develops when the body's own immune system produces antibodies in response to an antigen (vaccine or natural infection). It provides long-lasting immunity."
     },
     {
       id: 7,
       question: "Which of the following is an autoimmune disease?",
       options: ["AIDS", "Rheumatoid arthritis", "Tuberculosis", "Malaria"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Rheumatoid arthritis is an autoimmune disease where the immune system mistakenly attacks the body's own tissues, particularly joints."
     },
     {
@@ -96,7 +97,7 @@ export function BotanyChapter15() {
         "T-lymphocytes",
         "B-lymphocytes"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The first line of defense includes physical barriers like skin, mucous membranes, and secretions that prevent pathogen entry into the body."
     },
     {
@@ -108,14 +109,14 @@ export function BotanyChapter15() {
         "No immunity",
         "Antigens for vaccination"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Colostrum (first milk) contains IgA antibodies that provide passive immunity to the newborn, protecting against infections until the baby's immune system develops."
     },
     {
       id: 10,
       question: "Which drug is obtained from the plant Cannabis sativa?",
       options: ["Cocaine", "Marijuana (cannabinoids)", "Heroin", "LSD"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Marijuana and hashish are obtained from Cannabis sativa plant. The active principle is tetrahydrocannabinol (THC), which affects cardiovascular and nervous systems."
     }
   ];
@@ -132,7 +133,7 @@ export function BotanyChapter15() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -551,7 +552,7 @@ export function BotanyChapter15() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -571,10 +572,10 @@ export function BotanyChapter15() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

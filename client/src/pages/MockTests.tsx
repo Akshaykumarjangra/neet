@@ -6,18 +6,31 @@ import { QuickNavigationBar } from "@/components/QuickNavigationBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Clock, Target, Trophy, FileQuestion, AlertCircle, RefreshCw, ClipboardList, Lock, Crown } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, Target, FileQuestion, AlertCircle, RefreshCw, ClipboardList, Lock, Crown, Calendar } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscription, PremiumBadge } from "@/components/Paywall";
+import { useSubscription } from "@/components/Paywall";
+import React from "react";
 
-interface MockTest {
+interface MockExamPaper {
   id: number;
-  testType: string;
   title: string;
-  questionsList: number[];
+  description?: string | null;
   durationMinutes: number;
-  subject: string | null;
+  sectionCount?: number;
+  totalQuestions?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  attemptsAllowed?: number;
+}
+
+interface MockExamAttempt {
+  id: number;
+  paperId: number;
+  status: string;
+  startedAt: string;
+  submittedAt?: string | null;
 }
 
 export default function MockTests() {
@@ -25,93 +38,74 @@ export default function MockTests() {
   const { toast } = useToast();
   const { isPremium, freeLimits, isAuthenticated } = useSubscription();
 
-  const { data: tests, isLoading, error, refetch } = useQuery<MockTest[]>({
-    queryKey: ['/api/mock-tests'],
+  const [activeTab, setActiveTab] = React.useState("available");
+
+  const { data: tests = [], isLoading, error, refetch } = useQuery<MockExamPaper[]>({
+    queryKey: ["/api/mock-exams/papers", activeTab],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/mock-tests', {
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to fetch mock tests: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Handle both array and object response formats
-        if (Array.isArray(data)) {
-          return data;
-        } else if (data && typeof data === 'object' && Array.isArray(data.tests)) {
-          return data.tests;
-        } else if (data && typeof data === 'object' && data.error) {
-          throw new Error(data.error);
-        }
-        
-        return [];
-      } catch (err: any) {
-        console.error('Error fetching mock tests:', err);
-        throw err;
-      }
+      // Fetch based on active tab
+      const searchParams = new URLSearchParams(window.location.search);
+      const seriesId = searchParams.get("seriesId");
+      const status = activeTab === "past" ? "completed" : activeTab === "upcoming" ? "upcoming" : "available";
+      const payload = await apiRequest("GET", `/api/mock-exams/papers?status=${status}${seriesId ? `&seriesId=${seriesId}` : ""}`);
+      return Array.isArray(payload?.data) ? payload.data : [];
     },
-        retry: 3, // Auto-retry failed requests
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        networkMode: 'online',
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    networkMode: "online",
   });
 
-  const { data: testAttempts } = useQuery<{ count: number }>({
-    queryKey: ['/api/mock-tests/attempts-this-month'],
-    enabled: isAuthenticated && !isPremium,
+  const { data: attempts = [] } = useQuery<MockExamAttempt[]>({
+    queryKey: ["/api/mock-exams/attempts"],
+    queryFn: async () => {
+      const payload = await apiRequest("GET", "/api/mock-exams/attempts");
+      return Array.isArray(payload?.data) ? payload.data : [];
+    },
+    enabled: isAuthenticated,
   });
 
-  const freeTestsRemaining = freeLimits.mockTests - (testAttempts?.count ?? 0);
+  const attemptsThisMonth = attempts.filter((attempt) => {
+    const dateValue = attempt.submittedAt || attempt.startedAt;
+    if (!dateValue) return false;
+    const attemptDate = new Date(dateValue);
+    const now = new Date();
+    return attemptDate.getFullYear() === now.getFullYear() && attemptDate.getMonth() === now.getMonth();
+  }).length;
+
+  const freeTestsRemaining = freeLimits.mockTests - attemptsThisMonth;
   const canStartFreeTest = isPremium || freeTestsRemaining > 0;
 
   const startMutation = useMutation({
-    mutationFn: async (testId: number) => {
-      const res = await fetch(`/api/mock-tests/${testId}/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw data;
+    mutationFn: async (paperId: number) => apiRequest("POST", `/api/mock-exams/papers/${paperId}/start`),
+    onSuccess: (response: any, paperId) => {
+      const attemptId = response?.attemptId;
+      if (attemptId) {
+        localStorage.setItem(`mock_exam_attempt_${paperId}`, String(attemptId));
       }
-      return res.json();
-    },
-    onSuccess: (response: any, testId) => {
-      setLocation(`/mock-test/${testId}`);
+      if (response?.paper?.title) {
+        localStorage.setItem(`mock_exam_paper_${paperId}`, JSON.stringify({
+          title: response.paper.title,
+          durationMinutes: response.paper.durationMinutes,
+          totalMarks: response.paper.totalMarks,
+        }));
+      }
+      sessionStorage.setItem(`mock_exam_start_${paperId}`, JSON.stringify(response));
+      setLocation(`/mock-test/${paperId}?attemptId=${attemptId ?? ""}`);
     },
     onError: (error: any) => {
-      console.error("Failed to start mock test:", error);
-      if (error?.error === 'PREMIUM_REQUIRED') {
-        toast({
-          title: "Upgrade Required",
-          description: error.message || "Upgrade to Premium for unlimited mock tests.",
-          action: (
-            <Link href="/pricing">
-              <Button size="sm" variant="outline" className="gap-1">
-                <Crown className="h-3 w-3" />
-                View Plans
-              </Button>
-            </Link>
-          ),
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to start test. Please try again.",
-          variant: "destructive",
-        });
-      }
+      console.error("Failed to start mock exam:", error);
+      const message = typeof error?.message === "string" ? error.message : "Failed to start test. Please try again.";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
     },
   });
 
-  const startTest = async (testId: number) => {
-    startMutation.mutate(testId);
+  const startTest = async (paperId: number) => {
+    startMutation.mutate(paperId);
   };
 
   if (isLoading) {
@@ -179,23 +173,23 @@ export default function MockTests() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Mock Tests</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Mock Tests</h1>
               <p className="text-muted-foreground">
                 Test your knowledge with full-length NEET mock tests
               </p>
             </div>
             {isPremium ? (
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 h-8 px-4">
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 h-8 px-4 w-fit">
                 <Crown className="h-4 w-4 mr-2" />
                 Unlimited Access
               </Badge>
             ) : isAuthenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge variant="outline" className="h-8 px-4">
                   {freeTestsRemaining > 0 ? (
                     <span>{freeTestsRemaining} free test{freeTestsRemaining !== 1 ? 's' : ''} remaining</span>
@@ -214,118 +208,144 @@ export default function MockTests() {
           </div>
         </div>
 
+        <Tabs defaultValue="available" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 md:px-0 md:pb-0 md:overflow-visible">
+            <TabsList className="w-full justify-start md:w-auto inline-flex">
+              <TabsTrigger value="available" className="flex-1 md:flex-none">Available Now</TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex-1 md:flex-none">Upcoming</TabsTrigger>
+              <TabsTrigger value="past" className="flex-1 md:flex-none">Past / Completed</TabsTrigger>
+            </TabsList>
+          </div>
+        </Tabs>
+
         {!tests || tests.length === 0 ? (
           <Card className="glass-panel">
             <CardContent className="py-16 text-center space-y-4">
               <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
                 <ClipboardList className="h-16 w-16 text-primary" />
               </div>
-              <h3 className="text-2xl font-semibold">No Mock Tests Available Yet</h3>
+              <h3 className="text-2xl font-semibold">
+                {activeTab === 'upcoming' ? 'No Upcoming Tests' : activeTab === 'past' ? 'No Past Tests' : 'No Active Tests'}
+              </h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                We're preparing comprehensive NEET mock tests for you. Check back soon to test your knowledge with full-length practice exams.
+                {activeTab === 'upcoming'
+                  ? "You don't have any scheduled exams coming up."
+                  : "Check back later for new mock tests."}
               </p>
-              <div className="flex gap-3 justify-center pt-4">
-                <Button onClick={() => setLocation('/practice')} variant="outline" data-testid="button-practice-instead">
-                  <FileQuestion className="h-4 w-4 mr-2" />
-                  Practice Questions
-                </Button>
-                <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
-                  Return to Dashboard
-                </Button>
-              </div>
+              {activeTab === 'available' && (
+                <div className="flex gap-3 justify-center pt-4">
+                  <Button onClick={() => setLocation('/practice')} variant="outline" data-testid="button-practice-instead">
+                    <FileQuestion className="h-4 w-4 mr-2" />
+                    Practice Questions
+                  </Button>
+                  <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
+                    Return to Dashboard
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {tests.map((test) => (
-              <Card key={test.id} data-testid={`card-test-${test.id}`}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle>{test.title}</CardTitle>
-                    {test.subject && (
-                      <Badge variant="outline">{test.subject}</Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Target className="h-4 w-4" />
-                      {test.questionsList.length} Questions
+            {tests.map((test) => {
+              const hasInProgressAttempt = attempts.some(
+                (attempt) => attempt.paperId === test.id && attempt.status === "in_progress"
+              );
+              const isUpcoming = activeTab === 'upcoming';
+              const isPast = activeTab === 'past';
+              const startDate = test.startsAt ? new Date(test.startsAt) : null;
+
+              return (
+                <Card key={test.id} data-testid={`card-test-${test.id}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{test.title}</CardTitle>
+                        {activeTab === 'upcoming' && startDate && (
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Starts: {startDate.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                      {test.sectionCount ? (
+                        <Badge variant="outline">{test.sectionCount} sections</Badge>
+                      ) : null}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {test.durationMinutes} minutes
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Target className="h-4 w-4" />
+                        {test.totalQuestions ?? 0} Questions
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {test.durationMinutes} minutes
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="text-sm font-medium mb-1">XP Reward</p>
-                    <p className="text-xs text-muted-foreground">
-                      Earn up to {Math.floor(test.questionsList.length * 10)} XP based on your score
-                    </p>
-                  </div>
-                  
-                  {(() => {
-                    // Check if there's a saved progress for this test
-                    const savedProgress = localStorage.getItem(`mocktest_${test.id}_progress`);
-                    const hasSavedProgress = savedProgress && JSON.parse(savedProgress).lastSaved && 
-                      (Date.now() - JSON.parse(savedProgress).lastSaved < 24 * 60 * 60 * 1000);
-                    
-                    if (hasSavedProgress && (canStartFreeTest || isPremium)) {
-                      return (
-                        <div className="space-y-2">
-                          <Button 
-                            className="w-full"
-                            onClick={() => startTest(test.id)}
-                            data-testid={`button-resume-test-${test.id}`}
-                            variant="default"
-                          >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Resume Test
+
+                    {/* ... Existing Pricing & Button Logic ... */}
+                    {(() => {
+                      if (isUpcoming) {
+                        return (
+                          <Button className="w-full" disabled variant="secondary">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Coming Soon
                           </Button>
-                          <Button 
+                        );
+                      }
+
+                      if (hasInProgressAttempt && (canStartFreeTest || isPremium)) {
+                        return (
+                          <div className="space-y-2">
+                            <Button
+                              className="w-full"
+                              onClick={() => startTest(test.id)}
+                              data-testid={`button-resume-test-${test.id}`}
+                              variant="default"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Resume Test
+                            </Button>
+                          </div>
+                        );
+                      }
+
+                      if (isPast) {
+                        return (
+                          <Button className="w-full" variant="outline" onClick={() => setLocation(`/mock-test/${test.id}/results`)}>
+                            View Results
+                          </Button>
+                        );
+                      }
+
+                      return canStartFreeTest || isPremium ? (
+                        <Button
+                          className="w-full"
+                          onClick={() => startTest(test.id)}
+                          data-testid={`button-start-test-${test.id}`}
+                        >
+                          <Target className="h-4 w-4 mr-2" />
+                          Start Test
+                        </Button>
+                      ) : (
+                        <Link href="/pricing">
+                          <Button
                             variant="outline"
-                            size="sm"
-                            className="w-full text-xs"
-                            onClick={() => {
-                              localStorage.removeItem(`mocktest_${test.id}_progress`);
-                              localStorage.removeItem(`mocktest_${test.id}_answers`);
-                              localStorage.removeItem(`mocktest_${test.id}_timeTaken`);
-                              startTest(test.id);
-                            }}
+                            className="w-full gap-2"
+                            data-testid={`button-locked-test-${test.id}`}
                           >
-                            Start Fresh
+                            <Lock className="h-4 w-4" />
+                            Upgrade to Access
                           </Button>
-                        </div>
+                        </Link>
                       );
-                    }
-                    
-                    return canStartFreeTest || isPremium ? (
-                    <Button 
-                      className="w-full"
-                      onClick={() => startTest(test.id)}
-                      data-testid={`button-start-test-${test.id}`}
-                    >
-                      <Target className="h-4 w-4 mr-2" />
-                      Start Test
-                    </Button>
-                  ) : (
-                    <Link href="/pricing">
-                      <Button 
-                        variant="outline"
-                        className="w-full gap-2"
-                        data-testid={`button-locked-test-${test.id}`}
-                      >
-                        <Lock className="h-4 w-4" />
-                        Upgrade to Access
-                      </Button>
-                    </Link>
-                  );
-                  })()}
-                </CardContent>
-              </Card>
-            ))}
+                    })()}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 

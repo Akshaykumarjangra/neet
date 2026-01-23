@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter19() {
   console.log('Seeding Biology Class 11 Chapter 19: Excretory Products and their Elimination...');
@@ -555,7 +556,18 @@ async function seedBiologyChapter19() {
       chapterTitle: 'Excretory Products and their Elimination',
       estimatedStudyMinutes: 390,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Leaf, TestTubes, BookOpen, Brain, CheckCircle2, XCircle, Lightbulb , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter2() {
   // Fetch questions from database for Plant Physiology (topicId: 8)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -36,14 +37,14 @@ export function BotanyChapter2() {
       id: 1,
       question: "Who proposed the Five Kingdom classification?",
       options: ["Linnaeus", "Whittaker", "Haeckel", "Copeland"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "R.H. Whittaker (1969) proposed the Five Kingdom classification based on cell structure, mode of nutrition, and body organization."
     },
     {
       id: 2,
       question: "Kingdom Monera includes:",
       options: ["Algae", "Fungi", "Bacteria and Cyanobacteria", "Protozoans"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Kingdom Monera includes all prokaryotic organisms such as bacteria and blue-green algae (cyanobacteria)."
     },
     {
@@ -55,21 +56,21 @@ export function BotanyChapter2() {
         "They reproduce only sexually",
         "They are extinct"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Viruses are not considered living organisms as they lack cellular organization and can only replicate inside a host cell."
     },
     {
       id: 4,
       question: "Bacteria reproduce mainly by:",
       options: ["Budding", "Binary fission", "Fragmentation", "Spore formation"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Bacteria primarily reproduce asexually by binary fission, where one cell divides into two identical daughter cells."
     },
     {
       id: 5,
       question: "The term 'protista' was coined by:",
       options: ["Whittaker", "Ernst Haeckel", "Linnaeus", "Aristotle"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Ernst Haeckel (1866) coined the term 'Protista' for unicellular eukaryotic organisms."
     }
   ];
@@ -86,7 +87,7 @@ export function BotanyChapter2() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -359,7 +360,7 @@ export function BotanyChapter2() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -379,10 +380,10 @@ export function BotanyChapter2() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

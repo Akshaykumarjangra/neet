@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter20() {
   console.log('Seeding Biology Class 11 Chapter 20: Locomotion and Movement...');
@@ -619,7 +620,18 @@ Components:
       chapterTitle: 'Locomotion and Movement',
       estimatedStudyMinutes: 400,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

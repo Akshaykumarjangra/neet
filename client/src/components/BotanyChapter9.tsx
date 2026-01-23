@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sun, Leaf, Droplet, Wind, Zap, TestTubes , Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 const photosynthesisOverview = {
   definition: "Process by which green plants synthesize organic compounds (glucose) from inorganic raw materials (CO₂ and H₂O) in the presence of sunlight and chlorophyll",
   equation: "6CO₂ + 12H₂O + Light energy → C₆H₁₂O₆ + 6O₂ + 6H₂O",
@@ -351,7 +352,7 @@ export function BotanyChapter9() {
             <Zap className="h-4 w-4 mr-2" />
             Factors
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <TestTubes className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -723,7 +724,7 @@ export function BotanyChapter9() {
                 <AccordionTrigger className="text-left">
                   <div className="flex items-start gap-3">
                     <Badge>{idx + 1}</Badge>
-                    <span>{q.questionText}</span>
+                    <span>{getQuestionLabel(q)}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4">
@@ -731,7 +732,7 @@ export function BotanyChapter9() {
                     {q.options.map((option, oIdx) => (
                       <Card key={oIdx} className={option.startsWith(q.correct) ? "border-green-500/50 bg-green-500/10" : ""}>
                         <CardContent className="pt-4">
-                          <p className="text-sm">{typeof option === "string" ? option : option.text}</p>
+                          <p className="text-sm">{getOptionLabel(option)}</p>
                         </CardContent>
                       </Card>
                     ))}

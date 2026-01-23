@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   Check,
   X,
+  Leaf,
+  Bug,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -63,12 +65,20 @@ const subjects = [
     borderColor: "border-purple-500",
   },
   {
-    id: "Biology",
-    name: "Biology",
-    icon: Dna,
-    color: "from-emerald-500 to-green-500",
+    id: "Botany",
+    name: "Botany",
+    icon: Leaf,
+    color: "from-emerald-500 to-lime-500",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500",
+  },
+  {
+    id: "Zoology",
+    name: "Zoology",
+    icon: Bug,
+    color: "from-orange-500 to-amber-500",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500",
   },
 ];
 
@@ -156,7 +166,7 @@ export function OnboardingModal({
 
   const handleComplete = () => {
     const preferences: UserPreferences = {
-      subjects: selectedSubjects.length > 0 ? selectedSubjects : ["Physics", "Chemistry", "Biology"],
+      subjects: selectedSubjects.length > 0 ? selectedSubjects : ["Physics", "Chemistry", "Botany", "Zoology"],
       studyGoal,
       focusArea,
       onboardingCompleted: true,
@@ -178,7 +188,7 @@ export function OnboardingModal({
 
   const handleSkip = () => {
     const defaultPreferences: UserPreferences = {
-      subjects: ["Physics", "Chemistry", "Biology"],
+      subjects: ["Physics", "Chemistry", "Botany", "Zoology"],
       studyGoal: 60,
       focusArea: "balanced",
       onboardingCompleted: true,

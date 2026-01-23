@@ -366,7 +366,7 @@ export function ChemistryChapter37() {
                           setAttemptedProblems(new Set([...attemptedProblems, `${category.id}-${idx}`]));
                         }}
                       >
-                        {String.fromCharCode(65 + oIdx)}. {typeof option === "string" ? option : option.text}
+                        {String.fromCharCode(65 + oIdx)}. {option}
                       </Button>
                     ))}
                   </div>

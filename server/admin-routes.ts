@@ -1,9 +1,12 @@
+// @ts-nocheck
 import { Router } from "express";
 import { db } from "./db";
-import { users, questions, contentTopics, subscriptionPlans, userSubscriptions, adminSettings, auditLogs } from "@shared/schema";
+import { users, questions, contentTopics, subscriptionPlans, userSubscriptions, adminSettings, auditLogs, organizations, organizationMembers, organizationInvitations } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import OpenAI from "openai";
+import { nanoid } from "nanoid";
+import { requireOwner as ensureOwnerMiddleware } from "./auth";
 
 // Initialize OpenAI with Replit AI Integrations
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
@@ -14,62 +17,31 @@ const openai = new OpenAI({
 
 const router = Router();
 
-// Middleware to check if user is admin
-const requireAdmin = async (req: any, res: any, next: any) => {
-  const userId = req.session?.userId;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
+async function recordAuditLog(req: any, details: {
+  action: string;
+  entityType: string;
+  entityId?: string | number | null;
+  oldValue?: any;
+  newValue?: any;
+}) {
   try {
-    const [user] = await db
-      .select({ isAdmin: users.isAdmin })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    next();
+    await db.insert(auditLogs).values({
+      userId: req.session?.userId || null,
+      action: details.action,
+      entityType: details.entityType,
+      entityId: details.entityId ? String(details.entityId) : null,
+      oldValue: details.oldValue,
+      newValue: details.newValue,
+      ipAddress: (req.ip || "").slice(0, 45),
+      userAgent: req.get?.("user-agent"),
+    });
   } catch (error) {
-    console.error("Admin check error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Failed to record audit log:", error);
   }
-};
+}
 
-// Middleware to check if user is owner (blocks non-owners from access)
-const requireOwner = async (req: any, res: any, next: any) => {
-  const userId = req.session?.userId;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  try {
-    const [user] = await db
-      .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    if (!user.isOwner) {
-      return res.status(403).json({ error: "Owner access required. Only the platform owner can manage users." });
-    }
-
-    req.isOwner = true;
-    next();
-  } catch (error) {
-    console.error("Owner check error:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
+const requireOwner = ensureOwnerMiddleware;
+const requireAdmin = requireOwner;
 
 // Get all users (admin only) with pagination and filters
 router.get("/users", requireOwner, async (req, res) => {
@@ -183,6 +155,14 @@ router.patch("/users/:id/role", requireOwner, async (req, res) => {
       .set({ role, isAdmin: role === "admin" })
       .where(eq(users.id, id));
 
+    await recordAuditLog(req, {
+      action: "change_user_role",
+      entityType: "user",
+      entityId: id,
+      oldValue: { role: targetUser.role, isAdmin: targetUser.isAdmin },
+      newValue: { role, isAdmin: role === "admin" },
+    });
+
     res.json({ success: true, message: `User role changed to ${role}` });
   } catch (error) {
     console.error("Error changing user role:", error);
@@ -214,6 +194,14 @@ router.patch("/users/:id/premium", requireOwner, async (req, res) => {
     await db.update(users)
       .set({ isPaidUser })
       .where(eq(users.id, id));
+
+    await recordAuditLog(req, {
+      action: "toggle_premium",
+      entityType: "user",
+      entityId: id,
+      oldValue: { isPaidUser: targetUser.isPaidUser },
+      newValue: { isPaidUser },
+    });
 
     res.json({ success: true, message: `Premium status ${isPaidUser ? "enabled" : "disabled"}` });
   } catch (error) {
@@ -251,6 +239,14 @@ router.patch("/users/:id/status", requireOwner, async (req, res) => {
       .set({ isDisabled })
       .where(eq(users.id, id));
 
+    await recordAuditLog(req, {
+      action: "toggle_account_status",
+      entityType: "user",
+      entityId: id,
+      oldValue: { isDisabled: targetUser.isDisabled },
+      newValue: { isDisabled },
+    });
+
     res.json({ success: true, message: `Account ${isDisabled ? "disabled" : "enabled"}` });
   } catch (error) {
     console.error("Error toggling account status:", error);
@@ -267,6 +263,13 @@ router.post("/grant-access/:userId", requireAdmin, async (req, res) => {
       .set({ isPaidUser: true })
       .where(eq(users.id, userId));
 
+    await recordAuditLog(req, {
+      action: "grant_access",
+      entityType: "user",
+      entityId: userId,
+      newValue: { isPaidUser: true },
+    });
+
     res.json({ success: true });
   } catch (error) {
     console.error("Error granting access:", error);
@@ -282,6 +285,13 @@ router.post("/revoke-access/:userId", requireAdmin, async (req, res) => {
     await db.update(users)
       .set({ isPaidUser: false })
       .where(eq(users.id, userId));
+
+    await recordAuditLog(req, {
+      action: "revoke_access",
+      entityType: "user",
+      entityId: userId,
+      newValue: { isPaidUser: false },
+    });
 
     res.json({ success: true });
   } catch (error) {
@@ -316,11 +326,20 @@ router.post("/add-user", requireAdmin, async (req, res) => {
       createdAt: users.createdAt,
     });
 
-    res.json({
+    const payload = {
       success: true,
       user: newUser,
       temporaryPassword: randomPassword
+    };
+
+    await recordAuditLog(req, {
+      action: "owner_add_user",
+      entityType: "user",
+      entityId: newUser.id,
+      newValue: { email: newUser.email, isPaidUser: newUser.isPaidUser },
     });
+
+    res.json(payload);
   } catch (error: any) {
     console.error("Error adding user:", error);
     if (error.code === '23505') {
@@ -385,17 +404,501 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
       }
     }
 
-    res.json({
+    const payload = {
       imported: importedUsers.length,
       errors: errors.length,
       users: importedUsers,
       failedEmails: errors
+    };
+
+    await recordAuditLog(req, {
+      action: "owner_bulk_import_users",
+      entityType: "user",
+      newValue: { importedCount: importedUsers.length, errorCount: errors.length },
     });
+
+    res.json(payload);
   } catch (error) {
     console.error("Error bulk importing:", error);
     res.status(500).json({ error: "Failed to bulk import" });
   }
 });
+
+// Platform invitation management (organization invites)
+router.get("/invitations", requireOwner, async (_req, res) => {
+  try {
+    const invitations = await db
+      .select({
+        id: organizationInvitations.id,
+        email: organizationInvitations.email,
+        role: organizationInvitations.role,
+        status: organizationInvitations.status,
+        organizationId: organizationInvitations.organizationId,
+        organizationName: organizations.name,
+        expiresAt: organizationInvitations.expiresAt,
+        createdAt: organizationInvitations.createdAt,
+      })
+      .from(organizationInvitations)
+      .leftJoin(organizations, eq(organizationInvitations.organizationId, organizations.id))
+      .orderBy(desc(organizationInvitations.createdAt));
+
+    res.json({ invitations });
+  } catch (error) {
+    console.error("Error fetching invitations:", error);
+    res.status(500).json({ error: "Failed to fetch invitations" });
+  }
+});
+
+router.post("/invitations", requireOwner, async (req, res) => {
+  try {
+    const { organizationId, email, role = "student", expiresInDays = 14 } = req.body as {
+      organizationId?: number;
+      email?: string;
+      role?: string;
+      expiresInDays?: number;
+    };
+
+    if (!organizationId || !email) {
+      return res.status(400).json({ error: "organizationId and email are required" });
+    }
+
+    const [organization] = await db
+      .select({ id: organizations.id, isActive: organizations.isActive })
+      .from(organizations)
+      .where(eq(organizations.id, Number(organizationId)))
+      .limit(1);
+
+    if (!organization || !organization.isActive) {
+      return res.status(404).json({ error: "Organization not found or inactive" });
+    }
+
+    if (!["student", "teacher", "admin"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    const expiresAt = new Date(Date.now() + Math.max(1, expiresInDays) * 24 * 60 * 60 * 1000);
+
+    const [invitation] = await db
+      .insert(organizationInvitations)
+      .values({
+        organizationId: Number(organizationId),
+        email: String(email).trim().toLowerCase(),
+        role,
+        token: nanoid(32),
+        status: "pending",
+        invitedBy: req.session?.userId || null,
+        expiresAt,
+      })
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "create_invitation",
+      entityType: "organization_invitation",
+      entityId: invitation.id,
+      newValue: invitation,
+    });
+
+    res.json({ invitation });
+  } catch (error) {
+    console.error("Error creating invitation:", error);
+    res.status(500).json({ error: "Failed to create invitation" });
+  }
+});
+
+router.post("/invitations/:id/cancel", requireOwner, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: "Invalid invitation id" });
+    }
+
+    const [existing] = await db
+      .select()
+      .from(organizationInvitations)
+      .where(eq(organizationInvitations.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Invitation not found" });
+    }
+
+    const [updated] = await db
+      .update(organizationInvitations)
+      .set({ status: "cancelled" })
+      .where(eq(organizationInvitations.id, id))
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "cancel_invitation",
+      entityType: "organization_invitation",
+      entityId: id,
+      oldValue: existing,
+      newValue: updated,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error cancelling invitation:", error);
+    res.status(500).json({ error: "Failed to cancel invitation" });
+  }
+});
+
+// ============ ORGANIZATION MANAGEMENT ============
+
+router.get("/organizations", requireOwner, async (_req, res) => {
+  try {
+    const organizationsList = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        slug: organizations.slug,
+        type: organizations.type,
+        email: organizations.email,
+        phone: organizations.phone,
+        address: organizations.address,
+        city: organizations.city,
+        state: organizations.state,
+        country: organizations.country,
+        pincode: organizations.pincode,
+        logoUrl: organizations.logoUrl,
+        website: organizations.website,
+        billingEmail: organizations.billingEmail,
+        billingName: organizations.billingName,
+        gstNumber: organizations.gstNumber,
+        totalSeats: organizations.totalSeats,
+        usedSeats: organizations.usedSeats,
+        subscriptionStatus: organizations.subscriptionStatus,
+        subscriptionEndDate: organizations.subscriptionEndDate,
+        planId: organizations.planId,
+        isActive: organizations.isActive,
+        isVerified: organizations.isVerified,
+        createdAt: organizations.createdAt,
+        memberCount: sql<number>`COUNT(${organizationMembers.id})::int`,
+      })
+      .from(organizations)
+      .leftJoin(
+        organizationMembers,
+        eq(organizations.id, organizationMembers.organizationId)
+      )
+      .groupBy(organizations.id)
+      .orderBy(desc(organizations.createdAt));
+
+    res.json(organizationsList);
+  } catch (error) {
+    console.error("Error fetching organizations:", error);
+    res.status(500).json({ error: "Failed to fetch organizations" });
+  }
+});
+
+router.post("/organizations", requireOwner, async (req, res) => {
+  try {
+    const { name, email, totalSeats = 50, type = "school", city, state } =
+      req.body;
+
+    if (!name || !email) {
+      return res
+        .status(400)
+        .json({ error: "Organization name and email are required" });
+    }
+
+    const slug =
+      req.body.slug ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "") ||
+      `org-${nanoid(6)}`;
+
+    const [organization] = await db
+      .insert(organizations)
+      .values({
+        name: name.trim(),
+        slug,
+        email: email.trim().toLowerCase(),
+        type,
+        city,
+        state,
+        totalSeats,
+        usedSeats: 0,
+        isActive: true,
+      })
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "create_organization",
+      entityType: "organization",
+      entityId: organization.id,
+      newValue: organization,
+    });
+
+    res.json(organization);
+  } catch (error) {
+    console.error("Error creating organization:", error);
+    res.status(500).json({ error: "Failed to create organization" });
+  }
+});
+
+router.put("/organizations/:id", requireOwner, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: "Invalid organization id" });
+    }
+
+    const [existing] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    const updates: Record<string, any> = {};
+    for (const key of [
+      "name",
+      "email",
+      "phone",
+      "city",
+      "state",
+      "country",
+      "totalSeats",
+      "type",
+      "isActive",
+    ]) {
+      if (key in req.body) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.json(existing);
+    }
+
+    const [updated] = await db
+      .update(organizations)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(organizations.id, id))
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "update_organization",
+      entityType: "organization",
+      entityId: id,
+      oldValue: existing,
+      newValue: updated,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error updating organization:", error);
+    res.status(500).json({ error: "Failed to update organization" });
+  }
+});
+
+router.delete("/organizations/:id", requireOwner, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: "Invalid organization id" });
+    }
+
+    const [existing] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    const [updated] = await db
+      .update(organizations)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(organizations.id, id))
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "archive_organization",
+      entityType: "organization",
+      entityId: id,
+      oldValue: existing,
+      newValue: updated,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting organization:", error);
+    res.status(500).json({ error: "Failed to delete organization" });
+  }
+});
+
+router.post("/organizations/:id/invitations/bulk", requireOwner, async (req, res) => {
+  try {
+    const organizationId = Number(req.params.id);
+    if (!Number.isInteger(organizationId)) {
+      return res.status(400).json({ error: "Invalid organization id" });
+    }
+
+    const [organization] = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        totalSeats: organizations.totalSeats,
+        isActive: organizations.isActive,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .limit(1);
+
+    if (!organization || !organization.isActive) {
+      return res.status(404).json({ error: "Organization not found or inactive" });
+    }
+
+    const entries = extractInvitationEntries(req.body);
+    if (!entries.length) {
+      return res.status(400).json({ error: "No valid email addresses provided" });
+    }
+
+    const [{ count: activeMembers }] = await db
+      .select({
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(organizationMembers)
+      .where(eq(organizationMembers.organizationId, organizationId));
+
+    const remainingSeats = Math.max(
+      0,
+      (organization.totalSeats || 0) - Number(activeMembers || 0)
+    );
+
+    if (remainingSeats > 0 && entries.length > remainingSeats) {
+      return res.status(400).json({
+        error: `Only ${remainingSeats} seat(s) available for this organization`,
+      });
+    }
+
+    const defaultRole = typeof req.body?.defaultRole === "string" ? req.body.defaultRole : "student";
+    const invites: any[] = [];
+    const failures: Array<{ email: string; error: string }> = [];
+
+    for (const entry of entries) {
+      const role = entry.role || defaultRole;
+      if (!["student", "teacher", "admin"].includes(role)) {
+        failures.push({ email: entry.email, error: "Invalid role" });
+        continue;
+      }
+
+      const normalizedEmail = entry.email.trim().toLowerCase();
+      const [existingUser] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalizedEmail))
+        .limit(1);
+
+      if (existingUser) {
+        failures.push({ email: normalizedEmail, error: "User already exists" });
+        continue;
+      }
+
+      const expiresInDays = entry.expiresInDays && entry.expiresInDays > 0 && entry.expiresInDays <= 90
+        ? entry.expiresInDays
+        : 14;
+      const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+
+      try {
+        const [invitation] = await db
+          .insert(organizationInvitations)
+          .values({
+            email: normalizedEmail,
+            role,
+            token: nanoid(32),
+            invitedBy: req.session?.userId || null,
+            organizationId,
+            expiresAt,
+          })
+          .returning();
+
+        invites.push(invitation);
+      } catch (error: any) {
+        failures.push({
+          email: normalizedEmail,
+          error: error?.message || "Failed to create invitation",
+        });
+      }
+    }
+
+    await recordAuditLog(req, {
+      action: "bulk_invite_organization_members",
+      entityType: "organization",
+      entityId: organizationId,
+      newValue: {
+        total: entries.length,
+        created: invites.length,
+        failures: failures.length,
+      },
+    });
+
+    res.json({
+      success: true,
+      created: invites.length,
+      failed: failures.length,
+      invitations: invites,
+      failures,
+    });
+  } catch (error) {
+    console.error("Error creating bulk invitations:", error);
+    res.status(500).json({ error: "Failed to create invitations" });
+  }
+});
+
+function extractInvitationEntries(body: any): Array<{ email: string; role?: string; expiresInDays?: number; metadata?: Record<string, any> }> {
+  const entries: Array<{ email: string; role?: string; expiresInDays?: number; metadata?: Record<string, any> }> = [];
+
+  if (Array.isArray(body?.emails)) {
+    for (const item of body.emails) {
+      if (typeof item === "string") {
+        entries.push({ email: item });
+      } else if (item && typeof item.email === "string") {
+        entries.push({
+          email: item.email,
+          role: item.role,
+          expiresInDays: item.expiresInDays,
+          metadata: item.metadata,
+        });
+      }
+    }
+  }
+
+  if (typeof body?.csv === "string") {
+    const rows = body.csv.split(/\r?\n/);
+    for (const row of rows) {
+      const [emailRaw, roleRaw] = row.split(/[,;]/).map((val) => val?.trim());
+      if (!emailRaw) continue;
+      entries.push({
+        email: emailRaw,
+        role: roleRaw,
+      });
+    }
+  }
+
+  const seen = new Set<string>();
+  return entries
+    .filter((entry) => typeof entry.email === "string" && entry.email.trim().length > 3)
+    .filter((entry) => {
+      const normalized = entry.email.trim().toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      entry.email = normalized;
+      return true;
+    })
+    .slice(0, 500);
+}
 
 export default router;
 

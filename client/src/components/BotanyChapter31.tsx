@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sun, CheckCircle2, XCircle, Brain, Lightbulb, Move } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter31() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,7 +19,7 @@ export function BotanyChapter31() {
       id: 1,
       question: "Nyctinastic movements in plants are controlled by:",
       options: ["Light intensity", "Temperature", "Biological clock", "Gravity"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Nyctinastic (sleep) movements like closing of leaflets at night are controlled by the biological clock (circadian rhythm), independent of external stimuli."
     },
     {
@@ -30,35 +31,35 @@ export function BotanyChapter31() {
         "Night length is longer than critical dark period",
         "Day and night are equal"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Short-day plants (actually long-night plants) flower when the continuous dark period is longer than a critical duration. It's the night length that matters."
     },
     {
       id: 3,
       question: "The hypothetical flowering hormone is called:",
       options: ["Florigen", "Vernalin", "Gibberellin", "Auxin"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Florigen is the hypothetical flowering hormone proposed by Chailakhyan. Though not yet isolated, recent research suggests it may be a protein (FT protein)."
     },
     {
       id: 4,
       question: "Vernalization is the promotion of flowering by:",
       options: ["Light treatment", "Cold treatment", "Hormone application", "Water stress"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Vernalization is the process where cold treatment (typically 0-5°C) accelerates flowering in plants like winter wheat and biennial plants."
     },
     {
       id: 5,
       question: "Which pigment is responsible for photoperiodism?",
       options: ["Chlorophyll", "Carotenoid", "Phytochrome", "Anthocyanin"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Phytochrome is the photoreceptor pigment that exists in two interconvertible forms (Pr and Pfr) and controls photoperiodic responses including flowering."
     },
     {
       id: 6,
       question: "Thigmotropism is exhibited by:",
       options: ["Roots growing downward", "Stems bending toward light", "Tendrils coiling around support", "Leaves closing at night"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Thigmotropism is growth movement in response to touch/contact. Tendrils of climbing plants show positive thigmotropism by coiling around support."
     },
     {
@@ -70,14 +71,14 @@ export function BotanyChapter31() {
         "Regardless of photoperiod",
         "Only when day equals night"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Day-neutral plants like tomato, cucumber, and maize flower regardless of the photoperiod. They are not sensitive to day length."
     },
     {
       id: 8,
       question: "The site of perception of photoperiodic stimulus is:",
       options: ["Root", "Shoot apex", "Mature leaf", "Young leaf"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Mature leaves are the site of photoperiodic perception. The signal (florigen) is then translocated from leaves to the shoot apex to induce flowering."
     }
   ];
@@ -94,7 +95,7 @@ export function BotanyChapter31() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -518,7 +519,7 @@ export function BotanyChapter31() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -526,13 +527,13 @@ export function BotanyChapter31() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

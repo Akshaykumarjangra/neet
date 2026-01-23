@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter8() {
   console.log("Seeding Biology Class 11 Chapter 8: Cell - The Unit of Life...");
@@ -643,12 +644,14 @@ Network of interconnected membrane-bound tubules and sacs (cisternae).
       estimatedStudyMinutes: 360,
       status: "published",
 
-      visualizationsData: {
-        type: "cell-structure",
-        title: "Interactive 3D Cell Model",
-        description:
-          "Explore prokaryotic and eukaryotic cell structures with detailed organelle visualization including mitochondria, chloroplasts, ER, Golgi apparatus, and nucleus",
-      },
+      visualizationsData: [
+        {
+          type: "cell-structure",
+          title: "Interactive 3D Cell Model",
+          description:
+            "Explore prokaryotic and eukaryotic cell structures with detailed organelle visualization including mitochondria, chloroplasts, ER, Golgi apparatus, and nucleus",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -660,6 +663,20 @@ Network of interconnected membrane-bound tubules and sacs (cisternae).
         chapterTitle: "Cell - The Unit of Life",
         introduction:
           "The cell is the fundamental structural and functional unit of all living organisms. Every organism, from the tiniest bacterium to the largest whale, is composed of cells. The discovery of cells revolutionized biology and led to the formulation of the Cell Theory, one of the most important unifying principles in biology. Understanding cell structure and organization is essential for comprehending how life functions at the molecular level - how organisms grow, reproduce, respond to their environment, and maintain homeostasis. This chapter explores the fascinating world inside cells, from the simple organization of prokaryotic cells to the complex compartmentalization of eukaryotic cells with their diverse membrane-bound organelles. Each organelle performs specialized functions that contribute to the cell's survival, making the cell a remarkably efficient microscopic factory of life.",
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+            type: "cell-structure",
+            title: "Interactive 3D Cell Model",
+            description:
+              "Explore prokaryotic and eukaryotic cell structures with detailed organelle visualization including mitochondria, chloroplasts, ER, Golgi apparatus, and nucleus",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

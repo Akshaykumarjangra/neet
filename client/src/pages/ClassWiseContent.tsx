@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, ArrowRight } from "lucide-react";
+import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, Leaf, Bug, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { categorizeBiologyChapter } from "@/lib/biologySections";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Chapter {
   id: number;
@@ -24,15 +26,20 @@ interface Chapter {
   status: string;
 }
 
+type ClassWiseSubject = "Physics" | "Chemistry" | "Botany" | "Zoology";
+
 export default function ClassWiseContent() {
   const [, setLocation] = useLocation();
   const [selectedClass, setSelectedClass] = useState<"11" | "12">("11");
-  const [selectedSubject, setSelectedSubject] = useState<"Physics" | "Chemistry" | "Biology">("Physics");
+  const [selectedSubject, setSelectedSubject] = useState<ClassWiseSubject>("Physics");
   const [searchQuery, setSearchQuery] = useState("");
   const prefersReducedMotion = useReducedMotion();
 
-  const { data: chapters, isLoading } = useQuery<Chapter[]>({
+  const { data: chapters = [], isLoading } = useQuery<Chapter[]>({
     queryKey: ['/api/lms/library'],
+    queryFn: async () => apiRequest("GET", "/api/lms/library"),
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
   });
 
   const getSubjectIcon = (subject: string) => {
@@ -41,6 +48,10 @@ export default function ClassWiseContent() {
         return <Atom className="h-5 w-5" />;
       case "Chemistry":
         return <TestTubes className="h-5 w-5" />;
+      case "Botany":
+        return <Leaf className="h-5 w-5" />;
+      case "Zoology":
+        return <Bug className="h-5 w-5" />;
       case "Biology":
         return <Dna className="h-5 w-5" />;
       default:
@@ -54,6 +65,10 @@ export default function ClassWiseContent() {
         return "from-blue-500 to-blue-600";
       case "Chemistry":
         return "from-purple-500 to-purple-600";
+      case "Botany":
+        return "from-emerald-500 to-emerald-600";
+      case "Zoology":
+        return "from-orange-500 to-amber-500";
       case "Biology":
         return "from-green-500 to-green-600";
       default:
@@ -74,7 +89,17 @@ export default function ClassWiseContent() {
   };
 
   const filteredChapters = chapters
-    ?.filter(ch => ch.classLevel === selectedClass && ch.subject === selectedSubject)
+    ?.filter(ch => {
+      if (ch.classLevel !== selectedClass) return false;
+      if (selectedSubject === "Botany" || selectedSubject === "Zoology") {
+        return (
+          ch.subject === "Biology" &&
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) ===
+            selectedSubject
+        );
+      }
+      return ch.subject === selectedSubject;
+    })
     ?.filter(ch => 
       searchQuery === "" || 
       ch.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,8 +107,8 @@ export default function ClassWiseContent() {
     )
     ?.sort((a, b) => a.chapterNumber - b.chapterNumber) || [];
 
-  const class11Subjects = ["Physics", "Chemistry", "Biology"];
-  const class12Subjects = ["Physics", "Chemistry", "Biology"];
+  const class11Subjects = ["Physics", "Chemistry", "Botany", "Zoology"];
+  const class12Subjects = ["Physics", "Chemistry", "Botany", "Zoology"];
 
   const getChapterCount = (classLevel: string, subject: string) => {
     return chapters?.filter(ch => ch.classLevel === classLevel && ch.subject === subject).length || 0;
@@ -108,7 +133,7 @@ export default function ClassWiseContent() {
             </h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Comprehensive chapter-wise content for Class 11 and 12 - Physics, Chemistry & Biology
+            Comprehensive chapter-wise content for Class 11 and 12 - Physics, Chemistry, Botany & Zoology
           </p>
         </motion.div>
 

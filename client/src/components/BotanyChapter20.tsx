@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Globe, CheckCircle2, XCircle, Brain, Lightbulb, TreePine, AlertTriangle , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter20() {
   // Fetch questions from database for Microbes in Human Welfare (topicId: 84)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -31,56 +32,56 @@ export function BotanyChapter20() {
       id: 1,
       question: "Which country has the maximum biodiversity?",
       options: ["India", "Brazil", "China", "USA"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Brazil has the maximum biodiversity in the world due to the Amazon rainforest, which hosts about 20% of the world's species."
     },
     {
       id: 2,
       question: "The term 'biodiversity' was coined by:",
       options: ["E.O. Wilson", "Walter G. Rosen", "Norman Myers", "Robert May"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Walter G. Rosen coined the term 'biodiversity' in 1985, though it was popularized by E.O. Wilson."
     },
     {
       id: 3,
       question: "Which is NOT a megadiverse country?",
       options: ["India", "Brazil", "Australia", "Canada"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Canada is not among the 17 megadiverse countries. India, Brazil, and Australia are megadiverse nations."
     },
     {
       id: 4,
       question: "Biodiversity hotspots cover what percentage of Earth's land surface?",
       options: ["25%", "15%", "2%", "10%"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Biodiversity hotspots cover less than 2% of Earth's land surface but contain more than 50% of the world's plant species."
     },
     {
       id: 5,
       question: "Ex-situ conservation includes:",
       options: ["National parks", "Biosphere reserves", "Seed banks", "Wildlife sanctuaries"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Ex-situ conservation means conservation outside natural habitats. Seed banks, botanical gardens, and zoos are examples."
     },
     {
       id: 6,
       question: "The 'Evil Quartet' causing biodiversity loss includes all EXCEPT:",
       options: ["Habitat loss", "Over-exploitation", "Climate change", "Alien species invasion"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The Evil Quartet includes: habitat loss, over-exploitation, alien species invasion, and co-extinction. Climate change is a separate major threat."
     },
     {
       id: 7,
       question: "IUCN Red List categorizes species based on:",
       options: ["Economic value", "Extinction risk", "Population size", "Distribution area"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The IUCN Red List categorizes species based on their extinction risk: Extinct, Endangered, Vulnerable, Near Threatened, Least Concern."
     },
     {
       id: 8,
       question: "India has how many biodiversity hotspots?",
       options: ["2", "3", "4", "5"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "India has 4 biodiversity hotspots: Western Ghats, Eastern Himalayas, Indo-Burma region, and Sundaland (Nicobar Islands)."
     }
   ];
@@ -97,7 +98,7 @@ export function BotanyChapter20() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -544,7 +545,7 @@ export function BotanyChapter20() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -564,10 +565,10 @@ export function BotanyChapter20() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

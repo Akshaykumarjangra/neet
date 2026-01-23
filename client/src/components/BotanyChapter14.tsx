@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter14() {
   // Fetch questions from database for Sexual Reproduction in Flowering Plants (topicId: 78)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -36,7 +37,7 @@ export function BotanyChapter14() {
         "Three parallel chains",
         "Single polynucleotide chain"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "DNA consists of two antiparallel polynucleotide chains (one runs 5'→3', other runs 3'→5') held together by hydrogen bonds between complementary bases."
     },
     {
@@ -48,14 +49,14 @@ export function BotanyChapter14() {
         "A + T = G + C",
         "A = C and G = T"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Chargaff's rule states that in DNA, the amount of adenine equals thymine (A=T) and amount of guanine equals cytosine (G=C)."
     },
     {
       id: 3,
       question: "Which enzyme joins Okazaki fragments during DNA replication?",
       options: ["DNA polymerase", "DNA ligase", "Helicase", "Primase"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "DNA ligase joins the Okazaki fragments on the lagging strand by forming phosphodiester bonds between adjacent nucleotides."
     },
     {
@@ -67,7 +68,7 @@ export function BotanyChapter14() {
         "Some codons don't code for any amino acid",
         "Codons overlap with each other"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The genetic code is degenerate because multiple codons can code for the same amino acid. For example, leucine is coded by 6 different codons."
     },
     {
@@ -79,7 +80,7 @@ export function BotanyChapter14() {
         "DNA ligase",
         "Reverse transcriptase"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "RNA polymerase catalyzes the synthesis of RNA from DNA template during transcription."
     },
     {
@@ -91,7 +92,7 @@ export function BotanyChapter14() {
         "Another tRNA",
         "rRNA"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The anticodon (3 nucleotide sequence) on tRNA pairs with the complementary codon on mRNA during translation."
     },
     {
@@ -103,28 +104,28 @@ export function BotanyChapter14() {
         "Post-transcriptional regulation",
         "Post-translational regulation"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The lac operon is a classic example of negative gene regulation where the repressor protein blocks transcription in the absence of lactose."
     },
     {
       id: 8,
       question: "In eukaryotes, transcription occurs in:",
       options: ["Cytoplasm", "Nucleus", "Ribosome", "Mitochondria"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "In eukaryotes, transcription (DNA→RNA) occurs in the nucleus, while translation (RNA→Protein) occurs in the cytoplasm on ribosomes."
     },
     {
       id: 9,
       question: "The process of removal of introns and joining of exons is called:",
       options: ["Capping", "Tailing", "Splicing", "Editing"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Splicing is the process where introns (non-coding sequences) are removed and exons (coding sequences) are joined together during RNA processing in eukaryotes."
     },
     {
       id: 10,
       question: "The Human Genome Project was completed in:",
       options: ["1990", "2000", "2003", "2010"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The Human Genome Project was completed in 2003, revealing that humans have approximately 3 billion base pairs and about 20,000-25,000 genes."
     }
   ];
@@ -141,7 +142,7 @@ export function BotanyChapter14() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -495,7 +496,7 @@ export function BotanyChapter14() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -515,10 +516,10 @@ export function BotanyChapter14() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

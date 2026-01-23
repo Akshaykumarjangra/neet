@@ -1,0 +1,2256 @@
+
+> rest-express@1.0.0 dev
+> concurrently "npm run dev:backend" "npm run dev:frontend"
+
+[1] 
+[1] > rest-express@1.0.0 dev:frontend
+[1] > vite
+[1] 
+[0] 
+[0] > rest-express@1.0.0 dev:backend
+[0] > cross-env NODE_ENV=development PORT=5001 tsx server/index.ts
+[0] 
+[1] 
+[1]   [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1821[22m[2m[0m ms[22m
+[1] 
+[1]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5002[22m/[39m
+[1]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.137.1:[1m5002[22m/[39m
+[1]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.4:[1m5002[22m/[39m
+[0] New database connection established
+[0] ✓ Connected to Coolify PostgreSQL database
+[0] 11:43:54 AM [express] Using MemoryStore for development sessions
+[0] 11:43:54 AM [express] [Owner Account] Owner account akg45272@gmail.com already exists
+[0] 11:43:54 AM [express] 📡 WebSocket server initialized at /ws
+[0] 11:43:55 AM [express] serving on port 5001
+[0] 11:44:13 AM [express] GET /api/chapters/by-chapter/biology/12/5 200 in 55ms :: {"id":76,"subject":"Bi...
+[0] 11:44:14 AM [express] GET /api/chapters/by-chapter/biology/12/6 200 in 57ms :: {"id":77,"subject":"Bi...
+[0] 11:44:14 AM [express] GET /api/chapters/by-chapter/biology/12/7 200 in 56ms :: {"id":78,"subject":"Bi...
+[0] 11:44:15 AM [express] GET /api/chapters/by-chapter/biology/12/8 200 in 57ms :: {"id":79,"subject":"Bi...
+[0] 11:44:15 AM [express] GET /api/chapters/by-chapter/biology/12/9 200 in 32ms :: {"id":92,"subject":"Bi...
+[0] 11:44:16 AM [express] GET /api/chapters/by-chapter/biology/12/10 200 in 56ms :: {"id":89,"subject":"B...
+[0] 11:44:17 AM [express] GET /api/chapters/by-chapter/biology/12/11 200 in 54ms :: {"id":86,"subject":"B...
+[0] 11:44:17 AM [express] GET /api/chapters/by-chapter/biology/12/12 200 in 31ms :: {"id":87,"subject":"B...
+[0] 11:44:18 AM [express] GET /api/chapters/by-chapter/biology/12/13 200 in 67ms :: {"id":93,"subject":"B...
+[0] 11:44:19 AM [express] GET /api/chapters/by-chapter/biology/12/14 200 in 55ms :: {"id":94,"subject":"B...
+[0] 11:44:19 AM [express] GET /api/chapters/by-chapter/biology/12/15 200 in 33ms :: {"id":95,"subject":"B...
+[0] 11:44:19 AM [express] GET /api/chapters/by-chapter/biology/12/16 200 in 53ms :: {"id":138,"subject":"...
+[0] 11:52:54 AM [express] GET /api/chapters 200 in 138ms :: [{"id":73,"subject":"Biology","classLevel":"1...
+[0] 11:53:20 AM [express] GET /api/chapters/by-chapter/biology/12/22 200 in 28ms :: {"id":88,"subject":"B...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 40274,
+[0]     secretKey: 2112646478,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 15087,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 3780,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 18,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 12:05:01 PM [express] GET /api/chapters/by-chapter/biology/11/22 200 in 333ms :: {"id":122,"subject":...
+[0] 12:06:39 PM [express] GET /api/chapters 200 in 138ms :: [{"id":73,"subject":"Biology","classLevel":"1...
+[0] 12:06:54 PM [express] GET /api/chapters/by-chapter/biology/11/22 200 in 73ms :: {"id":122,"subject":"...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/5 200 in 31ms :: {"id":76,"subject":"Bi...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/8 200 in 59ms :: {"id":79,"subject":"Bi...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/11 200 in 31ms :: {"id":86,"subject":"B...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/14 200 in 34ms :: {"id":94,"subject":"B...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/16 200 in 36ms :: {"id":138,"subject":"...
+[0] 12:07:12 PM [express] GET /api/chapters/by-chapter/biology/12/6 200 in 30ms :: {"id":77,"subject":"Bi...
+[0] 12:08:25 PM [express] GET /api/chapters 200 in 216ms :: [{"id":64,"subject":"Biology","classLevel":"1...
+[0] 12:14:16 PM [express] GET /api/chapters/by-chapter/biology/11/16 200 in 53ms :: {"id":80,"subject":"B...
+[0] 12:14:17 PM [express] GET /api/chapters/by-chapter/biology/11/17 200 in 44ms :: {"id":81,"subject":"B...
+[0] 12:14:18 PM [express] GET /api/chapters/by-chapter/biology/11/18 200 in 45ms :: {"id":82,"subject":"B...
+[0] 12:14:18 PM [express] GET /api/chapters/by-chapter/biology/11/19 200 in 41ms :: {"id":83,"subject":"B...
+[0] 12:14:18 PM [express] GET /api/chapters/by-chapter/biology/11/20 200 in 36ms :: {"id":84,"subject":"B...
+[0] 12:14:18 PM [express] GET /api/chapters/by-chapter/biology/11/21 200 in 44ms :: {"id":85,"subject":"B...
+[0] 12:14:36 PM [express] GET /api/chapters 200 in 232ms :: [{"id":64,"subject":"Biology","classLevel":"1...
+[0] 12:17:03 PM [express] GET /api/chapters 200 in 327ms :: [{"id":2,"subject":"Physics","classLevel":"11...
+[0] 12:17:26 PM [express] GET /api/chapters 200 in 290ms :: [{"id":2,"subject":"Physics","classLevel":"11...
+[0] 12:17:44 PM [express] GET /api/chapters 200 in 231ms :: [{"id":2,"subject":"Physics","classLevel":"11...
+[0] 12:18:19 PM [express] GET /api/chapters 200 in 255ms :: [{"id":2,"subject":"Physics","classLevel":"11...
+[0] 12:18:48 PM [express] GET /api/chapters/by-chapter/biology/11/16 200 in 36ms :: {"id":80,"subject":"B...
+[0] 12:25:44 PM [express] GET /api/chapters 200 in 112ms :: [{"id":31,"subject":"Chemistry","classLevel":...
+[0] 12:26:06 PM [express] GET /api/chapters 200 in 111ms :: [{"id":2,"subject":"Physics","classLevel":"11...
+[0] 12:34:15 PM [express] GET /api/chapters 200 in 226ms :: [{"id":13,"subject":"Physics","classLevel":"1...
+[0] 12:34:41 PM [express] GET /api/chapters 200 in 228ms :: [{"id":13,"subject":"Physics","classLevel":"1...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 42300,
+[0]     secretKey: -1633309292,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 1284398,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 13870,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 26,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 12:48:28 PM [express] GET /api/chapters 200 in 1338ms :: [{"id":13,"subject":"Physics","classLevel":"...
+[0] [SLOW] GET /api/chapters took 1338ms
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 46506,
+[0]     secretKey: 778776590,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 3890321,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 23322,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 1,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] 1:33:54 PM [express] GET /api/auth/me 401 in 2ms :: {"error":"Not authenticated"}
+[0] New database connection established
+[0] 1:33:54 PM [express] GET /api/questions/preview 200 in 198ms :: {"questions":[{"id":1,"topicId":1,"q...
+[0] 1:34:02 PM [express] POST /api/auth/login 200 in 890ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7...
+[0] [SLOW] POST /api/auth/login took 890ms
+[0] 1:34:02 PM [express] GET /api/auth/me 200 in 38ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:34:03 PM [express] GET /api/stats/user/825b854f-fa05-44d1-810b-2b7a125d1ccc 200 in 67ms :: {"total...
+[0] New database connection established
+[0] New database connection established
+[0] 1:34:03 PM [express] GET /api/learn/continue-learning 401 in 249ms :: {"error":"Authentication requi...
+[0] New database connection established
+[0] 1:34:03 PM [express] GET /api/mentors/recommendations 200 in 297ms :: {"topRated":[{"id":1,"userId":...
+[0] New database connection established
+[0] New database connection established
+[0] [library] user=825b854f-fa05-44d1-810b-2b7a125d1ccc rows=98 limit=200 offset=0 progress=false duration=375ms
+[0] 1:34:04 PM [express] GET /api/lms/library 200 in 593ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 1:34:04 PM [express] GET /api/game/leaderboard/rank/825b854f-fa05-44d1-810b-2b7a125d1ccc 200 in 1032...
+[0] [SLOW] GET /api/game/leaderboard/rank/825b854f-fa05-44d1-810b-2b7a125d1ccc took 1032ms
+[0] 1:34:04 PM [express] GET /api/game/leaderboard 200 in 1383ms :: [{"rank":1,"id":"825b854f-fa05-44d1-...
+[0] [SLOW] GET /api/game/leaderboard took 1383ms
+[0] 1:34:12 PM [express] GET /api/learn/bookmarks/keypoints 401 in 43ms :: {"error":"Authentication requ...
+[0] 1:34:12 PM [express] GET /api/learn/bookmarks/formulas 401 in 46ms :: {"error":"Authentication requi...
+[0] 1:34:12 PM [express] GET /api/chapters/by-chapter/physics/11/1 200 in 64ms :: {"id":1,"subject":"Phy...
+[0] 1:34:13 PM [express] GET /api/chapters/chat/health 200 in 7ms :: {"configured":true,"model":"gpt-4o-...
+[0] 1:34:14 PM [express] GET /api/lms/bookmarks 200 in 87ms :: []
+[0] 1:34:14 PM [express] GET /api/questions 200 in 84ms :: {"questions":[],"total":0,"page":1,"limit":10...
+[0] 1:34:14 PM [express] POST /api/lms/sessions 201 in 258ms :: {"id":27,"userId":"825b854f-fa05-44d1-81...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 1:35:37 PM [express] GET /api/auth/me 304 in 166ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125...
+[0] 1:37:02 PM [express] GET /api/auth/me 304 in 65ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:37:07 PM [express] PATCH /api/lms/sessions/27 400 in 156ms :: {"error":"value.toISOString is not a...
+[0] 1:37:09 PM [express] GET /api/chapters/by-chapter/chemistry/11/2 200 in 43ms :: {"id":32,"subject":"...
+[0] 1:37:09 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 1:37:09 PM [express] POST /api/lms/sessions 201 in 388ms :: {"id":28,"userId":"825b854f-fa05-44d1-81...
+[0] New database connection established
+[0] 1:37:10 PM [express] GET /api/questions 200 in 219ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 1:37:26 PM [express] PATCH /api/lms/sessions/28 400 in 46ms :: {"error":"value.toISOString is not a ...
+[0] 1:37:55 PM [express] GET /api/chapters/by-chapter/biology/12/2 200 in 45ms :: {"id":73,"subject":"Bi...
+[0] 1:37:56 PM [express] GET /api/questions 200 in 73ms :: {"questions":[],"total":0,"page":1,"limit":10...
+[0] 1:37:56 PM [express] POST /api/lms/sessions 201 in 467ms :: {"id":29,"userId":"825b854f-fa05-44d1-81...
+[0] 1:38:31 PM [express] PATCH /api/lms/sessions/29 400 in 32ms :: {"error":"value.toISOString is not a ...
+[0] 1:38:33 PM [express] GET /api/chapters/by-chapter/biology/11/4 200 in 82ms :: {"id":67,"subject":"Bi...
+[0] 1:38:34 PM [express] POST /api/lms/sessions 201 in 184ms :: {"id":30,"userId":"825b854f-fa05-44d1-81...
+[0] 1:38:34 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 1:38:34 PM [express] GET /api/questions 200 in 70ms :: {"questions":[],"total":0,"page":1,"limit":10...
+[0] 1:38:56 PM [express] GET /api/auth/me 200 in 35ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:43:23 PM [express] GET /api/auth/me 304 in 41ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:43:37 PM [express] GET /api/auth/me 304 in 36ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:44:07 PM [express] GET /api/auth/me 304 in 43ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:44:14 PM [express] GET /api/auth/me 304 in 47ms :: {"user":{"id":"825b854f-fa05-44d1-810b-2b7a125d...
+[0] 1:44:15 PM [express] GET /api/learn/bookmarks/keypoints 401 in 40ms :: {"error":"Authentication requ...
+[0] 1:44:15 PM [express] GET /api/learn/bookmarks/formulas 401 in 39ms :: {"error":"Authentication requi...
+[0] 1:44:15 PM [express] GET /api/chapters/by-chapter/biology/11/4 304 in 85ms :: {"id":67,"subject":"Bi...
+[0] 1:44:16 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 1:44:16 PM [express] POST /api/lms/sessions 201 in 189ms :: {"id":31,"userId":"825b854f-fa05-44d1-81...
+[0] 1:44:16 PM [express] GET /api/questions 304 in 65ms :: {"questions":[],"total":0,"page":1,"limit":10...
+[0] 1:44:16 PM [express] GET /api/lms/bookmarks 304 in 69ms :: []
+[0] 1:44:19 PM [express] GET /api/mentors/status 400 in 2ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:19 PM [express] PATCH /api/lms/sessions/31 400 in 31ms :: {"error":"value.toISOString is not a ...
+[0] 1:44:19 PM [express] GET /api/mentors/status 400 in 1ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:20 PM [express] GET /api/mentors/status 400 in 1ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:25 PM [express] GET /api/mentors/status 400 in 5ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:27 PM [express] GET /api/mentors/status 400 in 2ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:28 PM [express] GET /api/mentors/status 400 in 5ms :: {"error":"Invalid mentor ID"}
+[0] 1:44:31 PM [express] POST /api/auth/logout 200 in 4ms :: {"message":"Logged out successfully"}
+[0] 1:44:31 PM [express] GET /api/auth/me 401 in 0ms :: {"error":"Not authenticated"}
+[0] 1:44:31 PM [express] GET /api/learn/continue-learning 401 in 5ms :: {"error":"Not authenticated"}
+[0] 1:44:31 PM [express] GET /api/game/leaderboard 401 in 1ms :: {"error":"Not authenticated"}
+[0] 1:44:31 PM [express] GET /api/game/leaderboard/rank/825b854f-fa05-44d1-810b-2b7a125d1ccc 401 in 1ms ...
+[0] 1:44:31 PM [express] GET /api/stats/user/825b854f-fa05-44d1-810b-2b7a125d1ccc 304 in 32ms :: {"total...
+[0] [library] user=anon rows=98 limit=200 offset=0 progress=false duration=170ms
+[0] 1:44:31 PM [express] GET /api/lms/library 304 in 176ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] New database connection established
+[0] 1:44:32 PM [express] GET /api/mentors/recommendations 304 in 220ms :: {"topRated":[{"id":1,"userId":...
+[0] 1:44:37 PM [express] GET /api/profile 401 in 1ms :: {"error":"Authentication required"}
+[0] 1:44:37 PM [express] GET /api/game/achievements/825b854f-fa05-44d1-810b-2b7a125d1ccc 401 in 1ms :: {...
+[0] 1:44:37 PM [express] GET /api/billing/status 401 in 1ms :: {"error":"Authentication required"}
+[0] 1:44:54 PM [express] GET /api/learning-path/summary 401 in 1ms :: {"error":"Not authenticated"}
+[0] 1:44:54 PM [express] GET /api/mentors/recommendations 304 in 1ms :: {"topRated":[{"id":1,"userId":"6...
+[0] 1:44:54 PM [express] GET /api/game/leaderboard 401 in 1ms :: {"error":"Not authenticated"}
+[0] 1:44:54 PM [express] GET /api/auth/me 401 in 1ms :: {"error":"Not authenticated"}
+[0] 1:44:56 PM [express] GET /api/questions/stats 200 in 1981ms :: {"total":51727,"bySubject":{"Physics"...
+[0] [SLOW] GET /api/questions/stats took 1981ms
+[0] 1:44:59 PM [express] GET /api/auth/me 401 in 1ms :: {"error":"Not authenticated"}
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] 1:45:17 PM [express] GET /api/auth/me 401 in 0ms :: {"error":"Not authenticated"}
+[0] 1:45:20 PM [express] GET /api/auth/me 401 in 2ms :: {"error":"Not authenticated"}
+[0] 1:45:23 PM [express] POST /api/auth/login 200 in 442ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202...
+[0] 1:45:23 PM [express] GET /api/auth/me 200 in 92ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 1:45:24 PM [express] GET /api/stats/user/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 200 in 34ms :: {"total...
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 1:45:24 PM [express] GET /api/learn/continue-learning 402 in 225ms :: {"error":"PAYMENT_REQUIRED","m...
+[0] 1:45:24 PM [express] GET /api/game/leaderboard 402 in 245ms :: {"error":"PAYMENT_REQUIRED","message"...
+[0] 1:45:24 PM [express] GET /api/game/leaderboard/rank/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 402 in 262m...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=322ms
+[0] 1:45:24 PM [express] GET /api/lms/library 304 in 333ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 1:45:29 PM [express] GET /api/bookings 200 in 113ms :: []
+[0] 1:45:29 PM [express] GET /api/mentors/1/availability 200 in 158ms :: {"slots":[{"id":1,"mentorId":1,...
+[0] [Booking Notification] REQUESTED -> mentor {
+[0]   bookingId: 1,
+[0]   mentorId: 1,
+[0]   mentorEmail: 'mentor@demo.com',
+[0]   studentId: '6cd94ae5-8f9d-485d-96ee-202dd273ecd7',
+[0]   startAt: '2025-12-31T05:00:00.000Z'
+[0] }
+[0] 1:45:49 PM [express] POST /api/bookings 201 in 344ms :: {"id":1,"mentorId":1,"studentId":"6cd94ae5-8...
+[0] 1:45:50 PM [express] GET /api/bookings 200 in 103ms :: [{"id":1,"startAt":"2025-12-31T05:00:00.000Z"...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] 1:45:54 PM [express] GET /api/bookings 304 in 98ms :: [{"id":1,"startAt":"2025-12-31T05:00:00.000Z",...
+[0] Database connection removed from pool
+[0] 1:46:01 PM [express] GET /api/mentors 200 in 43ms :: [{"id":1,"userId":"6cd94ae5-8f9d-485d-96ee-202d...
+[0] 1:46:05 PM [express] GET /api/questions/preview 304 in 35ms :: {"questions":[{"id":1,"topicId":1,"qu...
+[0] 1:46:15 PM [express] GET /api/subscription-plans 200 in 69ms :: [{"id":1,"name":"Free","slug":"free"...
+[0] 1:48:08 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 1:48:56 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 1:49:00 PM [express] GET /api/learn/continue-learning 402 in 73ms :: {"error":"PAYMENT_REQUIRED","me...
+[0] 1:49:02 PM [express] GET /api/game/leaderboard/rank/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 402 in 64ms...
+[0] Failed to list mock exam papers: error: relation "mock_exam_papers" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:127:20) {
+[0]   length: 116,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '242',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:10 PM [express] GET /api/mock-exams/papers 500 in 68ms :: {"error":"Failed to list mock exam pa...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list attempts: error: relation "mock_exam_attempts" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:1503:22) {
+[0]   length: 118,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '285',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:10 PM [express] GET /api/mock-exams/attempts 500 in 230ms :: {"error":"Failed to list attempts"}
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list attempts: error: relation "mock_exam_attempts" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:1503:22) {
+[0]   length: 118,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '285',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:11 PM [express] GET /api/mock-exams/attempts 500 in 208ms :: {"error":"Failed to list attempts"}
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list mock exam papers: error: relation "mock_exam_papers" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:127:20) {
+[0]   length: 116,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '242',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:12 PM [express] GET /api/mock-exams/papers 500 in 195ms :: {"error":"Failed to list mock exam p...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list attempts: error: relation "mock_exam_attempts" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:1503:22) {
+[0]   length: 118,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '285',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:12 PM [express] GET /api/mock-exams/attempts 500 in 211ms :: {"error":"Failed to list attempts"}
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list mock exam papers: error: relation "mock_exam_papers" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:127:20) {
+[0]   length: 116,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '242',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:14 PM [express] GET /api/mock-exams/papers 500 in 200ms :: {"error":"Failed to list mock exam p...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list mock exam papers: error: relation "mock_exam_papers" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:127:20) {
+[0]   length: 116,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '242',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 1:49:19 PM [express] GET /api/mock-exams/papers 500 in 254ms :: {"error":"Failed to list mock exam p...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 1:49:24 PM [express] GET /api/auth/me 304 in 188ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 1:49:52 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[1] [2m1:50:04 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m1:50:04 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 52373,
+[0]     secretKey: 1895385426,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 7547198,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 36365,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 2,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 2:14:47 PM [express] GET /api/auth/me 304 in 169ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 2:14:53 PM [express] GET /api/auth/me 304 in 27ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Failed to list mock exam papers: error: relation "mock_exam_papers" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:127:20) {
+[0]   length: 116,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '242',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 2:14:53 PM [express] GET /api/mock-exams/papers 500 in 61ms :: {"error":"Failed to list mock exam pa...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Failed to list attempts: error: relation "mock_exam_attempts" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\mock-exam-routes.ts:1503:22) {
+[0]   length: 118,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '285',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 2:14:53 PM [express] GET /api/mock-exams/attempts 500 in 221ms :: {"error":"Failed to list attempts"}
+[0] Database connection removed from pool
+[0] New database connection established
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=293ms
+[0] 2:14:54 PM [express] GET /api/lms/library 304 in 300ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 2:14:56 PM [express] GET /api/learn/bookmarks/keypoints 402 in 64ms :: {"error":"PAYMENT_REQUIRED","...
+[0] New database connection established
+[0] 2:14:56 PM [express] GET /api/learn/bookmarks/formulas 402 in 219ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 2:14:56 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 42ms :: {"id":1,"subject":"Phy...
+[0] 2:14:57 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 2:14:57 PM [express] GET /api/lms/bookmarks 304 in 71ms :: []
+[0] 2:14:57 PM [express] GET /api/questions 200 in 138ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] New database connection established
+[0] 2:14:58 PM [express] POST /api/lms/sessions 201 in 538ms :: {"id":32,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 2:17:39 PM [express] GET /api/auth/me 200 in 208ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 2:20:06 PM [express] GET /api/auth/me 304 in 38ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[1] [2m2:22:20 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[1] [2m2:22:21 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[0] 2:22:25 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[1] [2m2:25:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m2:25:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[0] 2:25:23 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 35ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 2:25:23 PM [express] GET /api/lms/bookmarks 304 in 187ms :: []
+[0] 2:25:23 PM [express] GET /api/learn/bookmarks/keypoints 402 in 190ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 2:25:23 PM [express] GET /api/questions 304 in 255ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 2:25:23 PM [express] GET /api/learn/bookmarks/formulas 402 in 56ms :: {"error":"PAYMENT_REQUIRED","m...
+[0] 2:25:24 PM [express] PATCH /api/lms/sessions/32 400 in 30ms :: {"error":"value.toISOString is not a ...
+[0] 2:25:24 PM [express] POST /api/lms/sessions 201 in 192ms :: {"id":33,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 2:31:27 PM [express] GET /api/auth/me 304 in 209ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 2:31:55 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 2:31:56 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 38ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] 2:31:56 PM [express] GET /api/learn/bookmarks/formulas 402 in 222ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 2:31:56 PM [express] GET /api/learn/bookmarks/keypoints 402 in 231ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 2:31:56 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 2:31:56 PM [express] GET /api/lms/bookmarks 304 in 61ms :: []
+[0] 2:31:57 PM [express] GET /api/questions 304 in 111ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 2:31:57 PM [express] POST /api/lms/sessions 201 in 177ms :: {"id":34,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 2:33:50 PM [express] GET /api/auth/me 304 in 186ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[1] [2m2:37:35 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[1] [2m2:37:35 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[0] 2:37:41 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 56640,
+[0]     secretKey: -597933591,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 10213838,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 43412,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 1,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 2:51:06 PM [express] GET /api/auth/me 304 in 252ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 2:51:12 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 2:51:12 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 38ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] 2:51:12 PM [express] GET /api/learn/bookmarks/formulas 402 in 216ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 2:51:12 PM [express] GET /api/learn/bookmarks/keypoints 402 in 220ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 2:51:12 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 2:51:12 PM [express] GET /api/lms/bookmarks 304 in 70ms :: []
+[0] 2:51:13 PM [express] GET /api/questions 304 in 117ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 2:51:13 PM [express] POST /api/lms/sessions 201 in 188ms :: {"id":35,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 2:54:40 PM [express] GET /api/auth/me 304 in 206ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 2:54:46 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 2:54:46 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 37ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] 2:54:46 PM [express] GET /api/learn/bookmarks/keypoints 402 in 215ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 2:54:46 PM [express] GET /api/learn/bookmarks/formulas 402 in 233ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 2:54:46 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 2:54:47 PM [express] POST /api/lms/sessions 201 in 199ms :: {"id":36,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 2:54:47 PM [express] GET /api/lms/bookmarks 304 in 71ms :: []
+[0] 2:54:47 PM [express] GET /api/questions 304 in 135ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] New database connection established
+[0] 2:55:26 PM [express] PATCH /api/lms/sessions/36 400 in 610ms :: {"error":"value.toISOString is not a...
+[0] 2:55:26 PM [express] GET /api/chapters/by-chapter/physics/11/2 200 in 643ms :: {"id":2,"subject":"Ph...
+[0] 2:55:28 PM [express] POST /api/lms/sessions 201 in 597ms :: {"id":37,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 2:55:28 PM [express] GET /api/questions 200 in 198ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 2:55:41 PM [express] GET /api/auth/me 200 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 2:57:16 PM [express] GET /api/auth/me 304 in 38ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 2:57:51 PM [express] GET /api/auth/me 304 in 41ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[1] [2m2:58:36 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m2:58:53 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[0] 3:02:54 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:03:06 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:03:16 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:03:41 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 58716,
+[0]     secretKey: 472245882,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 11509614,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 49549,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 1,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] 3:06:05 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:06:10 PM [express] PATCH /api/lms/sessions/37 400 in 32ms :: {"error":"value.toISOString is not a ...
+[0] 3:06:10 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 35ms :: {"id":1,"subject":"Phy...
+[0] 3:06:12 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:06:12 PM [express] GET /api/lms/bookmarks 304 in 61ms :: []
+[0] New database connection established
+[0] New database connection established
+[0] 3:06:12 PM [express] GET /api/questions 304 in 277ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 3:06:12 PM [express] POST /api/lms/sessions 201 in 328ms :: {"id":38,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[1] [2m3:06:56 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 3:07:00 PM [express] GET /api/game/combo/6cd94ae5-8f9d-485d-96ee-202dd273ecd7/General 402 in 229ms :...
+[0] 3:07:00 PM [express] GET /api/topics 200 in 254ms :: [{"id":1,"subject":"Physics","classLevel":"Clas...
+[0] Error fetching questions: error: relation "question_tags" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\routes.ts:618:11) {
+[0]   length: 112,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '46',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 3:07:00 PM [express] GET /api/questions 500 in 409ms :: {"error":"relation \"question_tags\" does no...
+[0] Database connection removed from pool
+[0] 3:07:00 PM [express] PATCH /api/lms/sessions/38 400 in 30ms :: {"error":"value.toISOString is not a ...
+[0] Database connection removed from pool
+[0] 3:10:59 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=131ms
+[0] 3:11:03 PM [express] GET /api/lms/library 304 in 146ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 3:11:07 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:11:07 PM [express] GET /api/learn/bookmarks/keypoints 402 in 61ms :: {"error":"PAYMENT_REQUIRED","...
+[0] New database connection established
+[0] New database connection established
+[0] 3:11:07 PM [express] GET /api/learn/bookmarks/formulas 402 in 204ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 3:11:08 PM [express] POST /api/lms/sessions 201 in 337ms :: {"id":39,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 3:11:23 PM [express] POST /api/chapters/1/chat 200 in 9136ms :: {"answer":"Absolutely! Let's break d...
+[0] [SLOW] POST /api/chapters/1/chat took 9136ms
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 3:14:15 PM [express] GET /api/auth/me 304 in 173ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 3:14:51 PM [express] GET /api/auth/me 304 in 38ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:15:46 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 60524,
+[0]     secretKey: 1407889576,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 12638634,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 53421,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 3,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[1] [2m3:32:14 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[0] 3:32:17 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] New database connection established
+[0] 3:32:17 PM [express] GET /api/auth/me 304 in 190ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 3:32:46 PM [express] GET /api/auth/me 304 in 35ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:32:59 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:32:59 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 37ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] 3:32:59 PM [express] GET /api/learn/bookmarks/keypoints 402 in 185ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 3:32:59 PM [express] GET /api/learn/bookmarks/formulas 402 in 190ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 3:33:00 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:33:00 PM [express] GET /api/lms/bookmarks 304 in 68ms :: []
+[0] 3:33:00 PM [express] GET /api/questions 304 in 113ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 3:33:01 PM [express] POST /api/lms/sessions 201 in 193ms :: {"id":40,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 3:33:16 PM [express] POST /api/chapters/1/chat 200 in 8243ms :: {"answer":"Absolutely! Let's break d...
+[0] [SLOW] POST /api/chapters/1/chat took 8243ms
+[0] 3:33:27 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 3:35:00 PM [express] GET /api/auth/me 304 in 165ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 3:36:44 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:37:36 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[1] [2m3:39:43 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ChapterChatbot.tsx, /src/index.css[22m
+[0] 3:39:45 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:39:54 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:40:09 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:40:25 PM [express] GET /api/auth/me 304 in 135ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 3:41:14 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:41:16 PM [express] GET /api/auth/me 304 in 32ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:43:23 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:43:26 PM [express] GET /api/auth/me 304 in 27ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:44:46 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:51:12 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:51:14 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:51:22 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:51:27 PM [express] GET /api/auth/me 304 in 26ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:51:27 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 36ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] 3:51:27 PM [express] GET /api/learn/bookmarks/formulas 402 in 201ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 3:51:27 PM [express] GET /api/learn/bookmarks/keypoints 402 in 227ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 3:51:27 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:51:28 PM [express] GET /api/lms/bookmarks 304 in 73ms :: []
+[0] 3:51:28 PM [express] GET /api/questions 304 in 134ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 3:51:28 PM [express] POST /api/lms/sessions 201 in 183ms :: {"id":41,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 3:51:41 PM [express] POST /api/chapters/1/chat 200 in 7823ms :: {"answer":"Absolutely! Let's break i...
+[0] [SLOW] POST /api/chapters/1/chat took 7823ms
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 3:52:07 PM [express] PATCH /api/lms/sessions/41 400 in 192ms :: {"error":"value.toISOString is not a...
+[0] 3:52:07 PM [express] GET /api/topics 304 in 60ms :: [{"id":1,"subject":"Physics","classLevel":"Class...
+[0] New database connection established
+[0] New database connection established
+[0] 3:52:07 PM [express] GET /api/game/combo/6cd94ae5-8f9d-485d-96ee-202dd273ecd7/General 402 in 216ms :...
+[0] Error fetching questions: error: relation "question_tags" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\routes.ts:618:11) {
+[0]   length: 112,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '46',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 3:52:07 PM [express] GET /api/questions 500 in 313ms :: {"error":"relation \"question_tags\" does no...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 3:53:05 PM [express] GET /api/auth/me 304 in 190ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 3:53:36 PM [express] GET /api/auth/me 304 in 43ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:53:49 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:53:51 PM [express] GET /api/auth/me 304 in 32ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:54:02 PM [express] GET /api/auth/me 304 in 32ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:54:38 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:55:48 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 3:55:59 PM [express] GET /api/auth/me 304 in 34ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=154ms
+[0] 3:56:06 PM [express] GET /api/lms/library 304 in 173ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 3:56:11 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 3:56:11 PM [express] POST /api/lms/sessions 201 in 191ms :: {"id":42,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 3:57:42 PM [express] PATCH /api/lms/sessions/42 400 in 35ms :: {"error":"value.toISOString is not a ...
+[0] 3:57:43 PM [express] GET /api/topics 304 in 67ms :: [{"id":1,"subject":"Physics","classLevel":"Class...
+[0] New database connection established
+[0] 3:57:43 PM [express] GET /api/game/combo/6cd94ae5-8f9d-485d-96ee-202dd273ecd7/General 402 in 217ms :...
+[0] 4:00:26 PM [express] GET /api/auth/me 304 in 32ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:02:55 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:02:57 PM [express] GET /api/auth/me 304 in 35ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=155ms
+[0] 4:03:01 PM [express] GET /api/lms/library 304 in 160ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 4:03:03 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 4:03:03 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 36ms :: {"id":1,"subject":"Phy...
+[0] 4:03:03 PM [express] GET /api/lms/bookmarks 304 in 76ms :: []
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 4:03:04 PM [express] GET /api/learn/bookmarks/formulas 402 in 199ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 4:03:04 PM [express] GET /api/learn/bookmarks/keypoints 402 in 221ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 4:03:04 PM [express] GET /api/questions 304 in 242ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 4:03:04 PM [express] POST /api/lms/sessions 201 in 335ms :: {"id":43,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 4:03:45 PM [express] GET /api/auth/me 304 in 162ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[1] [2m4:04:06 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m4:04:20 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[0] 4:04:31 PM [express] GET /api/auth/me 304 in 27ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:05:02 PM [express] GET /api/auth/me 304 in 34ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:05:12 PM [express] GET /api/chapters/by-chapter/physics/11/2 304 in 36ms :: {"id":2,"subject":"Phy...
+[0] 4:05:12 PM [express] PATCH /api/lms/sessions/43 400 in 29ms :: {"error":"value.toISOString is not a ...
+[0] 4:05:13 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 4:05:13 PM [express] GET /api/questions 304 in 103ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] New database connection established
+[0] 4:05:13 PM [express] POST /api/lms/sessions 201 in 297ms :: {"id":44,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 4:05:29 PM [express] PATCH /api/lms/sessions/44 400 in 31ms :: {"error":"value.toISOString is not a ...
+[0] Analytics fetch failed: error: column "status" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\analytics-routes.ts:70:25) {
+[0]   length: 106,
+[0]   severity: 'ERROR',
+[0]   code: '42703',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '36',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '3716',
+[0]   routine: 'errorMissingColumn'
+[0] }
+[0] 4:05:29 PM [express] GET /api/analytics/student 500 in 184ms :: {"error":"Unable to load analytics r...
+[0] Database connection removed from pool
+[0] Analytics fetch failed: error: column "status" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\analytics-routes.ts:70:25) {
+[0]   length: 106,
+[0]   severity: 'ERROR',
+[0]   code: '42703',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '36',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '3716',
+[0]   routine: 'errorMissingColumn'
+[0] }
+[0] 4:05:30 PM [express] GET /api/analytics/student 500 in 178ms :: {"error":"Unable to load analytics r...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Analytics fetch failed: error: column "status" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\analytics-routes.ts:70:25) {
+[0]   length: 106,
+[0]   severity: 'ERROR',
+[0]   code: '42703',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '36',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '3716',
+[0]   routine: 'errorMissingColumn'
+[0] }
+[0] 4:05:32 PM [express] GET /api/analytics/student 500 in 382ms :: {"error":"Unable to load analytics r...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Error fetching chat threads: {
+[0]   error: error: relation "chat_threads" does not exist
+[0]       at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]       at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\chat-routes.ts:44:24) {
+[0]     length: 112,
+[0]     severity: 'ERROR',
+[0]     code: '42P01',
+[0]     detail: undefined,
+[0]     hint: undefined,
+[0]     position: '118',
+[0]     internalPosition: undefined,
+[0]     internalQuery: undefined,
+[0]     where: undefined,
+[0]     schema: undefined,
+[0]     table: undefined,
+[0]     column: undefined,
+[0]     dataType: undefined,
+[0]     constraint: undefined,
+[0]     file: 'parse_relation.c',
+[0]     line: '1449',
+[0]     routine: 'parserOpenTable'
+[0]   },
+[0]   correlationId: '26082f36-cd3f-4bd7-a9e5-8ea583f9baf8'
+[0] }
+[0] 4:05:35 PM [express] GET /api/chat/threads 500 in 229ms :: {"error":"Failed to load threads","correl...
+[0] Database connection removed from pool
+[0] 4:05:36 PM [express] GET /api/chat/health 200 in 2ms :: {"status":"ok","timestamp":"2025-12-25T10:35...
+[0] New database connection established
+[0] Error fetching chat threads: {
+[0]   error: error: relation "chat_threads" does not exist
+[0]       at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]       at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\chat-routes.ts:44:24) {
+[0]     length: 112,
+[0]     severity: 'ERROR',
+[0]     code: '42P01',
+[0]     detail: undefined,
+[0]     hint: undefined,
+[0]     position: '118',
+[0]     internalPosition: undefined,
+[0]     internalQuery: undefined,
+[0]     where: undefined,
+[0]     schema: undefined,
+[0]     table: undefined,
+[0]     column: undefined,
+[0]     dataType: undefined,
+[0]     constraint: undefined,
+[0]     file: 'parse_relation.c',
+[0]     line: '1449',
+[0]     routine: 'parserOpenTable'
+[0]   },
+[0]   correlationId: 'b2d6ab25-4f26-406b-b517-93bfa87a7c60'
+[0] }
+[0] 4:05:37 PM [express] GET /api/chat/threads 500 in 214ms :: {"error":"Failed to load threads","correl...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] Error fetching chat threads: {
+[0]   error: error: relation "chat_threads" does not exist
+[0]       at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]       at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]       at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\chat-routes.ts:44:24) {
+[0]     length: 112,
+[0]     severity: 'ERROR',
+[0]     code: '42P01',
+[0]     detail: undefined,
+[0]     hint: undefined,
+[0]     position: '118',
+[0]     internalPosition: undefined,
+[0]     internalQuery: undefined,
+[0]     where: undefined,
+[0]     schema: undefined,
+[0]     table: undefined,
+[0]     column: undefined,
+[0]     dataType: undefined,
+[0]     constraint: undefined,
+[0]     file: 'parse_relation.c',
+[0]     line: '1449',
+[0]     routine: 'parserOpenTable'
+[0]   },
+[0]   correlationId: 'b818d5c5-ac02-4670-8a32-d61f08e6f71c'
+[0] }
+[0] 4:05:38 PM [express] GET /api/chat/threads 500 in 226ms :: {"error":"Failed to load threads","correl...
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 4:05:46 PM [express] GET /api/stats/user/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 304 in 186ms :: {"tota...
+[0] 4:05:46 PM [express] GET /api/learn/continue-learning 402 in 68ms :: {"error":"PAYMENT_REQUIRED","me...
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 4:05:46 PM [express] GET /api/mentors/recommendations 304 in 181ms :: {"topRated":[{"id":1,"userId":...
+[0] 4:05:46 PM [express] GET /api/game/leaderboard 402 in 218ms :: {"error":"PAYMENT_REQUIRED","message"...
+[0] 4:05:46 PM [express] GET /api/game/leaderboard/rank/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 402 in 226m...
+[0] 4:05:56 PM [express] GET /api/topics 304 in 62ms :: [{"id":1,"subject":"Physics","classLevel":"Class...
+[0] 4:05:56 PM [express] GET /api/game/combo/6cd94ae5-8f9d-485d-96ee-202dd273ecd7/General 402 in 59ms ::...
+[0] 4:06:01 PM [express] GET /api/learn/continue-learning 402 in 71ms :: {"error":"PAYMENT_REQUIRED","me...
+[0] 4:06:02 PM [express] GET /api/game/leaderboard/rank/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 402 in 66ms...
+[0] 4:06:10 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 4:11:13 PM [express] GET /api/auth/me 304 in 193ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 4:13:15 PM [express] GET /api/auth/me 304 in 29ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:13:51 PM [express] GET /api/auth/me 304 in 35ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:13:58 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:00 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:06 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:07 PM [express] GET /api/auth/me 304 in 43ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:09 PM [express] GET /api/auth/me 304 in 35ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:20 PM [express] GET /api/auth/me 304 in 31ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 4:14:25 PM [express] GET /api/auth/me 304 in 32ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 66010,
+[0]     secretKey: 1372100557,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 16056244,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 67171,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 10,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 6:08:56 PM [express] GET /api/auth/me 304 in 390ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 77292,
+[0]     secretKey: 1801399787,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 23119400,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 86956,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 1,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 6:21:44 PM [express] GET /api/auth/me 304 in 232ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 6:21:53 PM [express] GET /api/auth/me 304 in 36ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 6:21:58 PM [express] GET /api/questions/preview 304 in 72ms :: {"questions":[{"id":1,"topicId":1,"qu...
+[0] 6:22:47 PM [express] GET /api/stats/user/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 304 in 48ms :: {"total...
+[0] 6:22:48 PM [express] GET /api/game/leaderboard/rank/6cd94ae5-8f9d-485d-96ee-202dd273ecd7 402 in 86ms...
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 6:22:48 PM [express] GET /api/mentors/recommendations 304 in 238ms :: {"topRated":[{"id":1,"userId":...
+[0] 6:22:48 PM [express] GET /api/game/leaderboard 402 in 253ms :: {"error":"PAYMENT_REQUIRED","message"...
+[0] 6:22:48 PM [express] GET /api/learn/continue-learning 402 in 272ms :: {"error":"PAYMENT_REQUIRED","m...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=403ms
+[0] 6:22:48 PM [express] GET /api/lms/library 304 in 429ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 6:24:40 PM [express] GET /api/auth/me 304 in 164ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 6:24:44 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 42ms :: {"id":1,"subject":"Phy...
+[0] 6:24:45 PM [express] GET /api/learn/bookmarks/keypoints 402 in 62ms :: {"error":"PAYMENT_REQUIRED","...
+[0] New database connection established
+[0] 6:24:45 PM [express] GET /api/learn/bookmarks/formulas 402 in 214ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 6:24:45 PM [express] GET /api/chapters/chat/health 304 in 5ms :: {"configured":true,"model":"gpt-4o-...
+[0] 6:24:45 PM [express] GET /api/lms/bookmarks 304 in 66ms :: []
+[0] 6:24:45 PM [express] GET /api/questions 304 in 119ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] New database connection established
+[0] 6:24:45 PM [express] POST /api/lms/sessions 201 in 332ms :: {"id":45,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 6:25:04 PM [express] GET /api/auth/me 304 in 28ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 6:25:05 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 33ms :: {"id":1,"subject":"Phy...
+[0] 6:25:05 PM [express] GET /api/learn/bookmarks/keypoints 402 in 54ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 6:25:05 PM [express] GET /api/learn/bookmarks/formulas 402 in 62ms :: {"error":"PAYMENT_REQUIRED","m...
+[0] 6:25:06 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 6:25:06 PM [express] GET /api/lms/bookmarks 304 in 62ms :: []
+[0] 6:25:06 PM [express] GET /api/questions 304 in 121ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 6:25:06 PM [express] POST /api/lms/sessions 201 in 176ms :: {"id":46,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 6:46:07 PM [express] GET /api/auth/me 304 in 221ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[1] [2m6:52:32 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m6:52:54 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[0] Database connection removed from pool
+[0] Unexpected database pool error: Error: Connection terminated unexpectedly
+[0]     at Connection.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\client.js:136:73)
+[0]     at Object.onceWrapper (node:events:622:28)
+[0]     at Connection.emit (node:events:508:28)
+[0]     at Socket.<anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg\lib\connection.js:62:12)
+[0]     at Socket.emit (node:events:508:28)
+[0]     at TCP.<anonymous> (node:net:346:12) {
+[0]   client: Client {
+[0]     _events: [Object: null prototype] { error: [Function (anonymous)] },
+[0]     _eventsCount: 1,
+[0]     _maxListeners: undefined,
+[0]     connectionParameters: ConnectionParameters {
+[0]       user: 'postgres',
+[0]       database: 'postgres',
+[0]       port: 8001,
+[0]       host: '82.25.104.62',
+[0]       binary: false,
+[0]       options: undefined,
+[0]       ssl: false,
+[0]       client_encoding: '',
+[0]       replication: undefined,
+[0]       isDomainSocket: false,
+[0]       application_name: undefined,
+[0]       fallback_application_name: undefined,
+[0]       statement_timeout: 60000,
+[0]       lock_timeout: false,
+[0]       idle_in_transaction_session_timeout: false,
+[0]       query_timeout: 60000,
+[0]       connect_timeout: 10,
+[0]       keepalives: 1,
+[0]       keepalives_idle: 10
+[0]     },
+[0]     user: 'postgres',
+[0]     database: 'postgres',
+[0]     port: 8001,
+[0]     host: '82.25.104.62',
+[0]     replication: undefined,
+[0]     _Promise: [Function: Promise],
+[0]     _types: TypeOverrides { _types: [Object], text: {}, binary: {} },
+[0]     _ending: true,
+[0]     _ended: true,
+[0]     _connecting: false,
+[0]     _connected: true,
+[0]     _connectionError: false,
+[0]     _queryable: false,
+[0]     enableChannelBinding: false,
+[0]     connection: Connection {
+[0]       _events: [Object: null prototype],
+[0]       _eventsCount: 23,
+[0]       _maxListeners: undefined,
+[0]       stream: [Socket],
+[0]       _keepAlive: true,
+[0]       _keepAliveInitialDelayMillis: 10000,
+[0]       lastBuffer: false,
+[0]       parsedStatements: {},
+[0]       ssl: false,
+[0]       _ending: true,
+[0]       _emitMessage: false,
+[0]       _connecting: true,
+[0]       Symbol(shapeMode): false,
+[0]       Symbol(kCapture): false
+[0]     },
+[0]     queryQueue: [],
+[0]     binary: false,
+[0]     processID: 80876,
+[0]     secretKey: -709261072,
+[0]     ssl: false,
+[0]     _connectionTimeoutMillis: 10000,
+[0]     _connectionCallback: null,
+[0]     connectionTimeoutHandle: Timeout {
+[0]       _idleTimeout: -1,
+[0]       _idlePrev: null,
+[0]       _idleNext: null,
+[0]       _idleStart: 25350961,
+[0]       _onTimeout: null,
+[0]       _timerArgs: undefined,
+[0]       _repeat: null,
+[0]       _destroyed: true,
+[0]       Symbol(refed): false,
+[0]       Symbol(kHasPrimitive): false,
+[0]       Symbol(asyncId): 94874,
+[0]       Symbol(triggerId): 0,
+[0]       Symbol(kAsyncContextFrame): undefined
+[0]     },
+[0]     saslSession: null,
+[0]     release: [Function (anonymous)],
+[0]     activeQuery: null,
+[0]     readyForQuery: true,
+[0]     hasExecuted: true,
+[0]     _poolUseCount: 1,
+[0]     Symbol(shapeMode): false,
+[0]     Symbol(kCapture): false
+[0]   }
+[0] }
+[0] New database connection established
+[0] 8:53:26 PM [express] GET /api/auth/me 304 in 174ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 8:53:28 PM [express] PATCH /api/lms/sessions/46 400 in 29ms :: {"error":"value.toISOString is not a ...
+[0] [library] user=6cd94ae5-8f9d-485d-96ee-202dd273ecd7 rows=98 limit=200 offset=0 progress=false duration=158ms
+[0] 8:53:28 PM [express] GET /api/lms/library 304 in 169ms :: [{"id":64,"subject":"Biology","classLevel"...
+[0] 8:53:33 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 8:53:33 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 35ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] New database connection established
+[0] 8:53:33 PM [express] GET /api/learn/bookmarks/formulas 402 in 178ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 8:53:33 PM [express] GET /api/learn/bookmarks/keypoints 402 in 182ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 8:53:33 PM [express] GET /api/lms/bookmarks 304 in 188ms :: []
+[0] 8:53:33 PM [express] GET /api/questions 304 in 225ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 8:53:34 PM [express] POST /api/lms/sessions 201 in 180ms :: {"id":47,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 8:53:46 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 8:53:46 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 34ms :: {"id":1,"subject":"Phy...
+[0] 8:53:46 PM [express] GET /api/learn/bookmarks/keypoints 402 in 56ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 8:53:46 PM [express] GET /api/learn/bookmarks/formulas 402 in 56ms :: {"error":"PAYMENT_REQUIRED","m...
+[0] 8:53:47 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 8:53:47 PM [express] GET /api/lms/bookmarks 304 in 61ms :: []
+[0] 8:53:48 PM [express] GET /api/questions 304 in 108ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 8:53:48 PM [express] POST /api/lms/sessions 201 in 165ms :: {"id":48,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 8:54:22 PM [express] GET /api/auth/me 304 in 1254ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd2...
+[0] [SLOW] GET /api/auth/me took 1254ms
+[0] 9:00:42 PM [express] GET /api/chapters/by-chapter/physics/11/1 200 in 355ms :: {"id":1,"subject":"Ph...
+[0] 9:02:01 PM [express] GET /api/auth/me 304 in 30ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 9:02:08 PM [express] GET /api/auth/me 304 in 322ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 9:02:08 PM [express] GET /api/chapters/by-chapter/physics/11/1 200 in 132ms :: {"id":1,"subject":"Ph...
+[0] New database connection established
+[0] New database connection established
+[0] 9:02:08 PM [express] GET /api/learn/bookmarks/formulas 402 in 248ms :: {"error":"PAYMENT_REQUIRED","...
+[0] 9:02:08 PM [express] GET /api/learn/bookmarks/keypoints 402 in 253ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 9:02:09 PM [express] GET /api/chapters/chat/health 304 in 3ms :: {"configured":true,"model":"gpt-4o-...
+[0] 9:02:09 PM [express] GET /api/lms/bookmarks 304 in 79ms :: []
+[0] 9:02:09 PM [express] GET /api/questions 304 in 121ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 9:02:09 PM [express] POST /api/lms/sessions 201 in 160ms :: {"id":49,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[1] [2m9:10:11 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/visuals/physics/PhysicsScaleOverview.tsx, /src/index.css[22m
+[0] New database connection established
+[0] 9:10:33 PM [express] GET /api/auth/me 304 in 160ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[1] [2m9:16:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[1] [2m9:16:26 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[0] 9:16:32 PM [express] GET /api/chapters/chat/health 304 in 2ms :: {"configured":true,"model":"gpt-4o-...
+[0] 9:16:32 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 39ms :: {"id":1,"subject":"Phy...
+[0] 9:16:33 PM [express] GET /api/lms/bookmarks 304 in 60ms :: []
+[0] New database connection established
+[0] 9:16:33 PM [express] PATCH /api/lms/sessions/49 400 in 29ms :: {"error":"value.toISOString is not a ...
+[0] New database connection established
+[0] 9:16:33 PM [express] GET /api/learn/bookmarks/keypoints 402 in 206ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 9:16:33 PM [express] GET /api/learn/bookmarks/formulas 402 in 223ms :: {"error":"PAYMENT_REQUIRED","...
+[0] New database connection established
+[0] New database connection established
+[0] 9:16:33 PM [express] POST /api/lms/sessions 201 in 330ms :: {"id":50,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 9:16:33 PM [express] GET /api/questions 304 in 746ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 9:19:06 PM [express] GET /api/auth/me 304 in 172ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 9:19:11 PM [express] GET /api/auth/me 304 in 27ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 9:19:12 PM [express] GET /api/chapters/by-chapter/physics/11/1 304 in 38ms :: {"id":1,"subject":"Phy...
+[0] New database connection established
+[0] 9:19:12 PM [express] GET /api/learn/bookmarks/keypoints 402 in 191ms :: {"error":"PAYMENT_REQUIRED",...
+[0] 9:19:13 PM [express] GET /api/chapters/chat/health 304 in 1ms :: {"configured":true,"model":"gpt-4o-...
+[0] 9:19:13 PM [express] POST /api/lms/sessions 201 in 173ms :: {"id":51,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 9:19:13 PM [express] GET /api/lms/bookmarks 304 in 58ms :: []
+[0] New database connection established
+[0] 9:19:13 PM [express] GET /api/questions 304 in 108ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 9:19:13 PM [express] GET /api/learn/bookmarks/formulas 402 in 1703ms :: {"error":"PAYMENT_REQUIRED",...
+[0] [SLOW] GET /api/learn/bookmarks/formulas took 1703ms
+[0] 9:19:30 PM [express] PATCH /api/lms/sessions/51 400 in 35ms :: {"error":"value.toISOString is not a ...
+[0] 9:19:30 PM [express] GET /api/chapters/by-chapter/physics/11/2 200 in 46ms :: {"id":2,"subject":"Phy...
+[0] 9:19:31 PM [express] GET /api/questions 304 in 106ms :: {"questions":[],"total":0,"page":1,"limit":1...
+[0] 9:19:31 PM [express] POST /api/lms/sessions 201 in 689ms :: {"id":52,"userId":"6cd94ae5-8f9d-485d-96...
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] New database connection established
+[0] 9:20:53 PM [express] GET /api/chapters/by-chapter/physics/11/2 200 in 180ms :: {"id":2,"subject":"Ph...
+[0] 9:22:18 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] 9:22:21 PM [express] PATCH /api/lms/sessions/52 400 in 32ms :: {"error":"value.toISOString is not a ...
+[0] 9:22:21 PM [express] POST /api/lms/sessions 201 in 171ms :: {"id":53,"userId":"6cd94ae5-8f9d-485d-96...
+[0] 9:22:37 PM [express] PATCH /api/lms/sessions/53 400 in 30ms :: {"error":"value.toISOString is not a ...
+[0] New database connection established
+[0] New database connection established
+[0] 9:22:38 PM [express] GET /api/topics 304 in 216ms :: [{"id":1,"subject":"Physics","classLevel":"Clas...
+[0] 9:22:38 PM [express] GET /api/game/combo/6cd94ae5-8f9d-485d-96ee-202dd273ecd7/General 402 in 228ms :...
+[0] New database connection established
+[0] Error fetching questions: error: relation "question_tags" does not exist
+[0]     at C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\node_modules\src\node-postgres\session.ts:104:19)
+[0]     at async <anonymous> (C:\Users\Ekta\Downloads\ZeroPage\ZeroPage\server\routes.ts:618:11) {
+[0]   length: 112,
+[0]   severity: 'ERROR',
+[0]   code: '42P01',
+[0]   detail: undefined,
+[0]   hint: undefined,
+[0]   position: '46',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_relation.c',
+[0]   line: '1449',
+[0]   routine: 'parserOpenTable'
+[0] }
+[0] 9:22:39 PM [express] GET /api/questions 500 in 1583ms :: {"error":"relation \"question_tags\" does n...
+[0] [SLOW] GET /api/questions took 1583ms
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[0] Database connection removed from pool
+[1] [2m9:30:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m9:30:30 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[0] New database connection established
+[0] 9:41:45 PM [express] GET /api/auth/me 304 in 174ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd27...
+[0] 9:49:44 PM [express] GET /api/auth/me 304 in 33ms :: {"user":{"id":"6cd94ae5-8f9d-485d-96ee-202dd273...
+[0] npm run dev:backend exited with code 4294967295
+[1] [2m10:10:46 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:10:53 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/topics[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:10:53 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:10:54 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/topics[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:10:55 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/topics[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:11:03 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:11:05 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:11:07 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:11:09 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:12:45 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m10:33:22 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m10:33:33 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m10:33:50 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m10:48:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m10:48:20 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css, /src/pages/Home.tsx, /src/pages/Leaderboard.tsx, /src/pages/Achievements.tsx, /src/pages/MockTest.tsx, /src/pages/NEETBlast.tsx, /src/pages/ChapterViewer.tsx, /src/pages/BillingStatus.tsx, /src/pages/Pricing.tsx, /src/pages/MockTests.tsx, /src/pages/Chat.tsx, /src/pages/AdminAnnouncements.tsx, /src/pages/AdminDashboard.tsx, /src/pages/Library.tsx, /src/components/Header.tsx, /src/pages/ClassWiseContent.tsx, /src/pages/Signup.tsx, /src/pages/Profile.tsx, /src/pages/MyBookings.tsx, /src/pages/MockTestResults.tsx, /src/pages/MentorLmsAutomation.tsx, /src/pages/QuestionBank.tsx, /src/pages/Login.tsx, /src/pages/MentorDashboard.tsx, /src/pages/MentorDiscovery.tsx, /src/pages/AdminUsers.tsx, /src/pages/Explore.tsx, /src/pages/Practice.tsx, /src/pages/Community.tsx, /src/pages/AdminContentManager.tsx, /src/components/mentors/BookingModal.tsx, /src/components/ChapterChatbot.tsx, /src/components/mentors/ReviewModal.tsx[22m
+[1] [2m10:53:57 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m10:54:11 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m11:12:56 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:13:14 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:13:25 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:13:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:13:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:14:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Practice.tsx, /src/index.css[22m
+[1] [2m11:18:03 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m11:42:51 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m11:43:03 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/visualizations/VisualizationRegistry.tsx, /src/index.css[22m
+[1] [2m11:49:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChapterViewer.tsx, /src/index.css[22m
+[1] [2m12:15:11 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m1:47:30 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m1:52:29 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m1:57:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m2:08:07 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m2:19:12 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/visualizations/VisualizationRegistry.tsx[22m
+[1] [2m2:16:55 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Header.tsx, /src/index.css[22m
+[1] [2m2:44:33 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/GameLobbyDashboard.tsx, /src/pages/Biology.tsx, /src/pages/Class12.tsx, /src/pages/ClassWiseContent.tsx, /src/pages/Explore.tsx[22m
+[1] [2m2:44:43 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/GameLobbyDashboard.tsx, /src/index.css[22m
+[1] [2m2:44:53 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Explore.tsx, /src/index.css[22m
+[1] [2m2:45:09 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ClassWiseContent.tsx, /src/index.css[22m
+[1] [2m2:46:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Class12.tsx, /src/index.css[22m
+[1] [2m2:47:04 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Biology.tsx, /src/index.css[22m
+[1] [2m4:40:35 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:04 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:10 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:12 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:23 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:44 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:42:48 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:43:07 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:43:18 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:44:40 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:44:41 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:45:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:45:22 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:45:32 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:22 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:25 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:45 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:45 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:46 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:46 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:50 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mentors[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:51 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mentors[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:52 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mentors[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:55 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:56 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:46:57 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/questions/preview[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:47:23 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:52:19 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:52:21 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/login[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+[1] [2m4:53:28 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/auth/me[39m
+[1] AggregateError [ECONNREFUSED]: 
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)

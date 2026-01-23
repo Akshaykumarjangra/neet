@@ -10,10 +10,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   ChevronLeft,
   Trophy,
+  Crown,
   Target,
   Clock,
   CheckCircle2,
@@ -25,11 +26,26 @@ import {
   TrendingUp,
   Award,
   Zap,
+  Users,
+  PartyPopper,
 } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import type { Question, MockTest } from "@shared/schema";
 import { useLocation, useRoute } from "wouter";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SubjectStats {
   name: string;
@@ -39,21 +55,76 @@ interface SubjectStats {
   total: number;
   score: number;
   maxScore: number;
-  color: string;
 }
 
-interface TestResultData {
-  test: MockTest;
-  questions: Question[];
-  answers: Record<number, string>;
-  timeTaken: number;
-  totalTime: number;
+interface MockExamReviewItem {
+  question: {
+    id: number;
+    stem: string;
+    subject?: string | null;
+    topic?: string | null;
+    subtopic?: string | null;
+    difficulty?: string | null;
+    explanation?: string | null;
+    options: Array<{
+      id: number;
+      label: string;
+      text: string;
+      mediaRef?: string | null;
+      isCorrect?: boolean;
+    }>;
+    correctOptionIds: number[];
+  };
+  response: {
+    selectedOptionId: number | null;
+    isCorrect: boolean | null;
+    timeSpentSeconds: number | null;
+    flagged: boolean;
+  } | null;
 }
 
-function getSubjectFromTopicId(topicId: number): string {
-  if (topicId >= 1 && topicId <= 100) return "Physics";
-  if (topicId >= 101 && topicId <= 200) return "Chemistry";
-  return "Biology";
+interface MockExamReviewResponse {
+  attempt: {
+    id: number;
+    score: number | null;
+    correctCount: number | null;
+    wrongCount: number | null;
+    unansweredCount: number | null;
+    submittedAt?: string | null;
+  };
+  items: MockExamReviewItem[];
+}
+
+interface MockExamAnalyticsResponse {
+  rank: number;
+  percentile: number;
+  totalParticipants: number;
+  totals: {
+    totalQuestions: number;
+    correct: number;
+    wrong: number;
+    unanswered: number;
+    accuracy: number;
+    totalTimeSeconds: number;
+  };
+  topperStats: {
+    score: number;
+    timeTaken: number;
+    accuracy: number;
+  } | null;
+  averageStats: {
+    score: number;
+    timeTaken: number;
+  };
+  bySubject: Array<{
+    subject: string;
+    correct: number;
+    wrong: number;
+    unanswered: number;
+    totalQuestions: number;
+    accuracy: number;
+    totalTimeSeconds: number;
+  }>;
 }
 
 export default function MockTestResults() {
@@ -62,106 +133,111 @@ export default function MockTestResults() {
     | [boolean, { id: string } | null]
     | null;
   const testId = routeMatch?.[1]?.id ?? "";
+  const paperId = Number(testId);
+  const hasValidPaperId = Number.isInteger(paperId);
 
-  const { data: testData, isLoading, error: testError } = useQuery<TestResultData>({
-    queryKey: ['/api/mock-tests', testId, 'results'],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/mock-tests/${testId}`, {
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to fetch mock test: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Ensure we have the expected format
-        if (!data || !data.test) {
-          throw new Error('Invalid test data received');
-        }
-        
-        // Ensure questions array exists
-        if (!Array.isArray(data.questions)) {
-          console.warn('Questions array missing or invalid, using empty array');
-          data.questions = [];
-        }
-      
-      const storedAnswers = localStorage.getItem(`mocktest_${testId}_answers`);
-      const storedTimeTaken = localStorage.getItem(`mocktest_${testId}_timeTaken`);
-      
-      return {
-          test: data.test,
-          questions: data.questions || [],
-        answers: storedAnswers ? JSON.parse(storedAnswers) : {},
-          timeTaken: storedTimeTaken ? parseInt(storedTimeTaken) : (data.test.durationMinutes || 180) * 60,
-          totalTime: (data.test.durationMinutes || 180) * 60,
-      } as TestResultData;
-      } catch (err: any) {
-        console.error('Error fetching mock test results:', err);
-        throw err;
-      }
-    },
-    enabled: !!testId,
+  const attemptIdFromQuery = Number(new URLSearchParams(window.location.search).get("attemptId"));
+  const storedAttemptId = Number(localStorage.getItem(`mock_exam_attempt_${paperId}`));
+  const attemptId = Number.isInteger(attemptIdFromQuery)
+    ? attemptIdFromQuery
+    : Number.isInteger(storedAttemptId)
+      ? storedAttemptId
+      : null;
+
+  const cachedPaperMeta = useMemo(() => {
+    if (!hasValidPaperId) return null;
+    const raw = localStorage.getItem(`mock_exam_paper_${paperId}`);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as { title?: string; durationMinutes?: number; totalMarks?: number };
+    } catch {
+      return null;
+    }
+  }, [paperId, hasValidPaperId]);
+
+  const { data: paperData } = useQuery<{ paper: { title: string; durationMinutes: number; totalMarks?: number } }>({
+    queryKey: ["/api/mock-exams/papers", paperId],
+    queryFn: async () => apiRequest("GET", `/api/mock-exams/papers/${paperId}`),
+    enabled: hasValidPaperId && !cachedPaperMeta,
   });
 
+  const paperMeta = cachedPaperMeta ?? paperData?.paper ?? null;
+
+  const {
+    data: reviewData,
+    isLoading: reviewLoading,
+    error: reviewError,
+  } = useQuery<MockExamReviewResponse>({
+    queryKey: ["/api/mock-exams/attempts", attemptId, "review"],
+    queryFn: async () => apiRequest("GET", `/api/mock-exams/attempts/${attemptId}/review`),
+    enabled: !!attemptId,
+  });
+
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading,
+    error: analyticsError,
+  } = useQuery<MockExamAnalyticsResponse>({
+    queryKey: ["/api/mock-exams/attempts", attemptId, "analytics"],
+    queryFn: async () => apiRequest("GET", `/api/mock-exams/attempts/${attemptId}/analytics`),
+    enabled: !!attemptId,
+  });
+
+  const isLoading = reviewLoading || analyticsLoading;
+  const testError = reviewError || analyticsError;
+
   const results = useMemo(() => {
-    if (!testData) return null;
+    if (!reviewData && !analyticsData) return null;
 
-    const { questions, answers } = testData;
-    let totalCorrect = 0;
-    let totalIncorrect = 0;
-    let totalUnanswered = 0;
+    const totalQuestions = analyticsData?.totals?.totalQuestions ?? reviewData?.items.length ?? 0;
+    const totalCorrect = analyticsData?.totals?.correct ?? reviewData?.attempt?.correctCount ?? 0;
+    const totalIncorrect = analyticsData?.totals?.wrong ?? reviewData?.attempt?.wrongCount ?? 0;
+    const totalUnanswered = analyticsData?.totals?.unanswered ?? reviewData?.attempt?.unansweredCount ?? 0;
+    const totalScore = reviewData?.attempt?.score ?? (totalCorrect * 4 - totalIncorrect);
+    const maxScore = paperMeta?.totalMarks ?? totalQuestions * 4;
+    const percentage = maxScore ? Math.round((Math.max(0, totalScore) / maxScore) * 100) : 0;
+    const accuracy = analyticsData?.totals?.accuracy
+      ? Math.round(analyticsData.totals.accuracy * 100)
+      : totalCorrect + totalIncorrect > 0
+        ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100)
+        : 0;
+    const questionsAttempted = totalCorrect + totalIncorrect;
+    const timeTaken = analyticsData?.totals?.totalTimeSeconds ?? 0;
+    const totalTime = paperMeta?.durationMinutes ? paperMeta.durationMinutes * 60 : 0;
 
-    const subjectMap: Record<string, SubjectStats> = {
-      Physics: { name: "Physics", correct: 0, incorrect: 0, unanswered: 0, total: 0, score: 0, maxScore: 0, color: "blue" },
-      Chemistry: { name: "Chemistry", correct: 0, incorrect: 0, unanswered: 0, total: 0, score: 0, maxScore: 0, color: "green" },
-      Biology: { name: "Biology", correct: 0, incorrect: 0, unanswered: 0, total: 0, score: 0, maxScore: 0, color: "purple" },
-    };
+    const subjects: SubjectStats[] = (analyticsData?.bySubject || []).map((subject) => ({
+      name: subject.subject,
+      correct: subject.correct,
+      incorrect: subject.wrong,
+      unanswered: subject.unanswered,
+      total: subject.totalQuestions,
+      score: subject.correct * 4 - subject.wrong,
+      maxScore: subject.totalQuestions * 4,
+    }));
 
-    const questionResults = questions.map((question, index) => {
-      const userAnswer = answers[index];
-      const isCorrect = userAnswer === question.correctAnswer;
-      const isAttempted = !!userAnswer;
-      const subject = getSubjectFromTopicId(question.topicId);
-
-      subjectMap[subject].total++;
-      subjectMap[subject].maxScore += 4;
-
-      if (isAttempted) {
-        if (isCorrect) {
-          totalCorrect++;
-          subjectMap[subject].correct++;
-          subjectMap[subject].score += 4;
-        } else {
-          totalIncorrect++;
-          subjectMap[subject].incorrect++;
-          subjectMap[subject].score -= 1;
-        }
-      } else {
-        totalUnanswered++;
-        subjectMap[subject].unanswered++;
-      }
+    const questionResults = (reviewData?.items || []).map((item, index) => {
+      const selectedOptionId = item.response?.selectedOptionId ?? null;
+      const isCorrect = item.response?.isCorrect === true;
+      const isAttempted = selectedOptionId != null;
+      const subject = item.question.subject || "Unknown";
+      const selectedLabel = selectedOptionId
+        ? item.question.options.find((opt) => opt.id === selectedOptionId)?.label ?? String(selectedOptionId)
+        : "";
+      const correctLabels = item.question.correctOptionIds
+        .map((id) => item.question.options.find((opt) => opt.id === id)?.label ?? String(id))
+        .join(", ");
 
       return {
-        question,
+        question: item.question,
         index,
-        userAnswer,
+        selectedOptionId,
         isCorrect,
         isAttempted,
         subject,
+        selectedLabel,
+        correctLabels,
       };
     });
-
-    const totalScore = totalCorrect * 4 - totalIncorrect * 1;
-    const maxScore = 720;
-    const percentage = Math.round((totalScore / maxScore) * 100);
-    const accuracy = totalCorrect + totalIncorrect > 0
-      ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100)
-      : 0;
-    const questionsAttempted = totalCorrect + totalIncorrect;
 
     return {
       totalCorrect,
@@ -172,14 +248,14 @@ export default function MockTestResults() {
       percentage: Math.max(0, percentage),
       accuracy,
       questionsAttempted,
-      totalQuestions: questions.length,
-      subjects: Object.values(subjectMap),
+      totalQuestions,
+      subjects,
       questionResults,
-      timeTaken: testData.timeTaken,
-      totalTime: testData.totalTime,
-      averageTimePerQuestion: Math.round(testData.timeTaken / (questionsAttempted || 1)),
+      timeTaken,
+      totalTime,
+      averageTimePerQuestion: Math.round(timeTaken / (questionsAttempted || 1)),
     };
-  }, [testData]);
+  }, [reviewData, analyticsData, paperMeta]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -206,8 +282,10 @@ export default function MockTestResults() {
   };
 
   const handleRetakeTest = () => {
-    localStorage.removeItem(`mocktest_${testId}_answers`);
-    localStorage.removeItem(`mocktest_${testId}_timeTaken`);
+    if (hasValidPaperId) {
+      localStorage.removeItem(`mock_exam_attempt_${paperId}`);
+      sessionStorage.removeItem(`mock_exam_start_${paperId}`);
+    }
     setLocation(`/mock-test/${testId}`);
   };
 
@@ -224,7 +302,7 @@ export default function MockTestResults() {
     );
   }
 
-  if (testError || !testData) {
+  if (!attemptId || testError || !reviewData) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -235,7 +313,9 @@ export default function MockTestResults() {
               </div>
               <h3 className="text-xl font-semibold">Unable to Load Results</h3>
               <p className="text-muted-foreground">
-                {testError instanceof Error ? testError.message : 'Failed to load test results. Please try again.'}
+                {testError instanceof Error
+                  ? testError.message
+                  : "Missing attempt details for this test. Please retake the test."}
               </p>
               <div className="flex gap-2 justify-center">
                 <Button onClick={() => setLocation('/mock-tests')} variant="outline">
@@ -292,7 +372,7 @@ export default function MockTestResults() {
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2" data-testid="text-results-title">Test Results</h1>
-            <p className="text-muted-foreground" data-testid="text-test-name">{testData.test.title}</p>
+            <p className="text-muted-foreground" data-testid="text-test-name">{paperMeta?.title || "Mock Exam"}</p>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3 mb-8">
@@ -312,7 +392,7 @@ export default function MockTestResults() {
                     out of {results.maxScore}
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-4">
-                    <Badge 
+                    <Badge
                       variant={results.percentage >= 60 ? "default" : "secondary"}
                       className="text-lg px-4 py-1"
                       data-testid="badge-percentage"
@@ -325,38 +405,150 @@ export default function MockTestResults() {
               </CardContent>
             </Card>
 
+            <Card className="lg:col-span-1 border-2 bg-indigo-500/5 border-indigo-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Crown className="h-5 w-5 text-indigo-500" />
+                  Your Rank
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <div className="text-5xl font-bold mb-2 text-indigo-500" data-testid="text-rank">
+                    #{analyticsData?.rank ?? "-"}
+                  </div>
+                  <div className="text-lg text-muted-foreground mb-4">
+                    Top {analyticsData?.percentile ?? 0}%ile
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Badge variant="outline" className="px-3">
+                      <Users className="h-3 w-3 mr-1" />
+                      {analyticsData?.totalParticipants ?? 0} Students
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Avg Score: {Math.round(analyticsData?.averageStats?.score || 0)}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-1">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Target className="h-5 w-5" />
+                  Topper Comparison
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[180px] w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: 'You', score: results.totalScore, fill: '#6366f1' },
+                        { name: 'Avg', score: analyticsData?.averageStats?.score || 0, fill: '#94a3b8' },
+                        { name: 'Top', score: analyticsData?.topperStats?.score || 0, fill: '#22c55e' },
+                      ]}
+                      margin={{ top: 5, right: 5, bottom: 5, left: -20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        cursor={{ fill: 'transparent' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={32} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="lg:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <BarChart3 className="h-5 w-5" />
-                  Quick Summary
+                  Performance Visuals
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-green-600" data-testid="text-correct-count">
-                      {results.totalCorrect}
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                  {/* Donut Chart - Question Status */}
+                  <div className="h-[250px] w-full relative">
+                    <h4 className="absolute top-0 left-0 text-sm font-medium text-muted-foreground z-10">Breakdown</h4>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Correct', value: results.totalCorrect, color: '#22c55e' },
+                            { name: 'Incorrect', value: results.totalIncorrect, color: '#ef4444' },
+                            { name: 'Unanswered', value: results.totalUnanswered, color: '#94a3b8' },
+                          ]}
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          <Cell key="cell-0" fill="#22c55e" />
+                          <Cell key="cell-1" fill="#ef4444" />
+                          <Cell key="cell-2" fill="#94a3b8" />
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ borderRadius: '8px' }}
+                          formatter={(value: number, name: string) => [`${value} Questions`, name]}
+                        />
+                        <Legend verticalAlign="bottom" height={36} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-4">
+                      <div className="text-center">
+                        <span className="text-2xl font-bold">{results.questionsAttempted}</span>
+                        <p className="text-xs text-muted-foreground">Attempted</p>
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Correct</div>
-                    <div className="text-xs text-green-600 mt-1">+{results.totalCorrect * 4} marks</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <XCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-red-600" data-testid="text-incorrect-count">
-                      {results.totalIncorrect}
+
+                  {/* Summary Stats Grid (Mini) */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-500/20 rounded-full">
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-green-700">{results.totalCorrect}</p>
+                          <p className="text-xs text-green-600">Correct</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-mono font-medium text-green-700">+{results.totalCorrect * 4}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">Incorrect</div>
-                    <div className="text-xs text-red-600 mt-1">-{results.totalIncorrect} marks</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-gray-500/10 border border-gray-500/20">
-                    <MinusCircle className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-gray-600" data-testid="text-unanswered-count">
-                      {results.totalUnanswered}
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-red-500/20 rounded-full">
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-red-700">{results.totalIncorrect}</p>
+                          <p className="text-xs text-red-600">Incorrect</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-mono font-medium text-red-700">-{results.totalIncorrect}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">Unanswered</div>
-                    <div className="text-xs text-gray-600 mt-1">0 marks</div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-500/10 border border-gray-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gray-500/20 rounded-full">
+                          <MinusCircle className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-gray-700">{results.totalUnanswered}</p>
+                          <p className="text-xs text-gray-600">Unanswered</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-mono font-medium text-gray-700">0</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -383,7 +575,7 @@ export default function MockTestResults() {
                     </div>
                     <div className="flex gap-1 h-6 rounded-lg overflow-hidden bg-muted">
                       {subject.correct > 0 && (
-                        <div 
+                        <div
                           className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
                           style={{ width: `${(subject.correct / subject.total) * 100}%` }}
                         >
@@ -391,7 +583,7 @@ export default function MockTestResults() {
                         </div>
                       )}
                       {subject.incorrect > 0 && (
-                        <div 
+                        <div
                           className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
                           style={{ width: `${(subject.incorrect / subject.total) * 100}%` }}
                         >
@@ -399,7 +591,7 @@ export default function MockTestResults() {
                         </div>
                       )}
                       {subject.unanswered > 0 && (
-                        <div 
+                        <div
                           className="bg-gray-400 flex items-center justify-center text-xs text-white font-medium"
                           style={{ width: `${(subject.unanswered / subject.total) * 100}%` }}
                         >
@@ -481,9 +673,9 @@ export default function MockTestResults() {
                     <div className="text-2xl font-bold" data-testid="text-attempted">
                       {results.questionsAttempted}/{results.totalQuestions}
                     </div>
-                    <Progress 
-                      value={(results.questionsAttempted / results.totalQuestions) * 100} 
-                      className="h-2 mt-2" 
+                    <Progress
+                      value={(results.questionsAttempted / results.totalQuestions) * 100}
+                      className="h-2 mt-2"
                     />
                   </div>
                 </div>
@@ -504,14 +696,14 @@ export default function MockTestResults() {
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                 {results.questionResults.map((result, idx) => (
-                  <AccordionItem 
-                    key={result.index} 
+                  <AccordionItem
+                    key={result.index}
                     value={`question-${result.index}`}
                     className={cn(
                       "border rounded-lg mb-2 px-4",
-                      result.isAttempted 
-                        ? result.isCorrect 
-                          ? "border-green-500/30 bg-green-500/5" 
+                      result.isAttempted
+                        ? result.isCorrect
+                          ? "border-green-500/30 bg-green-500/5"
                           : "border-red-500/30 bg-red-500/5"
                         : "border-gray-500/30 bg-gray-500/5"
                     )}
@@ -521,9 +713,9 @@ export default function MockTestResults() {
                       <div className="flex items-center gap-3 text-left w-full">
                         <div className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                          result.isAttempted 
-                            ? result.isCorrect 
-                              ? "bg-green-500 text-white" 
+                          result.isAttempted
+                            ? result.isCorrect
+                              ? "bg-green-500 text-white"
                               : "bg-red-500 text-white"
                             : "bg-gray-400 text-white"
                         )}>
@@ -545,7 +737,7 @@ export default function MockTestResults() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                            {result.question.questionText.substring(0, 100)}...
+                            {result.question.stem.substring(0, 100)}...
                           </p>
                         </div>
                       </div>
@@ -555,35 +747,39 @@ export default function MockTestResults() {
                         <div>
                           <h4 className="font-medium mb-2">Question:</h4>
                           <p className="text-sm bg-muted/50 p-3 rounded-lg">
-                            {result.question.questionText}
+                            {result.question.stem}
                           </p>
                         </div>
 
                         <div>
                           <h4 className="font-medium mb-2">Options:</h4>
                           <div className="space-y-2">
-                            {result.question.options.map((option) => (
-                              <div 
-                                key={option.id}
-                                className={cn(
-                                  "p-3 rounded-lg border text-sm flex items-center gap-2",
-                                  option.id === result.question.correctAnswer 
-                                    ? "bg-green-500/10 border-green-500/30"
-                                    : option.id === result.userAnswer && !result.isCorrect
-                                      ? "bg-red-500/10 border-red-500/30"
-                                      : "bg-muted/30"
-                                )}
-                              >
-                                <span className="font-medium w-6">{option.id}.</span>
-                                <span className="flex-1">{option.text}</span>
-                                {option.id === result.question.correctAnswer && (
-                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                )}
-                                {option.id === result.userAnswer && !result.isCorrect && (
-                                  <XCircle className="h-4 w-4 text-red-500" />
-                                )}
-                              </div>
-                            ))}
+                            {result.question.options.map((option) => {
+                              const isCorrectOption = result.question.correctOptionIds.includes(option.id);
+                              const isSelected = option.id === result.selectedOptionId;
+                              return (
+                                <div
+                                  key={option.id}
+                                  className={cn(
+                                    "p-3 rounded-lg border text-sm flex items-center gap-2",
+                                    isCorrectOption
+                                      ? "bg-green-500/10 border-green-500/30"
+                                      : isSelected && !result.isCorrect
+                                        ? "bg-red-500/10 border-red-500/30"
+                                        : "bg-muted/30"
+                                  )}
+                                >
+                                  <span className="font-medium w-6">{option.label}.</span>
+                                  <span className="flex-1">{option.text}</span>
+                                  {isCorrectOption && (
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  )}
+                                  {isSelected && !result.isCorrect && (
+                                    <XCircle className="h-4 w-4 text-red-500" />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -592,26 +788,26 @@ export default function MockTestResults() {
                             <span className="text-muted-foreground">Your Answer: </span>
                             <span className={cn(
                               "font-medium",
-                              result.isAttempted 
+                              result.isAttempted
                                 ? result.isCorrect ? "text-green-600" : "text-red-600"
                                 : "text-gray-500"
                             )}>
-                              {result.userAnswer || "Not attempted"}
+                              {result.selectedLabel || "Not attempted"}
                             </span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Correct Answer: </span>
                             <span className="font-medium text-green-600">
-                              {result.question.correctAnswer}
+                              {result.correctLabels || "—"}
                             </span>
                           </div>
                         </div>
 
-                        {result.question.solutionDetail && (
+                        {result.question.explanation && (
                           <div>
                             <h4 className="font-medium mb-2">Explanation:</h4>
                             <p className="text-sm bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
-                              {result.question.solutionDetail}
+                              {result.question.explanation}
                             </p>
                           </div>
                         )}
@@ -626,7 +822,7 @@ export default function MockTestResults() {
           <Card>
             <CardContent className="py-6">
               <div className="flex flex-wrap justify-center gap-4">
-                <Button 
+                <Button
                   onClick={handleRetakeTest}
                   className="gap-2"
                   data-testid="button-retake-test"
@@ -634,7 +830,7 @@ export default function MockTestResults() {
                   <RefreshCw className="h-4 w-4" />
                   Retake Test
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setLocation('/dashboard')}
                   className="gap-2"
@@ -643,7 +839,7 @@ export default function MockTestResults() {
                   <Home className="h-4 w-4" />
                   Back to Dashboard
                 </Button>
-                <Button 
+                <Button
                   variant="secondary"
                   disabled
                   className="gap-2"

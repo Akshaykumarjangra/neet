@@ -6,9 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Target, Trophy, Zap , Loader2 } from "lucide-react";
+import { BookOpen, Target, Trophy, Zap, Loader2 } from "lucide-react";
+import {
+  getDifficultyLabel,
+  getOptionLabel,
+  getPrimaryTopicLabel,
+  normalizeLegacyQuestions,
+} from "@/lib/questionUtils";
 
-const mixedQuestions = [
+const legacyMixedQuestions = [
   {
     id: 1,
     chapter: "Mole Concept",
@@ -195,25 +201,41 @@ const mixedQuestions = [
   }
 ];
 
+const fallbackQuestions = normalizeLegacyQuestions(
+  legacyMixedQuestions.map((question, index) => ({
+    ...question,
+    id: question.id ?? index + 1,
+    topic: question.chapter ?? "Chapter 28 Mixed Revision",
+  })),
+  {
+    topicId: 2112,
+    sourceType: "chemistry_revision_chapter28",
+    defaultDifficulty: 2,
+  },
+);
+
 export function ChemistryChapter28() {
-  // Fetch questions from database for Biomolecules (topicId: 62)
+  // Fetch questions for the mixed revision pack (topicId: 2112)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
-    queryKey: ['/api/questions', 'topicId', '62'],
+    queryKey: ["/api/questions", "topicId", "2112"],
     queryFn: async () => {
-      const response = await fetch('/api/questions?topicId=62');
-      if (!response.ok) throw new Error('Failed to fetch questions');
+      const response = await fetch("/api/questions?topicId=2112");
+      if (!response.ok) throw new Error("Failed to fetch questions");
       return response.json();
     },
   });
 
-  const practiceQuestions = dbQuestions || [];
+  const practiceQuestions =
+    dbQuestions && dbQuestions.length > 0 ? dbQuestions : fallbackQuestions;
+  const totalQuestions = practiceQuestions.length;
+  const hasQuestions = totalQuestions > 0;
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleAnswerSelect = (questionId: number, optionId: string) => {
+    setUserAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   };
 
   const checkAnswers = () => {
@@ -225,12 +247,22 @@ export function ChemistryChapter28() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = practiceQuestions.reduce(
+    (correct, question) =>
+      correct + (userAnswers[question.id] === question.correctAnswer ? 1 : 0),
+    0,
+  );
+  const percentage = hasQuestions ? Math.round((score / totalQuestions) * 100) : 0;
+  const expectedNeetScore = hasQuestions ? Math.round((score / totalQuestions) * 180) : 0;
+  const excellentThreshold = hasQuestions ? Math.ceil(totalQuestions * 0.8) : 0;
+  const goodThreshold = hasQuestions ? Math.ceil(totalQuestions * 0.6) : 0;
+  const scoreBadgeVariant = !hasQuestions
+    ? "secondary"
+    : score >= excellentThreshold
+    ? "default"
+    : score >= goodThreshold
+    ? "secondary"
+    : "destructive";
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -252,7 +284,7 @@ export function ChemistryChapter28() {
             <Target className="h-4 w-4 mr-2" />
             Strategy
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Zap className="h-4 w-4 mr-2" />
             Mixed Test
           </TabsTrigger>
@@ -438,22 +470,22 @@ export function ChemistryChapter28() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Mixed Practice Test - All Topics</CardTitle>
-                {showSolutions && (
-                  <Badge variant={score >= 16 ? "default" : score >= 12 ? "secondary" : "destructive"}>
-                    Score: {score}/{mixedQuestions.length} ({Math.round(score/mixedQuestions.length*100)}%)
+                {showSolutions && hasQuestions && (
+                  <Badge variant={scoreBadgeVariant}>
+                    Score: {score}/{totalQuestions} ({percentage}%)
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {mixedQuestions.map((q, index) => (
+              {practiceQuestions.map((q, index) => (
                 <Card key={q.id} className="border-purple-500/20">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex gap-2 mb-2">
-                          <Badge variant="outline">{q.difficultyLevel === 1 ? 'Easy' : q.difficultyLevel === 2 ? 'Medium' : 'Hard'}</Badge>
-                          <Badge variant="secondary">{q.chapter}</Badge>
+                          <Badge variant="outline">{getDifficultyLabel(q.difficultyLevel)}</Badge>
+                          <Badge variant="secondary">{getPrimaryTopicLabel(q)}</Badge>
                         </div>
                         <p className="font-medium">Q{index + 1}. {q.questionText}</p>
                       </div>
@@ -461,28 +493,34 @@ export function ChemistryChapter28() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
-                      {q.options.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant={
-                            showSolutions
-                              ? index === q.correctAnswer
-                                ? "default"
-                                : userAnswers[q.id] === index
-                                ? "destructive"
+                      {q.options.map((option, optionIndex) => {
+                        const optionId = option.id ?? String.fromCharCode(65 + optionIndex);
+                        const isSelected = userAnswers[q.id] === optionId;
+                        const isCorrect = optionId === q.correctAnswer;
+
+                        return (
+                          <Button
+                            key={`${q.id}-${optionId}`}
+                            variant={
+                              showSolutions
+                                ? isCorrect
+                                  ? "default"
+                                  : isSelected
+                                  ? "destructive"
+                                  : "outline"
+                                : isSelected
+                                ? "secondary"
                                 : "outline"
-                              : userAnswers[q.id] === index
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
-                          disabled={showSolutions}
-                        >
-                          <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                          {typeof option === "string" ? option : option.text}
-                        </Button>
-                      ))}
+                            }
+                            className="w-full justify-start text-left h-auto py-3"
+                            onClick={() => !showSolutions && handleAnswerSelect(q.id, optionId)}
+                            disabled={showSolutions}
+                          >
+                            <span className="mr-3">{optionId}.</span>
+                            {getOptionLabel(option)}
+                          </Button>
+                        );
+                      })}
                     </div>
                     {showSolutions && (
                       <div className="bg-muted p-4 rounded-lg mt-4">
@@ -496,8 +534,8 @@ export function ChemistryChapter28() {
 
               <div className="flex gap-3">
                 {!showSolutions ? (
-                  <Button 
-                    onClick={checkAnswers} 
+                  <Button
+                    onClick={checkAnswers}
                     className="flex-1"
                     disabled={Object.keys(userAnswers).length === 0}
                   >
@@ -510,16 +548,28 @@ export function ChemistryChapter28() {
                 )}
               </div>
 
-              {showSolutions && (
+              {showSolutions && hasQuestions && (
                 <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-2">Performance Analysis</h3>
                     <div className="space-y-2 text-sm">
-                      <p>Total Score: {score}/20 ({Math.round(score/20*100)}%)</p>
-                      <p>Expected NEET Score: ~{Math.round(score/20*180)} marks (out of 180)</p>
-                      {score >= 16 && <p className="text-green-600 dark:text-green-400">🎉 Excellent! Keep up the great work!</p>}
-                      {score >= 12 && score < 16 && <p className="text-yellow-600 dark:text-yellow-400">👍 Good effort! Review weak areas.</p>}
-                      {score < 12 && <p className="text-red-600 dark:text-red-400">💪 Need more practice! Focus on concepts.</p>}
+                      <p>Total Score: {score}/{totalQuestions} ({percentage}%)</p>
+                      <p>Expected NEET Score: ~{expectedNeetScore} marks (out of 180)</p>
+                      {score >= excellentThreshold && (
+                        <p className="text-green-600 dark:text-green-400">
+                          Excellent! Keep up the great work.
+                        </p>
+                      )}
+                      {score >= goodThreshold && score < excellentThreshold && (
+                        <p className="text-yellow-600 dark:text-yellow-400">
+                          Good effort! Review weak areas to break into the top band.
+                        </p>
+                      )}
+                      {score < goodThreshold && (
+                        <p className="text-red-600 dark:text-red-400">
+                          Keep practicing! Focus on clarifying tricky concepts before the next drill.
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

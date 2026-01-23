@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { HeartPulse, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen, Bug , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter18() {
   // Fetch questions from database for Human Health and Disease (topicId: 82)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,35 +33,35 @@ export function BotanyChapter18() {
       id: 1,
       question: "Which pathogen causes malaria?",
       options: ["Bacteria", "Virus", "Protozoan", "Fungus"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Malaria is caused by Plasmodium (a protozoan parasite), transmitted by female Anopheles mosquitoes. There are several species: P. vivax, P. falciparum, P. malariae, and P. ovale."
     },
     {
       id: 2,
       question: "AIDS is caused by:",
       options: ["Bacteria", "HIV (Human Immunodeficiency Virus)", "Protozoan", "Fungus"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "AIDS (Acquired Immunodeficiency Syndrome) is caused by HIV, which attacks CD4+ T lymphocytes, weakening the immune system."
     },
     {
       id: 3,
       question: "Typhoid is caused by:",
       options: ["Salmonella typhi", "Vibrio cholerae", "E. coli", "Shigella"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Typhoid fever is caused by the bacterium Salmonella typhi, transmitted through contaminated food and water."
     },
     {
       id: 4,
       question: "Which type of immunity is provided by vaccination?",
       options: ["Natural active", "Natural passive", "Artificial active", "Artificial passive"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Vaccination provides artificial active immunity by introducing weakened or killed pathogens/antigens, stimulating the body to produce its own antibodies."
     },
     {
       id: 5,
       question: "Antibodies are produced by:",
       options: ["RBCs", "Platelets", "B-lymphocytes", "T-lymphocytes"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "B-lymphocytes (B cells) produce antibodies (immunoglobulins) in response to antigens. They are part of the humoral immune response."
     },
     {
@@ -72,21 +73,21 @@ export function BotanyChapter18() {
         "Haemophilus influenzae",
         "Vibrio cholerae"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Tuberculosis (TB) is caused by Mycobacterium tuberculosis, primarily affecting the lungs but can affect other organs."
     },
     {
       id: 7,
       question: "Allergic reactions are mediated by:",
       options: ["IgG", "IgA", "IgE", "IgM"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "IgE (Immunoglobulin E) antibodies are responsible for allergic reactions. They bind to mast cells and basophils, triggering histamine release."
     },
     {
       id: 8,
       question: "Which disease is NOT caused by a virus?",
       options: ["Dengue", "Typhoid", "Common cold", "Influenza"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Typhoid is caused by bacteria (Salmonella typhi). Dengue, common cold, and influenza are all viral diseases."
     }
   ];
@@ -103,7 +104,7 @@ export function BotanyChapter18() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -463,7 +464,7 @@ export function BotanyChapter18() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -483,10 +484,10 @@ export function BotanyChapter18() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

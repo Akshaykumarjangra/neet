@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Microscope, TestTubes } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter37() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,14 +19,14 @@ export function BotanyChapter37() {
       id: 1,
       question: "Which enzyme is used to cut DNA at specific recognition sequences?",
       options: ["DNA ligase", "Restriction endonuclease", "DNA polymerase", "Reverse transcriptase"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Restriction endonucleases (restriction enzymes) are molecular scissors that cut DNA at specific palindromic recognition sequences, producing sticky or blunt ends."
     },
     {
       id: 2,
       question: "The first restriction endonuclease identified was:",
       options: ["EcoRI", "Hind II", "BamHI", "PstI"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Hind II was the first restriction endonuclease isolated from Haemophilus influenzae by Smith, Wilcox, and Kelley in 1968."
     },
     {
@@ -37,21 +38,21 @@ export function BotanyChapter37() {
         "Are large in size",
         "Cannot integrate into host chromosome"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Plasmids contain antibiotic resistance genes (selectable markers) that help identify transformed cells, and they can replicate autonomously in bacterial cells."
     },
     {
       id: 4,
       question: "The enzyme used to join DNA fragments is:",
       options: ["Restriction enzyme", "DNA ligase", "DNA polymerase", "Helicase"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "DNA ligase catalyzes the formation of phosphodiester bonds between adjacent nucleotides, joining DNA fragments together."
     },
     {
       id: 5,
       question: "PCR (Polymerase Chain Reaction) requires which enzyme?",
       options: ["DNA ligase", "Taq polymerase", "Reverse transcriptase", "Restriction enzyme"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Taq polymerase from Thermus aquaticus is a thermostable DNA polymerase that can withstand the high temperatures used in PCR cycles."
     },
     {
@@ -63,21 +64,21 @@ export function BotanyChapter37() {
         "Translation of protein",
         "Insertion into host"
       ],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "The main steps of rDNA technology are: isolation of DNA, fragmentation using restriction enzymes, ligation into vectors, transformation into host cells, and selection. Translation is a natural cellular process, not a step in rDNA technology."
     },
     {
       id: 7,
       question: "EcoRI produces:",
       options: ["Blunt ends", "Sticky ends with 5' overhang", "Sticky ends with 3' overhang", "No cuts"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "EcoRI creates sticky (cohesive) ends with 5' overhangs at the recognition sequence GAATTC, facilitating DNA ligation."
     },
     {
       id: 8,
       question: "Gel electrophoresis separates DNA fragments based on:",
       options: ["Molecular weight", "Charge", "Size", "Both size and charge"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Gel electrophoresis separates DNA based on size (smaller fragments move faster) and charge (DNA is negatively charged and moves toward the positive electrode)."
     },
     {
@@ -89,14 +90,14 @@ export function BotanyChapter37() {
         "Cut DNA",
         "Amplify DNA"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Calcium chloride makes bacterial cells competent by increasing membrane permeability, allowing DNA to enter the cells during transformation."
     },
     {
       id: 10,
       question: "Which of the following is a thermostable polymerase?",
       options: ["E. coli DNA polymerase", "Taq polymerase", "T4 DNA ligase", "Klenow fragment"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Taq polymerase from Thermus aquaticus is thermostable and can function at high temperatures (94°C) used in PCR denaturation steps."
     }
   ];
@@ -113,7 +114,7 @@ export function BotanyChapter37() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -707,7 +708,7 @@ export function BotanyChapter37() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -715,13 +716,13 @@ export function BotanyChapter37() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

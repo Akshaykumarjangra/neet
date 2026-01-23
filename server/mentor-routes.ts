@@ -13,6 +13,7 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, sql, inArray, gte, lte, sum } from "drizzle-orm";
 import { requireAuthWithPasswordCheck, requireOwner } from "./auth";
+import { getCompletionDeltas, hasOverlappingBooking, isWithinAvailability, validateBookingWindow } from "./mentor-booking-utils";
 
 const router = Router();
 
@@ -37,8 +38,12 @@ const buildBookingTimeline = (booking: { status: string; createdAt: Date; update
     { label: "Requested", status: "requested", at: booking.createdAt },
   ];
 
-  if (booking.status === "confirmed") {
+  if (booking.status === "confirmed" || booking.status === "completed") {
     timeline.push({ label: "Confirmed", status: "confirmed", at: booking.updatedAt || booking.createdAt });
+  }
+
+  if (booking.status === "completed") {
+    timeline.push({ label: "Completed", status: "completed", at: booking.updatedAt || booking.createdAt });
   }
 
   if (booking.status === "cancelled") {
@@ -48,7 +53,11 @@ const buildBookingTimeline = (booking: { status: string; createdAt: Date; update
   return timeline;
 };
 
-const logBookingNotification = (direction: "mentor" | "student", action: "requested" | "confirmed" | "cancelled", details: Record<string, any>) => {
+const logBookingNotification = (
+  direction: "mentor" | "student",
+  action: "requested" | "confirmed" | "cancelled" | "completed",
+  details: Record<string, any>
+) => {
   console.log(`[Booking Notification] ${action.toUpperCase()} -> ${direction}`, details);
 };
 
@@ -69,7 +78,8 @@ function requireRole(...roles: Array<"student" | "mentor" | "admin">) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const hasRole = roles.includes(user.role as "student" | "mentor" | "admin");
+      const normalizedRole = user.role === "user" ? "student" : user.role;
+      const hasRole = roles.includes(normalizedRole as "student" | "mentor" | "admin");
       const isAdminRequested = roles.includes("admin") && user.isAdmin;
 
       if (!hasRole && !isAdminRequested) {
@@ -145,6 +155,10 @@ const updateBookingStatusSchema = z.object({
   meetingLink: z.string().url().optional(),
 });
 
+const completeBookingSchema = z.object({
+  paymentStatus: z.enum(["paid", "pending"]).optional(),
+});
+
 const submitReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().max(1000).optional(),
@@ -164,6 +178,7 @@ const createContentAssetSchema = z.object({
   thumbnailUrl: z.string().url().max(1000).optional(),
   durationSeconds: z.number().int().min(0).optional(),
   pageCount: z.number().int().min(1).optional(),
+  chapterContentId: z.number().int().optional(),
 });
 
 const updateContentAssetSchema = createContentAssetSchema.partial();
@@ -344,12 +359,12 @@ router.get("/mentors/recommendations/by-subject/:subject", async (req: Request, 
   }
 });
 
-router.get("/mentors/:id", async (req: Request, res: Response) => {
+router.get("/mentors/:id(\\d+)", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const mentorId = parseInt(req.params.id);
-    
-    if (isNaN(mentorId)) {
-      return res.status(400).json({ error: "Invalid mentor ID" });
+
+    if (Number.isNaN(mentorId)) {
+      return next();
     }
 
     const [mentor] = await db
@@ -555,7 +570,7 @@ router.post("/mentors/apply", requireAuth, async (req: Request, res: Response) =
       .limit(1);
 
     if (existingMentor) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "You already have a mentor application",
         status: existingMentor.verificationStatus,
       });
@@ -601,8 +616,8 @@ router.post("/mentors/register", requireAuth, async (req: Request, res: Response
       return res.status(400).json({ error: "You already have a mentor profile", status: existingMentor.verificationStatus });
     }
 
-    // Do not downgrade owners/admins; otherwise set role to mentor for clarity
-    await db.update(users).set({ role: sql`CASE WHEN role = 'admin' THEN role ELSE 'mentor' END` }).where(eq(users.id, userId));
+    // SECURITY FIX: Do not auto-upgrade role. Must be approved by admin first.
+    // await db.update(users).set({ role: sql`CASE WHEN role = 'admin' THEN role ELSE 'mentor' END` }).where(eq(users.id, userId));
 
     const [newMentor] = await db
       .insert(mentors)
@@ -896,8 +911,49 @@ router.post("/bookings", requireAuth, async (req: Request, res: Response) => {
 
     const startAt = new Date(validatedData.startAt);
     const endAt = new Date(validatedData.endAt);
-    const durationHours = (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60);
-    const priceCents = Math.round(mentor.hourlyRate * durationHours);
+    const windowCheck = validateBookingWindow(startAt, endAt);
+    if (!windowCheck.ok) {
+      return res.status(400).json({ error: windowCheck.error });
+    }
+
+    const availability = await db
+      .select()
+      .from(mentorAvailability)
+      .where(eq(mentorAvailability.mentorId, mentor.id));
+
+    if (!availability.length) {
+      return res.status(400).json({ error: "Mentor has no availability set" });
+    }
+
+    if (!isWithinAvailability(startAt, endAt, availability)) {
+      return res.status(400).json({ error: "Requested time is outside mentor availability" });
+    }
+
+    const dayStart = new Date(startAt);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(startAt);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const existingBookings = await db
+      .select({
+        startAt: mentorBookings.startAt,
+        endAt: mentorBookings.endAt,
+      })
+      .from(mentorBookings)
+      .where(
+        and(
+          eq(mentorBookings.mentorId, mentor.id),
+          inArray(mentorBookings.status, ["requested", "confirmed"]),
+          lte(mentorBookings.startAt, dayEnd),
+          gte(mentorBookings.endAt, dayStart)
+        )
+      );
+
+    if (hasOverlappingBooking(startAt, endAt, existingBookings)) {
+      return res.status(400).json({ error: "Time slot is already booked" });
+    }
+    const durationHours = windowCheck.durationMs / (1000 * 60 * 60);
+    const priceCents = Math.round((mentor.hourlyRate || 0) * durationHours);
 
     const [newBooking] = await db
       .insert(mentorBookings)
@@ -1060,7 +1116,8 @@ router.put("/bookings/:id/status", requireAuth, async (req: Request, res: Respon
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    if (booking.status !== "requested") {
+    const isConfirmedUpdate = booking.status === "confirmed" && validatedData.status === "confirmed";
+    if (!isConfirmedUpdate && booking.status !== "requested") {
       return res.status(400).json({ error: "Only requested bookings can be updated" });
     }
 
@@ -1100,6 +1157,102 @@ router.put("/bookings/:id/status", requireAuth, async (req: Request, res: Respon
       return res.status(400).json({ error: error.errors });
     }
     console.error("Update booking status error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put("/bookings/:id/complete", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const bookingId = parseInt(req.params.id);
+    const validatedData = completeBookingSchema.parse(req.body ?? {});
+
+    if (isNaN(bookingId)) {
+      return res.status(400).json({ error: "Invalid booking ID" });
+    }
+
+    const [mentor] = await db
+      .select({ id: mentors.id })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(403).json({ error: "Only mentors can complete bookings" });
+    }
+
+    const [booking] = await db
+      .select()
+      .from(mentorBookings)
+      .where(
+        and(
+          eq(mentorBookings.id, bookingId),
+          eq(mentorBookings.mentorId, mentor.id)
+        )
+      )
+      .limit(1);
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ error: "Cancelled bookings cannot be completed" });
+    }
+
+    if (new Date(booking.endAt) > new Date()) {
+      return res.status(400).json({ error: "Cannot complete a booking before it ends" });
+    }
+
+    const nextPaymentStatus = validatedData.paymentStatus ?? "paid";
+    const { sessionIncrement, earningsIncrement } = getCompletionDeltas({
+      currentStatus: booking.status,
+      currentPaymentStatus: booking.paymentStatus,
+      nextPaymentStatus,
+      priceCents: booking.priceCents,
+    });
+
+    let updatedBooking: any;
+    await db.transaction(async (tx: any) => {
+      [updatedBooking] = await tx
+        .update(mentorBookings)
+        .set({
+          status: "completed",
+          paymentStatus: nextPaymentStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(mentorBookings.id, bookingId))
+        .returning();
+
+      if (sessionIncrement || earningsIncrement) {
+        const updatePayload: any = {};
+        if (sessionIncrement) {
+          updatePayload.totalSessionsCompleted = sql`${mentors.totalSessionsCompleted} + ${sessionIncrement}`;
+        }
+        if (earningsIncrement) {
+          updatePayload.totalEarningsCents = sql`${mentors.totalEarningsCents} + ${earningsIncrement}`;
+        }
+        await tx.update(mentors).set(updatePayload).where(eq(mentors.id, mentor.id));
+      }
+    });
+
+    logBookingNotification("student", "completed", {
+      bookingId,
+      studentId: booking.studentId,
+      mentorId: mentor.id,
+      startAt: booking.startAt,
+      paymentStatus: nextPaymentStatus,
+    });
+
+    res.json({
+      ...updatedBooking,
+      timeline: buildBookingTimeline({ status: updatedBooking.status, createdAt: updatedBooking.createdAt, updatedAt: updatedBooking.updatedAt }),
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error("Complete booking error:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1338,6 +1491,7 @@ router.post("/mentors/my-content", requireAuthWithPasswordCheck, requireRole("me
         thumbnailUrl: validatedData.thumbnailUrl,
         durationSeconds: validatedData.durationSeconds,
         pageCount: validatedData.pageCount,
+        chapterContentId: validatedData.chapterContentId || null,
       })
       .returning();
 
@@ -1394,6 +1548,7 @@ router.put("/mentors/my-content/:id", requireAuthWithPasswordCheck, requireRole(
     if (validatedData.thumbnailUrl !== undefined) updateData.thumbnailUrl = validatedData.thumbnailUrl;
     if (validatedData.durationSeconds !== undefined) updateData.durationSeconds = validatedData.durationSeconds;
     if (validatedData.pageCount !== undefined) updateData.pageCount = validatedData.pageCount;
+    if (validatedData.chapterContentId !== undefined) updateData.chapterContentId = validatedData.chapterContentId;
 
     const [updatedContent] = await db
       .update(contentAssets)

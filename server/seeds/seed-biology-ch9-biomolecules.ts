@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter9() {
   console.log("Seeding Biology Class 11 Chapter 9: Biomolecules...");
@@ -768,12 +769,14 @@ Examples:
       estimatedStudyMinutes: 360,
       status: "published",
 
-      visualizationsData: {
-        type: "biomolecule-structure",
-        title: "Interactive 3D Biomolecule Models",
-        description:
-          "Explore 3D structures of carbohydrates (glucose, starch), proteins (amino acids, α-helix, β-sheet), lipids (phospholipid bilayer), and nucleic acids (DNA double helix, RNA)",
-      },
+      visualizationsData: [
+        {
+          type: "biomolecule-structure",
+          title: "Interactive 3D Biomolecule Models",
+          description:
+            "Explore 3D structures of carbohydrates (glucose, starch), proteins (amino acids, α-helix, β-sheet), lipids (phospholipid bilayer), and nucleic acids (DNA double helix, RNA)",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -785,6 +788,20 @@ Examples:
         chapterTitle: "Biomolecules",
         introduction:
           "Life at the molecular level is orchestrated by an intricate network of chemical compounds called biomolecules. These organic molecules form the structural framework of cells and carry out the complex chemical reactions that sustain life. From the simple sugars that provide instant energy to the complex DNA molecules that carry hereditary information, biomolecules are the fundamental building blocks and functional units of all living organisms. Understanding the structure, properties, and functions of biomolecules is essential for comprehending biological processes - from photosynthesis and respiration to growth and reproduction. This chapter explores the four major classes of biomolecules - carbohydrates, proteins, lipids, and nucleic acids - along with the remarkable catalysts called enzymes that regulate virtually every chemical reaction in living systems.",
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+          type: "biomolecule-structure",
+          title: "Interactive 3D Biomolecule Models",
+          description:
+            "Explore 3D structures of carbohydrates (glucose, starch), proteins (amino acids, α-helix, β-sheet), lipids (phospholipid bilayer), and nucleic acids (DNA double helix, RNA)",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

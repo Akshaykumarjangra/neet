@@ -1,12 +1,20 @@
 
 import { useState } from "react";
+import type { Question } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Brain, Calculator, Lightbulb } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  getDifficultyLabel,
+  getPrimaryTopicLabel,
+  normalizeLegacyQuestions,
+} from "@/lib/questionUtils";
 
-const advancedQuestions = [
+const legacyAdvancedQuestions = [
   {
     id: 1,
     topic: "Mole Concept",
@@ -164,13 +172,38 @@ const advancedQuestions = [
   }
 ];
 
+const fallbackQuestions = normalizeLegacyQuestions(
+  legacyAdvancedQuestions.map((question) => ({
+    ...question,
+    solution: question.concept
+      ? `${question.solution} (Concept: ${question.concept})`
+      : question.solution,
+  })),
+  {
+    sourceType: "chemistry_ch31_fallback",
+    defaultDifficulty: 2,
+    topicId: 2107,
+  },
+);
+
 export function ChemistryChapter31() {
+  const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
+    queryKey: ["/api/questions", "topicId", "2107"],
+    queryFn: async () => {
+      const response = await fetch("/api/questions?topicId=2107");
+      if (!response.ok) throw new Error("Failed to fetch practice questions");
+      return response.json();
+    },
+  });
+
+  const hasRemoteQuestions = Boolean(dbQuestions?.length);
+  const practiceQuestions = hasRemoteQuestions ? dbQuestions! : fallbackQuestions;
   const [activeTab, setActiveTab] = useState("overview");
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answerIndex: number) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answerIndex }));
+  const handleAnswerSelect = (questionId: number, answerId: string) => {
+    setUserAnswers((prev) => ({ ...prev, [questionId]: answerId }));
   };
 
   const checkAnswers = () => {
@@ -182,9 +215,13 @@ export function ChemistryChapter31() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => answer === advancedQuestions[parseInt(qId) - 1].correctAnswer
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answer]) => {
+    const question = practiceQuestions.find((q) => q.id === Number(qId));
+    return question && answer === question.correctAnswer;
+  }).length;
+  const totalQuestions = practiceQuestions.length;
+  const answeredCount = Object.keys(userAnswers).length;
+  const isLoadingRemote = questionsLoading && !hasRemoteQuestions;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -206,7 +243,7 @@ export function ChemistryChapter31() {
             <Lightbulb className="h-4 w-4 mr-2" />
             Strategy
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Calculator className="h-4 w-4 mr-2" />
             Advanced Test
           </TabsTrigger>
@@ -342,79 +379,125 @@ export function ChemistryChapter31() {
               <div className="flex items-center justify-between">
                 <CardTitle>Advanced Practice Questions</CardTitle>
                 {showSolutions && (
-                  <Badge variant={score >= 12 ? "default" : score >= 9 ? "secondary" : "destructive"}>
-                    Score: {score}/{advancedQuestions.length} ({Math.round(score/advancedQuestions.length*100)}%)
+                  <Badge
+                    variant={
+                      totalQuestions === 0
+                        ? "outline"
+                        : score / totalQuestions >= 0.8
+                        ? "default"
+                        : score / totalQuestions >= 0.6
+                        ? "secondary"
+                        : "destructive"
+                    }
+                  >
+                    Score: {score}/{totalQuestions}{" "}
+                    {totalQuestions > 0
+                      ? `(${Math.round((score / totalQuestions) * 100)}%)`
+                      : null}
                   </Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {advancedQuestions.map((q, index) => (
-                <Card key={q.id} className="border-purple-500/20">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex gap-2 mb-2">
-                          <Badge variant="outline">{q.difficulty}</Badge>
-                          <Badge variant="secondary">{q.topic}</Badge>
-                        </div>
-                        <p className="font-medium">Q{index + 1}. {q.question}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      {q.options.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant={
-                            showSolutions
-                              ? index === q.correctAnswer
-                                ? "default"
-                                : userAnswers[q.id] === index
-                                ? "destructive"
-                                : "outline"
-                              : userAnswers[q.id] === index
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
-                          disabled={showSolutions}
-                        >
-                          <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                          {typeof option === "string" ? option : option.text}
-                        </Button>
-                      ))}
-                    </div>
-                    {showSolutions && (
-                      <div className="bg-muted p-4 rounded-lg mt-4">
-                        <p className="font-semibold mb-2 text-purple-600 dark:text-purple-400">Solution:</p>
-                        <p className="text-sm mb-2">{q.solution}</p>
-                        <p className="text-xs text-muted-foreground">Concept: {q.concept}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-
-              <div className="flex gap-3">
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Multi-concept problems covering Physical, Organic and Inorganic Chemistry in NEET format.
+              </p>
+              <div className="flex gap-3 flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Questions loaded: {totalQuestions}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Attempted: {answeredCount}/{totalQuestions}
+                  </p>
+                </div>
                 {!showSolutions ? (
-                  <Button 
-                    onClick={checkAnswers} 
-                    className="flex-1"
-                    disabled={Object.keys(userAnswers).length === 0}
+                  <Button
+                    onClick={checkAnswers}
+                    disabled={totalQuestions === 0 || answeredCount === 0}
                   >
                     Check Answers
                   </Button>
                 ) : (
-                  <Button onClick={resetQuiz} variant="outline" className="flex-1">
+                  <Button variant="outline" onClick={resetQuiz}>
                     Try Again
                   </Button>
                 )}
               </div>
             </CardContent>
           </Card>
+
+          {isLoadingRemote ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+            </div>
+          ) : totalQuestions === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-muted-foreground">
+                Practice questions will appear here once they are added to the database.
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="space-y-6 pt-6">
+                {practiceQuestions.map((q, index) => (
+                  <Card key={q.id} className="border-purple-500/20">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex gap-2 mb-2">
+                            <Badge variant="outline">
+                              {getDifficultyLabel(q.difficultyLevel)}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {getPrimaryTopicLabel(q)}
+                            </Badge>
+                          </div>
+                          <p className="font-medium">
+                            Q{index + 1}. {q.questionText}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        {q.options.map((option) => (
+                          <Button
+                            key={option.id}
+                            variant={
+                              showSolutions
+                                ? option.id === q.correctAnswer
+                                  ? "default"
+                                  : userAnswers[q.id] === option.id
+                                  ? "destructive"
+                                  : "outline"
+                                : userAnswers[q.id] === option.id
+                                ? "secondary"
+                                : "outline"
+                            }
+                            className="w-full justify-start text-left h-auto py-3"
+                            onClick={() => !showSolutions && handleAnswerSelect(q.id, option.id)}
+                            disabled={showSolutions}
+                          >
+                            <span className="mr-3">{option.id}.</span>
+                            {option.text}
+                          </Button>
+                        ))}
+                      </div>
+                      {showSolutions && (
+                        <div className="bg-muted p-4 rounded-lg">
+                          <p className="font-semibold mb-2 text-purple-600 dark:text-purple-400">
+                            Solution
+                          </p>
+                          <p className="text-sm">{q.solutionDetail}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

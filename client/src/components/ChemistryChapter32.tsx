@@ -1,12 +1,15 @@
 
 import { useState } from "react";
+import type { Question } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Timer, Trophy, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { getPrimaryTopicLabel, normalizeLegacyQuestions } from "@/lib/questionUtils";
 
-const mockTestQuestions = [
+const legacyMockTestQuestions = [
   { id: 1, question: "Avogadro's number is:", options: ["6.022 × 10²²", "6.022 × 10²³", "6.022 × 10²⁴", "6.022 × 10²⁵"], correctAnswer: 1, topic: "Mole Concept" },
   { id: 2, question: "Electronic configuration of Cr (Z=24):", options: ["[Ar] 3d⁴ 4s²", "[Ar] 3d⁵ 4s¹", "[Ar] 3d⁶ 4s⁰", "[Ar] 4s² 3d⁴"], correctAnswer: 1, topic: "Atomic Structure" },
   { id: 3, question: "Most electronegative element:", options: ["Cl", "F", "O", "N"], correctAnswer: 1, topic: "Periodic Table" },
@@ -54,15 +57,33 @@ const mockTestQuestions = [
   { id: 45, question: "Freon-12 is:", options: ["CCl₄", "CFCl₃", "CF₂Cl₂", "CHCl₃"], correctAnswer: 2, topic: "Haloalkanes" }
 ];
 
+const fallbackMockTestQuestions = normalizeLegacyQuestions(legacyMockTestQuestions, {
+  sourceType: "chemistry_ch32_fallback",
+  defaultDifficulty: 2,
+  topicId: 2108,
+});
+
+
 export function ChemistryChapter32() {
+  const { data: dbQuestions } = useQuery<Question[]>({
+    queryKey: ["/api/questions", "topicId", "2108"],
+    queryFn: async () => {
+      const response = await fetch("/api/questions?topicId=2108");
+      if (!response.ok) throw new Error("Failed to fetch practice questions");
+      return response.json();
+    },
+  });
+
+  const hasRemoteQuestions = Boolean(dbQuestions?.length);
+  const practiceQuestions = hasRemoteQuestions ? dbQuestions! : fallbackMockTestQuestions;
   const [testStarted, setTestStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes in seconds
-  const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answerIndex: number) => {
+  const handleAnswerSelect = (questionId: number, answerId: string) => {
     if (!showResults) {
-      setUserAnswers(prev => ({ ...prev, [questionId]: answerIndex }));
+      setUserAnswers((prev) => ({ ...prev, [questionId]: answerId }));
     }
   };
 
@@ -70,12 +91,17 @@ export function ChemistryChapter32() {
     setShowResults(true);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => answer === mockTestQuestions[parseInt(qId) - 1].correctAnswer
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answer]) => {
+    const question = practiceQuestions.find((q) => q.id === Number(qId));
+    return question && answer === question.correctAnswer;
+  }).length;
 
-  const percentage = Math.round((score / mockTestQuestions.length) * 100);
+  const totalQuestions = practiceQuestions.length;
+  const answeredCount = Object.keys(userAnswers).length;
+  const percentage = totalQuestions ? Math.round((score / totalQuestions) * 100) : 0;
   const marks = score * 4; // 4 marks per question
+  const totalMarks = totalQuestions * 4;
+  const progressPercent = totalQuestions ? (answeredCount / totalQuestions) * 100 : 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -83,7 +109,9 @@ export function ChemistryChapter32() {
         <Trophy className="h-8 w-8 text-yellow-500" />
         <div>
           <h1 className="text-4xl font-bold">Chapter 32: Full-Length Mock Test</h1>
-          <p className="text-muted-foreground">45 Questions | 180 Marks | 60 Minutes</p>
+          <p className="text-muted-foreground">
+            {totalQuestions} Questions | {totalMarks} Marks | 60 Minutes
+          </p>
         </div>
       </div>
 
@@ -96,11 +124,11 @@ export function ChemistryChapter32() {
             <div className="space-y-2">
               <p className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Total Questions: 45 (All topics covered)
+                Questions available: {totalQuestions}
               </p>
               <p className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Total Marks: 180 (4 marks each)
+                Total Marks: {totalMarks} (4 marks each)
               </p>
               <p className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -134,10 +162,10 @@ export function ChemistryChapter32() {
                     </span>
                   </div>
                   <Badge variant="outline">
-                    Answered: {Object.keys(userAnswers).length}/45
+                    Answered: {answeredCount}/{totalQuestions}
                   </Badge>
                 </div>
-                <Progress value={(Object.keys(userAnswers).length / 45) * 100} />
+                <Progress value={progressPercent} />
               </CardContent>
             </Card>
           )}
@@ -151,8 +179,10 @@ export function ChemistryChapter32() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <p className="text-3xl font-bold">{score}/45 ({percentage}%)</p>
-                <p className="text-xl">Total Marks: {marks}/180</p>
+                <p className="text-3xl font-bold">
+                  {score}/{totalQuestions} ({percentage}%)
+                </p>
+                <p className="text-xl">Total Marks: {marks}/{totalMarks}</p>
                 <div className="mt-4">
                   {percentage >= 80 && <p className="text-green-600 dark:text-green-400">🎉 Excellent! You're well-prepared!</p>}
                   {percentage >= 60 && percentage < 80 && <p className="text-yellow-600 dark:text-yellow-400">👍 Good effort! Review weak areas.</p>}
@@ -162,56 +192,67 @@ export function ChemistryChapter32() {
             </Card>
           )}
 
-          <div className="space-y-4">
-            {mockTestQuestions.map((q, index) => (
-              <Card key={q.id} className="border-purple-500/20">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex gap-2 mb-2">
-                        <Badge variant="outline">Q{q.id}</Badge>
-                        <Badge variant="secondary">{q.topic}</Badge>
+          {practiceQuestions.length === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-muted-foreground">
+                Practice questions will appear here once they are added to the database.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {practiceQuestions.map((q) => (
+                <Card key={q.id} className="border-purple-500/20">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex gap-2 mb-2">
+                          <Badge variant="outline">Q{q.id}</Badge>
+                          <Badge variant="secondary">{getPrimaryTopicLabel(q)}</Badge>
+                        </div>
+                        <p className="font-medium">{q.questionText}</p>
                       </div>
-                      <p className="font-medium">{q.question}</p>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {q.options.map((option, index) => (
-                    <Button
-                      key={index}
-                      variant={
-                        showResults
-                          ? index === q.correctAnswer
-                            ? "default"
-                            : userAnswers[q.id] === index
-                            ? "destructive"
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {q.options.map((option) => (
+                      <Button
+                        key={option.id}
+                        variant={
+                          showResults
+                            ? option.id === q.correctAnswer
+                              ? "default"
+                              : userAnswers[q.id] === option.id
+                              ? "destructive"
+                              : "outline"
+                            : userAnswers[q.id] === option.id
+                            ? "secondary"
                             : "outline"
-                          : userAnswers[q.id] === index
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className="w-full justify-start text-left h-auto py-3"
-                      onClick={() => handleAnswerSelect(q.id, index)}
-                      disabled={showResults}
-                    >
-                      <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                      {typeof option === "string" ? option : option.text}
-                    </Button>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                        }
+                        className="w-full justify-start text-left h-auto py-3"
+                        onClick={() => handleAnswerSelect(q.id, option.id)}
+                        disabled={showResults}
+                      >
+                        <span className="mr-3">{option.id}.</span>
+                        {option.text}
+                      </Button>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-          {!showResults && (
+          {!showResults && testStarted && (
             <Card className="sticky bottom-0 bg-background/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="sr-only">Submit answers</CardTitle>
+              </CardHeader>
               <CardContent className="pt-6">
-                <Button 
-                  onClick={submitTest} 
-                  size="lg" 
+                <Button
+                  onClick={submitTest}
+                  size="lg"
                   className="w-full"
-                  disabled={Object.keys(userAnswers).length === 0}
+                  disabled={answeredCount === 0}
                 >
                   Submit Test
                 </Button>

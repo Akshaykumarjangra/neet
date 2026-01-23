@@ -233,7 +233,7 @@ export function PhysicsChapter15() {
             <Calculator className="h-4 w-4 mr-2" />
             3D Models
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Zap className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>

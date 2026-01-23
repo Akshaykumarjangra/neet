@@ -348,14 +348,68 @@ async function seedBiologyClass12Chapter12() {
 6. Transgenic animals serve as disease models, produce therapeutic proteins, and may provide organs for transplantation
 7. Biosafety regulations and ethical considerations are crucial for responsible use of GMOs
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Insulin Production',
+        description: 'Recombinant insulin workflow.'
+      },
+      {
+        type: 'flowchart',
+        title: 'GM Crop Development',
+        description: 'Gene selection -> transformation -> trials.'
+      },
+      {
+        type: 'table',
+        title: 'Biotech Applications',
+        description: 'Medicine, agriculture, environment.'
+      },
+      {
+        type: 'comparison',
+        title: 'Gene Therapy vs Vaccines',
+        description: 'Goals and delivery methods.'
+      },
+      {
+        type: 'graph',
+        title: 'GM Crop Adoption',
+        description: 'Adoption trend over time.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Biotechnology and its Applications',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Insulin Production',
+          description: 'Recombinant insulin workflow.'
+        },
+        {
+          type: 'flowchart',
+          title: 'GM Crop Development',
+          description: 'Gene selection -> transformation -> trials.'
+        },
+        {
+          type: 'table',
+          title: 'Biotech Applications',
+          description: 'Medicine, agriculture, environment.'
+        },
+        {
+          type: 'comparison',
+          title: 'Gene Therapy vs Vaccines',
+          description: 'Goals and delivery methods.'
+        },
+        {
+          type: 'graph',
+          title: 'GM Crop Adoption',
+          description: 'Adoption trend over time.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 12: Biotechnology and its Applications');

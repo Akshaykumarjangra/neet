@@ -2,6 +2,8 @@ import { seedPhysicalChemistryClass11 } from "./seed-physical-chemistry-class11"
 import { seedPhysicalChemistryClass12 } from "./seed-physical-chemistry-class12";
 import { seedOrganicChemistry } from "./seed-organic-chemistry";
 import { seedInorganicChemistry } from "./seed-inorganic-chemistry";
+import { seedChemistryClass11Visualizations } from "./seed-chemistry-class11-visuals";
+import { seedChemistryClass11Metadata } from "./seed-chemistry-class11-metadata";
 
 async function seedAllChemistry() {
   console.log("=".repeat(60));
@@ -24,6 +26,14 @@ async function seedAllChemistry() {
     console.log("\n⚗️ INORGANIC CHEMISTRY (CLASS 11 & 12)");
     console.log("-".repeat(40));
     await seedInorganicChemistry();
+
+    console.log("\nUpdating Class 11 Chemistry visualizations");
+    console.log("-".repeat(40));
+    await seedChemistryClass11Visualizations();
+
+    console.log("\nUpdating Class 11 Chemistry learning metadata");
+    console.log("-".repeat(40));
+    await seedChemistryClass11Metadata();
     
     console.log("\n" + "=".repeat(60));
     console.log("✅ ALL CHEMISTRY CONTENT SEEDED SUCCESSFULLY!");

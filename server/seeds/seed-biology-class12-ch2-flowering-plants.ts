@@ -507,7 +507,44 @@ async function seedBiologyClass12Chapter2() {
       chapterTitle: 'Sexual Reproduction in Flowering Plants',
       estimatedStudyMinutes: 360,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+      visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Flower Structure (L.S.)',
+        description: 'Longitudinal section showing all four whorls and parts'
+      },
+      {
+        type: 'diagram',
+        title: 'Anther T.S.',
+        description: 'Transverse section showing pollen sacs and microsporogenesis'
+      },
+      {
+        type: 'diagram',
+        title: 'Pollen Grain Structure',
+        description: 'Vegetative cell, generative cell, exine, intine, germ pores'
+      },
+      {
+        type: 'diagram',
+        title: 'Ovule Structure',
+        description: 'Funiculus, integuments, micropyle, nucellus, embryo sac'
+      },
+      {
+        type: 'diagram',
+        title: 'Embryo Sac (7-celled, 8-nucleate)',
+        description: 'Egg apparatus, central cell, antipodals'
+      },
+      {
+        type: 'flowchart',
+        title: 'Double Fertilization',
+        description: 'Syngamy and triple fusion pathways'
+      },
+      {
+        type: 'comparison',
+        title: 'Endospermic vs Non-endospermic Seeds',
+        description: 'Structure and examples'
+      }
+    ]
     }
   });
 

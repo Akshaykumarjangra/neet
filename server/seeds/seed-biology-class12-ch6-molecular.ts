@@ -349,14 +349,68 @@ More complex, occurs at multiple levels:
 6. Gene expression is regulated by operons in prokaryotes and multiple mechanisms in eukaryotes
 7. Central dogma: DNA → RNA → Protein
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'DNA Double Helix',
+        description: 'Base pairing and antiparallel strands.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Central Dogma',
+        description: 'DNA -> RNA -> Protein.'
+      },
+      {
+        type: 'diagram',
+        title: 'DNA Replication Fork',
+        description: 'Leading and lagging strand synthesis.'
+      },
+      {
+        type: 'table',
+        title: 'Genetic Code Features',
+        description: 'Codons, start/stop signals, and degeneracy.'
+      },
+      {
+        type: 'comparison',
+        title: 'Prokaryotic vs Eukaryotic Gene',
+        description: 'Introns, promoters, and processing differences.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Molecular Basis of Inheritance',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'DNA Double Helix',
+          description: 'Base pairing and antiparallel strands.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Central Dogma',
+          description: 'DNA -> RNA -> Protein.'
+        },
+        {
+          type: 'diagram',
+          title: 'DNA Replication Fork',
+          description: 'Leading and lagging strand synthesis.'
+        },
+        {
+          type: 'table',
+          title: 'Genetic Code Features',
+          description: 'Codons, start/stop signals, and degeneracy.'
+        },
+        {
+          type: 'comparison',
+          title: 'Prokaryotic vs Eukaryotic Gene',
+          description: 'Introns, promoters, and processing differences.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 6: Molecular Basis of Inheritance');

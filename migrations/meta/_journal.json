@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1766894400000,
+      "tag": "20251222_mock_exam_core",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766894400001,
+      "tag": "20251222_mock_exam_attempt_metadata",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766894400002,
+      "tag": "20251222_mock_exam_proctoring",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766894400003,
+      "tag": "20251223_mock_exam_assignments",
+      "breakpoints": false
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1766894400004,
+      "tag": "20251223_mock_exam_attempt_snapshot",
+      "breakpoints": false
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1766894400005,
+      "tag": "20251223_mock_exam_question_media",
+      "breakpoints": false
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767067200000,
+      "tag": "20251227_question_tags",
+      "breakpoints": false
+    }
+  ]
+}

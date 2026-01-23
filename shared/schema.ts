@@ -1,11 +1,9 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, pgEnum, uniqueIndex, real } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, pgEnum, uniqueIndex, real, primaryKey, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const chapterStatusEnum = pgEnum("chapter_status", ["draft", "in_review", "published", "archived"]);
-
-export const userRoleEnum = pgEnum("user_role", ["student", "mentor", "admin"]);
 
 export const verificationStatusEnum = pgEnum("verification_status", ["pending", "approved", "rejected"]);
 
@@ -15,6 +13,10 @@ export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "r
 
 export const contentAssetTypeEnum = pgEnum("content_asset_type", ["video", "pdf", "image", "handwritten_note"]);
 
+export const mockTestStatusEnum = pgEnum("mock_test_status", ["draft", "scheduled", "published", "closed"]);
+
+export const mockTestAttemptStatusEnum = pgEnum("mock_test_attempt_status", ["in_progress", "submitted", "auto_submitted", "expired"]);
+
 export const contentTopics = pgTable("content_topics", {
   id: serial("id").primaryKey(),
   subject: varchar("subject", { length: 50 }).notNull(),
@@ -22,30 +24,66 @@ export const contentTopics = pgTable("content_topics", {
   topicName: varchar("topic_name", { length: 200 }).notNull(),
   ncertChapter: varchar("ncert_chapter", { length: 100 }),
   referenceBooks: jsonb("reference_books").$type<string[]>(),
-});
+}, (table) => ({
+  subjectClassIdx: index("content_topics_subject_class_idx").on(table.subject, table.classLevel),
+}));
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   topicId: integer("topic_id").references(() => contentTopics.id).notNull(),
   questionText: text("question_text").notNull(),
-  options: jsonb("options").$type<{ id: string; text: string }[]>().notNull(),
+  optionA: text("option_a"),
+  optionB: text("option_b"),
+  optionC: text("option_c"),
+  optionD: text("option_d"),
+  options: jsonb("options").$type<{ id: string; text: string }[]>(),
   correctAnswer: varchar("correct_answer", { length: 10 }).notNull(),
-  solutionDetail: text("solution_detail").notNull(),
+  explanation: text("explanation"),
+  solutionDetail: text("solution_detail"),
   solutionSteps: jsonb("solution_steps").$type<string[]>(),
-  difficultyLevel: integer("difficulty_level").notNull(),
-  sourceType: varchar("source_type", { length: 50 }).notNull(),
+  difficulty: text("difficulty"),
+  difficultyLevel: integer("difficulty_level"),
+  sourceType: varchar("source_type", { length: 50 }),
   relatedTopics: jsonb("related_topics").$type<string[]>(),
+  tags: jsonb("tags").$type<string[]>(),
   pyqYear: integer("pyq_year"),
-});
+}, (table) => ({
+  topicIdx: index("questions_topic_idx").on(table.topicId),
+}));
+
+export const questionTags = pgTable(
+  "question_tags",
+  {
+    questionId: integer("question_id").references(() => questions.id).notNull(),
+    tag: varchar("tag", { length: 100 }).notNull(),
+    category: varchar("category", { length: 50 }).notNull().default("custom"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    questionTagIdx: primaryKey(table.questionId, table.tag),
+  })
+);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  role: userRoleEnum("role").notNull().default("student"),
+  name: text("name").notNull(),
+  companyName: text("company_name"),
+  role: text("role").notNull().default("user"),
+  isSuperAdmin: boolean("is_super_admin").notNull().default(false),
   avatarUrl: varchar("avatar_url", { length: 500 }),
   headline: varchar("headline", { length: 200 }),
+  isVerified: boolean("is_verified").notNull().default(false),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  twoFactorSecret: text("two_factor_secret"),
+  paymentStatus: text("payment_status").notNull().default("none"),
+  demoStartedAt: timestamp("demo_started_at"),
+  paidAt: timestamp("paid_at"),
+  paymentProvider: text("payment_provider"),
+  paymentId: text("payment_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   currentLevel: integer("current_level").notNull().default(1),
   totalPoints: integer("total_points").notNull().default(0),
   studyStreak: integer("study_streak").notNull().default(0),
@@ -57,12 +95,10 @@ export const users = pgTable("users", {
   }>(),
   isAdmin: boolean("is_admin").notNull().default(false),
   isPaidUser: boolean("is_paid_user").notNull().default(false),
-  isVerified: boolean("is_verified").notNull().default(false),
   verifiedAt: timestamp("verified_at"),
   isOwner: boolean("is_owner").notNull().default(false),
   isDisabled: boolean("is_disabled").notNull().default(false),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const questionPreviewLimits = pgTable("question_preview_limits", {
@@ -313,21 +349,21 @@ export const userChapterProgress = pgTable("user_chapter_progress", {
 });
 
 export const testSessions = pgTable("test_sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   testType: varchar("test_type", { length: 50 }).notNull(),
-  questionsList: jsonb("questions_list").$type<number[]>().notNull(),
-  currentQuestionIndex: integer("current_question_index").notNull().default(0),
-  answers: jsonb("answers").$type<Record<number, string>>().notNull().default({}),
+  subject: varchar("subject", { length: 50 }),
+  totalQuestions: integer("total_questions").notNull(),
+  correctAnswers: integer("correct_answers").notNull().default(0),
+  score: integer("score").notNull().default(0),
+  timeTaken: integer("time_taken"),
   startedAt: timestamp("started_at").notNull().defaultNow(),
-  endsAt: timestamp("ends_at").notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("in_progress"),
-  score: integer("score"),
+  completedAt: timestamp("completed_at"),
 });
 
 export const testSessionEvents = pgTable("test_session_events", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => testSessions.id).notNull(),
+  sessionId: integer("session_id").references(() => testSessions.id).notNull(),
   eventType: varchar("event_type", { length: 50 }).notNull(),
   eventData: jsonb("event_data").notNull(),
   sequence: integer("sequence").notNull(),
@@ -338,7 +374,7 @@ export const testSessionEvents = pgTable("test_session_events", {
 
 export const sessionParticipants = pgTable("session_participants", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => testSessions.id).notNull(),
+  sessionId: integer("session_id").references(() => testSessions.id).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
   lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
@@ -384,23 +420,179 @@ export const mockTests = pgTable("mock_tests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const mockTestSeries = pgTable("mock_test_series", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  isPublished: boolean("is_published").notNull().default(false),
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const mockExamPapers = pgTable("mock_exam_papers", {
+  id: serial("id").primaryKey(),
+  seriesId: integer("series_id").references(() => mockTestSeries.id),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  durationMinutes: integer("duration_minutes").notNull(),
+  totalMarks: real("total_marks").notNull().default(0),
+  instructions: text("instructions"),
+  shuffleQuestions: boolean("shuffle_questions").notNull().default(true),
+  shuffleOptions: boolean("shuffle_options").notNull().default(true),
+  attemptsAllowed: integer("attempts_allowed").notNull().default(1),
+  status: mockTestStatusEnum("status").notNull().default("draft"),
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const mockExamAssignments = pgTable("mock_exam_assignments", {
+  id: serial("id").primaryKey(),
+  paperId: integer("paper_id").references(() => mockExamPapers.id).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  organizationId: integer("organization_id"),
+  classSection: varchar("class_section", { length: 50 }),
+  assignedBy: varchar("assigned_by").references(() => users.id),
+  assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+}, (table) => ({
+  mockExamAssignmentIdx: uniqueIndex("mock_exam_assignment_idx").on(
+    table.paperId,
+    table.userId,
+    table.organizationId,
+    table.classSection
+  ),
+}));
+
+export const mockExamSections = pgTable("mock_exam_sections", {
+  id: serial("id").primaryKey(),
+  paperId: integer("paper_id").references(() => mockExamPapers.id).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  displayOrder: integer("display_order").notNull().default(1),
+  questionCount: integer("question_count").notNull(),
+  marksCorrect: real("marks_correct").notNull().default(4),
+  marksIncorrect: real("marks_incorrect").notNull().default(-1),
+  marksUnanswered: real("marks_unanswered").notNull().default(0),
+  durationMinutes: integer("duration_minutes"),
+  instructions: text("instructions"),
+});
+
+export const mockExamQuestions = pgTable("mock_exam_questions", {
+  id: serial("id").primaryKey(),
+  subject: varchar("subject", { length: 50 }).notNull(),
+  topic: varchar("topic", { length: 120 }),
+  subtopic: varchar("subtopic", { length: 120 }),
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"),
+  stem: text("stem").notNull(),
+  mediaRef: varchar("media_ref", { length: 500 }),
+  explanation: text("explanation"),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  sourceYear: integer("source_year"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const mockExamOptions = pgTable("mock_exam_options", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").references(() => mockExamQuestions.id).notNull(),
+  label: varchar("label", { length: 5 }).notNull(),
+  text: text("text").notNull(),
+  mediaRef: varchar("media_ref", { length: 500 }),
+  isCorrect: boolean("is_correct").notNull().default(false),
+}, (table) => ({
+  mockExamOptionQuestionLabelIdx: uniqueIndex("mock_exam_option_question_label_idx").on(table.questionId, table.label),
+}));
+
+export const mockExamPaperQuestions = pgTable("mock_exam_paper_questions", {
+  id: serial("id").primaryKey(),
+  paperId: integer("paper_id").references(() => mockExamPapers.id).notNull(),
+  sectionId: integer("section_id").references(() => mockExamSections.id).notNull(),
+  questionId: integer("question_id").references(() => mockExamQuestions.id).notNull(),
+  position: integer("position").notNull(),
+}, (table) => ({
+  mockExamPaperQuestionIdx: uniqueIndex("mock_exam_paper_question_idx").on(table.paperId, table.questionId),
+  mockExamPaperQuestionOrderIdx: uniqueIndex("mock_exam_paper_question_order_idx").on(table.paperId, table.position),
+}));
+
+export const mockExamAttempts = pgTable("mock_exam_attempts", {
+  id: serial("id").primaryKey(),
+  paperId: integer("paper_id").references(() => mockExamPapers.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  attemptNumber: integer("attempt_number").notNull().default(1),
+  status: mockTestAttemptStatusEnum("status").notNull().default("in_progress"),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  endsAt: timestamp("ends_at"),
+  submittedAt: timestamp("submitted_at"),
+  score: real("score"),
+  totalTimeSeconds: integer("total_time_seconds"),
+  correctCount: integer("correct_count").default(0),
+  wrongCount: integer("wrong_count").default(0),
+  unansweredCount: integer("unanswered_count").default(0),
+  focusLossCount: integer("focus_loss_count").notNull().default(0),
+  lastFocusLossAt: timestamp("last_focus_loss_at"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  deviceFingerprint: varchar("device_fingerprint", { length: 200 }),
+  lastActiveAt: timestamp("last_active_at"),
+}, (table) => ({
+  mockExamAttemptUserPaperIdx: uniqueIndex("mock_exam_attempt_user_paper_idx").on(table.paperId, table.userId, table.attemptNumber),
+}));
+
+export const mockExamAttemptSections = pgTable("mock_exam_attempt_sections", {
+  id: serial("id").primaryKey(),
+  attemptId: integer("attempt_id").references(() => mockExamAttempts.id).notNull(),
+  sectionId: integer("section_id").references(() => mockExamSections.id).notNull(),
+  timeSpentSeconds: integer("time_spent_seconds").default(0),
+}, (table) => ({
+  mockExamAttemptSectionIdx: uniqueIndex("mock_exam_attempt_section_idx").on(table.attemptId, table.sectionId),
+}));
+
+export const mockExamAttemptQuestions = pgTable("mock_exam_attempt_questions", {
+  id: serial("id").primaryKey(),
+  attemptId: integer("attempt_id").references(() => mockExamAttempts.id).notNull(),
+  questionId: integer("question_id").references(() => mockExamQuestions.id).notNull(),
+  sectionId: integer("section_id").references(() => mockExamSections.id).notNull(),
+  position: integer("position").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+}, (table) => ({
+  mockExamAttemptQuestionIdx: uniqueIndex("mock_exam_attempt_question_idx").on(table.attemptId, table.questionId),
+  mockExamAttemptQuestionOrderIdx: uniqueIndex("mock_exam_attempt_question_order_idx").on(table.attemptId, table.position),
+}));
+
+export const mockExamResponses = pgTable("mock_exam_responses", {
+  id: serial("id").primaryKey(),
+  attemptId: integer("attempt_id").references(() => mockExamAttempts.id).notNull(),
+  questionId: integer("question_id").references(() => mockExamQuestions.id).notNull(),
+  selectedOptionId: integer("selected_option_id").references(() => mockExamOptions.id),
+  isCorrect: boolean("is_correct"),
+  timeSpentSeconds: integer("time_spent_seconds").default(0),
+  flagged: boolean("flagged").notNull().default(false),
+  savedAt: timestamp("saved_at").notNull().defaultNow(),
+}, (table) => ({
+  mockExamResponseAttemptQuestionIdx: uniqueIndex("mock_exam_response_attempt_question_idx").on(table.attemptId, table.questionId),
+}));
+
+
 export const flashcardDecks = pgTable("flashcard_decks", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
   subject: varchar("subject", { length: 50 }),
   topicId: integer("topic_id").references(() => contentTopics.id),
   description: text("description"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const flashcards = pgTable("flashcards", {
   id: serial("id").primaryKey(),
-  deckId: integer("deck_id").references(() => flashcardDecks.id).notNull(),
-  front: text("front").notNull(),
-  back: text("back").notNull(),
-  order: integer("order").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  topicId: integer("topic_id").references(() => contentTopics.id).notNull(),
+  frontContent: text("front_content").notNull(),
+  backContent: text("back_content").notNull(),
+  difficulty: integer("difficulty").notNull().default(1),
+  tags: jsonb("tags").$type<string[]>(),
 });
 
 export const chapterContent = pgTable("chapter_content", {
@@ -453,7 +645,7 @@ export const chapterContent = pgTable("chapter_content", {
   }>>().notNull().default([]),
   difficultyLevel: integer("difficulty_level").notNull().default(3),
   estimatedStudyMinutes: integer("estimated_study_minutes").notNull().default(180),
-  
+
   // Simple content fields for quick seeding
   formulas: jsonb("formulas").$type<string[]>().notNull().default([]),
   learningObjectives: jsonb("learning_objectives").$type<string[]>().notNull().default([]),
@@ -466,7 +658,7 @@ export const chapterContent = pgTable("chapter_content", {
     description: string;
     config?: Record<string, any>;
   }>>().notNull().default([]),
-  
+
   authorId: varchar("author_id").references(() => users.id),
   mentorId: integer("mentor_id").references(() => mentors.id),
   status: chapterStatusEnum("status").notNull().default("draft"),
@@ -481,6 +673,23 @@ export const chapterContent = pgTable("chapter_content", {
 }, (table) => ({
   uniqueSubjectChapter: uniqueIndex("chapter_content_subject_class_chapter_idx").on(table.subject, table.classLevel, table.chapterNumber),
 }));
+
+export const chapterContentVersions = pgTable("chapter_content_versions", {
+  id: serial("id").primaryKey(),
+  chapterContentId: integer("chapter_content_id").references(() => chapterContent.id).notNull(),
+  mentorId: integer("mentor_id").references(() => mentors.id).notNull(),
+  detailedNotes: text("detailed_notes"),
+  keyConcepts: jsonb("key_concepts").$type<Array<{
+    title: string;
+    description: string;
+    formula?: string;
+  }>>(),
+  formulas: jsonb("formulas").$type<string[]>(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
 
 export const insertContentTopicSchema = createInsertSchema(contentTopics).omit({
   id: true,
@@ -508,6 +717,59 @@ export const insertMockTestSchema = createInsertSchema(mockTests).omit({
   createdAt: true,
 } as any);
 
+export const insertMockTestSeriesSchema = createInsertSchema(mockTestSeries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertMockExamPaperSchema = createInsertSchema(mockExamPapers).omit({
+  id: true,
+  totalMarks: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertMockExamAssignmentSchema = createInsertSchema(mockExamAssignments).omit({
+  id: true,
+  assignedAt: true,
+} as any);
+
+export const insertMockExamSectionSchema = createInsertSchema(mockExamSections).omit({
+  id: true,
+} as any);
+
+export const insertMockExamQuestionSchema = createInsertSchema(mockExamQuestions).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertMockExamOptionSchema = createInsertSchema(mockExamOptions).omit({
+  id: true,
+} as any);
+
+export const insertMockExamPaperQuestionSchema = createInsertSchema(mockExamPaperQuestions).omit({
+  id: true,
+} as any);
+
+export const insertMockExamAttemptSchema = createInsertSchema(mockExamAttempts).omit({
+  id: true,
+  startedAt: true,
+} as any);
+
+export const insertMockExamAttemptSectionSchema = createInsertSchema(mockExamAttemptSections).omit({
+  id: true,
+} as any);
+
+export const insertMockExamAttemptQuestionSchema = createInsertSchema(mockExamAttemptQuestions).omit({
+  id: true,
+} as any);
+
+export const insertMockExamResponseSchema = createInsertSchema(mockExamResponses).omit({
+  id: true,
+  savedAt: true,
+} as any);
+
 export const insertFlashcardDeckSchema = createInsertSchema(flashcardDecks).omit({
   id: true,
   createdAt: true,
@@ -516,7 +778,6 @@ export const insertFlashcardDeckSchema = createInsertSchema(flashcardDecks).omit
 
 export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
   id: true,
-  createdAt: true,
 } as any);
 
 export const insertChapterContentSchema = createInsertSchema(chapterContent).omit({
@@ -554,6 +815,12 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
 
 export const insertChapterPrerequisiteSchema = createInsertSchema(chapterPrerequisites).omit({
   id: true,
+} as any);
+
+export const insertChapterContentVersionSchema = createInsertSchema(chapterContentVersions).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
 } as any);
 
 export const insertUserChapterProgressSchema = createInsertSchema(userChapterProgress).omit({
@@ -717,12 +984,10 @@ export const userFlashcardProgress = pgTable("user_flashcard_progress", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   flashcardId: integer("flashcard_id").references(() => flashcards.id).notNull(),
   easeFactor: real("ease_factor").notNull().default(2.5),
-  interval: integer("interval").notNull().default(1),
+  interval: integer("interval").notNull().default(0),
   repetitions: integer("repetitions").notNull().default(0),
-  nextReviewAt: timestamp("next_review_at").notNull().defaultNow(),
-  lastReviewedAt: timestamp("last_reviewed_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  nextReview: timestamp("next_review"),
+  lastReviewed: timestamp("last_reviewed"),
 }, (table) => ({
   userFlashcardIdx: uniqueIndex("user_flashcard_progress_idx").on(table.userId, table.flashcardId),
 }));
@@ -757,8 +1022,6 @@ export const insertUserFormulaBookmarkSchema = createInsertSchema(userFormulaBoo
 
 export const insertUserFlashcardProgressSchema = createInsertSchema(userFlashcardProgress).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
 } as any);
 
 export const insertPastYearPaperSchema = createInsertSchema(pastYearPapers).omit({
@@ -779,6 +1042,28 @@ export type InsertUserPerformance = z.infer<typeof insertUserPerformanceSchema>;
 
 export type MockTest = typeof mockTests.$inferSelect;
 export type InsertMockTest = z.infer<typeof insertMockTestSchema>;
+export type MockTestSeries = typeof mockTestSeries.$inferSelect;
+export type InsertMockTestSeries = z.infer<typeof insertMockTestSeriesSchema>;
+export type MockExamPaper = typeof mockExamPapers.$inferSelect;
+export type InsertMockExamPaper = z.infer<typeof insertMockExamPaperSchema>;
+export type MockExamAssignment = typeof mockExamAssignments.$inferSelect;
+export type InsertMockExamAssignment = z.infer<typeof insertMockExamAssignmentSchema>;
+export type MockExamSection = typeof mockExamSections.$inferSelect;
+export type InsertMockExamSection = z.infer<typeof insertMockExamSectionSchema>;
+export type MockExamQuestion = typeof mockExamQuestions.$inferSelect;
+export type InsertMockExamQuestion = z.infer<typeof insertMockExamQuestionSchema>;
+export type MockExamOption = typeof mockExamOptions.$inferSelect;
+export type InsertMockExamOption = z.infer<typeof insertMockExamOptionSchema>;
+export type MockExamPaperQuestion = typeof mockExamPaperQuestions.$inferSelect;
+export type InsertMockExamPaperQuestion = z.infer<typeof insertMockExamPaperQuestionSchema>;
+export type MockExamAttempt = typeof mockExamAttempts.$inferSelect;
+export type InsertMockExamAttempt = z.infer<typeof insertMockExamAttemptSchema>;
+export type MockExamAttemptSection = typeof mockExamAttemptSections.$inferSelect;
+export type InsertMockExamAttemptSection = z.infer<typeof insertMockExamAttemptSectionSchema>;
+export type MockExamAttemptQuestion = typeof mockExamAttemptQuestions.$inferSelect;
+export type InsertMockExamAttemptQuestion = z.infer<typeof insertMockExamAttemptQuestionSchema>;
+export type MockExamResponse = typeof mockExamResponses.$inferSelect;
+export type InsertMockExamResponse = z.infer<typeof insertMockExamResponseSchema>;
 
 export type FlashcardDeck = typeof flashcardDecks.$inferSelect;
 export type InsertFlashcardDeck = z.infer<typeof insertFlashcardDeckSchema>;
@@ -847,130 +1132,58 @@ export type UserFlashcardProgress = typeof userFlashcardProgress.$inferSelect;
 export type InsertUserFlashcardProgress = z.infer<typeof insertUserFlashcardProgressSchema>;
 
 // Battle Pass / Season System
-export const seasonPasses = pgTable("season_passes", {
+export const battlePassSeasons = pgTable("battle_pass_seasons", {
   id: serial("id").primaryKey(),
-  seasonNumber: integer("season_number").notNull().unique(),
-  name: varchar("name", { length: 100 }).notNull(),
+  seasonName: varchar("season_name", { length: 100 }).notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  maxTier: integer("max_tier").notNull().default(50),
+  totalTiers: integer("total_tiers").notNull().default(50),
   isActive: boolean("is_active").notNull().default(true),
 });
 
 export const battlePassTiers = pgTable("battle_pass_tiers", {
   id: serial("id").primaryKey(),
-  seasonId: integer("season_id").references(() => seasonPasses.id).notNull(),
-  tier: integer("tier").notNull(),
+  seasonId: integer("season_id").references(() => battlePassSeasons.id).notNull(),
+  tierNumber: integer("tier_number").notNull(),
   xpRequired: integer("xp_required").notNull(),
   freeReward: jsonb("free_reward").$type<{
-    type: 'cosmetic' | 'xp_boost' | 'power_up' | 'badge';
+    type?: string;
     itemId?: number;
     quantity?: number;
   }>(),
   premiumReward: jsonb("premium_reward").$type<{
-    type: 'cosmetic' | 'xp_boost' | 'power_up' | 'badge';
+    type?: string;
     itemId?: number;
     quantity?: number;
   }>(),
 });
 
-export const userSeasonProgress = pgTable("user_season_progress", {
+export const userBattlePassProgress = pgTable("user_battle_pass_progress", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  seasonId: integer("season_id").references(() => seasonPasses.id).notNull(),
-  currentTier: integer("current_tier").notNull().default(0),
-  totalXp: integer("total_xp").notNull().default(0),
+  seasonId: integer("season_id").references(() => battlePassSeasons.id).notNull(),
+  currentTier: integer("current_tier").notNull().default(1),
+  currentXp: integer("current_xp").notNull().default(0),
   isPremium: boolean("is_premium").notNull().default(false),
-  claimedFreeTiers: jsonb("claimed_free_tiers").$type<number[]>().default([]),
-  claimedPremiumTiers: jsonb("claimed_premium_tiers").$type<number[]>().default([]),
-});
-
-// Cosmetics System
-export const cosmetics = pgTable("cosmetics", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  description: text("description"),
-  category: varchar("category", { length: 50 }).notNull(), // 'frame', 'badge', 'title', 'emote', 'avatar_border'
-  rarity: varchar("rarity", { length: 20 }).notNull(), // 'common', 'rare', 'epic', 'legendary'
-  imageUrl: varchar("image_url", { length: 255 }),
-  unlockMethod: varchar("unlock_method", { length: 50 }).notNull(), // 'battle_pass', 'achievement', 'purchase', 'challenge'
-  price: integer("price"), // null if not purchasable
-  isLimited: boolean("is_limited").notNull().default(false),
-  availableUntil: timestamp("available_until"),
-});
-
-export const userCosmetics = pgTable("user_cosmetics", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  cosmeticId: integer("cosmetic_id").references(() => cosmetics.id).notNull(),
-  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
-  isEquipped: boolean("is_equipped").notNull().default(false),
-});
-
-// Power-Ups System
-export const powerUpTypes = pgTable("power_up_types", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  description: text("description").notNull(),
-  icon: varchar("icon", { length: 50 }).notNull(),
-  effectType: varchar("effect_type", { length: 50 }).notNull(), // 'xp_boost', 'shield', 'focus_mode', 'streak_freeze'
-  effectValue: integer("effect_value").notNull(), // multiplier percentage or quantity
-  durationMinutes: integer("duration_minutes"), // null for instant effects
-  price: integer("price").notNull(), // cost in coins or points
-});
-
-export const userPowerUps = pgTable("user_power_ups", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  powerUpTypeId: integer("power_up_type_id").references(() => powerUpTypes.id).notNull(),
-  quantity: integer("quantity").notNull().default(1),
-  acquiredAt: timestamp("acquired_at").notNull().defaultNow(),
-});
-
-export const activePowerUps = pgTable("active_power_ups", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  powerUpTypeId: integer("power_up_type_id").references(() => powerUpTypes.id).notNull(),
-  activatedAt: timestamp("activated_at").notNull().defaultNow(),
-  expiresAt: timestamp("expires_at").notNull(),
+  claimedTiers: jsonb("claimed_tiers").$type<number[]>().default([]),
 });
 
 // Insert Schemas
-export const insertSeasonPassSchema = createInsertSchema(seasonPasses).omit({ id: true } as any);
 export const insertBattlePassTierSchema = createInsertSchema(battlePassTiers).omit({ id: true } as any);
-export const insertUserSeasonProgressSchema = createInsertSchema(userSeasonProgress).omit({ id: true } as any);
-export const insertCosmeticSchema = createInsertSchema(cosmetics).omit({ id: true } as any);
-export const insertUserCosmeticSchema = createInsertSchema(userCosmetics).omit({ id: true, unlockedAt: true } as any);
-export const insertPowerUpTypeSchema = createInsertSchema(powerUpTypes).omit({ id: true } as any);
-export const insertUserPowerUpSchema = createInsertSchema(userPowerUps).omit({ id: true, acquiredAt: true } as any);
-export const insertActivePowerUpSchema = createInsertSchema(activePowerUps).omit({ id: true, activatedAt: true } as any);
+export const insertBattlePassSeasonSchema = createInsertSchema(battlePassSeasons).omit({ id: true } as any);
+export const insertUserBattlePassProgressSchema = createInsertSchema(userBattlePassProgress).omit({ id: true } as any);
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ updatedAt: true } as any);
 export const insertUserComboSchema = createInsertSchema(userCombos).omit({ id: true } as any);
 
 // Type Exports
-export type SeasonPass = typeof seasonPasses.$inferSelect;
-export type InsertSeasonPass = z.infer<typeof insertSeasonPassSchema>;
-
 export type BattlePassTier = typeof battlePassTiers.$inferSelect;
 export type InsertBattlePassTier = z.infer<typeof insertBattlePassTierSchema>;
 
-export type UserSeasonProgress = typeof userSeasonProgress.$inferSelect;
-export type InsertUserSeasonProgress = z.infer<typeof insertUserSeasonProgressSchema>;
+export type BattlePassSeason = typeof battlePassSeasons.$inferSelect;
+export type InsertBattlePassSeason = z.infer<typeof insertBattlePassSeasonSchema>;
 
-export type Cosmetic = typeof cosmetics.$inferSelect;
-export type InsertCosmetic = z.infer<typeof insertCosmeticSchema>;
-
-export type UserCosmetic = typeof userCosmetics.$inferSelect;
-export type InsertUserCosmetic = z.infer<typeof insertUserCosmeticSchema>;
-
-export type PowerUpType = typeof powerUpTypes.$inferSelect;
-export type InsertPowerUpType = z.infer<typeof insertPowerUpTypeSchema>;
-
-export type UserPowerUp = typeof userPowerUps.$inferSelect;
-export type InsertUserPowerUp = z.infer<typeof insertUserPowerUpSchema>;
-
-export type ActivePowerUp = typeof activePowerUps.$inferSelect;
-export type InsertActivePowerUp = z.infer<typeof insertActivePowerUpSchema>;
+export type UserBattlePassProgress = typeof userBattlePassProgress.$inferSelect;
+export type InsertUserBattlePassProgress = z.infer<typeof insertUserBattlePassProgressSchema>;
 
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
@@ -1183,13 +1396,15 @@ export const userSubscriptions = pgTable("user_subscriptions", {
 }));
 
 export const paymentTransactions = pgTable("payment_transactions", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
   subscriptionId: integer("subscription_id").references(() => userSubscriptions.id),
   organizationId: integer("organization_id").references(() => organizations.id),
-  amount: integer("amount_cents").notNull(),
-  currency: varchar("currency", { length: 10 }).notNull().default("INR"),
-  status: paymentStatusEnum("status").notNull().default("pending"),
+  provider: text("provider").notNull(),
+  transactionId: text("transaction_id").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  status: text("status").notNull(),
   paymentMethod: varchar("payment_method", { length: 50 }), // stripe, razorpay, upi, card
   paymentProvider: varchar("payment_provider", { length: 50 }), // stripe, razorpay
   // Provider-specific IDs
@@ -1199,7 +1414,7 @@ export const paymentTransactions = pgTable("payment_transactions", {
   razorpayPaymentId: varchar("razorpay_payment_id", { length: 255 }),
   razorpaySignature: varchar("razorpay_signature", { length: 500 }),
   // Response and metadata
-  paymentGatewayResponse: jsonb("payment_gateway_response"),
+  paymentData: jsonb("payment_data"),
   failureCode: varchar("failure_code", { length: 100 }),
   failureMessage: text("failure_message"),
   invoiceUrl: varchar("invoice_url", { length: 500 }),
@@ -1222,6 +1437,7 @@ export const webhookEvents = pgTable("webhook_events", {
   error: text("error"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
 
 // ============ ORGANIZATION / SCHOOL SYSTEM ============
 
@@ -1292,6 +1508,7 @@ export const organizationInvitations = pgTable("organization_invitations", {
   acceptedAt: timestamp("accepted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
 
 // ============ ADMIN SETTINGS & AUDIT ============
 
@@ -1368,6 +1585,9 @@ export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
 
 export const insertOrganizationInvitationSchema = createInsertSchema(organizationInvitations).omit({
   id: true,
+  token: true,
+  status: true,
+  acceptedAt: true,
   createdAt: true,
 } as any);
 
@@ -1397,9 +1617,53 @@ export type InsertOrganizationMember = z.infer<typeof insertOrganizationMemberSc
 
 export type OrganizationInvitation = typeof organizationInvitations.$inferSelect;
 export type InsertOrganizationInvitation = z.infer<typeof insertOrganizationInvitationSchema>;
+export type QuestionTag = typeof questionTags.$inferSelect;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
+// ============ CHAT SYSTEM ============
+
+export const chatThreads = pgTable("chat_threads", {
+  id: serial("id").primaryKey(),
+  subject: varchar("subject", { length: 200 }).notNull(),
+  studentId: varchar("student_id").references(() => users.id).notNull(),
+  mentorId: integer("mentor_id").references(() => mentors.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  isResolved: boolean("is_resolved").notNull().default(false),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").references(() => chatThreads.id).notNull(),
+  senderId: varchar("sender_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  isFlagged: boolean("is_flagged").notNull().default(false),
+});
+
+export const insertChatThreadSchema = createInsertSchema(chatThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastMessageAt: true,
+  isResolved: true,
+} as any);
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+  isFlagged: true,
+} as any);
+
+export type ChatThread = typeof chatThreads.$inferSelect;
+export type InsertChatThread = z.infer<typeof insertChatThreadSchema>;
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+

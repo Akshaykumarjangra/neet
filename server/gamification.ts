@@ -1,4 +1,4 @@
-import { db } from "../server/db";
+import { db } from "./db";
 import { 
   users, 
   xpTransactions, 
@@ -10,12 +10,19 @@ import {
   userChapterProgress,
   userChapterBookmarks,
   userChapterNotes,
-  userChapterSessions
+  userChapterSessions,
+  userPerformance,
+  testSessions,
 } from "../shared/schema";
-import { eq, and, desc, sql, count, countDistinct } from "drizzle-orm";
+import { eq, and, desc, sql, count, countDistinct, gte } from "drizzle-orm";
 import type { PgTransaction } from "drizzle-orm/pg-core";
 import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import type { ExtractTablesWithRelations } from "drizzle-orm";
+
+type UserRow = typeof users.$inferSelect;
+type UserInsert = typeof users.$inferInsert;
+type UserChapterProgressInsert = typeof userChapterProgress.$inferInsert;
+type UserDailyChallengeInsert = typeof userDailyChallenges.$inferInsert;
 
 export interface XpSource {
   type: 'question' | 'chapter' | 'test' | 'streak' | 'achievement' | 'challenge' | 'chapter_view' | 'study_time' | 'note';
@@ -162,7 +169,7 @@ export class GamificationService {
           // Use a streak freeze
           await db
             .update(users)
-            .set({ streakFreezes: user.streakFreezes - 1 })
+            .set({ streakFreezes: user.streakFreezes - 1 } as Partial<UserInsert>)
             .where(eq(users.id, userId));
           freezeUsed = true;
         } else {
@@ -178,7 +185,7 @@ export class GamificationService {
       .set({
         studyStreak: newStreak,
         lastActiveDate: now,
-      })
+      } as Partial<UserInsert>)
       .where(eq(users.id, userId));
 
     return { streak: newStreak, bonusAwarded, freezeUsed };
@@ -283,8 +290,32 @@ export class GamificationService {
             })
             .from(userChapterSessions)
             .where(eq(userChapterSessions.userId, userId));
-          const totalMinutes = result?.totalMinutes || 0;
-          shouldUnlock = totalMinutes >= (condition.target || 0);
+              const totalMinutes = result?.totalMinutes || 0;
+              shouldUnlock = totalMinutes >= (condition.target || 0);
+              break;
+            }
+        
+        // Practice achievements (questions solved)
+        case 'questions_solved': {
+          const [result] = await db
+            .select({ count: count() })
+            .from(userPerformance)
+            .where(eq(userPerformance.userId, userId));
+          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          break;
+        }
+        
+        // Test score achievements
+        case 'test_score': {
+          const subjectFilter = condition.subject ? sql`${testSessions.subject} = ${condition.subject}` : sql`true`;
+          const [result] = await db
+            .select({
+              maxScore: sql<number>`COALESCE(MAX(${testSessions.score}), 0)`,
+            })
+            .from(testSessions)
+            .where(and(eq(testSessions.userId, userId), subjectFilter, gte(testSessions.score, condition.target || 0)))
+            .limit(1);
+          shouldUnlock = (result?.maxScore || 0) >= (condition.target || 0);
           break;
         }
       }
@@ -399,7 +430,7 @@ export class GamificationService {
           progress,
           completed,
           completedAt: completed ? new Date() : null,
-        })
+        } as Partial<UserDailyChallengeInsert>)
         .where(eq(userDailyChallenges.id, existing.id));
     } else {
       // Create new
@@ -409,7 +440,7 @@ export class GamificationService {
         progress,
         completed,
         completedAt: completed ? new Date() : null,
-      });
+      } as UserDailyChallengeInsert);
     }
 
     // Award XP if completed
@@ -430,7 +461,7 @@ export class GamificationService {
     const leaderboard = await db
       .select({
         userId: users.id,
-        username: users.username,
+        username: users.name,
         level: users.currentLevel,
         points: users.totalPoints,
         streak: users.studyStreak,
@@ -525,7 +556,7 @@ export class GamificationService {
         masteryLevel: 'bronze',
         timeSpentMinutes: updates.timeSpentMinutes || 0,
         practiceQuestionsAttempted: updates.practiceQuestionsAttempted || 0,
-      });
+      } as UserChapterProgressInsert);
     }
   }
 }

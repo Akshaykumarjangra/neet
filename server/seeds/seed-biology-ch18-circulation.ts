@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter18() {
   console.log('Seeding Biology Class 11 Chapter 18: Body Fluids and Circulation...');
@@ -642,7 +643,18 @@ SA node → Atrial muscle → AV node → AV bundle → Bundle branches → Purk
       chapterTitle: 'Body Fluids and Circulation',
       estimatedStudyMinutes: 390,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

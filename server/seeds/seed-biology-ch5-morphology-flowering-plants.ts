@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter5() {
   console.log("Seeding Biology Class 11 Chapter 5: Morphology of Flowering Plants...");
@@ -485,12 +486,14 @@ Understanding plant morphology is crucial for:
       estimatedStudyMinutes: 270,
       status: "published",
 
-      visualizationsData: {
-        type: "plant-anatomy",
-        title: "Flower Structure Interactive Model",
-        description:
-          "3D visualization of flower parts showing calyx, corolla, androecium, and gynoecium with different placentation types",
-      },
+      visualizationsData: [
+        {
+          type: "plant-anatomy",
+          title: "Flower Structure Interactive Model",
+          description:
+            "3D visualization of flower parts showing calyx, corolla, androecium, and gynoecium with different placentation types",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -502,6 +505,20 @@ Understanding plant morphology is crucial for:
         chapterTitle: "Morphology of Flowering Plants",
         introduction:
           "Plant morphology is the study of the external structure and form of plants. Flowering plants (angiosperms) represent the most advanced and diverse group in the plant kingdom, exhibiting remarkable variety in their vegetative and reproductive structures. Understanding plant morphology is essential for plant identification, classification, agricultural practices, and appreciating the adaptations that allow plants to thrive in diverse environments. From the underground root system that anchors the plant and absorbs water, to the above-ground shoot system with stems, leaves, and flowers, each organ has a specific structure suited to its function. This chapter explores the fascinating diversity of plant forms and the modifications that enable plants to survive in various ecological niches.",
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+            type: "plant-anatomy",
+            title: "Flower Structure Interactive Model",
+            description:
+              "3D visualization of flower parts showing calyx, corolla, androecium, and gynoecium with different placentation types",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

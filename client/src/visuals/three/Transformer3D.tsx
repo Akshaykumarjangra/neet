@@ -181,7 +181,11 @@ export default function Transformer3D() {
         // Animate flux lines
         fluxGroup.children.forEach((line, index) => {
           const opacity = 0.3 + 0.3 * Math.sin(time + index * 0.3);
-          (line as THREE.Line).material.opacity = opacity;
+          const material = (line as THREE.Line).material;
+          if (!Array.isArray(material)) {
+            material.transparent = true;
+            material.opacity = opacity;
+          }
         });
 
         // Pulse primary coil

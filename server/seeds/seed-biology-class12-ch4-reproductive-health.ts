@@ -592,7 +592,34 @@ async function seedBiologyClass12Chapter4() {
       chapterTitle: 'Reproductive Health',
       estimatedStudyMinutes: 330,
       difficultyLevel: 4,
-      status: 'published'
+      status: 'published',
+      visualizationsData: [
+      {
+        type: 'comparison',
+        title: 'Contraceptive Methods',
+        description: 'Natural, Barrier, IUDs, Hormonal, Surgical - mechanisms and effectiveness'
+      },
+      {
+        type: 'diagram',
+        title: 'Male and Female Sterilization',
+        description: 'Vasectomy (vas deferens) and Tubectomy (Fallopian tubes)'
+      },
+      {
+        type: 'flowchart',
+        title: 'HIV/AIDS Progression',
+        description: 'HIV infection → CD4+ T cell destruction → Immunodeficiency → Opportunistic infections'
+      },
+      {
+        type: 'diagram',
+        title: 'IVF Process',
+        description: 'Ovarian stimulation → Egg retrieval → Fertilization → Embryo culture → Transfer'
+      },
+      {
+        type: 'comparison',
+        title: 'ART Techniques',
+        description: 'IVF, ICSI, GIFT, ZIFT, IUI - processes and applications'
+      }
+    ]
     }
   });
 

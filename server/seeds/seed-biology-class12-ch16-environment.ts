@@ -502,14 +502,68 @@ async function seedBiologyClass12Chapter16() {
 6. Deforestation causes biodiversity loss, climate change, soil erosion, and disrupted water cycles
 7. Sustainable practices include organic farming, IPM, and rainwater harvesting to reduce environmental impact
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Greenhouse Effect',
+        description: 'Radiation trapping and warming.'
+      },
+      {
+        type: 'graph',
+        title: 'CO2 Trend',
+        description: 'Rising atmospheric CO2 levels.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Waste Management Hierarchy',
+        description: 'Reduce -> reuse -> recycle -> dispose.'
+      },
+      {
+        type: 'comparison',
+        title: 'Air vs Water Pollution',
+        description: 'Sources and impacts.'
+      },
+      {
+        type: 'table',
+        title: 'Environmental Laws',
+        description: 'Key acts and objectives.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Environmental Issues',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Greenhouse Effect',
+          description: 'Radiation trapping and warming.'
+        },
+        {
+          type: 'graph',
+          title: 'CO2 Trend',
+          description: 'Rising atmospheric CO2 levels.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Waste Management Hierarchy',
+          description: 'Reduce -> reuse -> recycle -> dispose.'
+        },
+        {
+          type: 'comparison',
+          title: 'Air vs Water Pollution',
+          description: 'Sources and impacts.'
+        },
+        {
+          type: 'table',
+          title: 'Environmental Laws',
+          description: 'Key acts and objectives.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 16: Environmental Issues');

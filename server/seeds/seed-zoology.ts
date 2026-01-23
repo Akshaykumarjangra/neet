@@ -2324,7 +2324,7 @@ If Hardy-Weinberg conditions are NOT met, evolution is happening! The equation h
   },
   {
     subject: "Biology",
-    classLevel: "12",
+    classLevel: "11",
     chapterNumber: 22,
     chapterTitle: "Chemical Coordination and Integration",
     introduction: "Zoology reveals how hormones control body functions! This chapter explores the endocrine system - the glands that produce hormones, how hormones work, and what happens when the system goes wrong. From growth to metabolism, hormones regulate it all!",

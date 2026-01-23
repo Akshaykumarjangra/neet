@@ -1,0 +1,230 @@
+openapi: 3.0.1
+info:
+  title: Mock Exams API
+  version: 0.1.0
+paths:
+  /api/mock-exams/papers:
+    get:
+      summary: List published mock exam papers
+      parameters:
+        - in: query
+          name: q
+          required: false
+          schema: { type: string }
+        - in: query
+          name: seriesId
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: minDuration
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: maxDuration
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+          description: available | upcoming | completed | all
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer }
+        - in: query
+          name: pageSize
+          required: false
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Papers list
+  /api/mock-exams/papers/{paperId}:
+    get:
+      summary: Get paper metadata and sections
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paper detail
+  /api/mock-exams/papers/{paperId}/start:
+    post:
+      summary: Start or resume an attempt; returns attemptId, sections, questions, savedResponses
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+        - in: header
+          name: x-device-fingerprint
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Attempt payload
+  /api/mock-exams/attempts/{attemptId}/save:
+    post:
+      summary: Autosave responses for in-progress attempt
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Saved successfully
+  /api/mock-exams/attempts/{attemptId}/submit:
+    post:
+      summary: Submit attempt; scores with negative marking and finalizes
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Submission result with score and counts
+  /api/mock-exams/attempts/{attemptId}/review:
+    get:
+      summary: Answer sheet view with correct answers and user selections
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: filter
+          required: false
+          schema: { type: string }
+          description: Comma-separated filters (flagged, wrong, correct, unanswered, slow, hardest)
+        - in: query
+          name: minTimeSeconds
+          required: false
+          schema: { type: integer }
+          description: Threshold for slow filter (default 60s)
+      responses:
+        "200":
+          description: Review payload
+  /api/mock-exams/attempts/{attemptId}/report:
+    get:
+      summary: Export-friendly report payload
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: format
+          required: false
+          schema: { type: string }
+          description: Optional export format (csv, html, pdf)
+      responses:
+        "200":
+          description: Report payload
+  /api/mock-exams/attempts/{attemptId}/analytics:
+    get:
+      summary: Accuracy/time analytics by subject and section
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Analytics payload
+  /api/mock-exams/attempts/{attemptId}/summary:
+    get:
+      summary: Summary payload for charts
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Summary payload
+  /api/mock-exams/attempts:
+    get:
+      summary: List current user's attempts
+      responses:
+        "200":
+          description: Attempts list
+  /api/mock-exams/papers/{paperId}/leaderboard:
+    get:
+      summary: Leaderboard with rank/percentile
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Leaderboard entries
+  /api/mock-exams/attempts/{attemptId}/focus-loss:
+    post:
+      summary: Record a focus-loss event for proctoring
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated focus loss count
+  /api/admin/mock-exams/jobs/auto-submit-expired:
+    post:
+      summary: Queue job to auto-submit expired attempts
+      responses:
+        "200":
+          description: Job queued
+  /api/admin/mock-exams/jobs/purge-old-attempts:
+    post:
+      summary: Queue job to purge old mock exam attempts
+      responses:
+        "200":
+          description: Job queued
+  /api/admin/mock-exams/papers/{paperId}:
+    patch:
+      summary: Update mock exam paper (status/schedule/shuffle/etc)
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paper updated
+  /api/admin/mock-exams/papers/{paperId}/assignments:
+    get:
+      summary: List assignments for a paper
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Assignment list
+    post:
+      summary: Create assignments for a paper
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Assignments created
+    delete:
+      summary: Delete assignments for a paper
+      parameters:
+        - in: path
+          name: paperId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Assignments deleted

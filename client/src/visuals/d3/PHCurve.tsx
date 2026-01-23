@@ -162,7 +162,7 @@ export default function PHCurve() {
               {hindi ? 'तीव्र अम्ल बनाम तीव्र क्षार' : 'Strong Acid vs Strong Base Titration'}
             </p>
           </div>
-          <HindiToggle enabled={hindi} onToggle={setHindi} />
+          <HindiToggle isHindi={hindi} onToggle={() => setHindi((prev) => !prev)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

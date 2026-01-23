@@ -1,164 +1,435 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
-import { sql } from 'drizzle-orm';
 
 async function seedChemistryClass12Part1() {
   console.log('Seeding Chemistry Class 12 Chapters 1-4...');
 
-  await db.insert(chapterContent).values([
+  const chapters = [
     {
       subject: 'Chemistry',
       classLevel: '12',
       chapterNumber: 1,
       chapterTitle: 'The Solid State',
-      introduction: `Solids have definite shape and volume with particles arranged in ordered patterns. This chapter explores classification of solids as crystalline and amorphous, crystal lattices and unit cells, types of crystalline solids (ionic, covalent, molecular, metallic), packing efficiency in close-packed structures, defects in crystals affecting properties, and magnetic and electrical properties. Understanding solid state chemistry is essential for NEET as it applies to bone structure, drug formulations, and biomineralization.`,
+      introduction: `Solids have fixed shape and volume with particles arranged in ordered patterns. This chapter covers crystalline vs amorphous solids, unit cells, packing efficiency, defects, and electrical and magnetic properties.`,
       detailedNotes: `# The Solid State
-## Classification: **Crystalline** (ordered, sharp melting point, anisotropic) vs **Amorphous** (random, softens over range, isotropic)
-## Crystal Lattice: 3D arrangement of points; **Unit cell**: Smallest repeating unit
-**7 crystal systems**: Cubic, tetragonal, orthorhombic, monoclinic, triclinic, hexagonal, rhombohedral
-**14 Bravais lattices**: Primitive (P), body-centered (I), face-centered (F), base-centered (C)
-## Cubic Unit Cells:
-**Simple cubic** (sc): Atoms at corners, Z=1, 52.4% packing
-**Body-centered cubic** (bcc): Corners + center, Z=2, 68% packing
-**Face-centered cubic** (fcc): Corners + face centers, Z=4, 74% packing (most efficient)
-**Close packing**: hcp and ccp (fcc) both 74% efficient; **Tetrahedral voids** 2n, **Octahedral voids** n
-## Types of Solids:
-**1. Ionic**: Strong electrostatic (NaCl, CsCl); high MP, hard, brittle, conduct when molten
-**2. Covalent/Network**: Covalent bonds throughout (diamond, SiO₂); very hard, high MP, poor conductor
-**3. Molecular**: Weak intermolecular forces (ice, I₂); low MP, soft
-**4. Metallic**: Delocalized electrons; malleable, ductile, lustrous, conduct electricity
-## Defects:
-**Point defects**: **Schottky** (cation-anion pair missing, density↓), **Frenkel** (ion moves to interstitial, no density change)
-**Interstitial**: Extra atom in void
-**F-center**: Anion vacancy with trapped electron (color centers)
-## Properties: **Ferromagnetic** (Fe, Co, Ni: permanent magnetization), **Paramagnetic** (unpaired e⁻, weak attraction), **Diamagnetic** (no unpaired, weak repulsion)
-**n-type semiconductor**: Excess electrons; **p-type**: Electron deficiency (holes)`,
+
+## Classification of Solids
+
+- Crystalline: long-range order, sharp melting point, anisotropic.
+- Amorphous: short-range order, softens over a range, isotropic.
+
+## Unit Cell and Packing
+
+- Unit cell is the smallest repeating unit of a crystal lattice.
+- Simple cubic (sc): Z = 1, coordination number 6.
+- Body centered cubic (bcc): Z = 2, coordination number 8.
+- Face centered cubic (fcc): Z = 4, coordination number 12.
+- Packing efficiency: sc 52.4%, bcc 68%, fcc 74%.
+
+## Relations in Cubic Cells
+
+- sc: a = 2r
+- bcc: a = 4r / sqrt(3)
+- fcc: a = 2 sqrt(2) r
+- Density: rho = (Z * M) / (a^3 * N_A)
+
+## Types of Crystalline Solids
+
+- Ionic: hard, brittle, high melting, conduct when molten.
+- Covalent network: very hard, high melting, poor conductor.
+- Molecular: soft, low melting, non-conducting.
+- Metallic: malleable, ductile, good conductor.
+
+## Defects
+
+- Schottky: pair of cation and anion missing, density decreases.
+- Frenkel: ion shifts to interstitial, density unchanged.
+- F-center: anion vacancy with trapped electron (color centers).
+
+## Magnetic Properties
+
+- Diamagnetic: weakly repelled, no unpaired electrons.
+- Paramagnetic: weakly attracted, unpaired electrons.
+- Ferromagnetic: strongly attracted, domains align.
+`,
+      keyConcepts: [
+        {
+          title: 'Unit Cell Packing',
+          description: 'Number of atoms and packing efficiency differ across sc, bcc, and fcc lattices.',
+          formula: 'Packing: sc 52.4%, bcc 68%, fcc 74%',
+        },
+        {
+          title: 'Density of Crystal',
+          description: 'Crystal density depends on unit cell mass and volume.',
+          formula: 'rho = (Z * M) / (a^3 * N_A)',
+        },
+        {
+          title: 'Radius and Edge Length',
+          description: 'Edge length relates to atomic radius for cubic cells.',
+          formula: 'sc: a = 2r; bcc: a = 4r / sqrt(3); fcc: a = 2 sqrt(2) r',
+        },
+      ],
+      formulas: [
+        'rho = (Z * M) / (a^3 * N_A)',
+        'sc: a = 2r',
+        'bcc: a = 4r / sqrt(3)',
+        'fcc: a = 2 sqrt(2) r',
+      ],
+      importantTopics: [
+        'Unit cell and packing efficiency',
+        'Cubic lattices and coordination number',
+        'Crystal defects and color centers',
+        'Magnetic behavior of solids',
+      ],
+      learningObjectives: [
+        'Differentiate crystalline and amorphous solids',
+        'Compute density from unit cell data',
+        'Relate lattice parameters to atomic radius',
+      ],
+      prerequisites: [
+        'Basic structure of matter',
+        'Moles and molar mass',
+      ],
+      ncertChapterRef: 'Class 12 Chemistry - Chapter 1',
+      visualizationsData: [
+        {
+          type: 'concept',
+          title: 'Crystal Lattice',
+          description: 'Explore common crystal lattice structures.',
+          config: {
+            visualizationName: 'crystal-lattice',
+          },
+        },
+        {
+          type: 'comparison',
+          title: 'Crystalline vs Amorphous',
+          description: 'Compare order, melting behavior, and properties.',
+        },
+      ],
+      difficultyLevel: 3,
+      estimatedStudyMinutes: 240,
+      status: 'published' as const,
     },
     {
       subject: 'Chemistry',
       classLevel: '12',
       chapterNumber: 2,
       chapterTitle: 'Solutions',
-      introduction: `Solutions are homogeneous mixtures of solute and solvent with composition-dependent properties. This chapter explores methods of expressing concentration (molarity, molality, mole fraction), Raoult's law relating vapor pressure to composition, colligative properties depending only on particle number (vapor pressure lowering, boiling point elevation, freezing point depression, osmotic pressure), ideal and non-ideal solutions, and applications in determining molar mass. Understanding solutions is crucial for NEET as biological fluids, IV solutions, and drug formulations are all aqueous solutions with specific concentrations.`,
+      introduction: `Solutions are homogeneous mixtures with composition-dependent properties. This chapter covers concentration terms, Henry and Raoult laws, colligative properties, and osmotic pressure.`,
       detailedNotes: `# Solutions
-## Concentration:
-**Molarity** (M) = moles/L solution; **Molality** (m) = moles/kg solvent (T-independent)
-**Mole fraction**: X_A = n_A/(n_A + n_B); **Mass %** = (mass solute/mass solution) × 100
-**ppm** = (mass solute/mass solution) × 10⁶
-## Solubility: **Henry's law**: P = K_H × X (gas solubility ∝ pressure)
-**Temperature**: Usually solubility↑ with T for solids; ↓ for gases
-## Raoult's Law:
-**P_A = P_A⁰ × X_A** (vapor pressure of component ∝ mole fraction)
-**Total pressure**: P = P_A + P_B = P_A⁰X_A + P_B⁰X_B
-**Ideal solution**: Obeys Raoult's law (benzene-toluene); ΔH_mix = 0, ΔV_mix = 0
-**Non-ideal**: **+ve deviation** (A-B weaker than A-A, B-B): P > Raoult; ΔH_mix > 0 (ethanol-acetone)
-**-ve deviation** (A-B stronger): P < Raoult; ΔH_mix < 0 (chloroform-acetone)
-## Colligative Properties (depend on # particles, not nature):
-**1. Vapor pressure lowering**: ΔP = P⁰ × X_solute = (P⁰ × n)/(n + N)
-**2. Boiling point elevation**: ΔT_b = K_b × m; K_b = molal elevation constant (0.52 K kg/mol for water)
-**3. Freezing point depression**: ΔT_f = K_f × m; K_f = molal depression constant (1.86 K kg/mol for water)
-**4. Osmotic pressure**: π = CRT = (n/V)RT; **Isotonic**: same π; **Hypertonic**: higher π (cells shrink); **Hypotonic**: lower π (cells swell)
-**van't Hoff factor** (i): Ratio of actual to expected particles
-i = 1 (non-electrolyte); i > 1 (electrolyte); i = 2 (NaCl complete dissociation)
-**Modified**: ΔT_f = i × K_f × m, π = iCRT
-**Abnormal molar mass**: Association (i < 1, M_obs > M_calc), Dissociation (i > 1, M_obs < M_calc)`,
+
+## Concentration Terms
+
+- Molarity (M) = moles of solute per liter of solution.
+- Molality (m) = moles of solute per kg of solvent.
+- Mole fraction: X_A = n_A / (n_A + n_B).
+
+## Henry and Raoult Laws
+
+- Henry law: P = K_H X (gas solubility).
+- Raoult law: P_A = P_A0 X_A (ideal solutions).
+
+## Colligative Properties
+
+- Relative lowering of vapor pressure: delta P / P0 = X_solute.
+- Boiling point elevation: delta Tb = Kb m.
+- Freezing point depression: delta Tf = Kf m.
+- Osmotic pressure: pi = C R T.
+- van't Hoff factor: i accounts for dissociation or association.
+
+## Ideal vs Non-Ideal
+
+- Ideal solutions obey Raoult law; delta H_mix = 0.
+- Positive deviation: A-B interactions weaker than A-A and B-B.
+- Negative deviation: A-B interactions stronger.
+`,
+      keyConcepts: [
+        {
+          title: 'Raoult Law',
+          description: 'Vapor pressure of a component depends on mole fraction.',
+          formula: 'P_A = P_A0 X_A',
+        },
+        {
+          title: 'Osmotic Pressure',
+          description: 'Pressure required to stop osmosis.',
+          formula: 'pi = C R T',
+        },
+        {
+          title: 'Boiling Point Elevation',
+          description: 'Boiling point increases with solute concentration.',
+          formula: 'delta Tb = Kb m',
+        },
+        {
+          title: 'Freezing Point Depression',
+          description: 'Freezing point decreases with solute concentration.',
+          formula: 'delta Tf = Kf m',
+        },
+      ],
+      formulas: [
+        'X_A = n_A / (n_A + n_B)',
+        'P_A = P_A0 X_A',
+        'delta P / P0 = X_solute',
+        'delta Tb = Kb m',
+        'delta Tf = Kf m',
+        'pi = C R T',
+      ],
+      importantTopics: [
+        'Concentration terms',
+        'Raoult law and vapor pressure',
+        'Colligative properties',
+        'Osmosis and osmotic pressure',
+      ],
+      learningObjectives: [
+        'Calculate molarity, molality, and mole fraction',
+        'Apply Raoult and Henry laws',
+        'Use colligative property formulas with van\'t Hoff factor',
+      ],
+      prerequisites: [
+        'Moles and stoichiometry',
+        'Gas laws basics',
+      ],
+      ncertChapterRef: 'Class 12 Chemistry - Chapter 2',
+      visualizationsData: [
+        {
+          type: 'concept',
+          title: 'pH Curve',
+          description: 'Use the titration curve to relate concentration to pH.',
+          config: {
+            visualizationName: 'ph-curve',
+          },
+        },
+        {
+          type: 'graph',
+          title: 'Colligative Properties vs Concentration',
+          description: 'Graph how delta Tb and delta Tf change with molality.',
+        },
+      ],
+      difficultyLevel: 3,
+      estimatedStudyMinutes: 260,
+      status: 'published' as const,
     },
     {
       subject: 'Chemistry',
       classLevel: '12',
       chapterNumber: 3,
       chapterTitle: 'Electrochemistry',
-      introduction: `Electrochemistry studies interconversion of chemical and electrical energy through redox reactions. This chapter explores conductance in electrolytic solutions, electrochemical cells converting chemical energy to electricity (galvanic cells), electrode potentials and EMF, Nernst equation relating potential to concentration, commercial cells (dry cell, lead storage battery, fuel cells), electrolysis and Faraday's laws for quantitative electrolysis, and corrosion prevention. Understanding electrochemistry is vital for NEET as nerve impulses, ECG, pacemakers, and defibrillators all involve electrochemical processes.`,
+      introduction: `Electrochemistry connects redox reactions with electrical energy. It covers galvanic cells, electrode potentials, the Nernst equation, electrolysis, Faraday laws, and corrosion.`,
       detailedNotes: `# Electrochemistry
-## Conductance:
-**Conductance** (G) = 1/R; Unit: Siemens (S) = Ω⁻¹
-**Conductivity** (κ) = G × (l/A); Unit: S/m or S/cm; **Molar conductivity**: Λ_m = κ/C (C in mol/L)
-**Λ_m** increases with dilution; **Strong electrolyte**: Λ_m → Λ_m⁰ (limiting value); **Weak**: Sharp increase on dilution
-**Kohlrausch's law**: Λ_m⁰ = λ_+⁰ + λ_-⁰ (sum of ionic conductances)
-**Application**: Calculate Λ_m⁰ for weak electrolyte from strong electrolytes
-## Electrochemical Cells:
-**Galvanic** (spontaneous, ΔG < 0, E⁰ > 0): Chemical → Electrical (battery)
-**Electrolytic** (non-spontaneous, ΔG > 0, E⁰ < 0): Electrical → Chemical (electrolysis)
-**Daniell cell**: Zn|Zn²⁺||Cu²⁺|Cu; E⁰_cell = 1.1 V
-**Anode** (oxidation, -ve in galvanic), **Cathode** (reduction, +ve)
-**Salt bridge**: Maintains electrical neutrality, completes circuit
-## EMF and Electrode Potential:
-**E⁰_cell = E⁰_cathode - E⁰_anode** (reduction potentials)
-**Standard hydrogen electrode** (SHE): 2H⁺ + 2e⁻ → H₂; E⁰ = 0 V (reference)
-**Higher E⁰**: Better oxidizing agent (gains e⁻); **Lower E⁰**: Better reducing agent (loses e⁻)
-**Nernst equation**: E_cell = E⁰_cell - (0.059/n) log Q (at 25°C)
-**At equilibrium**: E_cell = 0, E⁰ = (0.059/n) log K
-**ΔG⁰ = -nFE⁰** (F = 96500 C/mol)
-## Commercial Cells:
-**1. Dry cell** (Leclanché): Zn anode, MnO₂/C cathode, NH₄Cl electrolyte; 1.5 V, non-rechargeable
-**2. Lead storage battery**: Pb anode, PbO₂ cathode, H₂SO₄ electrolyte; 2 V/cell, rechargeable
-Discharge: Pb + PbO₂ + 2H₂SO₄ → 2PbSO₄ + 2H₂O
-**3. Fuel cell** (H₂-O₂): 2H₂ + O₂ → 2H₂O; 1.23 V, efficient (~70%), continuous operation
-## Electrolysis:
-**Faraday's laws**:
-**I**: Mass deposited ∝ charge (m ∝ Q = It)
-**II**: m ∝ E (equivalent weight); **m = (E × I × t) / F** or **m = (M × I × t) / (n × F)**
-**Applications**: Electroplating, extraction of Al/Na, electrolytic refining
-## Corrosion:
-**Rusting**: Fe oxidized to Fe²⁺ (anodic area), O₂ reduced (cathodic); Fe(OH)₃ forms rust
-**Prevention**: Painting, galvanizing (Zn coating), sacrificial anode, alloying`,
+
+## Conductance in Electrolytes
+
+- Conductance G = 1 / R.
+- Conductivity kappa = G * l / A.
+- Molar conductivity: Lambda_m = kappa / C.
+
+## Galvanic and Electrolytic Cells
+
+- Galvanic: spontaneous, E_cell > 0.
+- Electrolytic: non-spontaneous, E_cell < 0.
+- E_cell = E_cathode - E_anode.
+
+## Nernst Equation
+
+- E = E0 - (0.059 / n) log Q at 25 C.
+- At equilibrium: E = 0, E0 = (0.059 / n) log K.
+
+## Thermodynamics
+
+- delta G = -n F E.
+- When E > 0, delta G < 0 (spontaneous).
+
+## Electrolysis and Faraday Laws
+
+- Mass deposited: m = (M I t) / (n F).
+- Charge: Q = I t.
+
+## Corrosion
+
+- Iron rusts via anodic and cathodic reactions.
+- Prevention: painting, galvanizing, sacrificial anode.
+`,
+      keyConcepts: [
+        {
+          title: 'Cell EMF',
+          description: 'Cell potential equals cathode minus anode potential.',
+          formula: 'E_cell = E_cathode - E_anode',
+        },
+        {
+          title: 'Nernst Equation',
+          description: 'Potential depends on concentration of species.',
+          formula: 'E = E0 - (0.059 / n) log Q',
+        },
+        {
+          title: 'Gibbs Energy',
+          description: 'Electrical work relates to Gibbs free energy.',
+          formula: 'delta G = -n F E',
+        },
+        {
+          title: 'Faraday Law',
+          description: 'Mass deposited depends on charge passed.',
+          formula: 'm = (M I t) / (n F)',
+        },
+      ],
+      formulas: [
+        'G = 1 / R',
+        'kappa = G * l / A',
+        'Lambda_m = kappa / C',
+        'E_cell = E_cathode - E_anode',
+        'E = E0 - (0.059 / n) log Q',
+        'delta G = -n F E',
+        'm = (M I t) / (n F)',
+      ],
+      importantTopics: [
+        'Galvanic and electrolytic cells',
+        'Electrode potentials and EMF',
+        'Nernst equation',
+        'Electrolysis and Faraday laws',
+        'Corrosion and prevention',
+      ],
+      learningObjectives: [
+        'Compute cell potential and direction of reaction',
+        'Apply the Nernst equation to concentration changes',
+        'Use Faraday laws for electrolysis calculations',
+      ],
+      prerequisites: [
+        'Redox reactions',
+        'Logarithms',
+      ],
+      ncertChapterRef: 'Class 12 Chemistry - Chapter 3',
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Galvanic Cell Layout',
+          description: 'Diagram of anode, cathode, and salt bridge.',
+        },
+        {
+          type: 'table',
+          title: 'Standard Electrode Potentials',
+          description: 'Table of common electrode potentials for quick reference.',
+        },
+      ],
+      difficultyLevel: 4,
+      estimatedStudyMinutes: 300,
+      status: 'published' as const,
     },
     {
       subject: 'Chemistry',
       classLevel: '12',
       chapterNumber: 4,
       chapterTitle: 'Chemical Kinetics',
-      introduction: `Chemical kinetics studies reaction rates and mechanisms, explaining how fast reactants convert to products. This chapter explores rate of reaction and factors affecting it (concentration, temperature, catalyst), rate laws relating rate to concentration, order and molecularity of reactions, integrated rate equations for zero, first, and second order reactions with half-life calculations, collision theory and activation energy, and catalysis accelerating reactions. Understanding kinetics is crucial for NEET as enzyme kinetics, drug metabolism rates, and physiological reaction rates all follow these principles.`,
+      introduction: `Chemical kinetics explains how fast reactions occur and what controls reaction rate. It covers rate laws, order, integrated rate equations, Arrhenius equation, and catalysis.`,
       detailedNotes: `# Chemical Kinetics
-## Rate of Reaction:
-**Rate = -(1/a)(Δ[A]/Δt) = -(1/b)(Δ[B]/Δt) = (1/c)(Δ[C]/Δt)** for aA + bB → cC
-**Units**: mol L⁻¹ s⁻¹ or M/s
-**Average rate**: Over time interval; **Instantaneous rate**: At specific time (slope of tangent)
-## Factors Affecting Rate:
-1. **Concentration**: Rate ↑ (more collisions)
-2. **Temperature**: Rate ↑ (more energetic collisions); Rule: Rate doubles per 10°C rise
-3. **Catalyst**: Rate ↑ (lowers E_a)
-4. **Surface area**: Rate ↑ for heterogeneous reactions
-## Rate Law: **Rate = k[A]^x[B]^y**
-- k: Rate constant (depends on T, not concentration)
-- x, y: Order w.r.t. A, B (from experiment, NOT stoichiometry)
-**Overall order** = x + y; Can be 0, 1, 2, fractional, negative
-**Units of k**: [M^(1-n) s⁻¹] where n = overall order
-**Order 0**: k in M/s; **Order 1**: s⁻¹; **Order 2**: M⁻¹ s⁻¹
-## Molecularity: Number of molecules in elementary step (1, 2, 3); Always integer, always positive
-**Order ≠ Molecularity** (order from experiment, molecularity from mechanism)
-## Integrated Rate Equations:
-**Zero order**: [A] = [A]₀ - kt; **t₁/₂ = [A]₀/(2k)**; Linear: [A] vs t
-**First order**: ln[A] = ln[A]₀ - kt; **t₁/₂ = 0.693/k** (independent of [A]₀); Linear: ln[A] vs t
-**Second order**: 1/[A] = 1/[A]₀ + kt; **t₁/₂ = 1/(k[A]₀)**; Linear: 1/[A] vs t
-## Pseudo First Order: One reactant in large excess (CH₃COOC₂H₅ + H₂O → CH₃COOH + C₂H₅OH)
-Appears first order w.r.t. ester though actually second order
-## Temperature Dependence:
-**Arrhenius equation**: **k = Ae^(-E_a/RT)**
-**ln k = ln A - E_a/(RT)**; Plot ln k vs 1/T gives slope = -E_a/R
-**Two temperatures**: **log(k₂/k₁) = (E_a/2.303R) × [(T₂-T₁)/(T₁T₂)]**
-E_a: Activation energy (minimum energy for reaction); A: Frequency factor
-## Collision Theory:
-Rate ∝ collision frequency × fraction with E ≥ E_a × steric factor
-Not all collisions effective: Need proper orientation + sufficient energy
-## Catalysis:
-**Catalyst**: Speeds up reaction without being consumed; Lowers E_a (alternate pathway)
-**Homogeneous**: Same phase (esterification with H₂SO₄)
-**Heterogeneous**: Different phase (Haber process with Fe); **Adsorption** on surface
-**Enzyme**: Biological catalyst; Highly specific, work at body T, pH; **Lock-and-key** model
-**Positive**: Increases rate; **Negative**: Decreases rate (inhibitor)`,
-    }
-  ]).onConflictDoUpdate({
-    target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
-    set: {
-      chapterTitle: sql`EXCLUDED.chapter_title`,
-      introduction: sql`EXCLUDED.introduction`,
-      detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
-  });
 
-  console.log('✓ Seeded Chemistry Class 12 Chapters 1-4');
+## Rate and Rate Law
+
+- Rate = change in concentration per unit time.
+- Rate law: Rate = k [A]^x [B]^y.
+- Order = x + y; determined experimentally.
+
+## Integrated Rate Equations
+
+- Zero order: [A] = [A]0 - k t; t1/2 = [A]0 / (2k).
+- First order: ln[A] = ln[A]0 - k t; t1/2 = 0.693 / k.
+- Second order: 1/[A] = 1/[A]0 + k t; t1/2 = 1 / (k [A]0).
+
+## Temperature Dependence
+
+- Arrhenius equation: k = A e^(-Ea / (R T)).
+- Plot ln k vs 1/T gives slope = -Ea / R.
+
+## Catalysis
+
+- Catalyst lowers activation energy and increases rate.
+- Enzymes are highly specific biological catalysts.
+`,
+      keyConcepts: [
+        {
+          title: 'Rate Law',
+          description: 'Rate depends on concentration powers determined by experiment.',
+          formula: 'Rate = k [A]^x [B]^y',
+        },
+        {
+          title: 'First Order Half Life',
+          description: 'Half life for a first order reaction is constant.',
+          formula: 't1/2 = 0.693 / k',
+        },
+        {
+          title: 'Arrhenius Equation',
+          description: 'Temperature dependence of the rate constant.',
+          formula: 'k = A e^(-Ea / (R T))',
+        },
+      ],
+      formulas: [
+        'Rate = k [A]^x [B]^y',
+        'Zero order: [A] = [A]0 - k t',
+        'First order: ln[A] = ln[A]0 - k t',
+        'Second order: 1/[A] = 1/[A]0 + k t',
+        't1/2 (first order) = 0.693 / k',
+        'k = A e^(-Ea / (R T))',
+      ],
+      importantTopics: [
+        'Rate law and order',
+        'Integrated rate equations',
+        'Half life relations',
+        'Arrhenius equation',
+        'Catalysis and enzymes',
+      ],
+      learningObjectives: [
+        'Determine order from rate data',
+        'Use integrated rate equations to solve problems',
+        'Explain temperature effects on reaction rates',
+      ],
+      prerequisites: [
+        'Logarithms',
+        'Basic algebra',
+      ],
+      ncertChapterRef: 'Class 12 Chemistry - Chapter 4',
+      visualizationsData: [
+        {
+          type: 'graph',
+          title: 'Concentration vs Time',
+          description: 'Compare zero, first, and second order decay curves.',
+        },
+        {
+          type: 'flowchart',
+          title: 'Reaction Mechanism Steps',
+          description: 'Flowchart of elementary steps and intermediates.',
+        },
+      ],
+      difficultyLevel: 4,
+      estimatedStudyMinutes: 280,
+      status: 'published' as const,
+    },
+  ];
+
+  for (const chapter of chapters) {
+    await db
+      .insert(chapterContent)
+      .values(chapter)
+      .onConflictDoUpdate({
+        target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
+        set: {
+          chapterTitle: chapter.chapterTitle,
+          introduction: chapter.introduction,
+          detailedNotes: chapter.detailedNotes,
+          keyConcepts: chapter.keyConcepts,
+          formulas: chapter.formulas,
+          importantTopics: chapter.importantTopics,
+          learningObjectives: chapter.learningObjectives,
+          prerequisites: chapter.prerequisites,
+          ncertChapterRef: chapter.ncertChapterRef,
+          visualizationsData: chapter.visualizationsData,
+          difficultyLevel: chapter.difficultyLevel,
+          estimatedStudyMinutes: chapter.estimatedStudyMinutes,
+          status: chapter.status,
+          updatedAt: new Date(),
+        },
+      });
+
+    console.log(`  Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle} upserted`);
+  }
+
+  console.log('Chemistry Class 12 chapters 1-4 seeding completed!');
 }
 
 seedChemistryClass12Part1().catch(console.error);

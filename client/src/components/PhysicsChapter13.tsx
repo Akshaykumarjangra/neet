@@ -224,8 +224,8 @@ export function PhysicsChapter13() {
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showSolutions, setShowSolutions] = useState(false);
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleAnswerSelect = (questionId: number, answerId: string) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: answerId }));
   };
 
   const checkAnswers = () => {
@@ -268,7 +268,7 @@ export function PhysicsChapter13() {
             <Calculator className="h-4 w-4 mr-2" />
             3D Models
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Radio className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -441,13 +441,13 @@ export function PhysicsChapter13() {
                           key={idx}
                           variant={userAnswers[q.id] === String.fromCharCode(65 + idx) ? "default" : "outline"}
                           className="w-full justify-start"
-                          onClick={() => handleAnswerSelect(q.id, idx)}
+                          onClick={() => handleAnswerSelect(q.id, String.fromCharCode(65 + idx))}
                           disabled={showSolutions}
                         >
                           {showSolutions && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
                           )}
-                          {showSolutions && userAnswers[q.id] === String.fromCharCode(65 + idx) && idx !== q.correctAnswer && (
+                          {showSolutions && userAnswers[q.id] === String.fromCharCode(65 + idx) && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-4 w-4 mr-2 text-red-500" />
                           )}
                           {typeof option === "string" ? option : option.text}

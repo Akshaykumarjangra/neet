@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { chapterContent } from "../../shared/schema";
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter7() {
   console.log("Seeding Biology Class 11 Chapter 7: Structural Organisation in Animals...");
@@ -671,12 +672,14 @@ Frogs show **dual respiration** - change of respiratory organs with life stages.
       estimatedStudyMinutes: 300,
       status: "published",
 
-      visualizationsData: {
-        type: "animal-anatomy",
-        title: "Frog Anatomy Interactive 3D Model",
-        description:
-          "Detailed 3D visualization of frog internal organ systems including digestive, respiratory, circulatory, and nervous systems with tissue cross-sections",
-      },
+      visualizationsData: [
+        {
+          type: "animal-anatomy",
+          title: "Frog Anatomy Interactive 3D Model",
+          description:
+            "Detailed 3D visualization of frog internal organ systems including digestive, respiratory, circulatory, and nervous systems with tissue cross-sections",
+        },
+      ],
     })
     .onConflictDoUpdate({
       target: [
@@ -688,6 +691,20 @@ Frogs show **dual respiration** - change of respiratory organs with life stages.
         chapterTitle: "Structural Organisation in Animals",
         introduction:
           "The study of animal structure reveals the remarkable complexity and organization that enables animals to perform diverse functions. Unlike plants, animals exhibit active movement, rapid responses to stimuli, and complex organ systems for digestion, circulation, respiration, and coordination. Understanding animal tissue organization and anatomy is fundamental to comprehending how animal bodies function and adapt to their environment. This chapter explores the four basic types of animal tissues - epithelial, connective, muscular, and nervous - and examines the anatomy of a frog (Rana tigrina) as a representative vertebrate. The frog serves as an excellent model organism for studying vertebrate anatomy because it exhibits characteristics of both aquatic and terrestrial life, making it invaluable for understanding amphibian adaptations and the general organization of vertebrate organ systems.",
+        learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+        prerequisites: sql`EXCLUDED.prerequisites`,
+
+        importantTopics: sql`EXCLUDED.important_topics`,
+
+        visualizationsData: [
+          {
+            type: "animal-anatomy",
+            title: "Frog Anatomy Interactive 3D Model",
+            description:
+              "Detailed 3D visualization of frog internal organ systems including digestive, respiratory, circulatory, and nervous systems with tissue cross-sections",
+          },
+        ],
         updatedAt: new Date(),
       },
     });

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dna, CheckCircle2, XCircle, Brain, Lightbulb, Microscope , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter19() {
   // Fetch questions from database for Strategies for Enhancement in Food Production (topicId: 83)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -31,28 +32,28 @@ export function BotanyChapter19() {
       id: 1,
       question: "Bt cotton is resistant to:",
       options: ["Bacterial diseases", "Insect pests", "Fungal diseases", "Viral diseases"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Bt cotton contains the Bt toxin gene from Bacillus thuringiensis, which makes it resistant to bollworm and other insect pests."
     },
     {
       id: 2,
       question: "The first transgenic plant produced was:",
       options: ["Tobacco", "Cotton", "Rice", "Wheat"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Tobacco was the first transgenic plant created in 1983, using Agrobacterium-mediated gene transfer."
     },
     {
       id: 3,
       question: "Insulin was originally extracted from:",
       options: ["Human pancreas", "Pig and cattle pancreas", "Bacterial culture", "Yeast culture"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Before genetic engineering, insulin was extracted from the pancreas of slaughtered pigs and cattle, which sometimes caused allergic reactions."
     },
     {
       id: 4,
       question: "Golden Rice is enriched with:",
       options: ["Vitamin A", "Vitamin B12", "Vitamin C", "Iron"],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Golden Rice is genetically modified to produce beta-carotene (provitamin A) in the edible parts, helping prevent vitamin A deficiency."
     },
     {
@@ -64,7 +65,7 @@ export function BotanyChapter19() {
         "Creating new genes",
         "Destroying mutant genes"
       ],
-      correctAnswer: 0,
+      correctAnswer: "A",
       explanation: "Gene therapy is the technique to correct a genetic defect by inserting a functional gene into the genome to replace the defective one."
     }
   ];
@@ -81,7 +82,7 @@ export function BotanyChapter19() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -422,7 +423,7 @@ export function BotanyChapter19() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -442,10 +443,10 @@ export function BotanyChapter19() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

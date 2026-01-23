@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Trees, CheckCircle2, XCircle, Brain, Recycle, Sun } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter27() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showExplanations, setShowExplanations] = useState<{ [key: number]: boolean }>({});
@@ -18,7 +19,7 @@ export function BotanyChapter27() {
       id: 1,
       question: "What percentage of energy is transferred from one trophic level to the next?",
       options: ["1%", "10%", "50%", "90%"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "According to the 10% law of energy transfer, only about 10% of energy is transferred from one trophic level to the next. The rest is lost as heat."
     },
     {
@@ -30,14 +31,14 @@ export function BotanyChapter27() {
         "Energy by decomposers",
         "Nutrients by bacteria"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Primary productivity is the rate at which producers (autotrophs) produce organic matter through photosynthesis or chemosynthesis."
     },
     {
       id: 3,
       question: "The reservoir of phosphorus in the phosphorus cycle is:",
       options: ["Atmosphere", "Rocks and sediments", "Ocean water", "Living organisms"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Unlike carbon and nitrogen, phosphorus does not have an atmospheric reservoir. Its main reservoir is rocks and sediments."
     },
     {
@@ -49,14 +50,14 @@ export function BotanyChapter27() {
         "Tropical rainforests",
         "Grasslands"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Decomposition requires warmth and moisture. It is slowest in cold and dry conditions where microbial activity is minimal."
     },
     {
       id: 5,
       question: "Which of the following is a gaseous cycle?",
       options: ["Phosphorus cycle", "Sulfur cycle", "Nitrogen cycle", "Both B and C"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Both sulfur and nitrogen cycles are gaseous cycles with significant atmospheric reservoirs. Phosphorus cycle is sedimentary."
     }
   ];
@@ -73,7 +74,7 @@ export function BotanyChapter27() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -426,7 +427,7 @@ export function BotanyChapter27() {
                         className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                           selectedAnswers[q.id] === idx
                             ? showExplanations[q.id]
-                              ? idx === q.correctAnswer
+                              ? String.fromCharCode(65 + idx) === q.correctAnswer
                                 ? "border-green-500 bg-green-50"
                                 : "border-red-500 bg-red-50"
                               : "border-primary bg-primary/5"
@@ -434,13 +435,13 @@ export function BotanyChapter27() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {showExplanations[q.id] && idx === q.correctAnswer && (
+                          {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

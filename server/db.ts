@@ -19,10 +19,11 @@ const poolConfig = {
   min: parseInt(process.env.DB_POOL_MIN || '2'),  // Min connections
 
   // Timeout configurations
-  idleTimeoutMillis: 30000,        // Close idle connections after 30s
-  connectionTimeoutMillis: 10000,  // Connection timeout 10s
-  query_timeout: 30000,            // Query timeout 30s
-  statement_timeout: 30000,        // Statement timeout 30s
+  idleTimeoutMillis: 5000,         // Close idle connections after 5s to avoid backend termination
+  connectionTimeoutMillis: 2000,   // Fail fast if connection cannot be acquired
+  // Loosen timeouts for heavy reads (e.g., library view) on remote DB
+  query_timeout: 60000,            // Query timeout 60s
+  statement_timeout: 60000,        // Statement timeout 60s
 
   // Keep-alive for long-running connections
   keepAlive: true,

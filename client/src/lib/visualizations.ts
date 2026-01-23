@@ -3,7 +3,7 @@ export interface Visualization {
   title: string;
   description: string;
   component: string;
-  library: 'Three.js' | 'D3.js' | 'JSXGraph' | 'PixiJS' | 'Matter.js' | 'PhET' | 'Cytoscape.js';
+  library: 'Three.js' | 'D3.js' | 'JSXGraph' | 'PixiJS' | 'Matter.js' | 'PhET' | 'Cytoscape.js' | 'React';
   difficulty: '🟢' | '🟡' | '🔴';
   category: string;
 }
@@ -413,3 +413,4 @@ export function getVisualizationsByLibrary(library: string): Visualization[] {
 export function getVisualizationById(vizId: string): Visualization | undefined {
   return getAllVisualizations().find(v => v.id === vizId);
 }
+

@@ -276,14 +276,68 @@ Due to absence, excess, or abnormal arrangement of chromosomes.
 6. Mutations are the ultimate source of genetic variation
 7. Pedigree analysis helps determine inheritance patterns in families
 `,
+
+    visualizationsData: [
+      {
+        type: 'diagram',
+        title: 'Mendelian Monohybrid Cross',
+        description: 'Punnett square showing a 3:1 phenotypic ratio.'
+      },
+      {
+        type: 'comparison',
+        title: 'Autosomal vs Sex-linked Traits',
+        description: 'Key differences in inheritance patterns.'
+      },
+      {
+        type: 'flowchart',
+        title: 'Chromosomal Theory Steps',
+        description: 'Genes on chromosomes -> meiosis -> segregation.'
+      },
+      {
+        type: 'table',
+        title: 'Genetic Disorders Snapshot',
+        description: 'Selected Mendelian and chromosomal disorders with features.'
+      },
+      {
+        type: 'graph',
+        title: 'Recombination vs Distance',
+        description: 'Higher recombination with larger gene distance.'
+      },
+    ],
   }).onConflictDoUpdate({
     target: [chapterContent.subject, chapterContent.classLevel, chapterContent.chapterNumber],
     set: {
       chapterTitle: 'Principles of Inheritance and Variation',
       introduction: sql`EXCLUDED.introduction`,
       detailedNotes: sql`EXCLUDED.detailed_notes`,
-      updatedAt: sql`CURRENT_TIMESTAMP`
-    }
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+      visualizationsData: [
+        {
+          type: 'diagram',
+          title: 'Mendelian Monohybrid Cross',
+          description: 'Punnett square showing a 3:1 phenotypic ratio.'
+        },
+        {
+          type: 'comparison',
+          title: 'Autosomal vs Sex-linked Traits',
+          description: 'Key differences in inheritance patterns.'
+        },
+        {
+          type: 'flowchart',
+          title: 'Chromosomal Theory Steps',
+          description: 'Genes on chromosomes -> meiosis -> segregation.'
+        },
+        {
+          type: 'table',
+          title: 'Genetic Disorders Snapshot',
+          description: 'Selected Mendelian and chromosomal disorders with features.'
+        },
+        {
+          type: 'graph',
+          title: 'Recombination vs Distance',
+          description: 'Higher recombination with larger gene distance.'
+        },
+      ],}
   });
 
   console.log('✓ Seeded Biology Class 12 Chapter 5: Principles of Inheritance and Variation');

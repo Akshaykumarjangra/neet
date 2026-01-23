@@ -146,7 +146,7 @@ export default function AvogadroJar() {
               {hindi ? 'अणुओं को गिनें और मोल की गणना करें' : 'Count molecules and calculate moles'}
             </p>
           </div>
-          <HindiToggle enabled={hindi} onToggle={setHindi} />
+          <HindiToggle isHindi={hindi} onToggle={() => setHindi((prev) => !prev)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Droplets, CheckCircle2, XCircle, Brain, Lightbulb, AlertTriangle, Wind , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter25() {
   // Fetch questions from database for Biodiversity and Conservation (topicId: 89)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,21 +33,21 @@ export function BotanyChapter25() {
       id: 1,
       question: "Which of the following is a biodegradable pollutant?",
       options: ["DDT", "Sewage", "Mercury", "Plastic"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Sewage is a biodegradable pollutant that can be decomposed by microorganisms, while DDT, mercury, and plastic are non-biodegradable."
     },
     {
       id: 2,
       question: "The main cause of ozone depletion in the stratosphere is:",
       options: ["Carbon dioxide", "Chlorofluorocarbons (CFCs)", "Methane", "Nitrous oxide"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "CFCs release chlorine atoms in the stratosphere which catalyze the breakdown of ozone (O₃) into oxygen (O₂)."
     },
     {
       id: 3,
       question: "The thickness of ozone layer is measured in:",
       options: ["Angstrom units", "Dobson units", "Nanometers", "Micrometers"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Dobson unit (DU) is the standard unit for measuring the total amount of ozone in a vertical column of air."
     },
     {
@@ -58,7 +59,7 @@ export function BotanyChapter25() {
         "Increase in fish population",
         "Decrease in algal bloom"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Eutrophication causes excessive algal growth, which depletes dissolved oxygen when algae die and decompose, leading to fish deaths."
     },
     {
@@ -70,7 +71,7 @@ export function BotanyChapter25() {
         "Acid rain",
         "Water pollution"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The Montreal Protocol (1987) is an international treaty designed to protect the ozone layer by phasing out production of ozone-depleting substances."
     }
   ];
@@ -87,7 +88,7 @@ export function BotanyChapter25() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -383,7 +384,7 @@ export function BotanyChapter25() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -403,10 +404,10 @@ export function BotanyChapter25() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

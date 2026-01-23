@@ -326,11 +326,13 @@ export default function GameLobbyDashboard() {
       libraryData?.filter((ch) => ch.subject === "Chemistry").length ?? 30,
     Botany:
       biologyLibraryChapters.filter(
-        (ch) => categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber) === "Botany"
+        (ch) =>
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Botany"
       ).length ?? 19,
     Zoology:
       biologyLibraryChapters.filter(
-        (ch) => categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber) === "Zoology"
+        (ch) =>
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Zoology"
       ).length ?? 19,
   };
 

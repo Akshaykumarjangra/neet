@@ -28,6 +28,8 @@ import chemistryIcon from "@assets/generated_images/Chemistry_subject_icon_f3b65
 import botanyIcon from "@assets/generated_images/Botany_subject_icon_f51f8d03.png";
 import zoologyIcon from "@assets/generated_images/Zoology_subject_icon_879d7407.png";
 
+import { NextBestAction } from "@/components/NextBestAction";
+
 interface UserStats {
   totalAttempts: number;
   correctAnswers: number;
@@ -419,6 +421,15 @@ export default function Dashboard() {
           </section>
 
           <section>
+            <NextBestAction
+              userName={user?.name || "Student"}
+              userLevel={level}
+              streak={streak}
+              onAction={() => setLocation('/learning-path')}
+            />
+          </section>
+
+          <section>
             <h2 className="text-3xl font-bold mb-6">Subjects</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {subjects.map((subject, index) => {
@@ -572,8 +583,8 @@ export default function Dashboard() {
                               {step.label} · {new Date(step.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
                             </Badge>
                           )) || (
-                            <Badge variant="outline" className="text-[11px]">Requested</Badge>
-                          )}
+                              <Badge variant="outline" className="text-[11px]">Requested</Badge>
+                            )}
                           {booking.meetingLink && (
                             <Badge variant="secondary" className="text-[11px]">Link ready</Badge>
                           )}

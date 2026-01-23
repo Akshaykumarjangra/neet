@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { chapterContent } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 async function seedBiologyChapter21() {
   console.log('Seeding Biology Class 11 Chapter 21: Neural Control and Coordination...');
@@ -644,7 +645,18 @@ async function seedBiologyChapter21() {
       chapterTitle: 'Neural Control and Coordination',
       estimatedStudyMinutes: 420,
       difficultyLevel: 5,
-      status: 'published'
+      status: 'published',
+
+      learningObjectives: sql`EXCLUDED.learning_objectives`,
+
+
+      prerequisites: sql`EXCLUDED.prerequisites`,
+
+
+      importantTopics: sql`EXCLUDED.important_topics`,
+
+
+      visualizationsData: sql`EXCLUDED.visualizations_data`
     }
   });
 

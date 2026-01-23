@@ -28,17 +28,30 @@ interface HeaderProps {
 }
 
 export function Header({
-  activeSubject = "Physics",
+  activeSubject,
   onSubjectChange = () => { },
   userPoints = 2450,
   userLevel = 12,
   studyStreak = 7,
 }: HeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, isImpersonating } = useAuth();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const [location, setLocation] = useLocation();
   const subjects = ["Physics", "Chemistry", "Botany", "Zoology"];
+  const inferredSubject =
+    subjects.find((subject) => location.startsWith(`/${subject.toLowerCase()}`)) ?? undefined;
+  const resolvedSubject = activeSubject ?? inferredSubject ?? "Physics";
+  const canAccessAdmin = Boolean(user?.isOwner || user?.isAdmin || user?.role === "admin");
+  const navPublic = [
+    { label: "Home", href: "/" },
+    { label: "Chapters", href: "/preview/chapter" },
+    { label: "Mock Tests", href: "/preview/mock-test" },
+    { label: "Simulations", href: "/preview/simulations" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Mentors", href: "/mentors" },
+    { label: "Community", href: "/community" },
+  ];
 
   const handleProfileSwitch = (path: string) => {
     setLocation(path);
@@ -69,15 +82,42 @@ export function Header({
         method: 'POST',
         credentials: 'include',
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setLocation('/login');
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setLocation('/login');
+    }
+  };
+
+  const handleStopImpersonation = async () => {
+    try {
+      await fetch("/api/admin/impersonate/stop", { method: "POST" });
+      window.location.href = '/admin'; // Hard reload to clear state and return to admin
+    } catch (error) {
+      console.error("Failed to stop impersonation:", error);
     }
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-primary/20 bg-background/95 backdrop-blur-sm shadow-lg">
+      {isImpersonating && (
+        <div className="bg-orange-500 text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-4 animate-in slide-in-from-top">
+          <span className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Viewing as {user?.displayName} ({user?.role})
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-7 text-xs bg-white text-orange-600 hover:bg-orange-50 border-0"
+            onClick={handleStopImpersonation}
+          >
+            Exit View
+          </Button>
+        </div>
+      )}
       <div className="flex h-16 items-center gap-4 px-4 md:px-6">
         <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleHomeClick}>
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
@@ -87,79 +127,96 @@ export function Header({
         </div>
 
         <nav className="hidden md:flex flex-1 items-center gap-1 ml-6">
-          {subjects.map((subject) => (
-            <Button
-              key={subject}
-              variant={activeSubject === subject ? "default" : "ghost"}
-              size="sm"
-              onClick={() => handleSubjectClick(subject)}
-              data-testid={`button-subject-${subject.toLowerCase()}`}
-              className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-              style={{ borderBottom: 'none !important' }}
-            >
-              {subject}
-            </Button>
-          ))}
-          <div className="h-4 w-px bg-border mx-2" />
-          <Button
-            variant={location === '/community' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setLocation('/community')}
-            data-testid="button-community"
-            className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-            style={{ borderBottom: 'none !important' }}
-          >
-            <Users className="h-4 w-4 mr-1.5" />
-            Community
-          </Button>
-          <Button
-            variant={location === '/simulations' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setLocation('/simulations')}
-            data-testid="button-simulations"
-            className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-            style={{ borderBottom: 'none !important' }}
-          >
-            <Play className="h-4 w-4 mr-1.5" />
-            Simulations
-          </Button>
-          <Button
-            variant={location === '/chat' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setLocation('/chat')}
-            data-testid="button-chat"
-            className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-            style={{ borderBottom: 'none !important' }}
-          >
-            <MessageSquare className="h-4 w-4 mr-1.5" />
-            Chat
-          </Button>
-          <Button
-            variant={location === '/progress/analytics' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setLocation('/progress/analytics')}
-            data-testid="button-analytics"
-            className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-            style={{ borderBottom: 'none !important' }}
-          >
-            <ChartBar className="h-4 w-4 mr-1.5" />
-            Analytics
-          </Button>
-          {user?.isOwner && (
+          {user ? (
             <>
+              {subjects.map((subject) => (
+                <Button
+                  key={subject}
+                  variant={resolvedSubject === subject ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleSubjectClick(subject)}
+                  data-testid={`button-subject-${subject.toLowerCase()}`}
+                  className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                  style={{ borderBottom: 'none !important' }}
+                >
+                  {subject}
+                </Button>
+              ))}
               <div className="h-4 w-px bg-border mx-2" />
               <Button
-                variant={location.startsWith('/admin') ? "default" : "ghost"}
+                variant={location === '/community' ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setLocation('/admin')}
-                data-testid="button-admin"
+                onClick={() => setLocation('/community')}
+                data-testid="button-community"
                 className="[&>*]:!border-b-0 after:!hidden before:!hidden"
                 style={{ borderBottom: 'none !important' }}
               >
-                <Shield className="h-4 w-4 mr-1.5" />
-                Admin
+                <Users className="h-4 w-4 mr-1.5" />
+                Community
               </Button>
+              <Button
+                variant={location === '/simulations' ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setLocation('/simulations')}
+                data-testid="button-simulations"
+                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                style={{ borderBottom: 'none !important' }}
+              >
+                <Play className="h-4 w-4 mr-1.5" />
+                Simulations
+              </Button>
+              <Button
+                variant={location === '/chat' ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setLocation('/chat')}
+                data-testid="button-chat"
+                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                style={{ borderBottom: 'none !important' }}
+              >
+                <MessageSquare className="h-4 w-4 mr-1.5" />
+                Chat
+              </Button>
+              <Button
+                variant={location === '/progress/analytics' ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setLocation('/progress/analytics')}
+                data-testid="button-analytics"
+                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                style={{ borderBottom: 'none !important' }}
+              >
+                <ChartBar className="h-4 w-4 mr-1.5" />
+                Analytics
+              </Button>
+              {canAccessAdmin && (
+                <>
+                  <div className="h-4 w-px bg-border mx-2" />
+                  <Button
+                    variant={location.startsWith('/admin') ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setLocation('/admin')}
+                    data-testid="button-admin"
+                    className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                    style={{ borderBottom: 'none !important' }}
+                  >
+                    <Shield className="h-4 w-4 mr-1.5" />
+                    Admin
+                  </Button>
+                </>
+              )}
             </>
+          ) : (
+            navPublic.map((link) => (
+              <Button
+                key={link.href}
+                variant={location === link.href ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setLocation(link.href)}
+                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                style={{ borderBottom: 'none !important' }}
+              >
+                {link.label}
+              </Button>
+            ))
           )}
         </nav>
 
@@ -172,62 +229,78 @@ export function Header({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {subjects.map((subject) => (
-                <DropdownMenuItem
-                  key={subject}
-                  onClick={() => handleSubjectClick(subject)}
-                  className={activeSubject === subject ? "bg-accent" : ""}
-                  data-testid={`menu-mobile-${subject.toLowerCase()}`}
-                >
-                  {subject}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem
-                onClick={() => setLocation('/community')}
-                className={location === '/community' ? "bg-accent" : ""}
-                data-testid="menu-mobile-community"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Community
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocation('/simulations')}
-                className={location === '/simulations' ? "bg-accent" : ""}
-                data-testid="menu-mobile-simulations"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Simulations
-              </DropdownMenuItem>
-              {user?.isOwner && (
-                <DropdownMenuItem
-                  onClick={() => setLocation('/admin')}
-                  className={location.startsWith('/admin') ? "bg-accent" : ""}
-                  data-testid="menu-mobile-admin"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Admin
-                </DropdownMenuItem>
+              {user ? (
+                <>
+                  {subjects.map((subject) => (
+                    <DropdownMenuItem
+                      key={subject}
+                      onClick={() => handleSubjectClick(subject)}
+                      className={resolvedSubject === subject ? "bg-accent" : ""}
+                      data-testid={`menu-mobile-${subject.toLowerCase()}`}
+                    >
+                      {subject}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuItem
+                    onClick={() => setLocation('/community')}
+                    className={location === '/community' ? "bg-accent" : ""}
+                    data-testid="menu-mobile-community"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Community
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setLocation('/simulations')}
+                    className={location === '/simulations' ? "bg-accent" : ""}
+                    data-testid="menu-mobile-simulations"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Simulations
+                  </DropdownMenuItem>
+                  {canAccessAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => setLocation('/admin')}
+                      className={location.startsWith('/admin') ? "bg-accent" : ""}
+                      data-testid="menu-mobile-admin"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin
+                    </DropdownMenuItem>
+                  )}
+                </>
+              ) : (
+                navPublic.map((link) => (
+                  <DropdownMenuItem
+                    key={link.href}
+                    onClick={() => setLocation(link.href)}
+                    className={location === link.href ? "bg-accent" : ""}
+                  >
+                    {link.label}
+                  </DropdownMenuItem>
+                ))
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <div className="hidden sm:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => setLocation('/practice')}>
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span className="text-sm font-semibold" data-testid="text-streak">{studyStreak}</span>
-            </div>
+          {user && (
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => setLocation('/practice')}>
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-semibold" data-testid="text-streak">{studyStreak}</span>
+              </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => setLocation('/practice')}>
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-semibold" data-testid="text-points">{userPoints.toLocaleString()}</span>
-            </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => setLocation('/practice')}>
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                <span className="text-sm font-semibold" data-testid="text-points">{userPoints.toLocaleString()}</span>
+              </div>
 
-            <Badge variant="secondary" className="px-2 py-1 cursor-pointer hover:opacity-80 transition-opacity" data-testid="badge-level" onClick={() => setLocation('/practice')}>
-              Level {userLevel}
-            </Badge>
-          </div>
+              <Badge variant="secondary" className="px-2 py-1 cursor-pointer hover:opacity-80 transition-opacity" data-testid="badge-level" onClick={() => setLocation('/practice')}>
+                Level {userLevel}
+              </Badge>
+            </div>
+          )}
 
           <Button
             variant="ghost"
@@ -253,111 +326,121 @@ export function Header({
             )}
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-9 w-9 cursor-pointer hover:opacity-80 transition-opacity" data-testid="avatar-user">
-                <AvatarImage src={user?.avatarUrl || ""} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user?.initials || "ST"}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="flex items-center gap-3">
-                <Avatar className="h-9 w-9 border">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-9 w-9 cursor-pointer hover:opacity-80 transition-opacity" data-testid="avatar-user">
                   <AvatarImage src={user?.avatarUrl || ""} />
-                  <AvatarFallback>{user?.initials || "ST"}</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.initials || "ST"}
+                  </AvatarFallback>
                 </Avatar>
-                <div className="space-y-0.5">
-                  <div className="text-sm font-semibold leading-tight">{user?.displayName || "Student"}</div>
-                  <div className="text-xs text-muted-foreground leading-tight">
-                    {user?.headline?.trim() || "Add a headline"}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9 border">
+                    <AvatarImage src={user?.avatarUrl || ""} />
+                    <AvatarFallback>{user?.initials || "ST"}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-semibold leading-tight">{user?.displayName || "Student"}</div>
+                    <div className="text-xs text-muted-foreground leading-tight">
+                      {user?.headline?.trim() || "Add a headline"}
+                    </div>
                   </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger data-testid="menu-switch-profile">
-                  <Layers className="mr-2 h-4 w-4" />
-                  Switch View
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem 
-                    onClick={() => handleProfileSwitch('/dashboard')}
-                    className={isActiveRoute('/dashboard') ? "bg-accent" : ""}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Student View
-                    {isActiveRoute('/dashboard') && <Check className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleProfileSwitch('/mentor-dashboard')}
-                    disabled={!user?.isOwner && user?.role !== 'mentor'}
-                    className={isActiveRoute('/mentor-dashboard') ? "bg-accent" : ""}
-                  >
-                    <GraduationCap className="mr-2 h-4 w-4" />
-                    Mentor Dashboard
-                    {isActiveRoute('/mentor-dashboard') && <Check className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleProfileSwitch('/admin')}
-                    disabled={!user?.isOwner}
-                    className={isActiveRoute('/admin') ? "bg-accent" : ""}
-                  >
+                </DropdownMenuLabel>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger data-testid="menu-switch-profile">
+                    <Layers className="mr-2 h-4 w-4" />
+                    Switch View
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem
+                      onClick={() => handleProfileSwitch('/dashboard')}
+                      className={isActiveRoute('/dashboard') ? "bg-accent" : ""}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Student View
+                      {isActiveRoute('/dashboard') && <Check className="h-4 w-4 ml-auto" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleProfileSwitch('/mentor-dashboard')}
+                      className={isActiveRoute('/mentor-dashboard') ? "bg-accent" : ""}
+                    >
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Mentor Dashboard
+                      {isActiveRoute('/mentor-dashboard') && <Check className="h-4 w-4 ml-auto" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleProfileSwitch('/admin')}
+                      disabled={!canAccessAdmin}
+                      className={isActiveRoute('/admin') ? "bg-accent" : ""}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Hub
+                      {isActiveRoute('/admin') && <Check className="h-4 w-4 ml-auto" />}
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLocation('/profile')} data-testid="menu-profile">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/my-bookings')} data-testid="menu-my-bookings">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  My Bookings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/mentor-dashboard')} data-testid="menu-mentor-dashboard">
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Mentor Dashboard
+                </DropdownMenuItem>
+                {canAccessAdmin && (
+                  <DropdownMenuItem onClick={() => setLocation('/admin')} data-testid="menu-admin">
                     <Shield className="mr-2 h-4 w-4" />
                     Admin Hub
-                    {isActiveRoute('/admin') && <Check className="h-4 w-4 ml-auto" />}
                   </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLocation('/profile')} data-testid="menu-profile">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation('/my-bookings')} data-testid="menu-my-bookings">
-                <Calendar className="mr-2 h-4 w-4" />
-                My Bookings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation('/mentor-dashboard')} data-testid="menu-mentor-dashboard">
-                <GraduationCap className="mr-2 h-4 w-4" />
-                Mentor Dashboard
-              </DropdownMenuItem>
-              {user?.isOwner && (
-                <DropdownMenuItem onClick={() => setLocation('/admin')} data-testid="menu-admin">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Admin Hub
+                )}
+                {canAccessAdmin && (
+                  <DropdownMenuItem onClick={() => setLocation('/admin/organizations')} data-testid="menu-admin-organizations">
+                    <Users className="mr-2 h-4 w-4" />
+                    Organizations
+                  </DropdownMenuItem>
+                )}
+                {canAccessAdmin && (
+                  <DropdownMenuItem onClick={() => setLocation('/admin/lms-studio')} data-testid="menu-lms-studio">
+                    <Layers className="mr-2 h-4 w-4" />
+                    LMS Studio
+                  </DropdownMenuItem>
+                )}
+                {canAccessAdmin && (
+                  <DropdownMenuItem onClick={() => setLocation('/admin/mentor-automation')} data-testid="menu-mentor-automation">
+                    <Trophy className="mr-2 h-4 w-4" />
+                    Mentor Automations
+                  </DropdownMenuItem>
+                )}
+                {canAccessAdmin && (
+                  <DropdownMenuItem onClick={() => setLocation('/admin/announcements')} data-testid="menu-announcements">
+                    <Bell className="mr-2 h-4 w-4" />
+                    Announcements
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
                 </DropdownMenuItem>
-              )}
-              {user?.isOwner && (
-                <DropdownMenuItem onClick={() => setLocation('/admin/organizations')} data-testid="menu-admin-organizations">
-                  <Users className="mr-2 h-4 w-4" />
-                  Organizations
-                </DropdownMenuItem>
-              )}
-              {user?.isOwner && (
-                <DropdownMenuItem onClick={() => setLocation('/admin/lms-studio')} data-testid="menu-lms-studio">
-                  <Layers className="mr-2 h-4 w-4" />
-                  LMS Studio
-                </DropdownMenuItem>
-              )}
-              {user?.isOwner && (
-                <DropdownMenuItem onClick={() => setLocation('/admin/mentor-automation')} data-testid="menu-mentor-automation">
-                  <Trophy className="mr-2 h-4 w-4" />
-                  Mentor Automations
-                </DropdownMenuItem>
-              )}
-              {user?.isOwner && (
-                <DropdownMenuItem onClick={() => setLocation('/admin/announcements')} data-testid="menu-announcements">
-                  <Bell className="mr-2 h-4 w-4" />
-                  Announcements
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setLocation('/login')} data-testid="button-login">
+                Log in
+              </Button>
+              <Button onClick={() => setLocation('/signup')} data-testid="button-start-free">
+                Start free
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

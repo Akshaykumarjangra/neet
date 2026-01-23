@@ -20,6 +20,7 @@ export default function QuestionCardExample() {
         ]}
         isBookmarked={isBookmarked}
         onToggleBookmark={() => setIsBookmarked(!isBookmarked)}
+        onSubmit={() => {}}
       />
     </div>
   )

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wind, Zap, Flame, Droplet, Activity, TestTubes , Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 const respirationOverview = {
   definition: "Process of oxidation of food materials (glucose) to release energy in the form of ATP, with the release of CO₂",
   equation: "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + Energy (686 kcal or 38 ATP)",
@@ -346,7 +347,7 @@ export function BotanyChapter10() {
             <Droplet className="h-4 w-4 mr-2" />
             Anaerobic
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <TestTubes className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -620,7 +621,7 @@ export function BotanyChapter10() {
                 <AccordionTrigger className="text-left">
                   <div className="flex items-start gap-3">
                     <Badge>{idx + 1}</Badge>
-                    <span>{q.questionText}</span>
+                    <span>{getQuestionLabel(q)}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4">
@@ -628,7 +629,7 @@ export function BotanyChapter10() {
                     {q.options.map((option, oIdx) => (
                       <Card key={oIdx} className={option.startsWith(q.correct) ? "border-green-500/50 bg-green-500/10" : ""}>
                         <CardContent className="pt-4">
-                          <p className="text-sm">{typeof option === "string" ? option : option.text}</p>
+                          <p className="text-sm">{getOptionLabel(option)}</p>
                         </CardContent>
                       </Card>
                     ))}

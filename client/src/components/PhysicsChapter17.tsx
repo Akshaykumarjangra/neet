@@ -1,6 +1,16 @@
 
 import { useState } from "react";
-import type { Question } from "@shared/schema";
+type PracticeQuestion = {
+  id: number;
+  question?: string;
+  questionText?: string;
+  options: Array<string | { id: string; text: string }>;
+  correctAnswer: string | number;
+  solution?: string;
+  solutionDetail?: string;
+  difficulty?: "Easy" | "Medium" | "Hard";
+  difficultyLevel?: number;
+};
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -312,7 +322,7 @@ interface Question {
   difficulty: "Easy" | "Medium" | "Hard";
 }
 
-const practiceQuestions: Question[] = [
+const practiceQuestions: PracticeQuestion[] = [
   {
     id: 1,
     question: "A long straight wire carries current of 10A. What is the magnetic field at a distance of 2cm from the wire?",
@@ -437,7 +447,7 @@ const practiceQuestions: Question[] = [
 
 export function PhysicsChapter17() {
   // Fetch questions from database for Current Electricity (topicId: 27)
-  const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
+  const { data: dbQuestions, isLoading: questionsLoading } = useQuery<PracticeQuestion[]>({
     queryKey: ['/api/questions', 'topicId', '27'],
     queryFn: async () => {
       const response = await fetch('/api/questions?topicId=27');
@@ -446,7 +456,31 @@ export function PhysicsChapter17() {
     },
   });
 
-  const practiceQuestions = dbQuestions || [];
+  const rawQuestions = dbQuestions || practiceQuestions;
+
+  const normalizedQuestions = rawQuestions.map((q) => {
+    const options = (q.options || []).map((opt, idx) =>
+      typeof opt === "string" ? { id: String.fromCharCode(65 + idx), text: opt } : opt,
+    );
+    const correctId =
+      typeof q.correctAnswer === "number"
+        ? String.fromCharCode(65 + q.correctAnswer)
+        : q.correctAnswer;
+    const questionText = q.questionText ?? q.question ?? "";
+    const solutionDetail = q.solutionDetail ?? q.solution ?? "";
+    const difficultyLabel =
+      q.difficulty ??
+      (q.difficultyLevel === 1 ? "Easy" : q.difficultyLevel === 2 ? "Medium" : "Hard");
+
+    return {
+      ...q,
+      questionText,
+      solutionDetail,
+      options,
+      correctAnswer: correctId,
+      difficultyLabel,
+    };
+  });
 
   const [activeTab, setActiveTab] = useState("overview");
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
@@ -465,12 +499,10 @@ export function PhysicsChapter17() {
     setShowSolutions(false);
   };
 
-  const score = Object.entries(userAnswers).filter(
-    ([qId, answer]) => {
-      const question = practiceQuestions.find(q => q.id === parseInt(qId));
-      return question && answer === question.correctAnswer;
-    }
-  ).length;
+  const score = Object.entries(userAnswers).filter(([qId, answer]) => {
+    const question = normalizedQuestions.find(q => q.id === Number(qId));
+    return question && answer === question.correctAnswer;
+  }).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -496,7 +528,7 @@ export function PhysicsChapter17() {
             <Calculator className="h-4 w-4 mr-2" />
             3D Models
           </TabsTrigger>
-          <TabsTrigger value="practice">
+          <TabsTrigger value="quiz">
             <Calculator className="h-4 w-4 mr-2" />
             Practice
           </TabsTrigger>
@@ -638,7 +670,7 @@ export function PhysicsChapter17() {
                 <span>Loading questions from database...</span>
               </CardContent>
             </Card>
-          ) : practiceQuestions.length === 0 ? (
+          ) : normalizedQuestions.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center text-muted-foreground">
                 <p>No questions available for this chapter yet.</p>
@@ -649,23 +681,23 @@ export function PhysicsChapter17() {
             <CardHeader>
               <CardTitle>Practice Questions</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Test your understanding with {practiceQuestions.length} NEET-level questions
+                Test your understanding with {normalizedQuestions.length} NEET-level questions
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
               {showSolutions && (
                 <div className="bg-primary/10 p-4 rounded-lg">
                   <p className="font-semibold text-lg">
-                    Your Score: {score}/{practiceQuestions.length}
+                    Your Score: {score}/{normalizedQuestions.length}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Percentage: {((score / practiceQuestions.length) * 100).toFixed(1)}%
+                    Percentage: {((score / normalizedQuestions.length) * 100).toFixed(1)}%
                   </p>
                 </div>
               )}
 
               <div className="space-y-6">
-                {practiceQuestions.map((q) => (
+                {normalizedQuestions.map((q) => (
                   <Card key={q.id} className="border-l-4 border-l-blue-500">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -674,10 +706,10 @@ export function PhysicsChapter17() {
                             Question {q.id}
                           </Badge>
                           <Badge
-                            variant={q.difficulty === "Easy" ? "secondary" : q.difficulty === "Medium" ? "default" : "destructive"}
+                            variant={q.difficultyLabel === "Easy" ? "secondary" : q.difficultyLabel === "Medium" ? "default" : "destructive"}
                             className="ml-2 mb-2"
                           >
-                            {q.difficultyLevel === 1 ? 'Easy' : q.difficultyLevel === 2 ? 'Medium' : 'Hard'}
+                            {q.difficultyLabel}
                           </Badge>
                           <p className="text-sm mt-2">{q.questionText}</p>
                         </div>
@@ -686,14 +718,16 @@ export function PhysicsChapter17() {
                     <CardContent className="space-y-3">
                       <div className="space-y-2">
                         {q.options.map((option, index) => {
-                          const isSelected = userAnswers[q.id] === index;
-                          const isCorrect = index === q.correctAnswer;
+                          const optionId = typeof option === "string" ? String.fromCharCode(65 + index) : option.id;
+                          const optionText = typeof option === "string" ? option : option.text;
+                          const isSelected = userAnswers[q.id] === optionId;
+                          const isCorrect = optionId === q.correctAnswer;
                           const showResult = showSolutions && isSelected;
 
                           return (
                             <button
                               key={index}
-                              onClick={() => !showSolutions && handleAnswerSelect(q.id, index)}
+                              onClick={() => !showSolutions && handleAnswerSelect(q.id, optionId)}
                               disabled={showSolutions}
                               className={`w-full text-left p-3 rounded-lg border transition-all ${showResult
                                 ? isCorrect
@@ -705,7 +739,7 @@ export function PhysicsChapter17() {
                                 } ${showSolutions ? "cursor-not-allowed" : "cursor-pointer"}`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-sm">{typeof option === "string" ? option : option.text}</span>
+                                <span className="text-sm">{optionText}</span>
                                 {showResult && (
                                   isCorrect ? (
                                     <CheckCircle2 className="h-5 w-5 text-green-500" />

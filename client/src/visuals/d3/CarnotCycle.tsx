@@ -69,7 +69,7 @@ export default function CarnotCycle() {
 
     // Axes
     const xAxis = d3.axisBottom(xScale).tickFormat(d => `${d}V₀`);
-    const yAxis = d3.axisLeft(yScale).tickFormat(d => `${d.toFixed(0)}`);
+    const yAxis = d3.axisLeft(yScale).tickFormat((d) => `${Number(d).toFixed(0)}`);
 
     g.append("g")
       .attr("transform", `translate(0,${innerHeight})`)

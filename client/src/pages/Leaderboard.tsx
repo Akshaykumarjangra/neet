@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useGamification } from "@/hooks/useGamification";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface LeaderboardEntry {
@@ -61,17 +62,14 @@ export default function Leaderboard() {
   const { points, level, streak } = useGamification();
   const { user } = useAuth();
   const [selectedScope, setSelectedScope] = useState<string>("india");
+  const formatINR = new Intl.NumberFormat("en-IN");
 
   // Fetch leaderboard data for the selected scope
-  const { data: leaderboardData, isLoading, error } = useQuery<LeaderboardEntry[]>({
+  const { data: leaderboardData = [], isLoading, error } = useQuery<LeaderboardEntry[]>({
     queryKey: ['/api/game/leaderboard', selectedScope],
     queryFn: async () => {
-      const response = await fetch(`/api/game/leaderboard?scope=${selectedScope}`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch leaderboard' }));
-        throw new Error(errorData.error || 'Failed to fetch leaderboard');
-      }
-      return response.json();
+      const response = await apiRequest("GET", `/api/game/leaderboard?scope=${selectedScope}`);
+      return response;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: false, // Don't retry on 400 errors (missing profile data)
@@ -124,12 +122,12 @@ export default function Leaderboard() {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-16 w-16 border-2 border-primary">
                         <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                          {user?.username?.substring(0, 2).toUpperCase()}
+                          {user?.initials || user?.displayName?.substring(0, 2).toUpperCase() || "ST"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-xl font-bold">{user?.username}</h3>
+                          <h3 className="text-xl font-bold">{user?.displayName || user?.email}</h3>
                           <Badge className={`bg-gradient-to-r ${getTierColor(userTier)} text-white border-0`}>
                             {userTier}
                           </Badge>
@@ -267,7 +265,7 @@ export default function Leaderboard() {
                                           {tier}
                                         </Badge>
                                         <div className="text-right">
-                                          <p className="text-xl font-bold text-primary">{entry.points.toLocaleString()}</p>
+                                          <p className="text-xl font-bold text-primary">{formatINR.format(entry.points)}</p>
                                           <p className="text-xs text-muted-foreground">XP</p>
                                         </div>
                                       </div>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sprout, CheckCircle2, XCircle, Brain, Lightbulb, BookOpen , Loader2 } from "lucide-react";
 
+import { getOptionLabel, getQuestionLabel } from "@/lib/questionUtils";
 export function BotanyChapter16() {
   // Fetch questions from database for Molecular Basis of Inheritance (topicId: 80)
   const { data: dbQuestions, isLoading: questionsLoading } = useQuery<Question[]>({
@@ -32,35 +33,35 @@ export function BotanyChapter16() {
       id: 1,
       question: "The process of improving crop varieties for better yield is called:",
       options: ["Mutation", "Plant breeding", "Genetic engineering", "Tissue culture"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Plant breeding is the purposeful manipulation of plant species to create desired genotypes and phenotypes for specific purposes, especially for improving yield and quality."
     },
     {
       id: 2,
       question: "Green Revolution in India was primarily associated with:",
       options: ["Cotton production", "Wheat and rice production", "Sugarcane production", "Pulses production"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "The Green Revolution (1960s-1970s) in India primarily involved development of high-yielding varieties of wheat and rice, leading to significant increase in food grain production."
     },
     {
       id: 3,
       question: "Semi-dwarf varieties of wheat developed during Green Revolution were resistant to:",
       options: ["Drought", "Lodging (falling over)", "Pests", "Diseases"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Semi-dwarf varieties had shorter, stronger stems that were resistant to lodging (falling over), which was a major problem with tall varieties during heavy rain or wind."
     },
     {
       id: 4,
       question: "Which technique is used for large-scale production of plants with desirable traits?",
       options: ["Cross-breeding", "Tissue culture", "Hybridization", "Selection"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Tissue culture (micropropagation) allows rapid, large-scale production of genetically identical plants (clones) from a small tissue sample under sterile conditions."
     },
     {
       id: 5,
       question: "Somatic hybridization involves fusion of:",
       options: ["Gametes", "Protoplasts", "Seeds", "Pollen grains"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Somatic hybridization involves fusion of protoplasts (cells without cell walls) from two different plant species to create a hybrid. This technique can overcome sexual incompatibility barriers."
     },
     {
@@ -72,28 +73,28 @@ export function BotanyChapter16() {
         "Improved disease resistance",
         "Enhanced growth rate"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Inbreeding depression is the reduced biological fitness in a population due to continuous inbreeding, resulting in accumulation of harmful recessive genes, leading to reduced fertility and productivity."
     },
     {
       id: 7,
       question: "Out-breeding devices in plants include all EXCEPT:",
       options: ["Dioecy", "Self-incompatibility", "Dichogamy", "Self-pollination"],
-      correctAnswer: 3,
+      correctAnswer: "D",
       explanation: "Out-breeding devices promote cross-pollination. Dioecy (separate sexes), self-incompatibility, and dichogamy (different maturation times) prevent self-pollination. Self-pollination is inbreeding, not out-breeding."
     },
     {
       id: 8,
       question: "Single Cell Protein (SCP) refers to protein obtained from:",
       options: ["Single muscle cell", "Microorganisms", "Single plant cell", "Tissue culture"],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Single Cell Protein is protein derived from microorganisms (bacteria, yeast, algae, fungi) grown on various substrates. Example: Spirulina (blue-green algae)."
     },
     {
       id: 9,
       question: "Bt cotton is resistant to:",
       options: ["Viral diseases", "Bacterial diseases", "Insect pests", "Fungal diseases"],
-      correctAnswer: 2,
+      correctAnswer: "C",
       explanation: "Bt cotton contains genes from Bacillus thuringiensis that produce Bt toxin, which is toxic to lepidopteran insects (bollworms), making the plant resistant to insect pests."
     },
     {
@@ -105,7 +106,7 @@ export function BotanyChapter16() {
         "Improving nutrition",
         "Faster growth"
       ],
-      correctAnswer: 1,
+      correctAnswer: "B",
       explanation: "Artificial insemination allows semen from a superior male to be used to inseminate many females across different locations, improving the genetic quality of the herd."
     }
   ];
@@ -122,7 +123,7 @@ export function BotanyChapter16() {
   const handleSubmitQuiz = () => {
     let correct = 0;
     questions.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctAnswer) {
+      if (String.fromCharCode(65 + (selectedAnswers[q.id] ?? -1)) === q.correctAnswer) {
         correct++;
       }
     });
@@ -566,7 +567,7 @@ export function BotanyChapter16() {
 
               {questions.map((q, index) => (
                 <div key={q.id} className="p-6 bg-muted/50 rounded-lg space-y-4">
-                  <h3 className="font-semibold text-lg">Q{index + 1}. {q.questionText}</h3>
+                  <h3 className="font-semibold text-lg">Q{index + 1}. {getQuestionLabel(q)}</h3>
                   <div className="space-y-2">
                     {q.options.map((option, idx) => (
                       <button
@@ -586,10 +587,10 @@ export function BotanyChapter16() {
                           {showExplanations[q.id] && String.fromCharCode(65 + idx) === q.correctAnswer && (
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                           )}
-                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && idx !== q.correctAnswer && (
+                          {showExplanations[q.id] && selectedAnswers[q.id] === idx && String.fromCharCode(65 + idx) !== q.correctAnswer && (
                             <XCircle className="h-5 w-5 text-red-600" />
                           )}
-                          <span>{typeof option === "string" ? option : option.text}</span>
+                          <span>{getOptionLabel(option)}</span>
                         </div>
                       </button>
                     ))}

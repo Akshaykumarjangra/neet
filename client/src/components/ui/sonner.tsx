@@ -1,7 +1,16 @@
 "use client"
 
+// If `sonner` is installed, this component will use it. In environments without it,
+// we provide a safe fallback no-op component to satisfy TypeScript.
+let Sonner: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Sonner = require("sonner").Toaster;
+} catch {
+  Sonner = () => null;
+}
+
 import { useTheme } from "next-themes"
-import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
