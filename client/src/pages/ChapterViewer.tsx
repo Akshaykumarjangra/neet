@@ -44,6 +44,9 @@ import {
   ChevronUp,
   ArrowRight,
   Menu,
+  Crown,
+  Sparkles,
+  LogOut,
 } from "lucide-react";
 import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema";
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
@@ -573,11 +576,28 @@ export default function ChapterViewer() {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Button
                       size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 px-8"
-                      onClick={() => navigate("/pricing")}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 px-8 font-semibold shadow-lg"
+                      onClick={() => {
+                        if (!user) {
+                          // Redirect to login then back to this chapter
+                          const currentPath = window.location.pathname;
+                          navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+                        } else {
+                          navigate("/pricing");
+                        }
+                      }}
                     >
-                      <Crown className="h-4 w-4 mr-2" />
-                      Upgrade to Premium
+                      {user ? (
+                        <>
+                          <Crown className="h-4 w-4 mr-2" />
+                          Upgrade to Premium
+                        </>
+                      ) : (
+                        <>
+                          <LogOut className="h-4 w-4 mr-2 rotate-180" />
+                          Login to Unlock
+                        </>
+                      )}
                     </Button>
                     <Button
                       size="lg"

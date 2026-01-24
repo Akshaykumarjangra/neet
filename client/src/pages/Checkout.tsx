@@ -140,14 +140,21 @@ export default function Checkout() {
         },
       };
 
-      const instance = new window.Razorpay!(options);
-      instance.on("payment.failed", (response) => {
-        setError(response?.error?.description || "Payment failed. Please try again.");
+      const Razorpay = (window as any).Razorpay;
+      if (typeof Razorpay === "undefined") {
+        throw new Error("Razorpay script not loaded. Please check your internet connection and refresh.");
+      }
+
+      const instance = new Razorpay(options);
+      instance.on("payment.failed", (response: any) => {
+        const errorDesc = response?.error?.description || response?.error?.reason || "Payment failed.";
+        setError(`${errorDesc} Please try again.`);
       });
       setRazorpay(instance);
       setIsReady(true);
       instance.open();
     } catch (err: any) {
+      console.error("[Checkout] Error:", err);
       setError(err?.message || "Unable to start checkout.");
     } finally {
       setIsStarting(false);
@@ -204,9 +211,15 @@ export default function Checkout() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <span>Billing interval: {interval}</span>
-            <span>Payment provider: Razorpay</span>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+            <div className="flex justify-between">
+              <span>Billing interval:</span>
+              <span className="font-medium capitalize">{interval}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Payment provider:</span>
+              <span className="font-medium">Razorpay Requests</span>
+            </div>
           </div>
           <Button
             onClick={() => {
@@ -217,10 +230,18 @@ export default function Checkout() {
               }
             }}
             disabled={isStarting}
-            className="w-full gap-2"
+            className="w-full gap-2 text-lg h-12 font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all"
           >
-            {isStarting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {isReady ? "Open Razorpay" : "Start Payment"}
+            {isStarting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Initializing Payment...
+              </>
+            ) : isReady ? (
+              "Pay with Razorpay"
+            ) : (
+              "Secure Payment Request"
+            )}
           </Button>
           <Button variant="ghost" className="w-full" onClick={() => setLocation("/pricing")}>
             Back to pricing

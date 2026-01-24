@@ -229,31 +229,42 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       return res.status(400).json({ error: "Organization plans require sales assistance" });
     }
 
+    // 0. Logging
+    console.log(`[Checkout] Initiating for user ${userId}, plan ${planId}, provider ${provider}`);
+
+    // 1. Clear stale pending subscriptions FIRST to satisfy unique index and allow retries
+    // This solves the issue where a user is blocked from retrying because of a "pending" status
+    const cleared = await db
+      .update(userSubscriptions)
+      .set({ status: "cancelled", updatedAt: new Date() } as Partial<UserSubscriptionInsert>)
+      .where(
+        and(eq(userSubscriptions.userId, userId), eq(userSubscriptions.status, "pending"))
+      );
+
+    if (cleared.rowCount > 0) {
+      console.log(`[Checkout] Cleared ${cleared.rowCount} stale pending subscriptions for user ${userId}`);
+    }
+
+    // 2. Now check for active subscriptions (active, trial, past_due, paused)
+    // We exclude "pending" because we just cleared them (or they can be ignored for new checkout)
     const [activeSubscription] = await db
       .select()
       .from(userSubscriptions)
       .where(
         and(
           eq(userSubscriptions.userId, userId),
-          inArray(userSubscriptions.status, ["active", "trial", "pending", "past_due", "paused"])
+          inArray(userSubscriptions.status, ["active", "trial", "past_due", "paused"])
         )
       )
       .limit(1);
 
     if (activeSubscription) {
+      console.warn(`[Checkout] User ${userId} already has active subscription: ${activeSubscription.status}`);
       return res.status(400).json({
         error: "ALREADY_SUBSCRIBED",
         message: "You already have an active subscription.",
       });
     }
-
-    // Clear stale pending subscriptions to satisfy unique index
-    await db
-      .update(userSubscriptions)
-      .set({ status: "cancelled", updatedAt: new Date() } as Partial<UserSubscriptionInsert>)
-      .where(
-        and(eq(userSubscriptions.userId, userId), eq(userSubscriptions.status, "pending"))
-      );
 
     const interval: BillingInterval = billingInterval === "yearly" ? "yearly" : "monthly";
 
@@ -338,6 +349,7 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
         } as Partial<PaymentTransactionInsert>)
         .where(eq(paymentTransactions.id, transaction.id));
 
+      console.log(`[Checkout] Razorpay order created: ${order.id} for user ${userId}`);
       return res.json({
         provider: "razorpay",
         order,
@@ -349,6 +361,7 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       });
     }
 
+    console.log(`[Checkout] Setting up Stripe for user ${userId}`);
     const stripe = getStripeClient(settings.stripeSecretKey);
     if (!stripe) {
       return res.status(400).json({ error: "Stripe secret key is not configured" });
@@ -387,6 +400,7 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       } as Partial<PaymentTransactionInsert>)
       .where(eq(paymentTransactions.id, transaction.id));
 
+    console.log(`[Checkout] Stripe session created: ${session.id} for user ${userId}`);
     return res.json({
       provider: "stripe",
       sessionId: session.id,
@@ -395,9 +409,12 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       transactionId: transaction.id,
       publishableKey: settings.stripePublishableKey || process.env.STRIPE_PUBLISHABLE_KEY,
     });
-  } catch (error) {
-    console.error("Checkout error:", error);
-    res.status(500).json({ error: "Failed to create checkout session" });
+  } catch (error: any) {
+    console.error("[Checkout] Error in checkout process:", error);
+    res.status(500).json({
+      error: "CHECKOUT_ERROR",
+      message: error.message || "Failed to create checkout session",
+    });
   }
 });
 

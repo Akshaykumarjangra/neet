@@ -217,6 +217,7 @@ const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
     popular: apiPlan.isPopular,
     features: apiPlan.features || [],
     currency: apiPlan.currency || "INR",
+    ctaLabel: apiPlan.trialDays && apiPlan.trialDays > 0 ? "Start Free Trial" : "Pay Now",
   };
 };
 
@@ -389,8 +390,8 @@ export default function Pricing() {
               >
                 <Card
                   className={`relative h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${plan.popular
-                      ? "border-2 border-primary shadow-lg shadow-primary/10"
-                      : "hover:border-primary/50"
+                    ? "border-2 border-primary shadow-lg shadow-primary/10"
+                    : "hover:border-primary/50"
                     }`}
                   data-testid={`card-plan-${plan.slug}`}
                 >
@@ -460,8 +461,8 @@ export default function Pricing() {
                   <CardFooter>
                     <Button
                       className={`w-full ${plan.popular
-                          ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
-                          : ""
+                        ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white"
+                        : ""
                         }`}
                       variant={plan.buttonVariant}
                       size="lg"
