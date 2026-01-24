@@ -42,7 +42,7 @@ interface MessageResponse {
   };
 }
 
-import { Paywall } from "@/components/Paywall";
+import "./Chat.css";
 
 export default function Chat() {
   const { user } = useAuth();
@@ -157,16 +157,16 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="chat-page">
       <Header />
-      <main className="container mx-auto px-4 py-10 space-y-6">
+      <main className="chat-container">
         <Paywall
           variant="fullpage"
           feature="Mentor Chat"
           description="Get direct access to expert mentors who can help you solve doubts, provide guidance, and keep you on track."
         >
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+          <div className="chat-header-section">
+            <h1 className="chat-title">
               <MessageSquare className="h-6 w-6 text-primary" />
               Mentor Chat
               {chatHealth?.status === "ok" && (
@@ -175,14 +175,14 @@ export default function Chat() {
                 </Badge>
               )}
             </h1>
-            <p className="text-muted-foreground max-w-3xl">
+            <p className="description text-muted-foreground">
               Start private mentor-student conversations, share resources, and keep every reply moderated with automatic
               flagging.
             </p>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-            <div className="space-y-4">
+          <div className="chat-layout">
+            <div className="sidebar-section space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Create new thread</CardTitle>
@@ -229,15 +229,12 @@ export default function Chat() {
                       <CardDescription>No threads yet. Start one to chat with mentors.</CardDescription>
                     </Card>
                   ) : (
-                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    <div className="thread-list">
                       {threadsData.map((thread) => (
                         <button
                           key={thread.id}
                           onClick={() => setActiveThread(thread.id)}
-                          className={`w-full text-left rounded-xl border px-3 py-2 transition ${activeThread === thread.id
-                              ? "border-primary bg-primary/10"
-                              : "border-muted/30 hover:border-primary/50"
-                            }`}
+                          className={`thread-item ${activeThread === thread.id ? "active" : ""}`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-semibold">{thread.subject}</span>
@@ -260,7 +257,7 @@ export default function Chat() {
               </Card>
             </div>
 
-            <div className="space-y-4">
+            <div className="message-section">
               <Card className="flex flex-col h-full">
                 <CardHeader>
                   <CardTitle>Messages</CardTitle>
@@ -278,17 +275,17 @@ export default function Chat() {
                           ))}
                         </div>
                       ) : (
-                        messagesData.map((item) => (
-                          <div key={item.message.id} className="flex flex-col gap-1 rounded-xl border border-muted/30 p-3">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-sm">{item.sender.name}</span>
-                              <span className="text-[11px] text-muted-foreground">
-                                {new Date(item.message.createdAt).toLocaleTimeString()}
+                        messagesData.map(({ message, sender }) => (
+                          <div key={message.id} className="message-bubble">
+                            <div className="message-meta">
+                              <span className="sender-name">{sender.name}</span>
+                              <span className="message-time">
+                                {new Date(message.createdAt).toLocaleTimeString()}
                               </span>
                             </div>
-                            <p className="text-sm">{item.message.content}</p>
-                            {item.message.isFlagged && (
-                              <div className="flex items-center gap-1 text-amber-500 text-xs">
+                            <p className="text-sm">{message.content}</p>
+                            {message.isFlagged && (
+                              <div className="flagged-notice">
                                 <AlertCircle className="h-3 w-3" />
                                 Auto-flagged for moderation review.
                               </div>
@@ -299,7 +296,7 @@ export default function Chat() {
                     </ScrollArea>
                   )}
                   {!activeThread && (
-                    <div className="flex flex-col items-center justify-center text-center gap-2 text-sm text-muted-foreground h-48">
+                    <div className="empty-chat">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                       <p>Select a thread to start chatting.</p>
                     </div>

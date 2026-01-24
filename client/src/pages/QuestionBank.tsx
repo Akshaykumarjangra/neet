@@ -100,7 +100,7 @@ function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?:
 
   useEffect(() => {
     if (value === 0) return;
-    
+
     let startTime: number;
     let animationFrame: number;
 
@@ -152,8 +152,8 @@ function getSubjectIcon(subject: string) {
 }
 
 function QuestionCard({ question, index, isLocked, onManageTags }: { question: Question; index: number; isLocked: boolean; onManageTags?: () => void }) {
-  const truncatedText = question.questionText.length > 200 
-    ? question.questionText.substring(0, 200) + "..." 
+  const truncatedText = question.questionText.length > 200
+    ? question.questionText.substring(0, 200) + "..."
     : question.questionText;
 
   return (
@@ -162,7 +162,7 @@ function QuestionCard({ question, index, isLocked, onManageTags }: { question: Q
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card 
+      <Card
         className={`relative transition-all hover:shadow-md ${isLocked ? 'opacity-60' : ''}`}
         data-testid={`card-question-${question.id}`}
       >
@@ -174,9 +174,9 @@ function QuestionCard({ question, index, isLocked, onManageTags }: { question: Q
             </div>
           </div>
         )}
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-2 mb-3">
-              {getDifficultyBadge(question.difficultyLevel)}
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-2 mb-3">
+            {getDifficultyBadge(question.difficultyLevel)}
             {question.pyqYear && (
               <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30" data-testid={`badge-pyq-${question.id}`}>
                 <Calendar className="h-3 w-3 mr-1" />
@@ -192,27 +192,27 @@ function QuestionCard({ question, index, isLocked, onManageTags }: { question: Q
           <p className="text-sm leading-relaxed" data-testid={`text-question-${question.id}`}>
             {truncatedText}
           </p>
-          </CardContent>
-          {question.tags && question.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 pb-4 pt-1">
-              {question.tags.map((tag) => (
-                <Badge key={`${tag.category}-${tag.tag}`} variant="outline" className="text-xs uppercase">
-                  {tag.tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-          {onManageTags && (
-            <div className="flex justify-end px-4 pb-4">
-              <Button variant="outline" size="sm" onClick={onManageTags}>
-                Manage tags
-              </Button>
-            </div>
-          )}
-        </Card>
-      </motion.div>
-    );
-  }
+        </CardContent>
+        {question.tags && question.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-4 pb-4 pt-1">
+            {question.tags.map((tag) => (
+              <Badge key={`${tag.category}-${tag.tag}`} variant="outline" className="text-xs uppercase">
+                {tag.tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {onManageTags && (
+          <div className="flex justify-end px-4 pb-4">
+            <Button variant="outline" size="sm" onClick={onManageTags}>
+              Manage tags
+            </Button>
+          </div>
+        )}
+      </Card>
+    </motion.div>
+  );
+}
 
 function SignupWall({ onNavigate, totalQuestions }: { onNavigate: () => void; totalQuestions: number }) {
   return (
@@ -234,7 +234,7 @@ function SignupWall({ onNavigate, totalQuestions }: { onNavigate: () => void; to
             Sign up to access 10 preview questions, or upgrade to Premium for unlimited access to all {totalQuestions.toLocaleString()}+ questions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
+            <Button
               onClick={onNavigate}
               size="lg"
               className="bg-white text-purple-600 hover:bg-white/90 font-semibold px-8"
@@ -246,8 +246,8 @@ function SignupWall({ onNavigate, totalQuestions }: { onNavigate: () => void; to
           </div>
           <p className="text-sm text-white/70 mt-6">
             Already have an account?{" "}
-            <button 
-              onClick={() => window.location.href = '/login'} 
+            <button
+              onClick={() => window.location.href = '/login'}
               className="underline hover:text-white transition-colors"
               data-testid="link-login-wall"
             >
@@ -369,12 +369,12 @@ export default function QuestionBank() {
             isPreview: true,
           };
         }
-        
+
         // For authenticated users, use the main endpoint with filters
         const response = await fetch(`/api/questions?${buildQueryString()}`, {
           credentials: 'include',
         });
-        
+
         if (!response.ok) {
           if (response.status === 401) {
             // Session expired - treat as unauthenticated
@@ -398,9 +398,9 @@ export default function QuestionBank() {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || `Failed to fetch questions: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Ensure consistent format
         return {
           questions: Array.isArray(data.questions) ? data.questions : [],
@@ -571,7 +571,7 @@ export default function QuestionBank() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8" data-testid="page-question-bank">
         <section className="relative mb-12 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 p-8 md:p-12">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -584,7 +584,7 @@ export default function QuestionBank() {
               <AnimatedCounter value={stats?.total || 50000} />+ Questions
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
-              Master every topic with our comprehensive question bank covering Physics, Chemistry, Botany, and Zoology. 
+              Master every topic with our comprehensive question bank covering Physics, Chemistry, Botany, and Zoology.
               Practice with Previous Year Questions and track your progress.
             </p>
 
@@ -592,12 +592,11 @@ export default function QuestionBank() {
               {subjects.map((subject) => (
                 <Card key={subject} className="bg-background/50 backdrop-blur-sm border-primary/10">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      subject === "Physics" ? "bg-blue-500/10 text-blue-600" :
+                    <div className={`p-2 rounded-lg ${subject === "Physics" ? "bg-blue-500/10 text-blue-600" :
                       subject === "Chemistry" ? "bg-orange-500/10 text-orange-600" :
-                      subject === "Botany" ? "bg-green-500/10 text-green-600" :
-                      "bg-purple-500/10 text-purple-600"
-                    }`}>
+                        subject === "Botany" ? "bg-green-500/10 text-green-600" :
+                          "bg-purple-500/10 text-purple-600"
+                      }`}>
                       {getSubjectIcon(subject)}
                     </div>
                     <div>
@@ -606,12 +605,12 @@ export default function QuestionBank() {
                         {statsLoading ? (
                           <Skeleton className="h-5 w-12" />
                         ) : (
-                          <AnimatedCounter 
+                          <AnimatedCounter
                             value={
                               subject === "Botany" || subject === "Zoology"
                                 ? Math.floor((stats?.bySubject?.["Biology"] || 0) / 2)
                                 : stats?.bySubject?.[subject] || 0
-                            } 
+                            }
                           />
                         )}
                       </p>
@@ -634,8 +633,8 @@ export default function QuestionBank() {
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm">
                 <Target className="h-4 w-4 text-green-500" />
                 <span className="text-sm">
-                  <strong>Easy: {stats?.byDifficulty?.easy || 0}</strong> | 
-                  <strong> Medium: {stats?.byDifficulty?.medium || 0}</strong> | 
+                  <strong>Easy: {stats?.byDifficulty?.easy || 0}</strong> |
+                  <strong> Medium: {stats?.byDifficulty?.medium || 0}</strong> |
                   <strong> Hard: {stats?.byDifficulty?.hard || 0}</strong>
                 </span>
               </div>
@@ -715,23 +714,22 @@ export default function QuestionBank() {
               </Button>
 
               {questionsData?.isLimited && !isPremium && !questionsData?.requiresSignup && (
-                <Badge 
-                  variant="outline" 
-                  className={`gap-1 ${
-                    questionsData.quotaRemaining === 0 
-                      ? 'bg-red-500/10 text-red-600 border-red-500/30' 
-                      : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
-                  }`}
+                <Badge
+                  variant="outline"
+                  className={`gap-1 ${questionsData.quotaRemaining === 0
+                    ? 'bg-red-500/10 text-red-600 border-red-500/30'
+                    : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
+                    }`}
                   data-testid="badge-quota-remaining"
                 >
                   <AlertCircle className="h-3 w-3" />
                   {10 - (questionsData.quotaRemaining ?? 0)}/10 free previews used
                 </Badge>
               )}
-              
+
               {(questionsData?.requiresSignup || questionsData?.isPreview) && (
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className="gap-1 bg-blue-500/10 text-blue-600 border-blue-500/30"
                   data-testid="badge-signup-prompt"
                 >
@@ -786,25 +784,12 @@ export default function QuestionBank() {
             ))}
           </div>
         ) : questionsData?.quotaExhausted ? (
-          <Card className="p-12 text-center border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
-            <div className="bg-amber-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Crown className="h-8 w-8 text-amber-500" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2" data-testid="text-quota-exhausted">
-              You've viewed all your free preview questions
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              You've explored 10 free questions across the question bank. Upgrade to Premium to unlock all {stats?.total?.toLocaleString() || "50,000"}+ questions and supercharge your NEET preparation.
-            </p>
-            <Button 
-              onClick={() => setLocation("/pricing")} 
-              className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-              data-testid="button-upgrade-quota"
-            >
-              <Crown className="h-4 w-4" />
-              Upgrade to Premium
-            </Button>
-          </Card>
+          <Paywall
+            variant="fullpage"
+            feature="Unlock 50,000+ Questions"
+            description="You've reached the free preview limit. Upgrade to Premium to access our complete question bank with detailed solutions and AI insights."
+            freeLimit="10 Questions"
+          />
         ) : questionsData?.questions.length === 0 ? (
           <Card className="p-12 text-center">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -827,19 +812,19 @@ export default function QuestionBank() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {questionsData?.questions.map((question, index) => (
-                <QuestionCard 
-                  key={question.id} 
-                  question={question} 
+                <QuestionCard
+                  key={question.id}
+                  question={question}
                   index={index}
                   isLocked={false}
                   onManageTags={isOwner ? () => openTagModal(question) : undefined}
                 />
               ))}
-              
+
               {(questionsData?.requiresSignup || questionsData?.isPreview) && (
-                <SignupWall 
-                  onNavigate={() => setLocation('/signup')} 
-                  totalQuestions={stats?.total || 50000} 
+                <SignupWall
+                  onNavigate={() => setLocation('/signup')}
+                  totalQuestions={stats?.total || 50000}
                 />
               )}
             </div>

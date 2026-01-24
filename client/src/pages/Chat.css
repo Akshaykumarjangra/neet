@@ -1,0 +1,121 @@
+/* Base UI Components (Vanilla CSS) */
+
+/* Layout & Flex */
+.chat-page {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, hsl(var(--background)), hsla(var(--muted), 0.2));
+}
+
+.chat-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 1rem;
+}
+
+.chat-header-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chat-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-layout {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .chat-layout {
+        grid-template-columns: 300px 1fr;
+    }
+}
+
+/* Card overrides/variants */
+.card {
+    border-radius: var(--radius-lg);
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    box-shadow: var(--shadow-sm);
+}
+
+.thread-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.thread-item {
+    width: 100%;
+    text-align: left;
+    border-radius: var(--radius-lg);
+    border: 1px solid hsla(var(--muted), 0.3);
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.2s, background-color 0.2s;
+    background: none;
+    cursor: pointer;
+}
+
+.thread-item.active {
+    border-color: hsl(var(--primary));
+    background-color: hsla(var(--primary), 0.1);
+}
+
+.thread-item:hover:not(.active) {
+    border-color: hsla(var(--primary), 0.5);
+}
+
+.message-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid hsla(var(--muted), 0.3);
+    padding: 0.75rem;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sender-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.message-time {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground));
+}
+
+.flagged-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #f59e0b;
+    /* amber-500 */
+    font-size: 0.75rem;
+}
+
+.empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 12rem;
+    gap: 0.5rem;
+    color: hsl(var(--muted-foreground));
+}

@@ -7,62 +7,68 @@ import { Badge } from "@/components/ui/badge";
 import { SyllabusExplorer } from "@/components/SyllabusExplorer";
 import { PricingSection } from "@/components/PricingSection";
 
+import "./landing.css";
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30">
+    <div className="landing-page">
       {/* Navigation */}
-      <nav className="fixed top-0 z-50 w-full border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <nav className="landing-nav">
+        <div className="landing-nav-container">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-lg shadow-lg shadow-indigo-500/20">
+            <div className="logo-box">
               NP
             </div>
-            <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">NEET Prep</span>
+            <span className="logo-text">NEET Prep</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <Link href="#features" className="text-zinc-600 hover:text-indigo-600 transition-colors dark:text-zinc-400 dark:hover:text-indigo-400">Features</Link>
-            <Link href="#syllabus" className="text-zinc-600 hover:text-indigo-600 transition-colors dark:text-zinc-400 dark:hover:text-indigo-400">Syllabus</Link>
-            <Link href="#pricing" className="text-zinc-600 hover:text-indigo-600 transition-colors dark:text-zinc-400 dark:hover:text-indigo-400">Pricing</Link>
+          <div className="landing-nav-links">
+            <Link href="#features" className="nav-link">Features</Link>
+            <Link href="#syllabus" className="nav-link">Syllabus</Link>
+            <Link href="#pricing" className="nav-link">Pricing</Link>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-zinc-600 dark:text-zinc-400">Log In</Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 rounded-xl">Get Started</Button>
+            <Button variant="ghost" asChild className="text-zinc-600 dark:text-zinc-400">
+              <Link href="http://localhost:5002/login">Log In</Link>
+            </Button>
+            <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 rounded-xl">
+              <Link href="http://localhost:5002/signup">Get Started</Link>
+            </Button>
           </div>
         </div>
       </nav>
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden text-center">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
-          </div>
+        <section className="hero-section">
+          <div className="hero-gradient-orb" />
+          <div className="hero-gradient-orb" style={{ top: 'auto', bottom: '-10%', left: 'auto', right: '-10%', backgroundColor: 'hsla(271, 91%, 65%, 0.1)' }} />
 
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-sm font-medium mb-8">
+              <div className="hero-pill">
                 <Sparkles className="h-4 w-4" />
                 <span>India&apos;s Most Advanced AI NEET Platform</span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-8 leading-[1.1]">
+              <h1 className="hero-title">
                 Master NEET with{" "}
-                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic">
+                <span className="text-gradient">
                   Adaptive AI
                 </span>
               </h1>
 
-              <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+              <p className="hero-subtitle">
                 Experience personalized learning that evolves with you. 50,000+ questions,
                 real-time analytics, and 3D visualizations to boost your score by up to 40%.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-                <Button size="lg" className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-indigo-500/25 gap-2 transition-all hover:scale-105 active:scale-95">
-                  <GraduationCap className="h-6 w-6" />
-                  Start Free Trial
-                  <ArrowRight className="h-5 w-5" />
+                <Button size="lg" asChild className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-indigo-500/25 gap-2 transition-all hover:scale-105 active:scale-95">
+                  <Link href="http://localhost:5002/signup">
+                    <GraduationCap className="h-6 w-6" />
+                    Start Free Trial
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="h-14 px-8 border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md text-lg font-semibold rounded-2xl gap-2 transition-all hover:scale-105 active:scale-95">
                   <Play className="h-5 w-5" />

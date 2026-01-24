@@ -73,7 +73,13 @@ export default function Signup() {
         title: "Account created",
         description: "Welcome to NEET Prep! Let's start studying.",
       });
-      if (redirectParam) {
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const plan = searchParams.get("plan");
+
+      if (plan && plan !== "free") {
+        setLocation(`/checkout?plan=${plan}`);
+      } else if (redirectParam) {
         setLocation(redirectParam);
       } else {
         setLocation("/dashboard");

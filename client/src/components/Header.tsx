@@ -27,6 +27,8 @@ interface HeaderProps {
   studyStreak?: number;
 }
 
+import "./Header.css";
+
 export function Header({
   activeSubject,
   onSubjectChange = () => { },
@@ -101,9 +103,9 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b-2 border-primary/20 bg-background/95 backdrop-blur-sm shadow-lg">
+    <header className="header">
       {isImpersonating && (
-        <div className="bg-orange-500 text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-4 animate-in slide-in-from-top">
+        <div className="impersonation-banner">
           <span className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Viewing as {user?.displayName} ({user?.role})
@@ -111,19 +113,19 @@ export function Header({
           <Button
             variant="secondary"
             size="sm"
-            className="h-7 text-xs bg-white text-orange-600 hover:bg-orange-50 border-0"
+            className="h-7 text-xs bg-white text-[var(--status-busy)] hover:bg-orange-50 border-0"
             onClick={handleStopImpersonation}
           >
             Exit View
           </Button>
         </div>
       )}
-      <div className="flex h-16 items-center gap-4 px-4 md:px-6">
-        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleHomeClick}>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
+      <div className="header-container">
+        <div className="logo-section" onClick={handleHomeClick}>
+          <div className="logo-box">
             NP
           </div>
-          <h1 className="hidden sm:block text-lg font-bold">NEET Prep</h1>
+          <h1 className="logo-text hidden sm:block">NEET Prep</h1>
         </div>
 
         <nav className="hidden md:flex flex-1 items-center gap-1 ml-6">
@@ -299,6 +301,12 @@ export function Header({
               <Badge variant="secondary" className="px-2 py-1 cursor-pointer hover:opacity-80 transition-opacity" data-testid="badge-level" onClick={() => setLocation('/practice')}>
                 Level {userLevel}
               </Badge>
+              {user.isPaidUser && (
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-2 py-1 gap-1">
+                  <Crown className="h-3 w-3" />
+                  Premium
+                </Badge>
+              )}
             </div>
           )}
 

@@ -218,136 +218,142 @@ export default function MockTests() {
           </div>
         </Tabs>
 
-        {!tests || tests.length === 0 ? (
-          <Card className="glass-panel">
-            <CardContent className="py-16 text-center space-y-4">
-              <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
-                <ClipboardList className="h-16 w-16 text-primary" />
-              </div>
-              <h3 className="text-2xl font-semibold">
-                {activeTab === 'upcoming' ? 'No Upcoming Tests' : activeTab === 'past' ? 'No Past Tests' : 'No Active Tests'}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                {activeTab === 'upcoming'
-                  ? "You don't have any scheduled exams coming up."
-                  : "Check back later for new mock tests."}
-              </p>
-              {activeTab === 'available' && (
-                <div className="flex gap-3 justify-center pt-4">
-                  <Button onClick={() => setLocation('/practice')} variant="outline" data-testid="button-practice-instead">
-                    <FileQuestion className="h-4 w-4 mr-2" />
-                    Practice Questions
-                  </Button>
-                  <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
-                    Return to Dashboard
-                  </Button>
+        <Paywall
+          feature="Full Mock Test Series"
+          description="Access India's most accurate NEET mock test series with AI-based trend analysis and performance predictions."
+          freeLimit="1 Mock Test"
+          variant={!canStartFreeTest ? "fullpage" : "inline"}
+        >
+          {!tests || tests.length === 0 ? (
+            <Card className="glass-panel">
+              <CardContent className="py-16 text-center space-y-4">
+                <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+                  <ClipboardList className="h-16 w-16 text-primary" />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {tests.map((test) => {
-              const hasInProgressAttempt = attempts.some(
-                (attempt) => attempt.paperId === test.id && attempt.status === "in_progress"
-              );
-              const isUpcoming = activeTab === 'upcoming';
-              const isPast = activeTab === 'past';
-              const startDate = test.startsAt ? new Date(test.startsAt) : null;
+                <h3 className="text-2xl font-semibold">
+                  {activeTab === 'upcoming' ? 'No Upcoming Tests' : activeTab === 'past' ? 'No Past Tests' : 'No Active Tests'}
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  {activeTab === 'upcoming'
+                    ? "You don't have any scheduled exams coming up."
+                    : "Check back later for new mock tests."}
+                </p>
+                {activeTab === 'available' && (
+                  <div className="flex gap-3 justify-center pt-4">
+                    <Button onClick={() => setLocation('/practice')} variant="outline" data-testid="button-practice-instead">
+                      <FileQuestion className="h-4 w-4 mr-2" />
+                      Practice Questions
+                    </Button>
+                    <Button onClick={() => setLocation('/')} data-testid="button-return-dashboard">
+                      Return to Dashboard
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {tests.map((test) => {
+                const hasInProgressAttempt = attempts.some(
+                  (attempt) => attempt.paperId === test.id && attempt.status === "in_progress"
+                );
+                const isUpcoming = activeTab === 'upcoming';
+                const isPast = activeTab === 'past';
+                const startDate = test.startsAt ? new Date(test.startsAt) : null;
 
-              return (
-                <Card key={test.id} data-testid={`card-test-${test.id}`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle>{test.title}</CardTitle>
-                        {activeTab === 'upcoming' && startDate && (
-                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Starts: {startDate.toLocaleString()}
-                          </p>
-                        )}
+                return (
+                  <Card key={test.id} data-testid={`card-test-${test.id}`}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle>{test.title}</CardTitle>
+                          {activeTab === 'upcoming' && startDate && (
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Starts: {startDate.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        {test.sectionCount ? (
+                          <Badge variant="outline">{test.sectionCount} sections</Badge>
+                        ) : null}
                       </div>
-                      {test.sectionCount ? (
-                        <Badge variant="outline">{test.sectionCount} sections</Badge>
-                      ) : null}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Target className="h-4 w-4" />
-                        {test.totalQuestions ?? 0} Questions
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Target className="h-4 w-4" />
+                          {test.totalQuestions ?? 0} Questions
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {test.durationMinutes} minutes
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {test.durationMinutes} minutes
-                      </div>
-                    </div>
 
-                    {/* ... Existing Pricing & Button Logic ... */}
-                    {(() => {
-                      if (isUpcoming) {
-                        return (
-                          <Button className="w-full" disabled variant="secondary">
-                            <Clock className="h-4 w-4 mr-2" />
-                            Coming Soon
-                          </Button>
-                        );
-                      }
-
-                      if (hasInProgressAttempt && (canStartFreeTest || isPremium)) {
-                        return (
-                          <div className="space-y-2">
-                            <Button
-                              className="w-full"
-                              onClick={() => startTest(test.id)}
-                              data-testid={`button-resume-test-${test.id}`}
-                              variant="default"
-                            >
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Resume Test
+                      {(() => {
+                        if (isUpcoming) {
+                          return (
+                            <Button className="w-full" disabled variant="secondary">
+                              <Clock className="h-4 w-4 mr-2" />
+                              Coming Soon
                             </Button>
-                          </div>
-                        );
-                      }
+                          );
+                        }
 
-                      if (isPast) {
-                        return (
-                          <Button className="w-full" variant="outline" onClick={() => setLocation(`/mock-test/${test.id}/results`)}>
-                            View Results
-                          </Button>
-                        );
-                      }
+                        if (hasInProgressAttempt && (canStartFreeTest || isPremium)) {
+                          return (
+                            <div className="space-y-2">
+                              <Button
+                                className="w-full"
+                                onClick={() => startTest(test.id)}
+                                data-testid={`button-resume-test-${test.id}`}
+                                variant="default"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Resume Test
+                              </Button>
+                            </div>
+                          );
+                        }
 
-                      return canStartFreeTest || isPremium ? (
-                        <Button
-                          className="w-full"
-                          onClick={() => startTest(test.id)}
-                          data-testid={`button-start-test-${test.id}`}
-                        >
-                          <Target className="h-4 w-4 mr-2" />
-                          Start Test
-                        </Button>
-                      ) : (
-                        <Link href="/pricing">
+                        if (isPast) {
+                          return (
+                            <Button className="w-full" variant="outline" onClick={() => setLocation(`/mock-test/${test.id}/results`)}>
+                              View Results
+                            </Button>
+                          );
+                        }
+
+                        return canStartFreeTest || isPremium ? (
                           <Button
-                            variant="outline"
-                            className="w-full gap-2"
-                            data-testid={`button-locked-test-${test.id}`}
+                            className="w-full"
+                            onClick={() => startTest(test.id)}
+                            data-testid={`button-start-test-${test.id}`}
                           >
-                            <Lock className="h-4 w-4" />
-                            Upgrade to Access
+                            <Target className="h-4 w-4 mr-2" />
+                            Start Test
                           </Button>
-                        </Link>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                        ) : (
+                          <Link href="/pricing">
+                            <Button
+                              variant="outline"
+                              className="w-full gap-2"
+                              data-testid={`button-locked-test-${test.id}`}
+                            >
+                              <Lock className="h-4 w-4" />
+                              Upgrade to Access
+                            </Button>
+                          </Link>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </Paywall>
 
         {/* Quick Navigation */}
         <div className="mt-12 pt-8 border-t">

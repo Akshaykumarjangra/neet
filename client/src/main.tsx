@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import "./variables.css";
 import "./index.css";
 
 // Ensure all fetch calls include credentials by default so session cookies are sent

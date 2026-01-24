@@ -104,6 +104,7 @@ export function PricingSection() {
 
                     <CardFooter className="p-8 pt-4">
                         <Button
+                            asChild
                             size="lg"
                             variant={plan.popular ? "default" : "outline"}
                             className={cn(
@@ -111,7 +112,9 @@ export function PricingSection() {
                                 plan.popular ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30" : ""
                             )}
                         >
-                            {plan.cta}
+                            <a href={`http://localhost:5002/signup?plan=${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                                {plan.cta}
+                            </a>
                         </Button>
                     </CardFooter>
 
