@@ -11,6 +11,7 @@ import { GuestRoute } from "@/components/GuestRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
+import { UpgradePopup } from "@/components/UpgradePopup";
 
 import AccessDenied from "@/pages/AccessDenied";
 
@@ -410,6 +411,7 @@ function App() {
         <TooltipProvider>
           <ThemeProvider>
             <Toaster />
+            <UpgradePopup />
             <Router />
           </ThemeProvider>
         </TooltipProvider>

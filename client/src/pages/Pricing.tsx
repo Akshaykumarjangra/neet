@@ -196,6 +196,8 @@ const getPlanConfig = (planType: string): { icon: LucideIcon; color: string; but
 
 const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
   const config = getPlanConfig(apiPlan.planType);
+  const isQuarterly = apiPlan.billingInterval === "quarterly" || apiPlan.slug.includes("quarterly");
+
   return {
     planId: apiPlan.id,
     planType: apiPlan.planType as "free" | "premium" | "organization",
@@ -211,6 +213,9 @@ const transformApiPlan = (apiPlan: SubscriptionPlan): DisplayPlan => {
     features: apiPlan.features || [],
     currency: apiPlan.currency || "INR",
     ctaLabel: apiPlan.trialDays && apiPlan.trialDays > 0 ? "Start Free Trial" : "Pay Now",
+    intervalOverride: isQuarterly ? "quarterly" : undefined,
+    displayPrice: isQuarterly ? `₹${Math.round((apiPlan.priceYearly || 3 * apiPlan.priceMonthly) / 100)}` : undefined,
+    displayPeriod: isQuarterly ? " / 3 months" : undefined,
   };
 };
 

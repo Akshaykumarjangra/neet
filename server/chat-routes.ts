@@ -221,8 +221,21 @@ router.post("/threads/:id/messages", requireAuth, async (req, res) => {
 
     if (!thread) return res.status(404).json({ error: "Thread not found" });
 
-    // Simple Access Control
-    // In a real app we'd verify participant status again
+    // Access Control: Only the student owner or the assigned mentor can post messages
+    const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+    const isOwner = thread.studentId === userId;
+    let isAssignedMentor = false;
+
+    if (user?.role === 'mentor' && thread.mentorId) {
+      const [mentor] = await db.select({ id: mentors.id }).from(mentors).where(eq(mentors.userId, userId)).limit(1);
+      if (mentor && mentor.id === thread.mentorId) {
+        isAssignedMentor = true;
+      }
+    }
+
+    if (!isOwner && !isAssignedMentor) {
+      return res.status(403).json({ error: "Access denied. You are not a participant in this thread." });
+    }
 
     // Insert message
     const [newMessage] = await db

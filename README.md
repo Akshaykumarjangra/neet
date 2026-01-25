@@ -7,6 +7,7 @@ A full-stack learning management system tailored for NEET preparation, featuring
 *   **Frontend:** React, Vite, TailwindCSS, Radix UI
 *   **Backend:** Node.js, Express, PostgreSQL (Drizzle ORM)
 *   **Database:** PostgreSQL (Coolify / Neon)
+*   **Storage:** Local Volume Storage (Coolify compatible)
 *   **Tools:** TypeScript, PM2, Docker
 
 ## Getting Started

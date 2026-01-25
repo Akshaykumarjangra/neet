@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CreditCard } from "lucide-react";
 import type { SubscriptionPlan } from "@shared/schema";
 
-type BillingInterval = "monthly" | "yearly";
+type BillingInterval = "monthly" | "yearly" | "quarterly";
 
 interface RazorpayCheckoutResponse {
   razorpay_payment_id: string;
@@ -68,7 +68,9 @@ export default function Checkout() {
 
   const planSlug = params.get("plan") || "";
   const intervalParam = params.get("interval");
-  const interval: BillingInterval = intervalParam === "yearly" ? "yearly" : "monthly";
+  const interval: BillingInterval =
+    intervalParam === "yearly" ? "yearly" :
+      intervalParam === "quarterly" ? "quarterly" : "monthly";
 
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],

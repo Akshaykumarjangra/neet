@@ -29,6 +29,7 @@ import botanyIcon from "@assets/generated_images/Botany_subject_icon_f51f8d03.pn
 import zoologyIcon from "@assets/generated_images/Zoology_subject_icon_879d7407.png";
 
 import { NextBestAction } from "@/components/NextBestAction";
+import { LeadMagnetSection } from "@/components/LeadMagnetSection";
 
 interface UserStats {
   totalAttempts: number;
@@ -444,6 +445,10 @@ export default function Dashboard() {
                 );
               })}
             </div>
+          </section>
+
+          <section>
+            <LeadMagnetSection />
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">

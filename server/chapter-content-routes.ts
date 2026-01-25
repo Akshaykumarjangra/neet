@@ -56,6 +56,18 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, status } = req.query;
 
+    const userId = req.session?.userId;
+    let isPremium = false;
+
+    if (userId) {
+      const [user] = await db
+        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+    }
+
     let query = db.select().from(chapterContent);
 
     const conditions = [];
@@ -70,6 +82,11 @@ router.get("/", async (req: Request, res: Response) => {
     }
     if (status) {
       conditions.push(eq(chapterContent.status, status as any));
+    }
+
+    // Filter premium chapters if user is not premium
+    if (!isPremium) {
+      conditions.push(sql`${chapterContent.chapterNumber} <= 3`);
     }
 
     const chapters = conditions.length > 0
@@ -259,6 +276,38 @@ router.get("/:id/assets", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const chapterId = parseInt(id);
+
+    // Verify chapter existence and check premium status
+    const [chapter] = await db
+      .select({ chapterNumber: chapterContent.chapterNumber })
+      .from(chapterContent)
+      .where(eq(chapterContent.id, chapterId))
+      .limit(1);
+
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    // Enforce subscription check for assets of premium chapters
+    if (chapter.chapterNumber > 3) {
+      const userId = req.session?.userId;
+      let isPremium = false;
+      if (userId) {
+        const [user] = await db
+          .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+        isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+      }
+
+      if (!isPremium) {
+        return res.status(402).json({
+          error: "PAYMENT_REQUIRED",
+          message: "Assets for this chapter are available exclusively for Premium members."
+        });
+      }
+    }
 
     // Optional: filter by type e.g. ?type=video
     const { type } = req.query;

@@ -34,9 +34,8 @@ type UserInsert = typeof users.$inferInsert;
 
 
 async function ensureOwnerAccount() {
-  const ownerEmail = "akg45272@gmail.com";
-  // User enforced password
-  const ownerPassword = "akg45272@gmail.com";
+  const ownerEmail = process.env.OWNER_EMAIL || "akg45272@gmail.com";
+  const ownerPassword = process.env.OWNER_PASSWORD || "akg45272@gmail.com";
 
   try {
     const [existingUser] = await db
@@ -296,11 +295,14 @@ declare module 'http' {
   }
 }
 app.use(express.json({
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
+  verify: (req: any, _res, buf) => {
+    if (buf && buf.length) {
+      req.rawBody = buf;
+    }
+  },
+  limit: '5mb'
 }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();

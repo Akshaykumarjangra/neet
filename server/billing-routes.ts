@@ -291,9 +291,14 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       billingInterval === "yearly" ? "yearly" :
         billingInterval === "quarterly" ? "quarterly" : "monthly";
 
-    const amount = interval === "yearly"
-      ? plan.priceYearly || plan.priceMonthly * 12
-      : plan.priceMonthly;
+    let amount = plan.priceMonthly;
+    if (interval === "yearly") {
+      amount = plan.priceYearly || plan.priceMonthly * 12;
+    } else if (interval === "quarterly") {
+      // If priceYearly is used as "total price for interval" in seeds, or we just use priceMonthly * 3
+      // For "Quarterly Starter", priceYearly was seeded as 100000 (₹1000)
+      amount = (plan.slug === "quarterly-starter" && plan.priceYearly) ? plan.priceYearly : plan.priceMonthly * 3;
+    }
 
     const settings = await getPaymentSettings();
     const chosenProvider: PaymentProvider =
@@ -542,13 +547,14 @@ router.post(
     let event: Stripe.Event;
 
     try {
+      const payload = (req as any).rawBody || req.body;
       event = stripe.webhooks.constructEvent(
-        req.body,
+        payload,
         signature as string,
         webhookSecret
       );
     } catch (err: any) {
-      console.error("Stripe webhook signature error:", err);
+      console.error("[Stripe Webhook] Signature error:", err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -614,17 +620,19 @@ router.post(
     }
 
     const signature = req.headers["x-razorpay-signature"] as string;
-    const body = req.body.toString();
+    const payload = (req as any).rawBody ? (req as any).rawBody.toString() : JSON.stringify(req.body);
+
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
-      .update(body)
+      .update(payload)
       .digest("hex");
 
     if (expectedSignature !== signature) {
+      console.error("[Razorpay Webhook] Invalid signature");
       return res.status(400).send("Invalid signature");
     }
 
-    const payload = JSON.parse(body);
+    const eventData = typeof req.body === 'object' && !((req as any).rawBody) ? req.body : JSON.parse(payload);
 
     await db
       .insert(webhookEvents)
@@ -639,15 +647,15 @@ router.post(
       .onConflictDoNothing({ target: webhookEvents.eventId });
 
     try {
-      if (payload.event === "payment.captured") {
-        const notes = payload.payload.payment.entity.notes || {};
+      if (eventData.event === "payment.captured") {
+        const notes = eventData.payload.payment.entity.notes || {};
         const subscriptionId = parseInt(notes.subscriptionId || "0");
         const transactionId = notes.transactionId || "";
 
         if (subscriptionId && transactionId) {
           await markSubscriptionActive(subscriptionId, transactionId, {
-            razorpayPaymentId: payload.payload.payment.entity.id,
-            razorpayOrderId: payload.payload.payment.entity.order_id,
+            razorpayPaymentId: eventData.payload.payment.entity.id,
+            razorpayOrderId: eventData.payload.payment.entity.order_id,
           });
         }
       }

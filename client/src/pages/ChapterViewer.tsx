@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AuthModal } from "@/components/AuthModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -99,6 +100,7 @@ export default function ChapterViewer() {
   const [showFloatingToolbar, setShowFloatingToolbar] = useState(true);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const normalizedSubject = useMemo(() => {
     if (!subject) return "";
@@ -600,9 +602,7 @@ export default function ChapterViewer() {
                       className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 px-8 font-semibold shadow-lg"
                       onClick={() => {
                         if (!user) {
-                          // Redirect to login then back to this chapter
-                          const currentPath = window.location.pathname;
-                          navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+                          setShowAuthModal(true);
                         } else {
                           navigate("/pricing");
                         }
@@ -620,6 +620,12 @@ export default function ChapterViewer() {
                         </>
                       )}
                     </Button>
+                    <AuthModal
+                      isOpen={showAuthModal}
+                      onClose={() => setShowAuthModal(false)}
+                      title="Login to Unlock Content"
+                      description="Log in to your account to view this premium chapter and continue your progress."
+                    />
                     <Button
                       size="lg"
                       variant="outline"

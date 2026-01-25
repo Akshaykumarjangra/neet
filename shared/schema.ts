@@ -16,6 +16,7 @@ export const contentAssetTypeEnum = pgEnum("content_asset_type", ["video", "pdf"
 export const mockTestStatusEnum = pgEnum("mock_test_status", ["draft", "scheduled", "published", "closed"]);
 
 export const mockTestAttemptStatusEnum = pgEnum("mock_test_attempt_status", ["in_progress", "submitted", "auto_submitted", "expired"]);
+export const leadMagnetTypeEnum = pgEnum("lead_magnet_type", ["pdf", "video", "test_series", "cheatsheet", "roadmap"]);
 
 export const contentTopics = pgTable("content_topics", {
   id: serial("id").primaryKey(),
@@ -1667,3 +1668,73 @@ export type InsertChatThread = z.infer<typeof insertChatThreadSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 
+
+// ============ GROWTH & MARKETING SYSTEM ============
+
+export const leadMagnets = pgTable("lead_magnets", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  type: leadMagnetTypeEnum("type").notNull().default("pdf"),
+  contentUrl: varchar("content_url", { length: 500 }).notNull(),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  callToAction: varchar("call_to_action", { length: 100 }).default("Download Now"),
+  isActive: boolean("is_active").notNull().default(true),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userLeads = pgTable("user_leads", {
+  id: serial("id").primaryKey(),
+  magnetId: integer("magnet_id").references(() => leadMagnets.id),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  name: varchar("name", { length: 100 }),
+  userId: varchar("user_id").references(() => users.id),
+  status: varchar("status", { length: 20 }).default("new"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const upgradingPopups = pgTable("upgrading_popups", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  ctaText: varchar("cta_text", { length: 50 }).notNull().default("Upgrade Now"),
+  ctaLink: varchar("cta_link", { length: 500 }).notNull().default("/pricing"),
+  imageUrl: varchar("image_url", { length: 500 }),
+  triggerType: varchar("trigger_type", { length: 50 }).notNull().default("timer"),
+  triggerValue: jsonb("trigger_value"),
+  targetPages: jsonb("target_pages").$type<string[]>(),
+  isActive: boolean("is_active").notNull().default(true),
+  displayPriority: integer("display_priority").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas
+export const insertLeadMagnetSchema = createInsertSchema(leadMagnets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertUserLeadSchema = createInsertSchema(userLeads).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertUpgradingPopupSchema = createInsertSchema(upgradingPopups).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+// Types
+export type LeadMagnet = typeof leadMagnets.$inferSelect;
+export type InsertLeadMagnet = z.infer<typeof insertLeadMagnetSchema>;
+
+export type UserLead = typeof userLeads.$inferSelect;
+export type InsertUserLead = z.infer<typeof insertUserLeadSchema>;
+
+export type UpgradingPopup = typeof upgradingPopups.$inferSelect;
+export type InsertUpgradingPopup = z.infer<typeof insertUpgradingPopupSchema>;

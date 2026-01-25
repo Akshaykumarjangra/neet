@@ -41,6 +41,7 @@ import profileRoutes from "./profile-routes";
 import explainRoutes from "./explain-routes";
 import chapterChatRoutes from "./chapter-chat-routes";
 import adminImpersonationRoutes from "./admin-impersonation-routes";
+import growthRoutes from "./growth-routes";
 import multer from "multer";
 import { objectStorage } from "./services/object-storage";
 
@@ -197,6 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/profile", profileRoutes);
   app.use("/api/explain", requireActiveSubscription(), explainRoutes);
+  app.use("/api/growth", growthRoutes);
 
   // ============ PUBLIC SUBSCRIPTION PLANS ============
 
@@ -1444,5 +1446,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // Global error handler - must be after all routes
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    // Log error for server-side debugging
+    if (status >= 500) {
+      console.error("[Global Error Handler]", err);
+    }
+
+    res.status(status).json({
+      error: "INTERNAL_ERROR",
+      message: process.env.NODE_ENV === "production" ? "An unexpected error occurred." : message,
+    });
+  });
+
   return httpServer;
 }

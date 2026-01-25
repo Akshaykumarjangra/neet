@@ -69,7 +69,7 @@ router.get('/', requireAuthWithPasswordCheck, async (req, res) => {
     res.json(tests || []);
   } catch (error: any) {
     console.error('Error fetching mock tests:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to fetch mock tests',
       tests: []
     });
@@ -85,12 +85,12 @@ router.get('/attempts-this-month', requireAuthWithPasswordCheck, async (req, res
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     const result = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(testSessions)
       .where(sql`${testSessions.userId} = ${userId} AND ${testSessions.startedAt} >= ${startOfMonth}`);
-    
+
     res.json({ count: result[0]?.count ?? 0 });
   } catch (error) {
     console.error('Error fetching test attempts:', error);
@@ -102,26 +102,58 @@ router.get('/:id', requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const testId = parseInt(req.params.id);
     if (!Number.isInteger(testId) || testId <= 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid test ID',
         test: null,
         questions: []
       });
     }
 
+    const userId = getCurrentUser(req);
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+
+    // Baseline check: Premium or Admin can see any test. 
+    // Free users can only see the test if they have an active session for it 
+    // (which means they've used their monthly quota) or if we want to allow 
+    // them to see the test metadata but NOT the questions.
+    const isPremium = user?.isPaidUser || user?.role === 'admin';
+
     const test = await db.select().from(mockTests).where(eq(mockTests.id, testId)).limit(1);
-    
+
     if (test.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Test not found',
         test: null,
         questions: []
       });
     }
 
+    if (!isPremium) {
+      // Check if user has started this test session
+      const [activeSession] = await db
+        .select()
+        .from(testSessions)
+        .where(and(eq(testSessions.userId, userId), eq(testSessions.testType, test[0].testType))) // Simplified check: has ever attempted this type?
+        .limit(1);
+
+      // In a stricter system, we'd check if they have a session for THIS testId specifically.
+      // For now, if not premium, we only allow questions if they have a session they just started.
+      const hasSession = !!activeSession;
+
+      // If we want to allow free users to browse the list but block the detail:
+      if (!hasSession && test[0].testType !== 'demo') { // Assuming 'demo' tests are free
+        return res.status(402).json({
+          error: 'PREMIUM_REQUIRED',
+          message: 'This mock test is part of the Premium package. Upgrade to access full questions.',
+          test: test[0],
+          questions: [] // Return empty questions
+        });
+      }
+    }
+
     const questionIds = test[0].questionsList as number[];
     if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Test has no questions configured',
         test: test[0],
         questions: []
@@ -144,7 +176,7 @@ router.get('/:id', requireAuthWithPasswordCheck, async (req, res) => {
     // Add cache headers for better performance
     res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.setHeader("ETag", `"${crypto.createHash("md5").update(JSON.stringify({ testId, questionCount: orderedQuestions.length })).digest("hex")}"`);
-    
+
     // Ensure we always return the expected format
     res.json({
       test: test[0],
@@ -152,7 +184,7 @@ router.get('/:id', requireAuthWithPasswordCheck, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error fetching mock test:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to fetch mock test',
       test: null,
       questions: []
@@ -180,16 +212,16 @@ router.post('/:id/start', requireAuthWithPasswordCheck, async (req, res) => {
     if (!user.isPaidUser && user.role !== 'admin') {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       const [result] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(testSessions)
         .where(sql`${testSessions.userId} = ${userId} AND ${testSessions.startedAt} >= ${startOfMonth}`);
-      
+
       const attemptsThisMonth = result?.count ?? 0;
-      
+
       if (attemptsThisMonth >= FREE_MONTHLY_TEST_LIMIT) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: 'PREMIUM_REQUIRED',
           message: 'You have used your free mock test for this month. Upgrade to Premium for unlimited access.',
           freeLimit: FREE_MONTHLY_TEST_LIMIT,
@@ -199,7 +231,7 @@ router.post('/:id/start', requireAuthWithPasswordCheck, async (req, res) => {
     }
 
     const test = await db.select().from(mockTests).where(eq(mockTests.id, testId)).limit(1);
-    
+
     if (test.length === 0) {
       return res.status(404).json({ error: 'Test not found' });
     }
@@ -229,7 +261,7 @@ router.post('/:id/start', requireAuthWithPasswordCheck, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error starting test:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to start test'
     });
   }
