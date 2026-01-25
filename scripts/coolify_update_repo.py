@@ -32,7 +32,7 @@ def make_request(endpoint, method="GET", data=None):
 if __name__ == "__main__":
     print(f"Updating repo for {APP_UUID}...")
     payload = {
-        "git_repository": "https://github.com/Akshaykumarjangra/neet",
+        "git_repository": "Akshaykumarjangra/neet",
         "git_branch": "main"
     }
     

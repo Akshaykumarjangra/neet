@@ -127,7 +127,7 @@ export default function Practice() {
     queryKey: ["/api/questions/adaptive", user?.id, selectedSubject],
     queryFn: async () => {
       try {
-      const payload = await apiRequest("GET", "/api/questions/adaptive");
+        const payload = await apiRequest("GET", "/api/questions/adaptive");
         // Handle response format - should have questions array
         if (Array.isArray(payload)) {
           return payload;
@@ -245,18 +245,18 @@ export default function Practice() {
     queryKey: ['/api/questions', selectedSubject, selectedTopic, selectedDifficulty, pyqOnly, pyqYear, chapterContentId, user?.id],
     queryFn: async () => {
       try {
-      const queryParams = buildQueryParams();
-      const url = `/api/questions${queryParams ? '?' + queryParams : ''}`;
-      const payload = await apiRequest("GET", url);
-      setAuthRequired(false);
-      const quotaHit = Boolean(
-        payload &&
+        const queryParams = buildQueryParams();
+        const url = `/api/questions${queryParams ? '?' + queryParams : ''}`;
+        const payload = await apiRequest("GET", url);
+        setAuthRequired(false);
+        const quotaHit = Boolean(
+          payload &&
           typeof payload === 'object' &&
           'quotaExhausted' in payload &&
           payload.quotaExhausted
-      );
-      setQuotaExhausted(quotaHit);
-        
+        );
+        setQuotaExhausted(quotaHit);
+
         // Handle both array and object response formats
         let list: Question[] = [];
         if (Array.isArray(payload)) {
@@ -281,10 +281,10 @@ export default function Practice() {
             duration: 5000,
           });
         }
-        
+
         // Shuffle questions for variety
-      const shuffled = [...list].sort(() => Math.random() - 0.5);
-      return shuffled;
+        const shuffled = [...list].sort(() => Math.random() - 0.5);
+        return shuffled;
       } catch (err: any) {
         console.error("Error fetching questions:", err);
         setQuotaExhausted(false);
@@ -372,6 +372,10 @@ export default function Practice() {
 
   const { data: comboData } = useQuery<{ currentCombo: number; maxCombo: number }>({
     queryKey: ['/api/game/combo', user?.id, effectiveSubject],
+    queryFn: async () => {
+      const url = `/api/game/combo/${user?.id}${effectiveSubject !== 'all' ? `?subject=${encodeURIComponent(effectiveSubject)}` : ''}`;
+      return apiRequest('GET', url);
+    },
     enabled: !!user?.id,
   });
 
@@ -484,7 +488,7 @@ export default function Practice() {
       setIsTimerRunning(false);
 
       const neetMarksChange = variables.isCorrect ? 4 : (variables.selectedAnswer ? 1 : 0);
-      
+
       setSessionStats(prev => ({
         ...prev,
         questionsAttempted: prev.questionsAttempted + 1,
@@ -867,14 +871,14 @@ export default function Practice() {
                 {!user?.id || authRequired
                   ? 'Please log in to access practice questions.'
                   : chapterLookupFailed
-                  ? 'Chapter not found for the selected subject/class.'
-                  : quotaExhausted
-                  ? 'Free question limit reached. Upgrade to access more questions.'
-                  : error
-                  ? '❌ Error loading questions'
-                  : showFlaggedOnly
-                  ? 'No flagged questions found.'
-                  : 'No questions available for the selected filters.'}
+                    ? 'Chapter not found for the selected subject/class.'
+                    : quotaExhausted
+                      ? 'Free question limit reached. Upgrade to access more questions.'
+                      : error
+                        ? '❌ Error loading questions'
+                        : showFlaggedOnly
+                          ? 'No flagged questions found.'
+                          : 'No questions available for the selected filters.'}
               </p>
               {error && (
                 <p className="text-sm text-destructive">{String(error)}</p>
@@ -1668,7 +1672,7 @@ export default function Practice() {
                       <GraduationCap className="h-5 w-5 text-primary" />
                       <span className="font-semibold">NEET Score Analysis</span>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                       <div className="bg-white/50 dark:bg-black/20 rounded-md p-2 text-center">
                         <div className="flex items-center justify-center gap-1 text-green-600">
@@ -1703,23 +1707,23 @@ export default function Practice() {
                           {neetPercentile}th Percentile
                         </Badge>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-muted-foreground">NEET Cutoff Comparison:</span>
-                        <Badge 
-                          variant={neet720Equivalent >= 650 ? "default" : "outline"} 
+                        <Badge
+                          variant={neet720Equivalent >= 650 ? "default" : "outline"}
                           className={`text-[10px] ${neet720Equivalent >= 650 ? 'bg-green-500' : ''}`}
                         >
                           650+ {neet720Equivalent >= 650 ? '✓' : ''}
                         </Badge>
-                        <Badge 
-                          variant={neet720Equivalent >= 600 ? "default" : "outline"} 
+                        <Badge
+                          variant={neet720Equivalent >= 600 ? "default" : "outline"}
                           className={`text-[10px] ${neet720Equivalent >= 600 && neet720Equivalent < 650 ? 'bg-blue-500' : neet720Equivalent >= 650 ? 'bg-green-500' : ''}`}
                         >
                           600+ {neet720Equivalent >= 600 ? '✓' : ''}
                         </Badge>
-                        <Badge 
-                          variant={neet720Equivalent >= 550 ? "default" : "outline"} 
+                        <Badge
+                          variant={neet720Equivalent >= 550 ? "default" : "outline"}
                           className={`text-[10px] ${neet720Equivalent >= 550 && neet720Equivalent < 600 ? 'bg-yellow-500' : neet720Equivalent >= 600 ? 'bg-green-500' : ''}`}
                         >
                           550+ {neet720Equivalent >= 550 ? '✓' : ''}
