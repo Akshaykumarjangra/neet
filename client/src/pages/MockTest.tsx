@@ -34,6 +34,7 @@ import { useLocation, useRoute } from "wouter";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Grid as FixedSizeGrid } from "react-window";
+const FixedSizeGridAny = FixedSizeGrid as any;
 
 type MockExamOption = {
   id: number;
@@ -876,8 +877,8 @@ export default function MockTestPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="h-[300px] w-full" data-testid="question-navigation-grid">
-                    {questions.length > 0 && FixedSizeGrid && (
-                      <FixedSizeGrid
+                    {questions.length > 0 && FixedSizeGridAny && (
+                      <FixedSizeGridAny
                         columnCount={5}
                         columnWidth={55}
                         height={300}
@@ -892,7 +893,7 @@ export default function MockTestPage() {
                           getQuestionButtonClasses
                         }}
                       >
-                        {({ columnIndex, rowIndex, style, data }) => {
+                        {(({ columnIndex, rowIndex, style, data }: any) => {
                           const index = rowIndex * 5 + columnIndex;
                           if (index >= data.questions.length) return null;
                           const question = data.questions[index];
@@ -912,8 +913,8 @@ export default function MockTestPage() {
                               </button>
                             </div>
                           );
-                        }}
-                      </FixedSizeGrid>
+                        }) as any}
+                      </FixedSizeGridAny>
                     )}
                   </div>
 

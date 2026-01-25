@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Target, FileQuestion, AlertCircle, RefreshCw, ClipboardList, Lock, Crown, Calendar } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscription } from "@/components/Paywall";
+import { Paywall, useSubscription } from "@/components/Paywall";
 import React from "react";
 
 interface MockExamPaper {
@@ -47,7 +47,7 @@ export default function MockTests() {
       const searchParams = new URLSearchParams(window.location.search);
       const seriesId = searchParams.get("seriesId");
       const status = activeTab === "past" ? "completed" : activeTab === "upcoming" ? "upcoming" : "available";
-      const payload = await apiRequest("GET", `/api/mock-exams/papers?status=${status}${seriesId ? `&seriesId=${seriesId}` : ""}`);
+      const payload = await apiRequest("GET", `/ api / mock - exams / papers ? status = ${status}${seriesId ? `&seriesId=${seriesId}` : ""} `);
       return Array.isArray(payload?.data) ? payload.data : [];
     },
     retry: 3,
@@ -77,7 +77,7 @@ export default function MockTests() {
   const canStartFreeTest = isPremium || freeTestsRemaining > 0;
 
   const startMutation = useMutation({
-    mutationFn: async (paperId: number) => apiRequest("POST", `/api/mock-exams/papers/${paperId}/start`),
+    mutationFn: async (paperId: number) => apiRequest("POST", `/ api / mock - exams / papers / ${paperId}/start`),
     onSuccess: (response: any, paperId) => {
       const attemptId = response?.attemptId;
       if (attemptId) {

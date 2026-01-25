@@ -138,6 +138,7 @@ function ChapterCard({
   classLevel,
   onClick,
   prefersReducedMotion,
+  isPremium,
 }: {
   chapter: ChapterData;
   classLevel: string;

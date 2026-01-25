@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Leaf, ChevronRight, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { BotanyChapter1 } from "@/components/BotanyChapter1";
 import { BotanyChapter2 } from "@/components/BotanyChapter2";
 import { BotanyChapter3 } from "@/components/BotanyChapter3";
@@ -39,10 +44,6 @@ import { BotanyChapter34 } from "@/components/BotanyChapter34";
 import { BotanyChapter35 } from "@/components/BotanyChapter35";
 import { BotanyChapter36 } from "@/components/BotanyChapter36";
 import { BotanyChapter37 } from "@/components/BotanyChapter37";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Leaf, ChevronRight } from "lucide-react";
 
 // Chapter metadata
 const chapters = [
@@ -146,6 +147,8 @@ const componentMap: Record<number, React.ComponentType> = {
 export default function BotanyContent() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isPremium = user?.isPaidUser || false;
 
   if (selectedChapter !== null) {
     const Component = componentMap[selectedChapter];
@@ -184,55 +187,73 @@ export default function BotanyContent() {
           </div>
 
           <div className="grid gap-4">
-            {chapters.map((chapter) => (
-              <Card
-                key={chapter.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
-                  }`}
-                onClick={() => {
-                  if (chapter.status === "available") {
-                    const mapping = chapterMapping[chapter.id];
-                    if (mapping) {
-                      setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
-                    } else {
-                      setSelectedChapter(chapter.id);
+            {chapters.map((chapter) => {
+              const mapping = chapterMapping[chapter.id];
+              const chapterNum = mapping ? mapping.num : 0;
+              const isLocked = chapterNum > 3 && !isPremium;
+
+              return (
+                <Card
+                  key={chapter.id}
+                  className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
+                    } ${isLocked ? "opacity-75 grayscale-[0.2] border-muted" : "border-green-200"}`}
+                  onClick={() => {
+                    if (chapter.status === "available") {
+                      if (isLocked) {
+                        setLocation("/pricing");
+                        return;
+                      }
+                      if (mapping) {
+                        setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+                      }
                     }
-                  }
-                }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <Leaf className="h-6 w-6 text-green-500" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold">
-                            Chapter {chapter.id}: {chapter.title}
-                          </h3>
-                          {chapter.status === "available" && (
-                            <Badge variant="secondary">Available</Badge>
-                          )}
-                          {chapter.status === "coming-soon" && (
-                            <Badge variant="outline">Coming Soon</Badge>
+                  }}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isLocked ? "bg-muted" : "bg-green-500/10"
+                          }`}>
+                          {isLocked ? (
+                            <Lock className="h-6 w-6 text-muted-foreground" />
+                          ) : (
+                            <Leaf className="h-6 w-6 text-green-500" />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {(chapter.questions ?? 0) > 0
-                            ? `${chapter.questions} practice questions available`
-                            : "Content being prepared"
-                          }
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold">
+                              Chapter {chapter.id}: {chapter.title}
+                            </h3>
+                            {isLocked ? (
+                              <Badge variant="outline" className="bg-muted text-muted-foreground">Premium</Badge>
+                            ) : (
+                              chapter.status === "available" ? (
+                                <Badge variant="secondary">Available</Badge>
+                              ) : (
+                                <Badge variant="outline">Coming Soon</Badge>
+                              )
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {(chapter.questions ?? 0) > 0
+                              ? `${chapter.questions} practice questions available`
+                              : "Content being prepared"
+                            }
+                          </p>
+                        </div>
                       </div>
+                      {chapter.status === "available" && !isLocked && (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      {isLocked && (
+                        <Lock className="h-4 w-4 text-muted-foreground opacity-50" />
+                      )}
                     </div>
-                    {chapter.status === "available" && (
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>

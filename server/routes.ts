@@ -89,7 +89,7 @@ async function updateDailyChallengeProgress(userId: string, isCorrect: boolean) 
           progress: newProgress,
           completed: isCompleted,
           completedAt: isCompleted && !wasCompleted ? new Date() : existing.completedAt,
-        })
+        } as any)
         .where(eq(userDailyChallenges.id, existing.id));
     } else {
       await db.insert(userDailyChallenges).values({

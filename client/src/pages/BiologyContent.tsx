@@ -195,9 +195,6 @@ const chapterMapping: Record<string, { subject: string; class: string; num: numb
   "B9": { subject: "biology", class: "11", num: 9 },
   "B10": { subject: "biology", class: "11", num: 10 },
   "B11": { subject: "biology", class: "11", num: 11 },
-  "B12": { subject: "biology", class: "11", num: 12 },
-  "B13": { subject: "biology", class: "11", num: 13 },
-  "B14": { subject: "biology", class: "11", num: 14 },
   "B15": { subject: "biology", class: "11", num: 15 },
   // Zoology Class 11
   "Z1": { subject: "biology", class: "11", num: 4 },

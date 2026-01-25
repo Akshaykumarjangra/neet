@@ -63,11 +63,28 @@ export default function ChapterViewer() {
   const params = useParams<{ subject: string; classLevel: string; chapterNumber: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const sessionIdRef = useRef<number | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { subject, classLevel, chapterNumber } = params;
+
+  // Access Control check
+  useEffect(() => {
+    if (chapterNumber && parseInt(chapterNumber) > 3 && !user?.isPaidUser) {
+      if (user) {
+        // Only redirect if user IS loaded
+        navigate("/pricing");
+        toast({
+          title: "Premium Content",
+          description: "This chapter is locked. Upgrade to access.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [chapterNumber, user, navigate, toast]);
+
   const [activeTab, setActiveTab] = useState("read");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [copiedKeypointId, setCopiedKeypointId] = useState<number | null>(null);
@@ -82,7 +99,6 @@ export default function ChapterViewer() {
   const [showFloatingToolbar, setShowFloatingToolbar] = useState(true);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
-  const { user } = useAuth();
 
   const normalizedSubject = useMemo(() => {
     if (!subject) return "";

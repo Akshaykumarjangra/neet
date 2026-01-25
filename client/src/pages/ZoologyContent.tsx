@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dog, ChevronRight, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { ZoologyChapter1 } from "@/components/ZoologyChapter1";
 import { ZoologyChapter2 } from "@/components/ZoologyChapter2";
 import { ZoologyChapter3 } from "@/components/ZoologyChapter3";
@@ -40,10 +45,6 @@ import { ZoologyChapter35 } from "@/components/ZoologyChapter35";
 import { ZoologyChapter36 } from "@/components/ZoologyChapter36";
 import { ZoologyChapter37 } from "@/components/ZoologyChapter37";
 import { ZoologyChapter38 } from "@/components/ZoologyChapter38";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dog, ChevronRight } from "lucide-react";
 
 const chapters = [
   { id: 1, title: "Animal Kingdom", status: "available", questions: 45 },
@@ -108,6 +109,8 @@ const chapterMapping: Record<number, { subject: string; class: string; num: numb
 export default function ZoologyContent() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isPremium = user?.isPaidUser || false;
 
   if (selectedChapter === 1) {
     return (
@@ -883,55 +886,75 @@ export default function ZoologyContent() {
           </div>
 
           <div className="grid gap-4">
-            {chapters.map((chapter) => (
-              <Card
-                key={chapter.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
-                  }`}
-                onClick={() => {
-                  if (chapter.status === "available") {
-                    const mapping = chapterMapping[chapter.id];
-                    if (mapping) {
-                      setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
-                    } else {
-                      setSelectedChapter(chapter.id);
+            {chapters.map((chapter) => {
+              const mapping = chapterMapping[chapter.id];
+              const chapterNum = mapping ? mapping.num : 0;
+              const isLocked = chapterNum > 3 && !isPremium;
+
+              return (
+                <Card
+                  key={chapter.id}
+                  className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
+                    } ${isLocked ? "opacity-75 grayscale-[0.2] border-muted" : "border-orange-200"}`}
+                  onClick={() => {
+                    if (chapter.status === "available") {
+                      if (isLocked) {
+                        setLocation("/pricing");
+                        return;
+                      }
+                      if (mapping) {
+                        setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+                      } else {
+                        setSelectedChapter(chapter.id);
+                      }
                     }
-                  }
-                }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center">
-                        <Dog className="h-6 w-6 text-orange-500" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold">
-                            Chapter {chapter.id}: {chapter.title}
-                          </h3>
-                          {chapter.status === "available" && (
-                            <Badge variant="secondary">Available</Badge>
-                          )}
-                          {chapter.status === "coming-soon" && (
-                            <Badge variant="outline">Coming Soon</Badge>
+                  }}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isLocked ? "bg-muted" : "bg-orange-500/10"
+                          }`}>
+                          {isLocked ? (
+                            <Lock className="h-6 w-6 text-muted-foreground" />
+                          ) : (
+                            <Dog className="h-6 w-6 text-orange-500" />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {chapter.questions > 0
-                            ? `${chapter.questions} practice questions available`
-                            : "Content being prepared"
-                          }
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold">
+                              Chapter {chapter.id}: {chapter.title}
+                            </h3>
+                            {isLocked ? (
+                              <Badge variant="outline" className="bg-muted text-muted-foreground">Premium</Badge>
+                            ) : (
+                              chapter.status === "available" ? (
+                                <Badge variant="secondary">Available</Badge>
+                              ) : (
+                                <Badge variant="outline">Coming Soon</Badge>
+                              )
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {chapter.questions > 0
+                              ? `${chapter.questions} practice questions available`
+                              : "Content being prepared"
+                            }
+                          </p>
+                        </div>
                       </div>
+                      {chapter.status === "available" && !isLocked && (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      {isLocked && (
+                        <Lock className="h-4 w-4 text-muted-foreground opacity-50" />
+                      )}
                     </div>
-                    {chapter.status === "available" && (
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>

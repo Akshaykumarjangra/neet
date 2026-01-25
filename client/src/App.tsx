@@ -12,7 +12,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 
-import NotFound from "@/pages/NotFound";
 import AccessDenied from "@/pages/AccessDenied";
 
 // Lazy load all pages for code-splitting and better performance
@@ -47,7 +46,7 @@ const MentorProfile = lazy(() => import("@/pages/MentorProfile"));
 const MyBookings = lazy(() => import("@/pages/MyBookings"));
 const Login = lazy(() => import("@/pages/Login"));
 const Signup = lazy(() => import("@/pages/Signup"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 const Library = lazy(() => import("@/pages/Library"));
 const Explore = lazy(() => import("@/pages/Explore"));
 const Class12 = lazy(() => import("@/pages/Class12"));

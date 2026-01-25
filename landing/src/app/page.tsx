@@ -10,6 +10,8 @@ import { PricingSection } from "@/components/PricingSection";
 
 import "./landing.css";
 
+const APP_URL = "http://localhost:5002";
+
 export default function Home() {
   return (
     <div className="landing-page">
@@ -29,10 +31,10 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild className="text-zinc-600 dark:text-zinc-400">
-              <Link href="http://localhost:5002/login">Log In</Link>
+              <Link href={`${APP_URL}/login`}>Log In</Link>
             </Button>
             <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 rounded-xl">
-              <Link href="http://localhost:5002/signup">Get Started</Link>
+              <Link href={`${APP_URL}/signup`}>Get Started</Link>
             </Button>
           </div>
         </div>
@@ -65,7 +67,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                 <Button size="lg" asChild className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-indigo-500/25 gap-2 transition-all hover:scale-105 active:scale-95">
-                  <Link href="http://localhost:5002/signup">
+                  <Link href={`${APP_URL}/signup`}>
                     <GraduationCap className="h-6 w-6" />
                     Start Free Trial
                     <ArrowRight className="h-5 w-5" />

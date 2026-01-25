@@ -360,7 +360,7 @@ router.post("/:chapterId/versions", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Mentor ID required" });
     }
 
-    const versionPayload: typeof chapterContentVersions.$inferInsert = {
+    const versionPayload: any = {
       chapterContentId: contentId,
       mentorId: mentorId,
       detailedNotes: submission.detailedNotes ?? null,

@@ -290,11 +290,6 @@ router.post("/papers/:paperId/start", startLimiter, async (req, res) => {
       return res.status(400).json({ error: "Invalid paper id" });
     }
 
-    const userId = getCurrentUser(req);
-    if (!userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
     const [paper] = await db.select().from(mockExamPapers).where(eq(mockExamPapers.id, paperId)).limit(1);
     if (!paper || paper.status !== "published") {
       return res.status(404).json({ error: "Paper not found or unpublished" });

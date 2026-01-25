@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -407,12 +407,6 @@ export function Header({
                   <DropdownMenuItem onClick={() => setLocation('/admin')} data-testid="menu-admin">
                     <Shield className="mr-2 h-4 w-4" />
                     Admin Hub
-                  </DropdownMenuItem>
-                )}
-                {canAccessAdmin && (
-                  <DropdownMenuItem onClick={() => setLocation('/admin/organizations')} data-testid="menu-admin-organizations">
-                    <Users className="mr-2 h-4 w-4" />
-                    Organizations
                   </DropdownMenuItem>
                 )}
                 {canAccessAdmin && (

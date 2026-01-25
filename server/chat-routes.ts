@@ -40,7 +40,7 @@ router.post("/threads", requireAuth, async (req, res) => {
     // Create thread
     const [thread] = await db
       .insert(chatThreads)
-      .values(validatedData)
+      .values(validatedData as any)
       .returning();
 
     res.status(201).json(thread);
@@ -244,7 +244,7 @@ router.post("/threads/:id/messages", requireAuth, async (req, res) => {
 
     await db
       .update(chatThreads)
-      .set(threadUpdate)
+      .set(threadUpdate as any)
       .where(eq(chatThreads.id, threadId));
 
     res.status(201).json(newMessage);

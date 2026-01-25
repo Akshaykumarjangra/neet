@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Paywall } from "@/components/Paywall";
 import { MessageSquare, Loader2, AlertCircle, Send } from "lucide-react";
 
 interface Thread {

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, Zap, Trophy, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const APP_URL = "http://localhost:5002";
+
 const plans = [
     {
         name: "Foundation",
@@ -112,7 +114,7 @@ export function PricingSection() {
                                 plan.popular ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30" : ""
                             )}
                         >
-                            <a href={`http://localhost:5002/signup?plan=${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                            <a href={`${APP_URL}/signup?plan=${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
                                 {plan.cta}
                             </a>
                         </Button>

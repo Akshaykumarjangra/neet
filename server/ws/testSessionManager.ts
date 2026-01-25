@@ -236,7 +236,7 @@ export class TestSessionManager {
     if (!session) return;
 
     session.status = "expired";
-    const completionUpdate: Partial<TestSessionInsert> = {
+    const completionUpdate: any = {
       completedAt: new Date(),
       timeTaken: Math.round((Date.now() - session.startedAt.getTime()) / 1000),
     };

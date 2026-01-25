@@ -1,4 +1,5 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient, QueryFunction, MutationCache, QueryCache } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -62,13 +63,43 @@ export const getQueryFn: <T>(options: {
     };
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error: any, query) => {
+      // Only show toast if we haven't suppressed it in meta
+      if (query?.meta?.errorMessage !== false) {
+        const message = error?.message || "Something went wrong";
+        if (message.startsWith("401") || message.startsWith("403")) return; // Handle auth errors silently or via redirect
+
+        // Avoid spamming toasts for background refetches
+        if (query.state.data !== undefined) return;
+
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: message,
+        });
+      }
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error: any, _variables, _context, mutation) => {
+      // Only show toast if we haven't suppressed it in meta
+      if (mutation?.meta?.errorMessage !== false) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error?.message || "Action failed",
+        });
+      }
+    },
+  }),
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh for 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time for cache
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: (failureCount, error: any) => {
         const message = typeof error?.message === "string" ? error.message : "";
         const isClientError = message.startsWith("4");

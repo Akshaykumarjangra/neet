@@ -422,10 +422,6 @@ export default function Dashboard() {
 
           <section>
             <NextBestAction
-              userName={user?.name || "Student"}
-              userLevel={level}
-              streak={streak}
-              onAction={() => setLocation('/learning-path')}
             />
           </section>
 
