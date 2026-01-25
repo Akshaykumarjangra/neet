@@ -544,7 +544,7 @@ export default function ChapterViewer() {
   }
 
   if (error || !chapter) {
-    const isPaymentRequired = (error as any)?.status === 402;
+    const isPaymentRequired = (error as any)?.status === 402 || (error as any)?.status === 403;
 
     return (
       <ThemeProvider>
@@ -772,7 +772,7 @@ export default function ChapterViewer() {
                             <span className="text-xs font-semibold text-muted-foreground min-w-[20px] pt-0.5">
                               {c.chapterNumber}.
                             </span>
-                            <span className={`text-sm leading-tight ${c.id === chapter.id ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+                            <span className={`text-sm leading-tight break-words ${c.id === chapter.id ? "font-semibold text-primary" : "text-muted-foreground"}`}>
                               {c.chapterTitle}
                             </span>
                           </div>
