@@ -2,7 +2,7 @@
 import { Router, Request, Response } from "express";
 import { storage } from "./storage";
 import { db } from "./db";
-import { chapterContent, flashcards, flashcardDecks, contentTopics, userFlashcardProgress } from "@shared/schema";
+import { chapterContent, flashcards, flashcardDecks, contentTopics, userFlashcardProgress, users } from "@shared/schema";
 import { eq, asc, and, sql, lte, desc } from "drizzle-orm";
 
 const router = Router();
@@ -14,7 +14,26 @@ function isAuthenticated(req: Request): boolean {
 function getUserId(req: Request): string | null {
   if ((req as any).user?.id) return (req as any).user.id;
   if ((req.session as any)?.passport?.user) return (req.session as any).passport.user;
+  if ((req.session as any)?.userId) return (req.session as any).userId;
   return null;
+}
+
+async function isPremiumUser(req: Request): Promise<boolean> {
+  const userId = getUserId(req);
+  if (!userId) return false;
+
+  try {
+    const [user] = await db
+      .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+      .from(users)
+      .where(eq(users.id, Number(userId)))
+      .limit(1);
+
+    return user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+  } catch (error) {
+    console.error("Check premium error:", error);
+    return false;
+  }
 }
 
 // ============ KEYPOINTS ROUTES ============
@@ -22,6 +41,26 @@ function getUserId(req: Request): string | null {
 router.get("/keypoints", async (req: Request, res: Response) => {
   try {
     const { chapterId, topicId, subject, isHighYield, category } = req.query;
+
+    if (chapterId) {
+      const cId = parseInt(chapterId as string);
+      const [chapter] = await db
+        .select({ chapterNumber: chapterContent.chapterNumber })
+        .from(chapterContent)
+        .where(eq(chapterContent.id, cId))
+        .limit(1);
+
+      if (chapter && chapter.chapterNumber > 3) {
+        const isPremium = await isPremiumUser(req);
+        if (!isPremium) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "Key points for Chapter 4 and beyond are a Premium feature."
+          });
+        }
+      }
+    }
+
     const keypoints = await storage.getKeypoints({
       chapterId: chapterId ? parseInt(chapterId as string) : undefined,
       topicId: topicId ? parseInt(topicId as string) : undefined,
@@ -55,6 +94,26 @@ router.get("/keypoints/:id", async (req: Request, res: Response) => {
 router.get("/formulas", async (req: Request, res: Response) => {
   try {
     const { chapterId, topicId, subject, isHighYield } = req.query;
+
+    if (chapterId) {
+      const cId = parseInt(chapterId as string);
+      const [chapter] = await db
+        .select({ chapterNumber: chapterContent.chapterNumber })
+        .from(chapterContent)
+        .where(eq(chapterContent.id, cId))
+        .limit(1);
+
+      if (chapter && chapter.chapterNumber > 3) {
+        const isPremium = await isPremiumUser(req);
+        if (!isPremium) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "Formulas for Chapter 4 and beyond are a Premium feature."
+          });
+        }
+      }
+    }
+
     const formulas = await storage.getFormulas({
       chapterId: chapterId ? parseInt(chapterId as string) : undefined,
       topicId: topicId ? parseInt(topicId as string) : undefined,
@@ -120,6 +179,15 @@ router.get("/weak-areas", async (req: Request, res: Response) => {
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.status(402).json({
+      error: "PAYMENT_REQUIRED",
+      message: "Weak area identification is a Premium feature."
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
@@ -198,7 +266,23 @@ router.post("/bookmarks/formulas/:formulaId", async (req: Request, res: Response
 router.get("/flashcards", async (req: Request, res: Response) => {
   try {
     const { subject, deckId, limit } = req.query;
-    
+
+    // Check if user is premium for anything other than the first deck
+    const isPremium = await isPremiumUser(req);
+    if (!isPremium) {
+      const dId = deckId ? parseInt(deckId as string) : null;
+      if (dId) {
+        // Find the first deck
+        const [firstDeck] = await db.select({ id: flashcardDecks.id }).from(flashcardDecks).orderBy(flashcardDecks.id).limit(1);
+        if (firstDeck && dId !== firstDeck.id) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "Accessing this flashcard deck requires a Premium subscription."
+          });
+        }
+      }
+    }
+
     let query = db
       .select({
         id: flashcards.id,
@@ -215,11 +299,11 @@ router.get("/flashcards", async (req: Request, res: Response) => {
       .leftJoin(flashcardDecks, eq(flashcards.topicId, flashcardDecks.topicId));
 
     const conditions: any[] = [];
-    
+
     if (subject) {
       conditions.push(eq(flashcardDecks.subject, subject as string));
     }
-    
+
     if (deckId) {
       conditions.push(eq(flashcardDecks.id, parseInt(deckId as string)));
     }
@@ -229,7 +313,7 @@ router.get("/flashcards", async (req: Request, res: Response) => {
     }
 
     query = query.orderBy(flashcards.id);
-    
+
     if (limit) {
       query = query.limit(parseInt(limit as string)) as typeof query;
     }
@@ -275,7 +359,7 @@ router.get("/flashcards/:id", async (req: Request, res: Response) => {
 router.get("/flashcard-decks", async (req: Request, res: Response) => {
   try {
     const { subject } = req.query;
-    
+
     let query = db
       .select({
         id: flashcardDecks.id,
@@ -295,6 +379,13 @@ router.get("/flashcard-decks", async (req: Request, res: Response) => {
     }
 
     const results = await query.orderBy(flashcardDecks.name);
+
+    // Limit to 1 deck for free users
+    const isPremium = await isPremiumUser(req);
+    if (!isPremium && results.length > 1) {
+      return res.json(results.slice(0, 1));
+    }
+
     res.json(results);
   } catch (error) {
     console.error("Error fetching flashcard decks:", error);
@@ -308,6 +399,15 @@ router.get("/flashcard-progress", async (req: Request, res: Response) => {
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.status(402).json({
+      error: "PAYMENT_REQUIRED",
+      message: "Spaced repetition tracking is a Premium feature."
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
     const deckId = req.query.deckId ? parseInt(req.query.deckId as string) : undefined;
@@ -323,11 +423,20 @@ router.get("/flashcard-progress/due", async (req: Request, res: Response) => {
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.status(402).json({
+      error: "PAYMENT_REQUIRED",
+      message: "Spaced repetition (Due for Review) is a Premium feature."
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
     const { subject } = req.query;
-    
+
     const now = new Date();
     let query = db
       .select({
@@ -372,11 +481,23 @@ router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.json({
+      dueToday: 0,
+      learned: 0,
+      reviewedToday: 0,
+      total: 0,
+      isPremiumLocked: true
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     const [dueResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(userFlashcardProgress)
@@ -384,7 +505,7 @@ router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
         eq(userFlashcardProgress.userId, userId),
         lte(userFlashcardProgress.nextReview, now)
       ));
-    
+
     const [learnedResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(userFlashcardProgress)
@@ -392,7 +513,7 @@ router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
         eq(userFlashcardProgress.userId, userId),
         sql`${userFlashcardProgress.interval} > 21`
       ));
-    
+
     const [reviewedTodayResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(userFlashcardProgress)
@@ -400,12 +521,12 @@ router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
         eq(userFlashcardProgress.userId, userId),
         sql`${userFlashcardProgress.lastReviewed} >= ${startOfToday}`
       ));
-    
+
     const [totalResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(userFlashcardProgress)
       .where(eq(userFlashcardProgress.userId, userId));
-    
+
     res.json({
       dueToday: Number(dueResult.count),
       learned: Number(learnedResult.count),
@@ -422,15 +543,24 @@ router.post("/flashcard-progress/:flashcardId/review", async (req: Request, res:
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.status(402).json({
+      error: "PAYMENT_REQUIRED",
+      message: "Saving flashcard progress requires a Premium subscription."
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
     const flashcardId = parseInt(req.params.flashcardId);
     const { quality } = req.body;
-    
+
     if (quality < 0 || quality > 5) {
       return res.status(400).json({ error: "Quality must be between 0 and 5" });
     }
-    
+
     const progress = await storage.updateFlashcardProgress(userId, flashcardId, quality);
     res.json(progress);
   } catch (error) {
@@ -445,23 +575,23 @@ router.get("/chapters", async (req: Request, res: Response) => {
   try {
     const { subject, classLevel } = req.query;
     let query = db.select().from(chapterContent);
-    
+
     if (subject) {
       query = query.where(eq(chapterContent.subject, subject as string)) as any;
     }
-    
+
     const chapters = await query.orderBy(
       asc(chapterContent.subject),
       asc(chapterContent.classLevel),
       asc(chapterContent.chapterNumber)
     );
-    
+
     // Filter by classLevel if provided
     let result = chapters;
     if (classLevel) {
       result = chapters.filter(c => c.classLevel === classLevel);
     }
-    
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching chapters:", error);
@@ -477,7 +607,7 @@ router.get("/chapters/:id", async (req: Request, res: Response) => {
       .from(chapterContent)
       .where(eq(chapterContent.id, id))
       .limit(1);
-    
+
     if (!chapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
@@ -491,12 +621,12 @@ router.get("/chapters/:id", async (req: Request, res: Response) => {
 router.get("/chapters/:id/content", async (req: Request, res: Response) => {
   try {
     const chapterId = parseInt(req.params.id);
-    
+
     const [keypoints, formulas] = await Promise.all([
       storage.getKeypoints({ chapterId }),
       storage.getFormulas({ chapterId }),
     ]);
-    
+
     res.json({
       keypoints,
       formulas,
@@ -511,7 +641,7 @@ router.get("/topics", async (req: Request, res: Response) => {
   try {
     const { subject, classLevel } = req.query;
     const topics = await storage.getAllTopics();
-    
+
     // Filter if params provided
     let filtered = topics;
     if (subject) {
@@ -520,7 +650,7 @@ router.get("/topics", async (req: Request, res: Response) => {
     if (classLevel) {
       filtered = filtered.filter(t => t.classLevel === classLevel);
     }
-    
+
     res.json(filtered);
   } catch (error) {
     console.error("Error fetching topics:", error);
@@ -534,9 +664,18 @@ router.get("/continue-learning", async (req: Request, res: Response) => {
   if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Authentication required" });
   }
+
+  const isPremium = await isPremiumUser(req);
+  if (!isPremium) {
+    return res.status(402).json({
+      error: "PAYMENT_REQUIRED",
+      message: "The 'Continue Learning' dashboard feature is exclusive to Premium members."
+    });
+  }
+
   try {
     const userId = getUserId(req)!;
-    
+
     // Get the most recently accessed topic that's not complete
     const progress = await storage.getUserTopicProgress(userId);
     const inProgress = progress
@@ -546,17 +685,17 @@ router.get("/continue-learning", async (req: Request, res: Response) => {
         const dateB = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
         return dateB - dateA;
       });
-    
+
     if (inProgress.length === 0) {
       return res.json({ continueLearning: null, weakAreas: [], dueFlashcards: 0 });
     }
-    
+
     // Get weak areas and due flashcards count
     const [weakAreas, dueFlashcards] = await Promise.all([
       storage.getWeakAreas(userId, 5),
       storage.getDueFlashcards(userId, 100),
     ]);
-    
+
     res.json({
       continueLearning: inProgress[0],
       weakAreas,
@@ -573,19 +712,19 @@ router.get("/continue-learning", async (req: Request, res: Response) => {
 router.get("/syllabus", async (req: Request, res: Response) => {
   try {
     const { subject: subjectFilter } = req.query;
-    
+
     // Get all chapters
     let query = db.select().from(chapterContent);
     if (subjectFilter) {
       query = query.where(eq(chapterContent.subject, subjectFilter as string)) as any;
     }
-    
+
     const chapters = await query.orderBy(
       asc(chapterContent.subject),
       asc(chapterContent.classLevel),
       asc(chapterContent.chapterNumber)
     );
-    
+
     // Group by subject
     const syllabus: Record<string, any[]> = {};
     for (const chapter of chapters) {
@@ -601,7 +740,7 @@ router.get("/syllabus", async (req: Request, res: Response) => {
         estimatedStudyMinutes: chapter.estimatedStudyMinutes,
       });
     }
-    
+
     res.json(syllabus);
   } catch (error) {
     console.error("Error fetching syllabus:", error);

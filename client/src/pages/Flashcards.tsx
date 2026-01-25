@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { SpacedRepetitionFlashcard } from "@/components/SpacedRepetitionFlashcard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Paywall } from "@/components/Paywall";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -12,11 +13,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  Clock, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  BookOpen,
+  Clock,
+  CheckCircle2,
   RotateCcw,
   AlertCircle,
   Sparkles
@@ -68,7 +69,7 @@ const subjects = [
 export default function Flashcards() {
   const { user, isLoading: authLoading } = useAuth();
   const isAuthenticated = !!user;
-  
+
   const [mode, setMode] = useState<"all" | "due">("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedDeck, setSelectedDeck] = useState<string>("all");
@@ -85,10 +86,15 @@ export default function Flashcards() {
       if (selectedSubject !== "all") params.append("subject", selectedSubject);
       if (selectedDeck !== "all") params.append("deckId", selectedDeck);
       const response = await fetch(`/api/learn/flashcards?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch flashcards');
+      if (!response.ok) {
+        const err = new Error('Failed to fetch flashcards') as any;
+        err.status = response.status;
+        throw err;
+      }
       return response.json();
     },
     enabled: mode === "all",
+    retry: false,
   });
 
   const { data: dueFlashcards = [], isLoading: dueLoading, error: dueError } = useQuery<FlashcardWithProgress[]>({
@@ -100,10 +106,15 @@ export default function Flashcards() {
       const response = await fetch(`/api/learn/flashcard-progress/due?${params.toString()}`, {
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Failed to fetch due flashcards');
+      if (!response.ok) {
+        const err = new Error('Failed to fetch due flashcards') as any;
+        err.status = response.status;
+        throw err;
+      }
       return response.json();
     },
     enabled: mode === "due" && isAuthenticated,
+    retry: false,
   });
 
   const { data: stats } = useQuery<FlashcardStats>({
@@ -128,6 +139,9 @@ export default function Flashcards() {
       return response.json();
     },
   });
+
+  const errors = [flashcardsError, dueError].filter(Boolean);
+  const isLocked = errors.some((err: any) => err.status === 402 || err.message?.includes("402"));
 
   const currentCards = mode === "due" ? dueFlashcards : flashcards;
   const isLoading = mode === "due" ? dueLoading : flashcardsLoading;
@@ -253,8 +267,8 @@ export default function Flashcards() {
       <div className="mb-6 text-center">
         <h1 className="text-4xl font-bold mb-2">Spaced Repetition Flashcards</h1>
         <p className="text-muted-foreground">
-          {isAuthenticated 
-            ? "Review cards using SM-2 spaced repetition algorithm for optimal learning" 
+          {isAuthenticated
+            ? "Review cards using SM-2 spaced repetition algorithm for optimal learning"
             : "Sign in to track your progress and enable spaced repetition"}
         </p>
       </div>
@@ -372,8 +386,8 @@ export default function Flashcards() {
           <CardContent className="pt-6 text-center">
             <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {mode === "due" 
-                ? "No cards due for review!" 
+              {mode === "due"
+                ? "No cards due for review!"
                 : "No flashcards available"}
             </h3>
             <p className="text-muted-foreground mb-4">
@@ -392,12 +406,21 @@ export default function Flashcards() {
           </CardContent>
         </Card>
       ) : (
-        <SpacedRepetitionFlashcard
-          cards={currentCards}
-          onComplete={handleComplete}
-          onCardReviewed={handleCardReviewed}
-          isAuthenticated={isAuthenticated}
-        />
+        <Paywall
+          feature={mode === "due" ? "Spaced Repetition (Due for Review)" : "Premium Flashcard Decks"}
+          description={mode === "due"
+            ? "Spaced repetition uses AI to show you cards exactly when you're about to forget them. Master concepts 10x faster."
+            : "Access 1,000+ premium flashcards covering every sub-topic in the NEET syllabus."}
+          freeLimit={mode === "due" ? "None (Basic Review only)" : "1 Deck Free"}
+          isLocked={isLocked}
+        >
+          <SpacedRepetitionFlashcard
+            cards={currentCards}
+            onComplete={handleComplete}
+            onCardReviewed={handleCardReviewed}
+            isAuthenticated={isAuthenticated}
+          />
+        </Paywall>
       )}
 
       {!isLoading && !error && currentCards.length > 0 && (

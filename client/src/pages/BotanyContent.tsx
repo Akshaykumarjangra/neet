@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { BotanyChapter1 } from "@/components/BotanyChapter1";
@@ -43,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Leaf, ChevronRight } from "lucide-react";
 
+// Chapter metadata
 const chapters = [
   { id: 1, title: "The Living World", status: "available", questions: 45 },
   { id: 2, title: "Biological Classification", status: "available", questions: 50 },
@@ -83,779 +85,89 @@ const chapters = [
   { id: 37, title: "Biotechnology: Principles & Processes", component: BotanyChapter37 },
 ];
 
+const chapterMapping: Record<number, { subject: string; class: string; num: number }> = {
+  // Class 11
+  1: { subject: "biology", class: "11", num: 1 },
+  2: { subject: "biology", class: "11", num: 2 },
+  3: { subject: "biology", class: "11", num: 3 },
+  4: { subject: "biology", class: "11", num: 4 },
+  5: { subject: "biology", class: "11", num: 5 },
+  6: { subject: "biology", class: "11", num: 6 },
+  7: { subject: "biology", class: "11", num: 7 },
+  8: { subject: "biology", class: "11", num: 8 },
+  9: { subject: "biology", class: "11", num: 9 },
+  10: { subject: "biology", class: "11", num: 10 },
+  11: { subject: "biology", class: "11", num: 11 },
+  // Class 12
+  12: { subject: "biology", class: "12", num: 1 }, // Sexual Repro in Flowering Plants
+  13: { subject: "biology", class: "12", num: 2 }, // Principles of Inheritance
+};
+
+const componentMap: Record<number, React.ComponentType> = {
+  1: BotanyChapter1,
+  2: BotanyChapter2,
+  3: BotanyChapter3,
+  4: BotanyChapter4,
+  5: BotanyChapter5,
+  6: BotanyChapter6,
+  7: BotanyChapter7,
+  8: BotanyChapter8,
+  9: BotanyChapter9,
+  10: BotanyChapter10,
+  11: BotanyChapter11,
+  12: BotanyChapter12,
+  13: BotanyChapter13,
+  14: BotanyChapter14,
+  15: BotanyChapter15,
+  16: BotanyChapter16,
+  17: BotanyChapter17,
+  18: BotanyChapter18,
+  19: BotanyChapter19,
+  20: BotanyChapter20,
+  21: BotanyChapter21,
+  22: BotanyChapter22,
+  23: BotanyChapter23,
+  24: BotanyChapter24,
+  25: BotanyChapter25,
+  26: BotanyChapter26,
+  27: BotanyChapter27,
+  28: BotanyChapter28,
+  29: BotanyChapter29,
+  30: BotanyChapter30,
+  31: BotanyChapter31,
+  32: BotanyChapter32,
+  33: BotanyChapter33,
+  34: BotanyChapter34,
+  35: BotanyChapter35,
+  36: BotanyChapter36,
+  37: BotanyChapter37,
+};
+
 export default function BotanyContent() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
 
-  if (selectedChapter === 1) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter1 />
+  if (selectedChapter !== null) {
+    const Component = componentMap[selectedChapter];
+    if (Component) {
+      return (
+        <ThemeProvider>
+          <div className="min-h-screen bg-background">
+            <Header />
+            <div className="container mx-auto p-6">
+              <Button
+                variant="ghost"
+                onClick={() => setSelectedChapter(null)}
+                className="mb-4"
+              >
+                ← Back to Chapters
+              </Button>
+              <Component />
+            </div>
           </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 2) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter2 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 3) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter3 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 4) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter4 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 5
-  if (selectedChapter === 5) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter5 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 6
-  if (selectedChapter === 6) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter6 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 7
-  if (selectedChapter === 7) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter7 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 8
-  if (selectedChapter === 8) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter8 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 9
-  if (selectedChapter === 9) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter9 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 10
-  if (selectedChapter === 10) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter10 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 11
-  if (selectedChapter === 11) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter11 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 12
-  if (selectedChapter === 12) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter12 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 13
-  if (selectedChapter === 13) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter13 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 14
-  if (selectedChapter === 14) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter14 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 15
-  if (selectedChapter === 15) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter15 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 16
-  if (selectedChapter === 16) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter16 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 17
-  if (selectedChapter === 17) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter17 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 18
-  if (selectedChapter === 18) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter18 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 19
-  if (selectedChapter === 19) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter19 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 20
-  if (selectedChapter === 20) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter20 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 21
-  if (selectedChapter === 21) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter21 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 22
-  if (selectedChapter === 22) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter22 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 23
-  if (selectedChapter === 23) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter23 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 24
-  if (selectedChapter === 24) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter24 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 25
-  if (selectedChapter === 25) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter25 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 26
-  if (selectedChapter === 26) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter26 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 27
-  if (selectedChapter === 27) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter27 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 28
-  if (selectedChapter === 28) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter28 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 29
-  if (selectedChapter === 29) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter29 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 30
-  if (selectedChapter === 30) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter30 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 31
-  if (selectedChapter === 31) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter31 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 32
-  if (selectedChapter === 32) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter32 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 33
-  if (selectedChapter === 33) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter33 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 34
-  if (selectedChapter === 34) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter34 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 35
-  if (selectedChapter === 35) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter35 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // Added conditional rendering for Chapter 36
-  if (selectedChapter === 36) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter36 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  if (selectedChapter === 37) {
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="mb-4"
-            >
-              ← Back to Chapters
-            </Button>
-            <BotanyChapter37 />
-          </div>
-        </div>
-      </ThemeProvider>
-    );
+        </ThemeProvider>
+      );
+    }
   }
 
   return (
@@ -875,10 +187,18 @@ export default function BotanyContent() {
             {chapters.map((chapter) => (
               <Card
                 key={chapter.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
-                  chapter.status === "coming-soon" ? "opacity-60" : ""
-                }`}
-                onClick={() => chapter.status === "available" && setSelectedChapter(chapter.id)}
+                className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
+                  }`}
+                onClick={() => {
+                  if (chapter.status === "available") {
+                    const mapping = chapterMapping[chapter.id];
+                    if (mapping) {
+                      setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+                    } else {
+                      setSelectedChapter(chapter.id);
+                    }
+                  }
+                }}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">

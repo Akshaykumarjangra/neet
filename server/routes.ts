@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/admin", adminContentRoutes);
 
   // Chapter Content routes
-  app.use("/api/chapters", requireActiveSubscription(), chapterContentRoutes);
+  app.use("/api/chapters", chapterContentRoutes);
 
   // Chapter Chat routes (context-aware chatbot)
   app.use("/api/chapters", chapterChatRoutes);
@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/replies", requireActiveSubscription(), replyRoutes);
 
   // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
-  app.use("/api/learn", requireActiveSubscription(), lmsLearningRoutes);
+  app.use("/api/learn", lmsLearningRoutes);
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
   app.use("/api/search", requireActiveSubscription(), searchRoutes);

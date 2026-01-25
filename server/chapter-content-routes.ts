@@ -105,6 +105,32 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
       return res.status(404).json({ error: "Chapter not found" });
     }
 
+    // Check if user is premium for chapters > 3
+    if (chapter.chapterNumber > 3) {
+      const userId = req.session?.userId;
+      if (userId) {
+        const [user] = await db
+          .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+
+        const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+
+        if (!isPremium) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "Chapter 4 and beyond are available exclusively for Premium members."
+          });
+        }
+      } else {
+        return res.status(402).json({
+          error: "PAYMENT_REQUIRED",
+          message: "Please log in and upgrade to Premium to access this chapter."
+        });
+      }
+    }
+
     res.json(chapter);
   } catch (error) {
     console.error("Error fetching chapter:", error);
@@ -124,6 +150,32 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     if (!chapter) {
       return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    // Check if user is premium for chapters > 3
+    if (chapter.chapterNumber > 3) {
+      const userId = req.session?.userId;
+      if (userId) {
+        const [user] = await db
+          .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+
+        const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+
+        if (!isPremium) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "Chapter 4 and beyond are available exclusively for Premium members."
+          });
+        }
+      } else {
+        return res.status(402).json({
+          error: "PAYMENT_REQUIRED",
+          message: "Please log in and upgrade to Premium to access this chapter."
+        });
+      }
     }
 
     res.json(chapter);

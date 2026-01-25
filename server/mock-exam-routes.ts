@@ -16,6 +16,7 @@ import {
   webhookEvents,
   mockExamAssignments,
   organizationMembers,
+  userSubscriptions,
 } from "@shared/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from "./auth";
@@ -231,8 +232,59 @@ router.get("/papers/:paperId", async (req, res) => {
   }
 });
 
-router.post("/papers/:paperId/start", requireActiveSubscription(), startLimiter, async (req, res) => {
+router.post("/papers/:paperId/start", startLimiter, async (req, res) => {
   try {
+    const userId = getCurrentUser(req);
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Check subscription status
+    const [user] = await db
+      .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+
+    if (!isPremium) {
+      // Find active subscription in userSubscriptions table
+      const [activeSubscription] = await db
+        .select()
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.userId, userId),
+            eq(userSubscriptions.status, "active")
+          )
+        )
+        .limit(1);
+
+      if (!activeSubscription) {
+        // Evaluate free test quota (1 per month)
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const [{ count }] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(mockExamAttempts)
+          .where(
+            and(
+              eq(mockExamAttempts.userId, userId),
+              sql`${mockExamAttempts.startedAt} >= ${firstDayOfMonth}`
+            )
+          );
+
+        if (count >= 1) {
+          return res.status(402).json({
+            error: "PAYMENT_REQUIRED",
+            message: "You've used your 1 free mock test for this month. Upgrade to Premium for unlimited access.",
+          });
+        }
+      }
+    }
+
     const paperId = Number(req.params.paperId);
     if (!Number.isInteger(paperId)) {
       return res.status(400).json({ error: "Invalid paper id" });

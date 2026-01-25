@@ -1331,7 +1331,7 @@ export type InsertDiscussionVote = z.infer<typeof insertDiscussionVoteSchema>;
 
 export const subscriptionPlanEnum = pgEnum("subscription_plan", ["free", "premium", "organization"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "cancelled", "expired", "pending", "trial", "past_due", "paused"]);
-export const billingIntervalEnum = pgEnum("billing_interval", ["monthly", "yearly", "one_time"]);
+export const billingIntervalEnum = pgEnum("billing_interval", ["monthly", "yearly", "quarterly", "one_time"]);
 
 export const subscriptionPlans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),

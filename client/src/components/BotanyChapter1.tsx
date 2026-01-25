@@ -1,5 +1,7 @@
-import { Leaf, BookOpen, Brain, CheckCircle2 } from "lucide-react";
+import { Leaf, BookOpen, Brain, CheckCircle2, Lightbulb } from "lucide-react";
 import { ChapterQuiz } from "./ChapterQuiz";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function BotanyChapter1() {
   return (

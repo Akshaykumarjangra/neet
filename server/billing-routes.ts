@@ -22,7 +22,7 @@ type PaymentTransactionInsert = typeof paymentTransactions.$inferInsert;
 type UserInsert = typeof users.$inferInsert;
 type WebhookEventInsert = typeof webhookEvents.$inferInsert;
 
-type BillingInterval = "monthly" | "yearly";
+type BillingInterval = "monthly" | "yearly" | "quarterly" | "one_time";
 type PaymentProvider = "stripe" | "razorpay";
 
 const PAYMENT_SETTING_KEYS = [
@@ -102,6 +102,8 @@ const calculatePeriodEnd = (interval: BillingInterval, start: Date) => {
   const date = new Date(start);
   if (interval === "yearly") {
     date.setFullYear(date.getFullYear() + 1);
+  } else if (interval === "quarterly") {
+    date.setMonth(date.getMonth() + 3);
   } else {
     date.setMonth(date.getMonth() + 1);
   }
@@ -128,7 +130,7 @@ async function markSubscriptionActive(
     .limit(1);
 
   const periodEnd = calculatePeriodEnd(
-    existing?.billingInterval === "yearly" ? "yearly" : "monthly",
+    existing?.billingInterval || "monthly",
     new Date()
   );
 
@@ -266,7 +268,9 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       });
     }
 
-    const interval: BillingInterval = billingInterval === "yearly" ? "yearly" : "monthly";
+    const interval: BillingInterval =
+      billingInterval === "yearly" ? "yearly" :
+        billingInterval === "quarterly" ? "quarterly" : "monthly";
 
     const amount = interval === "yearly"
       ? plan.priceYearly || plan.priceMonthly * 12

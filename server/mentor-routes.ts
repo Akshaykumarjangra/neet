@@ -12,7 +12,7 @@ import {
   mentorPayouts,
 } from "@shared/schema";
 import { eq, and, desc, sql, inArray, gte, lte, sum } from "drizzle-orm";
-import { requireAuthWithPasswordCheck, requireOwner } from "./auth";
+import { requireAuthWithPasswordCheck, requireOwner, requireActiveSubscription } from "./auth";
 import { getCompletionDeltas, hasOverlappingBooking, isWithinAvailability, validateBookingWindow } from "./mentor-booking-utils";
 
 const router = Router();
@@ -881,7 +881,7 @@ router.delete("/mentors/availability/:id", requireAuth, requireRole("mentor"), a
 
 // ============ BOOKING ENDPOINTS ============
 
-router.post("/bookings", requireAuth, async (req: Request, res: Response) => {
+router.post("/bookings", requireAuth, requireActiveSubscription(), async (req: Request, res: Response) => {
   try {
     const userId = req.session.userId!;
     const validatedData = createBookingSchema.parse(req.body);

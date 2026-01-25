@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ZoologyChapter1 } from "@/components/ZoologyChapter1";
@@ -85,8 +86,28 @@ const chapters = [
   { id: 38, title: "Aging and Gerontology", status: "available", questions: 50 },
 ];
 
+const chapterMapping: Record<number, { subject: string; class: string; num: number }> = {
+  // Class 11
+  1: { subject: "biology", class: "11", num: 4 }, // Animal Kingdom
+  2: { subject: "biology", class: "11", num: 7 }, // Structural Org
+  3: { subject: "biology", class: "11", num: 9 }, // Biomolecules
+  4: { subject: "biology", class: "11", num: 16 }, // Digestion
+  5: { subject: "biology", class: "11", num: 17 }, // Breathing
+  6: { subject: "biology", class: "11", num: 18 }, // Body Fluids
+  7: { subject: "biology", class: "11", num: 19 }, // Excretory
+  8: { subject: "biology", class: "11", num: 20 }, // Locomotion
+  9: { subject: "biology", class: "11", num: 21 }, // Neural
+  10: { subject: "biology", class: "11", num: 22 }, // Chemical
+  // Class 12
+  11: { subject: "biology", class: "12", num: 1 }, // Repro in Org
+  13: { subject: "biology", class: "12", num: 3 }, // Human Repro
+  14: { subject: "biology", class: "12", num: 4 }, // Repro Health
+  17: { subject: "biology", class: "12", num: 7 }, // Evolution
+};
+
 export default function ZoologyContent() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
 
   if (selectedChapter === 1) {
     return (
@@ -94,8 +115,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -114,8 +135,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -134,8 +155,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -154,8 +175,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -174,8 +195,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -194,8 +215,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -214,8 +235,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -234,8 +255,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -254,8 +275,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -274,8 +295,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -294,8 +315,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -314,8 +335,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -334,8 +355,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -354,8 +375,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -374,8 +395,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -394,8 +415,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -414,8 +435,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -434,8 +455,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -454,8 +475,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -474,8 +495,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -494,8 +515,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -514,8 +535,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -534,8 +555,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -554,8 +575,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -574,8 +595,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -594,8 +615,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -614,8 +635,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -634,8 +655,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -654,8 +675,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -674,8 +695,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -694,8 +715,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -714,8 +735,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -734,8 +755,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -754,8 +775,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -774,8 +795,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -794,8 +815,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -814,8 +835,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -834,8 +855,8 @@ export default function ZoologyContent() {
         <div className="min-h-screen bg-background">
           <Header />
           <div className="container mx-auto p-6">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setSelectedChapter(null)}
               className="mb-4"
             >
@@ -863,12 +884,20 @@ export default function ZoologyContent() {
 
           <div className="grid gap-4">
             {chapters.map((chapter) => (
-              <Card 
+              <Card
                 key={chapter.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
-                  chapter.status === "coming-soon" ? "opacity-60" : ""
-                }`}
-                onClick={() => chapter.status === "available" && setSelectedChapter(chapter.id)}
+                className={`cursor-pointer transition-all hover:shadow-lg ${chapter.status === "coming-soon" ? "opacity-60" : ""
+                  }`}
+                onClick={() => {
+                  if (chapter.status === "available") {
+                    const mapping = chapterMapping[chapter.id];
+                    if (mapping) {
+                      setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+                    } else {
+                      setSelectedChapter(chapter.id);
+                    }
+                  }
+                }}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -889,7 +918,7 @@ export default function ZoologyContent() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {chapter.questions > 0 
+                          {chapter.questions > 0
                             ? `${chapter.questions} practice questions available`
                             : "Content being prepared"
                           }

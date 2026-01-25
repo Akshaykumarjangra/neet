@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { BotanyChapter1 } from "@/components/BotanyChapter1";
@@ -121,7 +121,7 @@ const chapters = [
   { id: "B35", title: "Biodiversity & Conservation", status: "available", questions: 50, type: "botany" },
   { id: "B36", title: "Environmental Issues", status: "available", questions: 50, type: "botany" },
   { id: "B37", title: "Biotechnology: Principles & Processes", status: "available", questions: 50, type: "botany" },
-  
+
   // Zoology Chapters
   { id: "Z1", title: "Animal Kingdom", status: "available", questions: 45, type: "zoology" },
   { id: "Z2", title: "Structural Organization in Animals", status: "available", questions: 50, type: "zoology" },
@@ -182,11 +182,58 @@ const componentMap: Record<string, any> = {
   Z36: ZoologyChapter36, Z37: ZoologyChapter37, Z38: ZoologyChapter38,
 };
 
+const chapterMapping: Record<string, { subject: string; class: string; num: number }> = {
+  // Botany Class 11
+  "B1": { subject: "biology", class: "11", num: 1 },
+  "B2": { subject: "biology", class: "11", num: 2 },
+  "B3": { subject: "biology", class: "11", num: 3 },
+  "B4": { subject: "biology", class: "11", num: 4 },
+  "B5": { subject: "biology", class: "11", num: 5 },
+  "B6": { subject: "biology", class: "11", num: 6 },
+  "B7": { subject: "biology", class: "11", num: 7 },
+  "B8": { subject: "biology", class: "11", num: 8 },
+  "B9": { subject: "biology", class: "11", num: 9 },
+  "B10": { subject: "biology", class: "11", num: 10 },
+  "B11": { subject: "biology", class: "11", num: 11 },
+  "B12": { subject: "biology", class: "11", num: 12 },
+  "B13": { subject: "biology", class: "11", num: 13 },
+  "B14": { subject: "biology", class: "11", num: 14 },
+  "B15": { subject: "biology", class: "11", num: 15 },
+  // Zoology Class 11
+  "Z1": { subject: "biology", class: "11", num: 4 },
+  "Z2": { subject: "biology", class: "11", num: 7 },
+  "Z3": { subject: "biology", class: "11", num: 9 },
+  "Z4": { subject: "biology", class: "11", num: 16 },
+  "Z5": { subject: "biology", class: "11", num: 17 },
+  "Z6": { subject: "biology", class: "11", num: 18 },
+  "Z7": { subject: "biology", class: "11", num: 19 },
+  "Z8": { subject: "biology", class: "11", num: 20 },
+  "Z9": { subject: "biology", class: "11", num: 21 },
+  "Z10": { subject: "biology", class: "11", num: 22 },
+  // Class 12
+  "Z11": { subject: "biology", class: "12", num: 1 },
+  "Z13": { subject: "biology", class: "12", num: 3 },
+  "Z14": { subject: "biology", class: "12", num: 4 },
+  "Z17": { subject: "biology", class: "12", num: 7 },
+  "B12": { subject: "biology", class: "12", num: 2 }, // Sexual Reproduction in Flowering Plants
+  "B13": { subject: "biology", class: "12", num: 4 }, // Principles of Inheritance
+  "B14": { subject: "biology", class: "12", num: 5 }, // Molecular Basis
+  "B37": { subject: "biology", class: "12", num: 11 }, // Biotech Principles
+};
+
 export default function BiologyContent() {
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
 
   const handleChapterSelect = (chapterId: string) => {
+    // Check for mapping to modern dynamic route first
+    const mapping = chapterMapping[chapterId];
+    if (mapping) {
+      setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+      return;
+    }
+
     setIsLoading(true);
     // Small delay to show loading state
     setTimeout(() => {
@@ -220,7 +267,7 @@ export default function BiologyContent() {
       setSelectedChapter(null);
     }
   }
-  
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-background gradient-mesh-bg">

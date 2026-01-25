@@ -13,7 +13,8 @@ import {
   insertUserChapterNoteSchema,
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { requireAuth, requireAuthWithPasswordCheck } from "./auth";
+import { requireAuth, requireAuthWithPasswordCheck, requireActiveSubscription } from "./auth";
+import { users } from "@shared/schema";
 import { GamificationService } from "./gamification";
 
 const router = Router();
@@ -29,7 +30,7 @@ const parseBool = (value: unknown, defaultValue = false) => {
 router.get("/library", async (req, res) => {
   const started = Date.now();
   let responseSent = false;
-  
+
   const timeout = setTimeout(() => {
     if (!responseSent && !res.headersSent) {
       responseSent = true;
@@ -327,6 +328,26 @@ router.get("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
 router.post("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
+    const { chapterContentId } = req.body;
+
+    // Check if chapter is premium
+    const [chapter] = await db
+      .select({ chapterNumber: chapterContent.chapterNumber })
+      .from(chapterContent)
+      .where(eq(chapterContent.id, parseInt(chapterContentId)))
+      .limit(1);
+
+    if (chapter && chapter.chapterNumber > 3) {
+      // Inline premium check to avoid middleware duplication if preferred
+      const [user] = await db.select({ isPaidUser: users.isPaidUser, role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+      if (!user?.isPaidUser && user?.role !== 'admin') {
+        return res.status(402).json({
+          error: "PAYMENT_REQUIRED",
+          message: "Chapter 4 and beyond, including bookmarks, are Premium features."
+        });
+      }
+    }
+
     const validatedData = insertUserChapterBookmarkSchema.parse({
       ...req.body,
       userId,
@@ -398,6 +419,25 @@ router.get("/notes", requireAuthWithPasswordCheck, async (req, res) => {
 router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
+    const { chapterContentId } = req.body;
+
+    // Check if chapter is premium
+    const [chapter] = await db
+      .select({ chapterNumber: chapterContent.chapterNumber })
+      .from(chapterContent)
+      .where(eq(chapterContent.id, parseInt(chapterContentId)))
+      .limit(1);
+
+    if (chapter && chapter.chapterNumber > 3) {
+      const [user] = await db.select({ isPaidUser: users.isPaidUser, role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+      if (!user?.isPaidUser && user?.role !== 'admin') {
+        return res.status(402).json({
+          error: "PAYMENT_REQUIRED",
+          message: "Chapter 4 and beyond, including notes, are Premium features."
+        });
+      }
+    }
+
     const validatedData = insertUserChapterNoteSchema.parse({
       ...req.body,
       userId,
@@ -502,7 +542,7 @@ router.delete("/notes/:id", requireAuthWithPasswordCheck, async (req, res) => {
   }
 });
 
-router.get("/learning-path/next", requireAuthWithPasswordCheck, async (req, res) => {
+router.get("/learning-path/next", requireAuthWithPasswordCheck, requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
 
@@ -589,7 +629,7 @@ router.get("/learning-path/next", requireAuthWithPasswordCheck, async (req, res)
   }
 });
 
-router.get("/mastery/:chapterId", requireAuthWithPasswordCheck, async (req, res) => {
+router.get("/mastery/:chapterId", requireAuthWithPasswordCheck, requireActiveSubscription(), async (req, res) => {
   try {
     const userId = req.session.userId!;
     const { chapterId } = req.params;

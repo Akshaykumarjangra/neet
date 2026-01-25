@@ -51,8 +51,10 @@ import {
   FlaskConical,
   TestTubes,
   Sparkles,
+  Lock,
 } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 interface ChapterData {
@@ -186,26 +188,40 @@ function ChapterCard({
   classLevel: string;
   onClick: () => void;
   prefersReducedMotion: boolean;
+  isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
+  const isLocked = chapter.chapterNumber > 3 && !isPremium;
 
   return (
     <motion.div
       initial={prefersReducedMotion ? {} : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={prefersReducedMotion ? {} : { opacity: 0, scale: 0.95 }}
-      whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-      whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+      whileHover={prefersReducedMotion ? {} : { scale: isLocked ? 1 : 1.02 }}
+      whileTap={prefersReducedMotion ? {} : { scale: isLocked ? 1 : 0.98 }}
     >
       <Card
-        className="cursor-pointer transition-all hover:shadow-lg border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/80"
+        className={cn(
+          "cursor-pointer transition-all border-2 bg-gradient-to-br from-card to-card/80",
+          isLocked
+            ? "opacity-80 grayscale-[0.5] border-muted hover:border-muted"
+            : "hover:shadow-lg hover:border-primary/50"
+        )}
         onClick={onClick}
         data-testid={`card-chapter-chemistry-${classLevel}-${chapter.chapterNumber}`}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
-            <ProgressRing progress={chapter.progress} />
-            
+            <div className="relative">
+              <ProgressRing progress={chapter.progress} />
+              {isLocked && (
+                <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5 border shadow-sm">
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -218,14 +234,18 @@ function ChapterCard({
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <DifficultyStars level={chapter.difficultyLevel} />
-                  {hasPYQ && (
+                  {isLocked ? (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-secondary/50">
+                      Premium
+                    </Badge>
+                  ) : hasPYQ && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                       PYQ
                     </Badge>
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -233,14 +253,19 @@ function ChapterCard({
                     {chapter.estimatedStudyMinutes} min
                   </span>
                 </div>
-                
+
                 <Button
                   size="sm"
-                  variant={chapter.progress > 0 ? "default" : "outline"}
+                  variant={isLocked ? "secondary" : (chapter.progress > 0 ? "default" : "outline")}
                   className="h-7 text-xs"
                   data-testid={`button-start-chapter-${chapter.id}`}
                 >
-                  {chapter.progress > 0 ? (
+                  {isLocked ? (
+                    <>
+                      <Lock className="h-3 w-3 mr-1" />
+                      Locked
+                    </>
+                  ) : chapter.progress > 0 ? (
                     <>
                       <Play className="h-3 w-3 mr-1" />
                       Continue
@@ -267,12 +292,14 @@ function UnitSection({
   classLevel,
   onChapterClick,
   prefersReducedMotion,
+  isPremium,
 }: {
   unit: Unit;
   chapters: ChapterData[];
   classLevel: string;
   onChapterClick: (chapter: ChapterData) => void;
   prefersReducedMotion: boolean;
+  isPremium: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -283,8 +310,8 @@ function UnitSection({
   const completedCount = unitChapters.filter((c) => c.progress === 100).length;
   const unitProgress = unitChapters.length > 0
     ? Math.round(
-        unitChapters.reduce((sum, c) => sum + c.progress, 0) / unitChapters.length
-      )
+      unitChapters.reduce((sum, c) => sum + c.progress, 0) / unitChapters.length
+    )
     : 0;
 
   if (unitChapters.length === 0) return null;
@@ -314,7 +341,7 @@ function UnitSection({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-2xl font-bold">{unitProgress}%</p>
@@ -349,6 +376,7 @@ function UnitSection({
                 classLevel={classLevel}
                 onClick={() => onChapterClick(chapter)}
                 prefersReducedMotion={prefersReducedMotion}
+                isPremium={isPremium}
               />
             ))}
           </motion.div>
@@ -383,15 +411,15 @@ function TopicSelectionModal({
             Select a chapter to start practicing
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-2 mt-4">
           {chapters.map((chapter) => (
             <Button
               key={chapter.id}
               variant="outline"
               className="w-full justify-start text-left h-auto py-3"
-                onClick={() => {
-                  setLocation(`/chapter/chemistry/${classLevel}/${chapter.chapterNumber}`);
+              onClick={() => {
+                setLocation(`/chapter/chemistry/${classLevel}/${chapter.chapterNumber}`);
                 onOpenChange(false);
               }}
               data-testid={`modal-chapter-${chapter.id}`}
@@ -452,6 +480,8 @@ export default function Chemistry() {
   const [statusFilter, setStatusFilter] = useState<"all" | "not-started" | "in-progress" | "completed">("all");
   const [sortBy, setSortBy] = useState<"number" | "difficulty" | "time">("number");
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
+  const { user } = useAuth();
+  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
 
   const { data: allChapters, isLoading, error, refetch } = useQuery<ChapterData[]>({
     queryKey: ["/api/lms/library"],
@@ -508,6 +538,11 @@ export default function Chemistry() {
   }, [chemistryChapters]);
 
   const handleChapterClick = (chapter: ChapterData) => {
+    const isLocked = chapter.chapterNumber > 3 && !isPremium;
+    if (isLocked) {
+      setLocation("/pricing");
+      return;
+    }
     setLocation(`/chapter/chemistry/${selectedClass}/${chapter.chapterNumber}`);
   };
 
@@ -556,7 +591,7 @@ export default function Chemistry() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         <motion.div
           initial={prefersReducedMotion ? {} : { opacity: 0, y: -20 }}
@@ -565,7 +600,7 @@ export default function Chemistry() {
           className={`relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br ${heroGradient} p-4 sm:p-6 md:p-8 text-white`}
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
-          
+
           <motion.div
             className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-3xl"
             animate={prefersReducedMotion ? {} : {
@@ -574,7 +609,7 @@ export default function Chemistry() {
             }}
             transition={{ duration: 4, repeat: Infinity }}
           />
-          
+
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
               <div className="space-y-3 sm:space-y-4">
@@ -593,7 +628,7 @@ export default function Chemistry() {
                     <p className="text-white/80 text-sm sm:text-base">NEET 2025 Chemistry Syllabus</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white/80">Overall Progress</span>
@@ -614,7 +649,7 @@ export default function Chemistry() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-1 sm:gap-2 p-1 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Button
                   variant={selectedClass === "11" ? "secondary" : "ghost"}
@@ -661,7 +696,7 @@ export default function Chemistry() {
               data-testid="input-search-chapters"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
             <SelectTrigger className="w-full sm:w-40" data-testid="select-status-filter">
               <Filter className="h-4 w-4 mr-2" />
@@ -674,7 +709,7 @@ export default function Chemistry() {
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
             <SelectTrigger className="w-full sm:w-40" data-testid="select-sort-by">
               <ArrowUpDown className="h-4 w-4 mr-2" />
@@ -706,6 +741,7 @@ export default function Chemistry() {
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
                   prefersReducedMotion={prefersReducedMotion}
+                  isPremium={isPremium}
                 />
               ))}
             </motion.div>
@@ -755,7 +791,7 @@ export default function Chemistry() {
             <Shuffle className="h-5 w-5" />
           </Button>
         </motion.div>
-        
+
         <motion.div
           initial={prefersReducedMotion ? {} : { scale: 0 }}
           animate={{ scale: 1 }}

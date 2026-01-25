@@ -149,6 +149,11 @@ export default function ChapterViewer() {
 
   const { data: bookmarks = [] } = useQuery<any[]>({
     queryKey: ['/api/lms/bookmarks'],
+    queryFn: async () => {
+      const response = await fetch('/api/lms/bookmarks');
+      if (!response.ok) return [];
+      return response.json();
+    },
     enabled: !!chapter?.id && !!user?.id,
   });
 

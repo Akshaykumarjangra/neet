@@ -25,6 +25,7 @@ import { PhETSimulation } from "@/components/PhETSimulation";
 import ProjectileMotion from "@/components/simulations/ProjectileMotion";
 import CircuitBuilder from "@/components/simulations/CircuitBuilder";
 import MoleculeViewer from "@/components/simulations/MoleculeViewer";
+import { Paywall } from "@/components/Paywall";
 
 interface SimulationItem {
   id: string;
@@ -348,15 +349,22 @@ export default function Simulations() {
                   <Badge variant="secondary">Custom</Badge>
                   Interactive Simulations
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedSimulations.custom.map((sim) => (
-                    <SimulationCard
-                      key={sim.id}
-                      simulation={sim}
-                      onSelect={() => setSelectedSimulation(sim)}
-                    />
-                  ))}
-                </div>
+                <Paywall
+                  feature="3D Interactive Simulations"
+                  description="Unlock the full catalog of 50+ interactive physics and chemistry simulations to visualize complex NEET concepts."
+                  freeLimit="2 Simulations"
+                >
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {groupedSimulations.custom.map((sim, index) => (
+                      <SimulationCard
+                        key={sim.id}
+                        simulation={sim}
+                        onSelect={() => setSelectedSimulation(sim)}
+                        isLocked={index >= 2}
+                      />
+                    ))}
+                  </div>
+                </Paywall>
               </div>
             )}
 
@@ -366,15 +374,23 @@ export default function Simulations() {
                   <Badge variant="outline">PhET</Badge>
                   University of Colorado Simulations
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedSimulations.phet.map((sim) => (
-                    <SimulationCard
-                      key={sim.id}
-                      simulation={sim}
-                      onSelect={() => setSelectedSimulation(sim)}
-                    />
-                  ))}
-                </div>
+                <Paywall
+                  feature="University PhET Simulations"
+                  description="Access premium University-grade simulations for deep conceptual understanding of NEET Biology and Physics."
+                  freeLimit="Unlimited for Premium"
+                  variant="inline"
+                >
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {groupedSimulations.phet.map((sim) => (
+                      <SimulationCard
+                        key={sim.id}
+                        simulation={sim}
+                        onSelect={() => setSelectedSimulation(sim)}
+                        isLocked={true} // PhET all premium in this logic
+                      />
+                    ))}
+                  </div>
+                </Paywall>
               </div>
             )}
 
@@ -403,9 +419,11 @@ export default function Simulations() {
 function SimulationCard({
   simulation,
   onSelect,
+  isLocked = false,
 }: {
   simulation: SimulationItem;
   onSelect: () => void;
+  isLocked?: boolean;
 }) {
   const colors = subjectColors[simulation.subject];
 
@@ -418,8 +436,8 @@ function SimulationCard({
       whileTap={{ scale: 0.98 }}
     >
       <Card
-        className={`cursor-pointer transition-all hover:shadow-lg ${colors.border} border-2`}
-        onClick={onSelect}
+        className={`cursor-pointer transition-all hover:shadow-lg ${colors.border} border-2 ${isLocked ? "opacity-75 grayscale-[0.5]" : ""}`}
+        onClick={() => !isLocked && onSelect()}
         data-testid={`card-simulation-${simulation.id}`}
       >
         <CardHeader className="pb-3">
@@ -461,15 +479,24 @@ function SimulationCard({
                 simulation.difficulty === "Beginner"
                   ? "text-green-600 border-green-300"
                   : simulation.difficulty === "Intermediate"
-                  ? "text-yellow-600 border-yellow-300"
-                  : "text-red-600 border-red-300"
+                    ? "text-yellow-600 border-yellow-300"
+                    : "text-red-600 border-red-300"
               }
             >
               {simulation.difficulty}
             </Badge>
-            <Button size="sm" className="gap-1">
-              <Play className="h-3 w-3" />
-              Launch
+            <Button size="sm" className="gap-1" disabled={isLocked}>
+              {isLocked ? (
+                <>
+                  <Sparkles className="h-3 w-3" />
+                  Premium
+                </>
+              ) : (
+                <>
+                  <Play className="h-3 w-3" />
+                  Launch
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

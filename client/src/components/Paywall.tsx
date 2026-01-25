@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  Lock, 
-  Crown, 
-  Sparkles, 
-  CheckCircle2, 
+import {
+  Lock,
+  Crown,
+  Sparkles,
+  CheckCircle2,
   ArrowRight,
   Target,
   BookOpen,
@@ -22,6 +22,7 @@ interface PaywallProps {
   freeLimit?: string;
   variant?: "inline" | "fullpage" | "modal";
   children?: React.ReactNode;
+  isLocked?: boolean;
 }
 
 const premiumFeatures = [
@@ -32,16 +33,17 @@ const premiumFeatures = [
   { icon: Users, text: "2 mentor sessions/month" },
 ];
 
-export function Paywall({ 
-  feature, 
-  description, 
+export function Paywall({
+  feature,
+  description,
   freeLimit,
-  variant = "inline", 
-  children 
+  variant = "inline",
+  isLocked,
+  children
 }: PaywallProps) {
   const { user, isAuthenticated } = useAuth();
 
-  if (user?.isPaidUser) {
+  if (user?.isPaidUser && !isLocked) {
     return <>{children}</>;
   }
 
@@ -185,7 +187,7 @@ export function PremiumBadge({ className }: { className?: string }) {
 
 export function useSubscription() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
+
   return {
     isPremium: user?.isPaidUser ?? false,
     isAdmin: user?.isAdmin ?? false,
@@ -198,7 +200,7 @@ export function useSubscription() {
     canAccess: (feature: "mock_tests" | "full_questions" | "video_lessons" | "ai_features" | "mentor_sessions") => {
       if (!isAuthenticated) return false;
       if (user?.isPaidUser) return true;
-      
+
       const freeAccessMap: Record<string, boolean> = {
         mock_tests: false,
         full_questions: false,
@@ -206,11 +208,11 @@ export function useSubscription() {
         ai_features: false,
         mentor_sessions: false,
       };
-      
+
       return freeAccessMap[feature] ?? false;
     },
     freeLimits: {
-      questions: 500,
+      questions: 10,
       mockTests: 1,
       chapters: 3,
       simulations: 2,

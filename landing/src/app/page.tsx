@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { GraduationCap, ArrowRight, BookOpen, Brain, Target, Play, Award, Sparkles, Flame, Users, TrendingUp, Quote, Star, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { SyllabusExplorer } from "@/components/SyllabusExplorer";
 import { PricingSection } from "@/components/PricingSection";
 

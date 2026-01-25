@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -58,7 +58,18 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
 };
 
 export default function BillingStatus() {
-  const { user } = useAuth();
+  const { user, forceRefreshAuth } = useAuth();
+
+  const statusParam = useMemo(() => {
+    if (typeof window === "undefined") return undefined;
+    return new URLSearchParams(window.location.search).get("status") || undefined;
+  }, []);
+
+  useEffect(() => {
+    if (statusParam === "success") {
+      forceRefreshAuth();
+    }
+  }, [statusParam, forceRefreshAuth]);
 
   const {
     data = { subscription: null },
@@ -73,10 +84,6 @@ export default function BillingStatus() {
     staleTime: 60_000,
   });
 
-  const statusParam = useMemo(() => {
-    if (typeof window === "undefined") return undefined;
-    return new URLSearchParams(window.location.search).get("status") || undefined;
-  }, []);
 
   const subscription = data.subscription ?? null;
   const renewalDate =
@@ -129,13 +136,12 @@ export default function BillingStatus() {
 
         {bannerCopy && (
           <Alert
-            className={`border ${
-              bannerCopy.tone === "success"
-                ? "border-green-500/30 bg-green-500/10"
-                : bannerCopy.tone === "warning"
-                  ? "border-yellow-500/30 bg-yellow-500/10"
-                  : "border-blue-500/30 bg-blue-500/10"
-            }`}
+            className={`border ${bannerCopy.tone === "success"
+              ? "border-green-500/30 bg-green-500/10"
+              : bannerCopy.tone === "warning"
+                ? "border-yellow-500/30 bg-yellow-500/10"
+                : "border-blue-500/30 bg-blue-500/10"
+              }`}
           >
             <BannerIcon className="h-4 w-4" />
             <AlertDescription>

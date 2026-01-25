@@ -54,7 +54,7 @@ const loadRazorpayScript = () => {
 };
 
 export default function Checkout() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, forceRefreshAuth } = useAuth();
   const [, setLocation] = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -118,6 +118,8 @@ export default function Checkout() {
               paymentId: response.razorpay_payment_id,
               signature: response.razorpay_signature,
             });
+            // Refresh auth state to reflect paid status immediately
+            await forceRefreshAuth();
             setLocation("/billing-status?status=success");
           } catch (err: any) {
             const message = err?.message || "Payment verification failed.";

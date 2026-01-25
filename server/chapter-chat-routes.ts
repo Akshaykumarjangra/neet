@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { db } from './db';
 import { chapterContent } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { requireAuthWithPasswordCheck, getCurrentUser } from './auth';
+import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from './auth';
 import OpenAI from 'openai';
 
 const router = Router();
@@ -51,7 +51,7 @@ function buildSystemPrompt(chapter: any, context?: ChapterContext): string {
   }
 
   if (chapter.introduction) {
-    const introText = chapter.introduction.length > 500 
+    const introText = chapter.introduction.length > 500
       ? chapter.introduction.substring(0, 500) + '...'
       : chapter.introduction;
     prompt += `Chapter introduction: ${introText}\n\n`;
@@ -87,7 +87,7 @@ router.get("/chat/health", (_req: Request, res: Response) => {
   });
 });
 
-router.post('/:id/chat', requireAuthWithPasswordCheck, async (req: Request, res: Response) => {
+router.post('/:id/chat', requireAuthWithPasswordCheck, requireActiveSubscription(), async (req: Request, res: Response) => {
   try {
     const chapterId = parseInt(req.params.id);
     const { message, chapterContext } = req.body;
@@ -102,14 +102,14 @@ router.post('/:id/chat', requireAuthWithPasswordCheck, async (req: Request, res:
 
     const trimmedMessage = message.trim();
     if (trimmedMessage.length < 3) {
-      return res.status(400).json({ 
-        error: 'Message must be at least 3 characters long.' 
+      return res.status(400).json({
+        error: 'Message must be at least 3 characters long.'
       });
     }
 
     if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-      return res.status(400).json({ 
-        error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.` 
+      return res.status(400).json({
+        error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
       });
     }
 
@@ -143,7 +143,7 @@ router.post('/:id/chat', requireAuthWithPasswordCheck, async (req: Request, res:
     });
 
     // Add timeout (30 seconds)
-    const timeoutPromise = new Promise<never>((_, reject) => 
+    const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Request timeout - please try again')), 30000)
     );
 
@@ -160,20 +160,20 @@ router.post('/:id/chat', requireAuthWithPasswordCheck, async (req: Request, res:
     });
   } catch (error: any) {
     console.error('Error in chapter chat:', error);
-    
+
     // Handle specific OpenAI errors
     if (error?.status === 429) {
       return res.status(429).json({
         error: 'Rate limit exceeded. Please try again in a moment.',
       });
     }
-    
+
     if (error?.status === 503 || error?.message?.includes('service unavailable')) {
       return res.status(503).json({
         error: 'AI service is temporarily unavailable. Please try again later.',
       });
     }
-    
+
     res.status(500).json({
       error: error?.message || 'Failed to generate response. Please try again.',
     });

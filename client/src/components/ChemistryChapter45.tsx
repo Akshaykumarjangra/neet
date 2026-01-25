@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -547,11 +548,11 @@ export function ChemistryChapter45() {
                                   ? option.id === q.correctAnswer
                                     ? "default"
                                     : userAnswers[q.id] === option.id
-                                    ? "destructive"
-                                    : "outline"
+                                      ? "destructive"
+                                      : "outline"
                                   : userAnswers[q.id] === option.id
-                                  ? "default"
-                                  : "outline"
+                                    ? "default"
+                                    : "outline"
                               }
                               className="justify-start text-left"
                               onClick={() => handleAnswerSelect(q.id, option.id)}
