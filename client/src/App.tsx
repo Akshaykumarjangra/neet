@@ -8,8 +8,12 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { OwnerRoute } from "@/components/OwnerRoute";
 import { GuestRoute } from "@/components/GuestRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
+
+import NotFound from "@/pages/NotFound";
+import AccessDenied from "@/pages/AccessDenied";
 
 // Lazy load all pages for code-splitting and better performance
 const Home = lazy(() => import("@/pages/Home"));
@@ -123,275 +127,280 @@ function Router() {
 
   return (
     <Suspense fallback={<PageLoader />}>
-      <Switch>
-        <Route path="/mentors/:id">
-          <MentorProfile />
-        </Route>
-        <Route path="/mentors">
-          <MentorDiscovery />
-        </Route>
-        <Route path="/explain">
-          <Explain />
-        </Route>
-        <Route path="/explore">
-          <ProtectedRoute>
-            <Explore />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/class-wise">
-          <ProtectedRoute>
-            <ClassWiseContent />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/class-12">
-          <ProtectedRoute>
-            <Class12 />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/login">
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        </Route>
-        <Route path="/signup">
-          <GuestRoute>
-            <Signup />
-          </GuestRoute>
-        </Route>
-        <Route path="/">
-          <Home />
-        </Route>
-        <Route path="/pricing">
-          <Pricing />
-        </Route>
-        <Route path="/checkout">
-          <ProtectedRoute>
-            <Checkout />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/dashboard">
-          <ProtectedRoute>
-            <RoleDashboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/classic">
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/physics">
-          <ProtectedRoute>
-            <Physics />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/physics-legacy">
-          <ProtectedRoute>
-            <PhysicsContent />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/chemistry">
-          <ProtectedRoute>
-            <Chemistry />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/chemistry-legacy">
-          <ProtectedRoute>
-            <ChemistryContent />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/biology">
-          <ProtectedRoute>
-            <Biology />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/botany">
-          <ProtectedRoute>
-            <Biology initialSection="Botany" />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/zoology">
-          <ProtectedRoute>
-            <Biology initialSection="Zoology" />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/biology-legacy">
-          <ProtectedRoute>
-            <BiologyContent />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/chapter/:subject/:classLevel/:chapterNumber">
-          <ProtectedRoute>
-            <ChapterViewer />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/preview/chapter">
-          <SampleChapterPreview />
-        </Route>
-        <Route path="/practice">
-          <ProtectedRoute>
-            <Practice />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/progress/analytics">
-          <ProtectedRoute>
-            <PracticeAnalytics />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/leaderboard">
-          <ProtectedRoute>
-            <Leaderboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/learning-path">
-          <ProtectedRoute>
-            <LearningPath />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/mock-tests">
-          <ProtectedRoute>
-            <MockTests />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/preview/mock-test">
-          <MockTestPreview />
-        </Route>
-        <Route path="/mock-test/:id">
-          <ProtectedRoute>
-            <MockTestPage />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/mock-test/:id/results">
-          <ProtectedRoute>
-            <MockTestResults />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/flashcards">
-          <ProtectedRoute>
-            <Flashcards />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/build-test">
-          <ProtectedRoute>
-            <QuestionnaireBuilder />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/library">
-          <ProtectedRoute>
-            <Library />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/achievements">
-          <ProtectedRoute>
-            <Achievements />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin">
-          <OwnerRoute>
-            <AdminDashboard />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/lms-studio">
-          <OwnerRoute>
-            <LmsContentStudio />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/mentor-automation">
-          <OwnerRoute>
-            <MentorLmsAutomation />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/announcements">
-          <OwnerRoute>
-            <AdminAnnouncements />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/content">
-          <OwnerRoute>
-            <AdminContentManager />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/payments">
-          <OwnerRoute>
-            <AdminPaymentConfig />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/approvals">
-          <OwnerRoute>
-            <AdminContentApprovals />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/users">
-          <OwnerRoute>
-            <AdminUsers />
-          </OwnerRoute>
-        </Route>
-        <Route path="/admin/test-series">
-          <OwnerRoute>
-            <AdminTestSeries />
-          </OwnerRoute>
-        </Route>
-        <Route path="/test-series">
-          <ProtectedRoute>
-            <StudentTestSeries />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/mentor-dashboard">
-          <ProtectedRoute>
-            <MentorDashboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/community">
-          <Community />
-        </Route>
-        <Route path="/chat">
-          <ProtectedRoute>
-            <Chat />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/simulations">
-          <ProtectedRoute>
-            <Simulations />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/preview/simulations">
-          <SimulationsPreview />
-        </Route>
-        <Route path="/syllabus">
-          <ProtectedRoute>
-            <Syllabus />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/search">
-          <ProtectedRoute>
-            <Search />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/profile">
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/my-bookings">
-          <ProtectedRoute>
-            <MyBookings />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/billing-status">
-          <ProtectedRoute>
-            <BillingStatus />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/question-bank">
-          <QuestionBank />
-        </Route>
-        <Route path="/neet-blast">
-          <ProtectedRoute>
-            <NEETBlast />
-          </ProtectedRoute>
-        </Route>
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+      <ErrorBoundary>
+        <Switch>
+          <Route path="/access-denied">
+            <AccessDenied />
+          </Route>
+          <Route path="/mentors/:id">
+            <MentorProfile />
+          </Route>
+          <Route path="/mentors">
+            <MentorDiscovery />
+          </Route>
+          <Route path="/explain">
+            <Explain />
+          </Route>
+          <Route path="/login">
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          </Route>
+          <Route path="/signup">
+            <GuestRoute>
+              <Signup />
+            </GuestRoute>
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+          <Route path="/pricing">
+            <Pricing />
+          </Route>
+          <Route path="/checkout">
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/explore">
+            <ProtectedRoute>
+              <Explore />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/class-wise">
+            <ProtectedRoute>
+              <ClassWiseContent />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/class-12">
+            <ProtectedRoute>
+              <Class12 />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/dashboard">
+            <ProtectedRoute>
+              <RoleDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/classic">
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/physics">
+            <ProtectedRoute>
+              <Physics />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/physics-legacy">
+            <ProtectedRoute>
+              <PhysicsContent />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/chemistry">
+            <ProtectedRoute>
+              <Chemistry />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/chemistry-legacy">
+            <ProtectedRoute>
+              <ChemistryContent />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/biology">
+            <ProtectedRoute>
+              <Biology />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/botany">
+            <ProtectedRoute>
+              <Biology initialSection="Botany" />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/zoology">
+            <ProtectedRoute>
+              <Biology initialSection="Zoology" />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/biology-legacy">
+            <ProtectedRoute>
+              <BiologyContent />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/chapter/:subject/:classLevel/:chapterNumber">
+            <ProtectedRoute>
+              <ChapterViewer />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/preview/chapter">
+            <SampleChapterPreview />
+          </Route>
+          <Route path="/practice">
+            <ProtectedRoute>
+              <Practice />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/progress/analytics">
+            <ProtectedRoute>
+              <PracticeAnalytics />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/leaderboard">
+            <ProtectedRoute>
+              <Leaderboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/learning-path">
+            <ProtectedRoute>
+              <LearningPath />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/mock-tests">
+            <ProtectedRoute>
+              <MockTests />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/preview/mock-test">
+            <MockTestPreview />
+          </Route>
+          <Route path="/mock-test/:id">
+            <ProtectedRoute>
+              <MockTestPage />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/mock-test/:id/results">
+            <ProtectedRoute>
+              <MockTestResults />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/flashcards">
+            <ProtectedRoute>
+              <Flashcards />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/build-test">
+            <ProtectedRoute>
+              <QuestionnaireBuilder />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/library">
+            <ProtectedRoute>
+              <Library />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/achievements">
+            <ProtectedRoute>
+              <Achievements />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/admin">
+            <OwnerRoute>
+              <AdminDashboard />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/lms-studio">
+            <OwnerRoute>
+              <LmsContentStudio />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/mentor-automation">
+            <OwnerRoute>
+              <MentorLmsAutomation />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/announcements">
+            <OwnerRoute>
+              <AdminAnnouncements />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/content">
+            <OwnerRoute>
+              <AdminContentManager />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/payments">
+            <OwnerRoute>
+              <AdminPaymentConfig />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/approvals">
+            <OwnerRoute>
+              <AdminContentApprovals />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/users">
+            <OwnerRoute>
+              <AdminUsers />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/test-series">
+            <OwnerRoute>
+              <AdminTestSeries />
+            </OwnerRoute>
+          </Route>
+          <Route path="/test-series">
+            <ProtectedRoute>
+              <StudentTestSeries />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/mentor-dashboard">
+            <ProtectedRoute>
+              <MentorDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/community">
+            <Community />
+          </Route>
+          <Route path="/chat">
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/simulations">
+            <ProtectedRoute>
+              <Simulations />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/preview/simulations">
+            <SimulationsPreview />
+          </Route>
+          <Route path="/syllabus">
+            <ProtectedRoute>
+              <Syllabus />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/search">
+            <ProtectedRoute>
+              <Search />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/profile">
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/my-bookings">
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/billing-status">
+            <ProtectedRoute>
+              <BillingStatus />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/question-bank">
+            <QuestionBank />
+          </Route>
+          <Route path="/neet-blast">
+            <ProtectedRoute>
+              <NEETBlast />
+            </ProtectedRoute>
+          </Route>
+          <Route component={NotFound} />
+        </Switch >
+      </ErrorBoundary >
+    </Suspense >
   );
 }
 
