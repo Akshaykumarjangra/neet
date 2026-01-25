@@ -1,0 +1,27 @@
+
+> rest-express@1.0.0 dev
+> concurrently "npm run dev:backend" "npm run dev:frontend"
+
+[0]
+[0] > rest-express@1.0.0 dev:backend
+[0] > cross-env NODE_ENV=development PORT=5001 tsx server/index.ts
+[0]
+[1]
+[1] > rest-express@1.0.0 dev:frontend
+[1] > vite
+[1]
+[1] Re-optimizing dependencies because lockfile has changed
+[1]
+[1]   VITE v5.4.21  ready in 282 ms
+[1]
+[1]   ➜  Local:   http://localhost:5002/
+[1]   ➜  Network: http://192.168.0.2:5002/
+[0] 7:55:09 PM [express] Using MemoryStore for development sessions
+[0] New database connection established
+[0] New database connection established
+[0] ✓ Connected to Coolify PostgreSQL database
+[0] 7:55:11 PM [express] [Owner Account] Updated owner account credentials for akg45272@gmail.com
+[0] 7:55:12 PM [express] 📡 WebSocket server initialized at /ws
+[0] 7:55:12 PM [express] serving on port 5001
+[0] 7:55:29 PM [express] GET /api/auth/me 401 in 5ms :: {"error":"Not authenticated"}
+[0] 7:55:29 PM [express] GET /api/subscription-plans 200 in 256ms :: [{"id":6,"name":"Foundation","slug"...

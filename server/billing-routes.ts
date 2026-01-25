@@ -274,7 +274,9 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
 
     const amount = interval === "yearly"
       ? plan.priceYearly || plan.priceMonthly * 12
-      : plan.priceMonthly;
+      : interval === "quarterly"
+        ? plan.priceMonthly * 3
+        : plan.priceMonthly;
 
     const settings = await getPaymentSettings();
     const chosenProvider: PaymentProvider =

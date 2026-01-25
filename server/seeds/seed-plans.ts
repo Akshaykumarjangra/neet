@@ -1,6 +1,7 @@
 
 import { db } from "../db";
 import { subscriptionPlans } from "@shared/schema";
+import { notInArray } from "drizzle-orm";
 
 async function seedPlans() {
   console.log("Seeding subscription plans...");
@@ -68,10 +69,10 @@ async function seedPlans() {
         slug: "quarterly-starter",
         description: "3 months of full access at the best price",
         planType: "premium",
-        priceMonthly: 33300, // ₹333/mo effectively
-        priceYearly: 100000,   // ₹1000 for 3 months? No, backend logic assumes yearly. 
-        // We'll treat this specially or just as a budget monthly plan for now.
+        priceMonthly: 33333, // ~₹333/month (Total ₹1000 for 3 months)
+        priceYearly: 0,
         currency: "INR",
+        billingInterval: "quarterly",
         features: [
           "Full access for 3 months",
           "50,000+ questions",
@@ -92,6 +93,56 @@ async function seedPlans() {
         });
       console.log(`Seeded plan: ${plan.name}`);
     }
+
+    // Deactivate old plans that are not in the current seed list
+    // This ensures the UI only shows the relevant plans
+    const newSlugs = plans.map(p => p.slug);
+
+    // We keep 'organization' if it exists, as it might be useful,
+    // but the seed plans above don't include it.
+    // If the frontend expects 'organization' plan for the comparison table, we might need it.
+    // However, the pricing page renders 'organization' column in features table,
+    // but the cards are derived from API.
+
+    // Let's NOT deactivate 'organization' if possible, or just add it to the seed.
+    // The previous DB state had 'organization'.
+    // I'll add 'Organization' to the seed to be safe.
+
+    const organizationPlan = {
+        name: "Organization",
+        slug: "organization",
+        description: "For schools, coaching centers & institutions",
+        planType: "organization",
+        priceMonthly: 0, // Contact sales
+        priceYearly: 0,
+        currency: "INR",
+        features: [
+          "Everything in Premium",
+          "Bulk student licenses",
+          "Teacher admin dashboard",
+          "School-wide analytics",
+          "Custom branding"
+        ],
+        isActive: true,
+        isPopular: false,
+        displayOrder: 4
+    };
+
+    await db.insert(subscriptionPlans)
+        .values(organizationPlan as any)
+        .onConflictDoUpdate({
+            target: subscriptionPlans.slug,
+            set: organizationPlan
+        });
+    console.log(`Seeded plan: ${organizationPlan.name}`);
+    newSlugs.push("organization");
+
+    await db.update(subscriptionPlans)
+      .set({ isActive: false })
+      .where(
+        notInArray(subscriptionPlans.slug, newSlugs)
+      );
+    console.log("Deactivated obsolete plans.");
 
     console.log("Plans seeded successfully");
   } catch (error) {
