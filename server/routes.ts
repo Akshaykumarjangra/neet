@@ -41,6 +41,8 @@ import profileRoutes from "./profile-routes";
 import explainRoutes from "./explain-routes";
 import chapterChatRoutes from "./chapter-chat-routes";
 import adminImpersonationRoutes from "./admin-impersonation-routes";
+import multer from "multer";
+import { objectStorage } from "./services/object-storage";
 
 type ContentTopicInsert = typeof contentTopics.$inferInsert;
 type QuestionPreviewLimitInsert = typeof questionPreviewLimits.$inferInsert;
@@ -136,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/auth", authRoutes);
 
   // Learning Path routes
-  app.use("/api/learning-path", requireActiveSubscription(), learningPathRoutes);
+  app.use("/api/learning-path", learningPathRoutes);
 
   // Mock Test routes
   app.use("/api/mock-tests", mockTestRoutes);
@@ -144,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/admin/mock-exams", mockExamAdminRoutes);
 
   // Game/Gamification routes
-  app.use("/api/game", requireActiveSubscription(), gameRoutes);
+  app.use("/api/game", gameRoutes);
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
@@ -176,14 +178,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", mentorRoutes);
 
   // Community Discussion routes
-  app.use("/api/discussions", requireActiveSubscription(), discussionRoutes);
-  app.use("/api/replies", requireActiveSubscription(), replyRoutes);
+  app.use("/api/discussions", discussionRoutes);
+  app.use("/api/replies", replyRoutes);
 
   // LMS Learning routes (Keypoints, Formulas, Progress, Bookmarks, Spaced Repetition)
   app.use("/api/learn", lmsLearningRoutes);
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
-  app.use("/api/search", requireActiveSubscription(), searchRoutes);
+  app.use("/api/search", searchRoutes);
 
   app.use("/api/billing", billingRoutes);
 
@@ -1401,6 +1403,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // FILE UPLOAD ROUTES (S3/Object Storage)
+  // ==========================================
+
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB limit
+    },
+  });
+
+  app.post("/api/upload", requireAuthWithPasswordCheck, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      const folder = req.body.folder || "uploads";
+      const key = await objectStorage.uploadFile(req.file, folder);
+
+      // Generate a signed URL for immediate display if needed, 
+      // or just return the key if the frontend constructs the URL
+      const url = await objectStorage.getSignedUrl(key);
+
+      res.json({
+        key,
+        url,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: "Failed to upload file" });
     }
   });
 

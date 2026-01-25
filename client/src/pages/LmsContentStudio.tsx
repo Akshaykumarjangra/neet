@@ -450,8 +450,41 @@ function VisualAssetForm({ toast, chapters }: { toast: ReturnType<typeof useToas
         <Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
       </div>
       <div>
-        <Label>URL</Label>
-        <Input value={form.url} onChange={(event) => setForm({ ...form, url: event.target.value })} />
+        <Label>URL or File Upload</Label>
+        <div className="flex gap-2">
+          <Input value={form.url} onChange={(event) => setForm({ ...form, url: event.target.value })} placeholder="https://..." />
+          <div className="relative">
+            <Button variant="outline" size="icon" className="relative cursor-pointer">
+              <Layers className="h-4 w-4" />
+              <input
+                type="file"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  formData.append("folder", "lms-assets");
+
+                  try {
+                    toast({ title: "Uploading..." });
+                    const res = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formData,
+                    });
+                    if (!res.ok) throw new Error("Upload failed");
+                    const data = await res.json();
+                    setForm({ ...form, url: data.url, title: form.title || file.name });
+                    toast({ title: "File uploaded", description: "URL auto-filled." });
+                  } catch (err: any) {
+                    toast({ title: "Error", description: err.message, variant: "destructive" });
+                  }
+                }}
+              />
+            </Button>
+          </div>
+        </div>
       </div>
       <div>
         <Label>Type</Label>

@@ -301,11 +301,21 @@ export function Header({
               <Badge variant="secondary" className="px-2 py-1 cursor-pointer hover:opacity-80 transition-opacity" data-testid="badge-level" onClick={() => setLocation('/practice')}>
                 Level {userLevel}
               </Badge>
-              {user.isPaidUser && (
+              {user.isPaidUser ? (
                 <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-2 py-1 gap-1">
                   <Crown className="h-3 w-3" />
                   Premium
                 </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 h-7 text-xs px-3 shadow-sm"
+                  onClick={() => setLocation('/pricing')}
+                  data-testid="button-upgrade"
+                >
+                  <Crown className="h-3.5 w-3.5 mr-1.5 fill-current" />
+                  Upgrade
+                </Button>
               )}
             </div>
           )}

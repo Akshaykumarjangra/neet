@@ -231,6 +231,9 @@ if (process.env.NODE_ENV === "production") {
 // Trust proxy for secure cookies behind reverse proxies
 app.set("trust proxy", 1);
 
+// Serve uploaded files statically
+app.use("/uploads", express.static("uploads"));
+
 // Validate SESSION_SECRET
 if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
   throw new Error("SESSION_SECRET environment variable is required in production");

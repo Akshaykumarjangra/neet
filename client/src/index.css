@@ -4,6 +4,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --- GLOBAL DEFENSIVE CSS START --- */
+
+/* 1. Box Sizing fix: Padding layout ko nahi todega */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2. Media Safety: Koi bhi image/video parent se badi nahi hogi */
+img,
+video,
+iframe,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  /* Extra space niche se hatata hai */
+}
+
+/* 3. Text Safety: Lamba text automatic next line me break ho jayega */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+li,
+a,
+div {
+  overflow-wrap: break-word;
+  /* Modern standard */
+  word-wrap: break-word;
+  /* Legacy support */
+  min-width: 0;
+  /* Flexbox children ko shrink hone deta hai */
+}
+
+/* 4. Root overflow preventer (Optional but recommended) */
+html,
+body {
+  overflow-x: hidden;
+  /* Horizontal scrollbar ko global level pe rokna */
+  width: 100%;
+}
+
+/* --- GLOBAL DEFENSIVE CSS END --- */
+
 /* LIGHT MODE - Magical Kids' Dreamscape */
 :root {
   --button-outline: rgba(147, 51, 234, .15);
@@ -304,9 +355,7 @@
   /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
    * buttons/badges can remove the automatic brightness adjustment on interactions
    * and program their own. */
-  .no-default-hover-elevate {}
 
-  .no-default-active-elevate {}
 
 
   /**

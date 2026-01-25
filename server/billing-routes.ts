@@ -121,62 +121,73 @@ async function markSubscriptionActive(
     razorpayOrderId?: string | null;
   }
 ) {
-  const [existing] = await db
-    .select({
-      billingInterval: userSubscriptions.billingInterval,
-    })
-    .from(userSubscriptions)
-    .where(eq(userSubscriptions.id, subscriptionId))
-    .limit(1);
+  try {
+    await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({
+          billingInterval: userSubscriptions.billingInterval,
+          userId: userSubscriptions.userId, // Fetch userId here to ensure consistency
+        })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.id, subscriptionId))
+        .limit(1);
 
-  const periodEnd = calculatePeriodEnd(
-    existing?.billingInterval || "monthly",
-    new Date()
-  );
+      if (!existing) {
+        throw new Error(`Subscription ${subscriptionId} not found`);
+      }
 
-  const [subscription] = await db
-    .update(userSubscriptions)
-    .set({
-      status: "active",
-      startDate: new Date(),
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: periodEnd,
-      updatedAt: new Date(),
-    } as Partial<UserSubscriptionInsert>)
-    .where(eq(userSubscriptions.id, subscriptionId))
-    .returning({
-      id: userSubscriptions.id,
-      userId: userSubscriptions.userId,
-      billingInterval: userSubscriptions.billingInterval,
+      const periodEnd = calculatePeriodEnd(
+        existing.billingInterval || "monthly",
+        new Date()
+      );
+
+      const [subscription] = await tx
+        .update(userSubscriptions)
+        .set({
+          status: "active",
+          startDate: new Date(),
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: periodEnd,
+          updatedAt: new Date(),
+        } as Partial<UserSubscriptionInsert>)
+        .where(eq(userSubscriptions.id, subscriptionId))
+        .returning({
+          id: userSubscriptions.id,
+          userId: userSubscriptions.userId,
+        });
+
+      if (!subscription) return;
+
+      await tx
+        .update(paymentTransactions)
+        .set({
+          status: "paid",
+          invoiceUrl: options.invoiceUrl || null,
+          stripePaymentIntentId: options.stripePaymentIntentId || null,
+          stripeChargeId: options.stripeChargeId || null,
+          razorpayPaymentId: options.razorpayPaymentId || null,
+          razorpayOrderId: options.razorpayOrderId || null,
+          updatedAt: new Date(),
+        } as Partial<PaymentTransactionInsert>)
+        .where(eq(paymentTransactions.id, transactionId));
+
+      await tx
+        .update(users)
+        .set({
+          isPaidUser: true,
+          paymentStatus: "paid",
+          paidAt: new Date(),
+          paymentProvider: options.razorpayPaymentId ? "razorpay" : "stripe",
+          paymentId: options.razorpayPaymentId || options.stripePaymentIntentId
+        } as Partial<UserInsert>)
+        .where(eq(users.id, existing.userId));
     });
-
-  if (!subscription) {
-    return;
+    console.log(`[Billing] Successfully activated subscription ${subscriptionId}`);
+  } catch (error) {
+    console.error(`[Billing] Failed to activate subscription ${subscriptionId}:`, error);
+    // Determine if we should re-throw or just log. For robust flows, we likely want to alert admin/logs.
+    throw error;
   }
-
-  await db
-    .update(paymentTransactions)
-    .set({
-      status: "paid",
-      invoiceUrl: options.invoiceUrl || null,
-      stripePaymentIntentId: options.stripePaymentIntentId || null,
-      stripeChargeId: options.stripeChargeId || null,
-      razorpayPaymentId: options.razorpayPaymentId || null,
-      razorpayOrderId: options.razorpayOrderId || null,
-      updatedAt: new Date(),
-    } as Partial<PaymentTransactionInsert>)
-    .where(eq(paymentTransactions.id, transactionId));
-
-  await db
-    .update(users)
-    .set({
-      isPaidUser: true,
-      paymentStatus: "paid",
-      paidAt: new Date(),
-      paymentProvider: options.razorpayPaymentId ? "razorpay" : "stripe",
-      paymentId: options.razorpayPaymentId || options.stripePaymentIntentId
-    } as Partial<UserInsert>)
-    .where(eq(users.id, subscription.userId));
 }
 
 async function markSubscriptionFailed(
@@ -184,24 +195,32 @@ async function markSubscriptionFailed(
   transactionId: string,
   reason: string
 ) {
-  await db
-    .update(userSubscriptions)
-    .set({
-      status: "cancelled",
-      cancelledAt: new Date(),
-      cancellationReason: reason,
-      updatedAt: new Date(),
-    } as Partial<UserSubscriptionInsert>)
-    .where(eq(userSubscriptions.id, subscriptionId));
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(userSubscriptions)
+        .set({
+          status: "cancelled", // or 'unpaid' if we want to allow retry? but 'cancelled' fails the flow safely.
+          cancelledAt: new Date(),
+          cancellationReason: reason,
+          updatedAt: new Date(),
+        } as Partial<UserSubscriptionInsert>)
+        .where(eq(userSubscriptions.id, subscriptionId));
 
-  await db
-    .update(paymentTransactions)
-    .set({
-      status: "failed",
-      failureMessage: reason,
-      updatedAt: new Date(),
-    } as Partial<PaymentTransactionInsert>)
-    .where(eq(paymentTransactions.id, transactionId));
+      await tx
+        .update(paymentTransactions)
+        .set({
+          status: "failed",
+          failureMessage: reason,
+          updatedAt: new Date(),
+        } as Partial<PaymentTransactionInsert>)
+        .where(eq(paymentTransactions.id, transactionId));
+    });
+    console.log(`[Billing] Marked subscription ${subscriptionId} as failed: ${reason}`);
+  } catch (error) {
+    console.error(`[Billing] Failed to mark subscription ${subscriptionId} as failed:`, error);
+    throw error;
+  }
 }
 
 router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {

@@ -7,15 +7,10 @@ import { eq, asc, and, sql, lte, desc } from "drizzle-orm";
 
 const router = Router();
 
-function isAuthenticated(req: Request): boolean {
-  return !!((req.session as any)?.passport?.user || (req as any).user);
-}
+import { requireAuth, requireAuthWithPasswordCheck, requireActiveSubscription } from "./auth";
 
 function getUserId(req: Request): string | null {
-  if ((req as any).user?.id) return (req as any).user.id;
-  if ((req.session as any)?.passport?.user) return (req.session as any).passport.user;
-  if ((req.session as any)?.userId) return (req.session as any).userId;
-  return null;
+  return req.session?.userId || null;
 }
 
 async function isPremiumUser(req: Request): Promise<boolean> {
@@ -29,11 +24,15 @@ async function isPremiumUser(req: Request): Promise<boolean> {
       .where(eq(users.id, Number(userId)))
       .limit(1);
 
-    return user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+    return !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
   } catch (error) {
     console.error("Check premium error:", error);
     return false;
   }
+}
+
+function isAuthenticated(req: Request): boolean {
+  return !!req.session?.userId;
 }
 
 // ============ KEYPOINTS ROUTES ============

@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
     }
 
     const conditions: any[] = [];
-    
+
     if (chapterId) {
       conditions.push(eq(discussions.chapterId, parseInt(chapterId as string)));
     }
@@ -135,7 +135,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", requireActiveSubscription(), async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const validatedData = createDiscussionSchema.parse(req.body);
@@ -324,7 +324,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/:id/replies", requireActiveSubscription(), async (req, res) => {
+router.post("/:id/replies", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -375,7 +375,7 @@ router.post("/:id/replies", requireActiveSubscription(), async (req, res) => {
   }
 });
 
-router.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
+router.post("/:id/vote", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -407,14 +407,14 @@ router.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
         await db
           .delete(discussionVotes)
           .where(eq(discussionVotes.id, existingVote.id));
-        
+
         return res.json({ voteType: null, message: "Vote removed" });
       } else {
         await db
           .update(discussionVotes)
           .set({ voteType })
           .where(eq(discussionVotes.id, existingVote.id));
-        
+
         return res.json({ voteType, message: "Vote updated" });
       }
     } else {
@@ -424,11 +424,11 @@ router.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
         voteType,
         replyId: null,
       };
-      
+
       await db
         .insert(discussionVotes)
         .values(insertData);
-      
+
       return res.json({ voteType, message: "Vote added" });
     }
   } catch (error: any) {
@@ -437,7 +437,7 @@ router.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
   }
 });
 
-router.post("/:id/resolve", requireActiveSubscription(), async (req, res) => {
+router.post("/:id/resolve", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const discussionId = parseInt(req.params.id);
@@ -473,7 +473,7 @@ export default router;
 
 export const replyRoutes = Router();
 
-replyRoutes.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
+replyRoutes.post("/:id/vote", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const replyId = parseInt(req.params.id);
@@ -505,14 +505,14 @@ replyRoutes.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
         await db
           .delete(discussionVotes)
           .where(eq(discussionVotes.id, existingVote.id));
-        
+
         return res.json({ voteType: null, message: "Vote removed" });
       } else {
         await db
           .update(discussionVotes)
           .set({ voteType })
           .where(eq(discussionVotes.id, existingVote.id));
-        
+
         return res.json({ voteType, message: "Vote updated" });
       }
     } else {
@@ -522,11 +522,11 @@ replyRoutes.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
         voteType,
         discussionId: null,
       };
-      
+
       await db
         .insert(discussionVotes)
         .values(insertData);
-      
+
       return res.json({ voteType, message: "Vote added" });
     }
   } catch (error: any) {
@@ -535,7 +535,7 @@ replyRoutes.post("/:id/vote", requireActiveSubscription(), async (req, res) => {
   }
 });
 
-replyRoutes.put("/:id/accept", requireActiveSubscription(), async (req, res) => {
+replyRoutes.put("/:id/accept", async (req, res) => {
   try {
     const userId = req.session.userId!;
     const replyId = parseInt(req.params.id);
@@ -586,7 +586,7 @@ replyRoutes.put("/:id/accept", requireActiveSubscription(), async (req, res) => 
       .set({ isResolved: newStatus, updatedAt: new Date() } as any)
       .where(eq(discussions.id, reply.discussionId));
 
-    res.json({ 
+    res.json({
       message: newStatus ? "Answer accepted" : "Answer unaccepted",
       isAcceptedAnswer: newStatus,
     });
