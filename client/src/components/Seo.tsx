@@ -4,9 +4,21 @@ interface SeoProps {
   title: string;
   description?: string;
   url?: string;
+  keywords?: string[];
+  ogImage?: string;
+  structuredData?: any | any[];
+  noindex?: boolean;
 }
 
-export function Seo({ title, description, url }: SeoProps) {
+export function Seo({
+  title,
+  description,
+  url,
+  keywords = [],
+  ogImage,
+  structuredData,
+  noindex = false
+}: SeoProps) {
   useEffect(() => {
     if (title) {
       document.title = title;
@@ -34,14 +46,43 @@ export function Seo({ title, description, url }: SeoProps) {
       tag.content = content;
     };
 
+    // Primary meta tags
     if (description) {
       ensureMeta("description", description);
       ensureProperty("og:description", description);
       ensureProperty("twitter:description", description);
     }
 
+    if (keywords.length > 0) {
+      ensureMeta("keywords", keywords.join(", "));
+    }
+
+    // Robots meta
+    ensureMeta("robots", noindex
+      ? "noindex, nofollow"
+      : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    );
+
+    // Open Graph
     ensureProperty("og:title", title);
+    ensureProperty("og:type", "website");
+    ensureProperty("og:locale", "en_IN");
+
+    if (ogImage) {
+      ensureProperty("og:image", ogImage);
+    }
+
+    // Twitter
+    ensureProperty("twitter:card", "summary_large_image");
     ensureProperty("twitter:title", title);
+    if (ogImage) {
+      ensureProperty("twitter:image", ogImage);
+    }
+
+    // India/NEET specific
+    ensureMeta("geo.region", "IN");
+    ensureMeta("geo.placename", "India");
+    ensureMeta("language", "English");
 
     if (url) {
       ensureProperty("og:url", url);
@@ -54,7 +95,28 @@ export function Seo({ title, description, url }: SeoProps) {
       }
       canonical.href = url;
     }
-  }, [title, description, url]);
+
+    // Structured Data (JSON-LD)
+    if (structuredData) {
+      const dataArray = Array.isArray(structuredData) ? structuredData : [structuredData];
+
+      // Remove existing structured data scripts
+      document.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
+        if (script.getAttribute('data-seo-component') === 'true') {
+          script.remove();
+        }
+      });
+
+      // Add new structured data
+      dataArray.forEach((data, index) => {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-seo-component', 'true');
+        script.textContent = JSON.stringify(data);
+        document.head.appendChild(script);
+      });
+    }
+  }, [title, description, url, keywords, ogImage, structuredData, noindex]);
 
   return null;
 }

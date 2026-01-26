@@ -16,6 +16,8 @@ import { LootCrate } from "@/components/game/LootCrate";
 import { KillCamReplay } from "@/components/game/KillCamReplay";
 import { ComboTracker } from "@/components/game/ComboTracker";
 import { XpGainAnimation } from "@/components/game/XpGainAnimation";
+import { Seo } from "@/components/SEO";
+import { SEO_PAGES, getFAQSchema, getBreadcrumbSchema } from "@/config/seo";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ChevronLeft, Loader2, Filter, RefreshCw, Timer, Clock, Flag, AlertTriangle, HelpCircle, BookmarkCheck, MessageSquare, Trophy, Target, Zap, TrendingUp, Star, Sparkles, PartyPopper, Calendar, X, Award, Minus, Plus, GraduationCap } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -915,6 +917,32 @@ export default function Practice() {
 
   return (
     <ThemeProvider>
+      <Seo
+        title={SEO_PAGES.practice.title}
+        description={SEO_PAGES.practice.description}
+        keywords={SEO_PAGES.practice.keywords}
+        url="https://neet.zeropage.in/practice"
+        structuredData={[
+          getFAQSchema([
+            {
+              question: "How many NEET practice questions are available?",
+              answer: "We offer 10,000+ chapter-wise practice questions covering Biology (Botany & Zoology), Physics, and Chemistry for NEET preparation."
+            },
+            {
+              question: "Are the NEET practice questions free?",
+              answer: "Yes, we provide free access to thousands of NEET practice questions with detailed solutions and explanations."
+            },
+            {
+              question: "Can I practice NEET questions chapter-wise?",
+              answer: "Yes, you can filter questions by subject, chapter, topic, and difficulty level to practice specific areas."
+            }
+          ]),
+          getBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Practice Questions", url: "/practice" }
+          ])
+        ]}
+      />
       <div className="min-h-screen bg-background">
         <Header
           activeSubject={selectedSubject}

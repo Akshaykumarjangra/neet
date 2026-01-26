@@ -42,6 +42,7 @@ import explainRoutes from "./explain-routes";
 import chapterChatRoutes from "./chapter-chat-routes";
 import adminImpersonationRoutes from "./admin-impersonation-routes";
 import growthRoutes from "./growth-routes";
+import sitemapRoutes from "./sitemap";
 import multer from "multer";
 import { objectStorage } from "./services/object-storage";
 
@@ -145,6 +146,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/mock-tests", mockTestRoutes);
   app.use("/api/mock-exams", mockExamRoutes);
   app.use("/api/admin/mock-exams", mockExamAdminRoutes);
+
+  // Growth/Marketing routes
+  app.use("/api/growth", growthRoutes);
+
+  // SEO routes (sitemap)
+  app.use("", sitemapRoutes);
 
   // Game/Gamification routes
   app.use("/api/game", gameRoutes);
