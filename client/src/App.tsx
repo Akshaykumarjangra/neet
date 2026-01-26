@@ -73,6 +73,7 @@ const PracticeAnalytics = lazy(() => import("@/pages/PracticeAnalytics"));
 const SampleChapterPreview = lazy(() => import("@/pages/SampleChapterPreview"));
 const MockTestPreview = lazy(() => import("@/pages/MockTestPreview"));
 const SimulationsPreview = lazy(() => import("@/pages/SimulationsPreview"));
+const NEETFAQPage = lazy(() => import("@/pages/NEETFAQPage"));
 
 // Loading fallback component
 function PageLoader() {
@@ -154,6 +155,7 @@ function Router() {
           <Route path="/">
             <Home />
           </Route>
+          <Route path="/neet-faq" component={NEETFAQPage} />
           <Route path="/pricing">
             <Pricing />
           </Route>
