@@ -16,7 +16,7 @@ import { LootCrate } from "@/components/game/LootCrate";
 import { KillCamReplay } from "@/components/game/KillCamReplay";
 import { ComboTracker } from "@/components/game/ComboTracker";
 import { XpGainAnimation } from "@/components/game/XpGainAnimation";
-import { Seo } from "@/components/seo";
+import { Seo } from "@/components/Seo";
 import { SEO_PAGES, getFAQSchema, getBreadcrumbSchema } from "@/config/seo";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ChevronLeft, Loader2, Filter, RefreshCw, Timer, Clock, Flag, AlertTriangle, HelpCircle, BookmarkCheck, MessageSquare, Trophy, Target, Zap, TrendingUp, Star, Sparkles, PartyPopper, Calendar, X, Award, Minus, Plus, GraduationCap } from "lucide-react";
