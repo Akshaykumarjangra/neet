@@ -24,7 +24,7 @@ export default function NEETAppGuide() {
             <Seo
                 title="ZeroPage NEET Preparation App Review 2026: Complete Guide for Medical Aspirants"
                 description="Comprehensive review of ZeroPage NEET app with 10,000+ practice questions, mock tests, 3D visualizations, and AI-powered learning. Compare features, pricing, pros & cons. Free trial available."
-                keywords="NEET preparation app 2026, NEET online coaching, NEET mock tests, NEET practice questions, best NEET app, NEET study material, NEET app review"
+                keywords={["NEET preparation app 2026", "NEET online coaching", "NEET mock tests", "NEET practice questions", "best NEET app", "NEET study material", "NEET app review"]}
                 url="https://neet.zeropage.in/guide"
             />
 

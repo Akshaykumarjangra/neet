@@ -21,7 +21,7 @@ export default function NEETFAQPage() {
             <Seo
                 title="NEET 2026 FAQ - Complete Guide to NEET Preparation | All Questions Answered"
                 description="Get answers to all your NEET questions: exam pattern, preparation strategy, best books, scoring tips, cutoffs, and more. 20+ frequently asked questions with expert answers."
-                keywords="NEET FAQ, NEET questions, NEET preparation guide, NEET exam pattern, NEET cutoff, NEET books, NEET strategy"
+                keywords={["NEET FAQ", "NEET questions", "NEET preparation guide", "NEET exam pattern", "NEET cutoff", "NEET books", "NEET strategy"]}
                 url="https://neet.zeropage.in/neet-faq"
                 structuredData={[
                     generateFAQSchema(allFAQs),
