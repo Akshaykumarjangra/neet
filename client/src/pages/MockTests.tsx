@@ -11,7 +11,7 @@ import { Clock, Target, FileQuestion, AlertCircle, RefreshCw, ClipboardList, Loc
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Paywall, useSubscription } from "@/components/Paywall";
-import { Seo } from "@/components/SEO";
+import { Seo } from "@/components/seo";
 import { SEO_PAGES, getExamSchema, getBreadcrumbSchema } from "@/config/seo";
 import React from "react";
 
@@ -380,6 +380,6 @@ export default function MockTests() {
           </div>
         </main>
       </div>
-      </>
-      );
+    </>
+  );
 }

@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Seo } from "@/components/SEO";
+import { Seo } from "@/components/seo";
 import { FAQSection, QuickAnswer, StatCard, HowToGuide } from "@/components/AEOComponents";
 import { NEET_FAQ_DATABASE, NEET_STATISTICS, NEET_HOWTO_GUIDES, generateFAQSchema, getNEETExamEntity } from "@/config/aeo-geo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

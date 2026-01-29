@@ -39,7 +39,7 @@ import {
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import type { SubscriptionPlan } from "@shared/schema";
-import { Seo } from "@/components/Seo";
+import { Seo } from "@/components/seo";
 import { apiRequest } from "@/lib/queryClient";
 
 const fadeInUp = {
