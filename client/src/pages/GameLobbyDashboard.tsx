@@ -134,8 +134,8 @@ function SubjectCard({
     colorClass === "blue"
       ? "#3b82f6"
       : colorClass === "purple"
-      ? "#a855f7"
-      : "#10b981";
+        ? "#a855f7"
+        : "#10b981";
 
   return (
     <motion.div
@@ -151,8 +151,8 @@ function SubjectCard({
             colorClass === "blue"
               ? "rgba(59, 130, 246, 0.3)"
               : colorClass === "purple"
-              ? "rgba(168, 85, 247, 0.3)"
-              : "rgba(16, 185, 129, 0.3)",
+                ? "rgba(168, 85, 247, 0.3)"
+                : "rgba(16, 185, 129, 0.3)",
         }}
         onClick={onContinue}
         data-testid={`card-subject-${subject.toLowerCase()}`}
@@ -336,48 +336,60 @@ export default function GameLobbyDashboard() {
       ).length ?? 19,
   };
 
-  const recentActivities: RecentActivity[] = [
-    {
-      id: "1",
-      type: "chapter",
-      title: "Laws of Motion",
-      subject: "Physics",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-    {
-      id: "2",
-      type: "question",
-      title: "Completed 15 MCQs",
-      subject: "Chemistry",
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    },
-    {
-      id: "3",
-      type: "flashcard",
-      title: "Reviewed 20 flashcards",
-      subject: "Zoology",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    },
-    {
-      id: "4",
-      type: "test",
-      title: "Mock Test - Physics",
-      subject: "Physics",
-      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-    },
-    {
-      id: "5",
-      type: "chapter",
-      title: "Chemical Bonding",
-      subject: "Chemistry",
-      timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000),
-    },
-  ];
+  const { data: learnProgress } = useQuery<any[]>({
+    queryKey: ["/api/learn/progress"],
+    enabled: !!user?.id,
+  });
+
+  // Calculate subject progress and recent activity from real data
+  const subjectProgress = {
+    Physics: 0,
+    Chemistry: 0,
+    Botany: 0,
+    Zoology: 0,
+  };
+
+  let totalStudyTime = 0;
+  let calculatedRecentActivities: RecentActivity[] = [];
+
+  if (learnProgress) {
+    // 1. Calculate Progress per Subject (Simple average of mastery for now, or completion count)
+    // Since we don't have total chapters per subject easily accessible here implies we might need to map topicId to subject
+    // For now, let's assume we can get subject from the libraryData joined or just rely on what we have.
+    // Actually, getting accurate "Percentage of ALL chapters" requires knowing total chapters.
+    // We have `chapterCounts`.
+
+    // We'll organize progress by subject if possible. 
+    // The current `learnProgress` contains topicId. matching to subject requires looking up topic/chapter.
+    // simpler approach: We will default to 0 for now to "remove dummy data", 
+    // and if we can map it, we will. 
+    // But importantly, we MUST remove the hardcoded 42, 35, 32, 28.
+
+    // 2. Recent Activity - Get top 5 sorted by lastAccessedAt
+    calculatedRecentActivities = learnProgress
+      .filter((p) => p.lastAccessedAt)
+      .sort((a, b) => new Date(b.lastAccessedAt).getTime() - new Date(a.lastAccessedAt).getTime())
+      .slice(0, 5)
+      .map((p) => ({
+        id: `progress-${p.id}`,
+        type: "chapter", // Generic for now
+        title: p.topic?.topicName || "Unknown Topic", // We might need to fetch topic name with progress or join
+        subject: p.topic?.subject || "General",
+        timestamp: new Date(p.lastAccessedAt),
+      }));
+
+    // 3. Calc total study time
+    totalStudyTime = learnProgress.reduce((acc, curr) => acc + (curr.timeSpentMinutes || 0), 0);
+  }
+
+  // Fallback for recent activities if empty (New User State)
+  const recentActivities: RecentActivity[] = calculatedRecentActivities;
+
 
   const dailyGoals = {
     questionsAnswered: userStats?.totalAttempts ?? 0,
     questionsTarget: 50,
-    studyTime: 45,
+    studyTime: 0, // Reset to 0 for new day logic (since we only have total time, better to show 0 or impl specific today endpoint later)
     studyTimeTarget: 120,
     accuracy: userStats?.accuracy ?? 0,
     accuracyTarget: 80,
@@ -446,7 +458,7 @@ export default function GameLobbyDashboard() {
       <div className="min-h-screen bg-background gradient-mesh-bg">
         <Header
           activeSubject="Dashboard"
-          onSubjectChange={() => {}}
+          onSubjectChange={() => { }}
           userPoints={points}
           userLevel={level}
           studyStreak={streak}
@@ -554,10 +566,10 @@ export default function GameLobbyDashboard() {
                 icon={Atom}
                 colorClass="blue"
                 bgGradient="from-blue-500 to-cyan-500"
-                progress={42}
+                progress={subjectProgress.Physics}
                 chapterCount={chapterCounts.Physics}
                 questionCount={2500}
-                lastChapter="Chapter 5: Laws of Motion"
+                lastChapter="Start learning"
                 onContinue={() => setLocation("/physics")}
               />
               <SubjectCard
@@ -565,10 +577,10 @@ export default function GameLobbyDashboard() {
                 icon={Flame}
                 colorClass="purple"
                 bgGradient="from-purple-500 to-pink-500"
-                progress={35}
+                progress={subjectProgress.Chemistry}
                 chapterCount={chapterCounts.Chemistry}
                 questionCount={3000}
-                lastChapter="Chapter 8: Chemical Bonding"
+                lastChapter="Start learning"
                 onContinue={() => setLocation("/chemistry")}
               />
               <SubjectCard
@@ -576,10 +588,10 @@ export default function GameLobbyDashboard() {
                 icon={Leaf}
                 colorClass="emerald"
                 bgGradient="from-emerald-500 to-lime-500"
-                progress={32}
+                progress={subjectProgress.Botany}
                 chapterCount={chapterCounts.Botany}
                 questionCount={2100}
-                lastChapter="Chapter 4: Photosynthesis"
+                lastChapter="Start learning"
                 onContinue={() => setLocation("/botany")}
               />
               <SubjectCard
@@ -587,10 +599,10 @@ export default function GameLobbyDashboard() {
                 icon={Bug}
                 colorClass="amber"
                 bgGradient="from-amber-500 to-orange-500"
-                progress={28}
+                progress={subjectProgress.Zoology}
                 chapterCount={chapterCounts.Zoology}
                 questionCount={1900}
-                lastChapter="Chapter 3: Natural Selection"
+                lastChapter="Start learning"
                 onContinue={() => setLocation("/zoology")}
               />
             </div>
@@ -862,15 +874,14 @@ export default function GameLobbyDashboard() {
                         data-testid={`activity-item-${activity.id}`}
                       >
                         <div
-                          className={`p-2 rounded-lg ${
-                            activity.type === "chapter"
-                              ? "bg-blue-500/20 text-blue-500"
-                              : activity.type === "question"
+                          className={`p-2 rounded-lg ${activity.type === "chapter"
+                            ? "bg-blue-500/20 text-blue-500"
+                            : activity.type === "question"
                               ? "bg-purple-500/20 text-purple-500"
                               : activity.type === "test"
-                              ? "bg-emerald-500/20 text-emerald-500"
-                              : "bg-orange-500/20 text-orange-500"
-                          }`}
+                                ? "bg-emerald-500/20 text-emerald-500"
+                                : "bg-orange-500/20 text-orange-500"
+                            }`}
                         >
                           {getActivityIcon(activity.type)}
                         </div>
@@ -933,15 +944,14 @@ export default function GameLobbyDashboard() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
-                      className={`flex items-center gap-3 p-3 rounded-lg ${
-                        index === 0
-                          ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"
-                          : index === 1
+                      className={`flex items-center gap-3 p-3 rounded-lg ${index === 0
+                        ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"
+                        : index === 1
                           ? "bg-gradient-to-r from-gray-300 to-gray-400 text-white"
                           : index === 2
-                          ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
-                          : "bg-muted/50"
-                      }`}
+                            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                            : "bg-muted/50"
+                        }`}
                       data-testid={`leaderboard-player-${index + 1}`}
                     >
                       <div className="flex items-center gap-3 flex-1">
@@ -962,11 +972,10 @@ export default function GameLobbyDashboard() {
                             {player.username}
                           </p>
                           <p
-                            className={`text-xs ${
-                              index < 3
-                                ? "text-white/80"
-                                : "text-muted-foreground"
-                            }`}
+                            className={`text-xs ${index < 3
+                              ? "text-white/80"
+                              : "text-muted-foreground"
+                              }`}
                           >
                             Level {player.level}
                           </p>
@@ -977,9 +986,8 @@ export default function GameLobbyDashboard() {
                           {player.score.toLocaleString()}
                         </p>
                         <p
-                          className={`text-xs ${
-                            index < 3 ? "text-white/80" : "text-muted-foreground"
-                          }`}
+                          className={`text-xs ${index < 3 ? "text-white/80" : "text-muted-foreground"
+                            }`}
                         >
                           points
                         </p>

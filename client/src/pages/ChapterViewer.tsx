@@ -253,8 +253,11 @@ export default function ChapterViewer() {
       const element = contentRef.current;
       const scrollTop = window.scrollY - element.offsetTop;
       const scrollHeight = element.scrollHeight - window.innerHeight;
-      const progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
-      setReadingProgress(progress);
+      let progress = 0;
+      if (scrollHeight > 0) {
+        progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
+      }
+      setReadingProgress(Number.isFinite(progress) ? progress : 0);
     }
   }, []);
 
@@ -724,7 +727,7 @@ export default function ChapterViewer() {
                   {/* Progress and Timer components (unchanged) */}
                   <Progress value={readingProgress} className="h-1.5 sm:h-2" />
                   <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-0.5 sm:mt-1">
-                    {Math.round(readingProgress)}%
+                    {Number.isFinite(readingProgress) ? Math.round(readingProgress) : 0}%
                   </p>
                 </div>
 

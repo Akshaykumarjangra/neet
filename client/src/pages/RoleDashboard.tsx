@@ -9,10 +9,8 @@ export default function RoleDashboard() {
 
   useEffect(() => {
     if (isLoading || !user) return;
-    if (user.isOwner || user.isAdmin || user.role === "admin") {
-      setLocation("/admin");
-      return;
-    }
+    // Admins can now view the student dashboard (GameLobbyDashboard)
+    // Only mentors have a forced separate dashboard
     if (user.role === "mentor") {
       setLocation("/mentor-dashboard");
     }
@@ -26,10 +24,11 @@ export default function RoleDashboard() {
     );
   }
 
-  if (user.isOwner || user.isAdmin || user.role === "admin" || user.role === "mentor") {
+  // Only block render for mentors as they are being redirected
+  if (user.role === "mentor") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
-        Redirecting to your dashboard...
+        Redirecting to mentor dashboard...
       </div>
     );
   }

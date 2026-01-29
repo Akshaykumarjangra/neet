@@ -231,7 +231,8 @@ export default function LmsContentStudio() {
                 <div>
                   <Label>Detailed Notes</Label>
                   <Textarea
-                    rows={6}
+                    rows={20}
+                    className="font-mono text-sm resize-y"
                     value={editorState.detailedNotes}
                     onChange={(event) =>
                       setEditorState((prev) => ({ ...prev, detailedNotes: event.target.value }))
@@ -241,21 +242,25 @@ export default function LmsContentStudio() {
                 <div>
                   <Label>Key Concepts (JSON)</Label>
                   <Textarea
-                    rows={4}
+                    rows={12}
+                    className="font-mono text-sm resize-y"
                     value={editorState.keyConcepts}
                     onChange={(event) =>
                       setEditorState((prev) => ({ ...prev, keyConcepts: event.target.value }))
                     }
+                    placeholder='[{"title": "Concept", "description": "Details"}]'
                   />
                 </div>
                 <div>
                   <Label>Visualizations (JSON)</Label>
                   <Textarea
-                    rows={4}
+                    rows={12}
+                    className="font-mono text-sm resize-y"
                     value={editorState.visualizationsData}
                     onChange={(event) =>
                       setEditorState((prev) => ({ ...prev, visualizationsData: event.target.value }))
                     }
+                    placeholder='[{"type": "chart", "title": "...", "config": {...}}]'
                   />
                 </div>
                 <div className="flex items-center justify-between">

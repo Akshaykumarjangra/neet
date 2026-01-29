@@ -107,7 +107,7 @@ body {
   --popover-border: 280 40% 88%;
 
   /* Beautiful purple-pink gradient for primary actions */
-  --primary: 280 85% 65%;
+  --primary: 280 85% 58%;
 
   --primary-foreground: 280 15% 99%;
 
@@ -127,7 +127,7 @@ body {
   --accent-foreground: 270 30% 18%;
 
   /* Soft coral for destructive */
-  --destructive: 350 75% 65%;
+  --destructive: 350 75% 56%;
 
   --destructive-foreground: 0 10% 99%;
 

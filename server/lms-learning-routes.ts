@@ -2,8 +2,8 @@
 import { Router, Request, Response } from "express";
 import { storage } from "./storage";
 import { db } from "./db";
-import { chapterContent, flashcards, flashcardDecks, contentTopics, userFlashcardProgress, users } from "@shared/schema";
-import { eq, asc, and, sql, lte, desc } from "drizzle-orm";
+import { chapterContent, flashcards, flashcardDecks, contentTopics, userFlashcardProgress, users, userTopicProgress } from "@shared/schema";
+import { eq, asc, and, sql, lte, desc, getTableColumns } from "drizzle-orm";
 
 const router = Router();
 
@@ -167,7 +167,20 @@ router.get("/progress", async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req)!;
     const topicId = req.query.topicId ? parseInt(req.query.topicId as string) : undefined;
-    const progress = await storage.getUserTopicProgress(userId, topicId);
+
+    let query = db.select({
+      ...getTableColumns(userTopicProgress),
+      topic: contentTopics
+    })
+      .from(userTopicProgress)
+      .leftJoin(contentTopics, eq(userTopicProgress.topicId, contentTopics.id))
+      .where(eq(userTopicProgress.userId, userId));
+
+    if (topicId) {
+      query = query.where(and(eq(userTopicProgress.userId, userId), eq(userTopicProgress.topicId, topicId))) as any;
+    }
+
+    const progress = await query;
     res.json(progress);
   } catch (error) {
     console.error("Error fetching progress:", error);
@@ -692,41 +705,61 @@ router.get("/continue-learning", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Authentication required" });
   }
 
+  // Removed strict 402 check to allow free users to see a limited dashboard
   const isPremium = await isPremiumUser(req);
-  if (!isPremium) {
-    return res.status(402).json({
-      error: "PAYMENT_REQUIRED",
-      message: "The 'Continue Learning' dashboard feature is exclusive to Premium members."
-    });
-  }
 
   try {
     const userId = getUserId(req)!;
 
     // Get the most recently accessed topic that's not complete
-    const progress = await storage.getUserTopicProgress(userId);
-    const inProgress = progress
-      .filter(p => !p.isCompleted && p.lastAccessedAt)
-      .sort((a, b) => {
-        const dateA = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0;
-        const dateB = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
-        return dateB - dateA;
-      });
+    let continueLearning = null;
+    try {
+      const progress = await storage.getUserTopicProgress(userId);
+      const inProgress = progress
+        .filter(p => !p.isCompleted && p.lastAccessedAt)
+        .sort((a, b) => {
+          const dateA = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0;
+          const dateB = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
+          return dateB - dateA;
+        });
 
-    if (inProgress.length === 0) {
-      return res.json({ continueLearning: null, weakAreas: [], dueFlashcards: 0 });
+      if (inProgress.length > 0) {
+        continueLearning = inProgress[0];
+      }
+    } catch (err) {
+      console.error("Error fetching user topic progress:", err);
+      // Continue without this data instead of crashing
     }
 
-    // Get weak areas and due flashcards count
-    const [weakAreas, dueFlashcards] = await Promise.all([
-      storage.getWeakAreas(userId, 5),
-      storage.getDueFlashcards(userId, 100),
-    ]);
+    // Safely fetch weak areas
+    let weakAreas: any[] = [];
+    if (isPremium) {
+      try {
+        weakAreas = await storage.getWeakAreas(userId, 5);
+      } catch (err) {
+        console.error("Error fetching weak areas:", err);
+      }
+    }
+
+    // Safely fetch due flashcards
+    let dueFlashcardsCount = 0;
+    try {
+      // Free users might have limited flashcard access, but we can still show count if applicable
+      // or just show 0 if intended for premium only.
+      // Assuming basic flashcard usage is allowed, or we restrict here:
+      if (isPremium) {
+        const cards = await storage.getDueFlashcards(userId, 100);
+        dueFlashcardsCount = cards.length;
+      }
+    } catch (err) {
+      console.error("Error fetching due flashcards:", err);
+    }
 
     res.json({
-      continueLearning: inProgress[0],
-      weakAreas,
-      dueFlashcards: dueFlashcards.length,
+      continueLearning,
+      weakAreas, // Will be empty for free users or if error occurs
+      dueFlashcards: dueFlashcardsCount,
+      isPremium, // Useful for frontend to show/hide UI elements
     });
   } catch (error) {
     console.error("Error fetching continue learning:", error);

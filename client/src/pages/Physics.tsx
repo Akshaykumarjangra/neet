@@ -123,7 +123,8 @@ function ProgressRing({ progress, size = 48 }: { progress: number; size?: number
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
+  const validProgress = (typeof progress === 'number' && !Number.isNaN(progress)) ? progress : 0;
+  const offset = circumference - (validProgress / 100) * circumference;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -151,7 +152,7 @@ function ProgressRing({ progress, size = 48 }: { progress: number; size?: number
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold">{progress}%</span>
+        <span className="text-xs font-bold">{Math.round(validProgress)}%</span>
       </div>
     </div>
   );

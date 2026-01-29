@@ -55,6 +55,16 @@ export function Header({
     { label: "Community", href: "/community" },
   ];
 
+  const adminNav = [
+    { label: "Dashboard", href: "/admin", icon: Shield },
+    { label: "Users", href: "/admin/users", icon: Users },
+    { label: "Content", href: "/admin/content", icon: Layers },
+    { label: "Approvals", href: "/admin/approvals", icon: Check },
+    { label: "LMS Studio", href: "/admin/lms-studio", icon: GraduationCap },
+  ];
+
+  const isAdminView = location.startsWith('/admin');
+
   const handleProfileSwitch = (path: string) => {
     setLocation(path);
   };
@@ -130,82 +140,88 @@ export function Header({
 
         <nav className="hidden md:flex flex-1 items-center gap-1 ml-6">
           {user ? (
-            <>
-              {subjects.map((subject) => (
+            isAdminView ? (
+              // ADMIN NAVIGATION
+              adminNav.map((link) => (
                 <Button
-                  key={subject}
-                  variant={resolvedSubject === subject ? "default" : "ghost"}
+                  key={link.href}
+                  variant={location === link.href ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => handleSubjectClick(subject)}
-                  data-testid={`button-subject-${subject.toLowerCase()}`}
+                  onClick={() => setLocation(link.href)}
                   className="[&>*]:!border-b-0 after:!hidden before:!hidden"
                   style={{ borderBottom: 'none !important' }}
                 >
-                  {subject}
+                  <link.icon className="h-4 w-4 mr-1.5" />
+                  {link.label}
                 </Button>
-              ))}
-              <div className="h-4 w-px bg-border mx-2" />
-              <Button
-                variant={location === '/community' ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setLocation('/community')}
-                data-testid="button-community"
-                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-                style={{ borderBottom: 'none !important' }}
-              >
-                <Users className="h-4 w-4 mr-1.5" />
-                Community
-              </Button>
-              <Button
-                variant={location === '/simulations' ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setLocation('/simulations')}
-                data-testid="button-simulations"
-                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-                style={{ borderBottom: 'none !important' }}
-              >
-                <Play className="h-4 w-4 mr-1.5" />
-                Simulations
-              </Button>
-              <Button
-                variant={location === '/chat' ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setLocation('/chat')}
-                data-testid="button-chat"
-                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-                style={{ borderBottom: 'none !important' }}
-              >
-                <MessageSquare className="h-4 w-4 mr-1.5" />
-                Chat
-              </Button>
-              <Button
-                variant={location === '/progress/analytics' ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setLocation('/progress/analytics')}
-                data-testid="button-analytics"
-                className="[&>*]:!border-b-0 after:!hidden before:!hidden"
-                style={{ borderBottom: 'none !important' }}
-              >
-                <ChartBar className="h-4 w-4 mr-1.5" />
-                Analytics
-              </Button>
-              {canAccessAdmin && (
-                <>
-                  <div className="h-4 w-px bg-border mx-2" />
+              ))
+            ) : (
+              // STUDENT NAVIGATION
+              <>
+                {subjects.map((subject) => (
                   <Button
-                    variant={location.startsWith('/admin') ? "default" : "ghost"}
+                    key={subject}
+                    variant={resolvedSubject === subject ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setLocation('/admin')}
-                    data-testid="button-admin"
+                    onClick={() => handleSubjectClick(subject)}
+                    data-testid={`button-subject-${subject.toLowerCase()}`}
                     className="[&>*]:!border-b-0 after:!hidden before:!hidden"
                     style={{ borderBottom: 'none !important' }}
                   >
-                    <Shield className="h-4 w-4 mr-1.5" />
-                    Admin
+                    {subject}
                   </Button>
-                </>
-              )}
-            </>
+                ))}
+                <div className="h-4 w-px bg-border mx-2" />
+
+                {/* Secondary Nav Grouped */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5"
+                    >
+                      <Layers className="h-4 w-4" />
+                      Explore
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setLocation('/community')} className="gap-2">
+                      <Users className="h-4 w-4" />
+                      Community
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/simulations')} className="gap-2">
+                      <Play className="h-4 w-4" />
+                      Simulations
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/chat')} className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Chat
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/progress/analytics')} className="gap-2">
+                      <ChartBar className="h-4 w-4" />
+                      Analytics
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {canAccessAdmin && (
+                  <>
+                    <div className="h-4 w-px bg-border mx-2" />
+                    <Button
+                      variant={location.startsWith('/admin') ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setLocation('/admin')}
+                      data-testid="button-admin"
+                      className="[&>*]:!border-b-0 after:!hidden before:!hidden"
+                      style={{ borderBottom: 'none !important' }}
+                    >
+                      <Shield className="h-4 w-4 mr-1.5" />
+                      Admin
+                    </Button>
+                  </>
+                )}
+              </>
+            )
           ) : (
             navPublic.map((link) => (
               <Button
@@ -286,7 +302,7 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          {user && (
+          {user && !isAdminView && (
             <div className="hidden sm:flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => setLocation('/practice')}>
                 <Flame className="h-4 w-4 text-orange-500" />

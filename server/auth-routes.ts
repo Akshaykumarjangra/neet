@@ -196,7 +196,7 @@ router.get("/me", async (req: Request, res: Response) => {
   const userId = getCurrentUser(req);
 
   if (!userId) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res.json(null);
   }
 
   try {

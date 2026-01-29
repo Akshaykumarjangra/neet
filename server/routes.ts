@@ -20,6 +20,7 @@ import mockTestAdminRoutes from "./mock-test-admin-routes";
 import mockExamRoutes from "./mock-exam-routes";
 import mockExamAdminRoutes from "./mock-exam-admin-routes";
 import gameRoutes from "./game-routes";
+import { gamificationRoutes } from "./gamification-routes";
 import adminRoutes from "./admin-routes";
 import adminContentRoutes from "./admin-content-routes";
 import chapterContentRoutes from "./chapter-content-routes";
@@ -155,6 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Game/Gamification routes
   app.use("/api/game", gameRoutes);
+  app.use("/api/gamification", gamificationRoutes);
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
@@ -1428,12 +1430,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/upload", requireAuthWithPasswordCheck, upload.single("file"), async (req, res) => {
     try {
-      if (!req.file) {
+      const file = (req as any).file;
+      if (!file) {
         return res.status(400).json({ error: "No file provided" });
       }
 
       const folder = req.body.folder || "uploads";
-      const key = await objectStorage.uploadFile(req.file, folder);
+      const key = await objectStorage.uploadFile(file, folder);
 
       // Generate a signed URL for immediate display if needed, 
       // or just return the key if the frontend constructs the URL
@@ -1442,9 +1445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         key,
         url,
-        filename: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
       });
     } catch (error) {
       console.error("Upload error:", error);
@@ -1455,7 +1458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Global error handler - must be after all routes
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, _req: any, res: any, _next: any) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
