@@ -24,14 +24,13 @@ router.get("/lead-magnets", async (req, res) => {
 router.post("/capture-lead", async (req, res) => {
     try {
         const validated = insertUserLeadSchema.parse(req.body);
-        const [lead] = await db
-            .insert(userLeads)
-            .values({
-                ...validated,
-                userId: (req as any).session?.userId || null,
-                createdAt: new Date(),
-            })
-            .returning();
+        const leadData = {
+            ...(validated as any),
+            userId: req.session?.userId ?? null,
+            createdAt: new Date(),
+        } as typeof userLeads.$inferInsert;
+
+        const [lead] = await db.insert(userLeads).values(leadData).returning();
         res.json(lead);
     } catch (error: any) {
         console.error("Error capturing lead:", error);

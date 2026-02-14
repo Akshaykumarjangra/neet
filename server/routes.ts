@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/topics", async (req, res) => {
+  app.post("/api/topics", requireOwner, async (req, res) => {
     try {
       const validatedData = insertContentTopicSchema.parse(req.body) as ContentTopicInsert;
       const topic = await storage.createTopic(validatedData);
@@ -336,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Question stats endpoint for Question Bank page
-  app.get("/api/questions/stats", async (req, res) => {
+  app.get("/api/questions/stats", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       // Get total count
       const totalResult = await db.select({ count: sql<number>`count(*)` }).from(questions);
@@ -1064,9 +1064,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Progress/chapters endpoint for user chapter progress
-  app.get("/api/progress/chapters/:userId", async (req, res) => {
+  app.get("/api/progress/chapters/:userId", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.params;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required", requiresAuth: true });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       // Return empty object as this endpoint was missing
       res.json({});
     } catch (error: any) {
@@ -1151,9 +1167,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User performance routes
-  app.post("/api/performance", async (req, res) => {
+  app.post("/api/performance", requireAuthWithPasswordCheck, async (req, res) => {
     try {
-      const validatedData = insertUserPerformanceSchema.parse(req.body) as UserPerformanceInsert;
+      const userId = getCurrentUser(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required", requiresAuth: true });
+      }
+
+      const validatedData = insertUserPerformanceSchema.parse({
+        ...req.body,
+        userId,
+      }) as UserPerformanceInsert;
+
       const attempt = await storage.recordAttempt(validatedData);
 
       // Award XP for the attempt (more for correct answers) and check achievements
@@ -1191,9 +1216,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/performance/user/:userId", async (req, res) => {
+  app.get("/api/performance/user/:userId", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.params;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required", requiresAuth: true });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       const performance = await storage.getUserPerformance(userId);
       res.json(performance);
     } catch (error: any) {
@@ -1201,9 +1243,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/stats/user/:userId", async (req, res) => {
+  app.get("/api/stats/user/:userId", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.params;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required", requiresAuth: true });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error: any) {
@@ -1213,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Generate PYQ-focused test
-  app.post("/api/questionnaires/pyq", async (req, res) => {
+  app.post("/api/questionnaires/pyq", requireAuthWithPasswordCheck, requireActiveSubscription(), async (req, res) => {
     try {
       const { questionGenerator } = await import("./question-generator");
       const { years, questionsPerYear } = req.body;
@@ -1239,7 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate topic-wise practice
-  app.post("/api/questionnaires/topic-practice", async (req, res) => {
+  app.post("/api/questionnaires/topic-practice", requireAuthWithPasswordCheck, requireActiveSubscription(), async (req, res) => {
     try {
       const { questionGenerator } = await import("./question-generator");
       const { topicIds, questionsPerTopic, progressiveDifficulty } = req.body;
@@ -1271,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate adaptive practice based on performance
-  app.post("/api/questionnaires/adaptive", async (req, res) => {
+  app.post("/api/questionnaires/adaptive", requireAuthWithPasswordCheck, requireActiveSubscription(), async (req, res) => {
     try {
       const { questionGenerator } = await import("./question-generator");
       const { userId, totalQuestions } = req.body;
@@ -1330,9 +1389,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { GamificationService } = await import("./gamification");
 
   // Award XP
-  app.post("/api/gamification/award-xp", async (req, res) => {
+  app.post("/api/gamification/award-xp", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId, amount, source } = req.body;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       const result = await GamificationService.awardXp(userId, amount, source);
       res.json(result);
     } catch (error: any) {
@@ -1341,9 +1416,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update streak
-  app.post("/api/gamification/update-streak", async (req, res) => {
+  app.post("/api/gamification/update-streak", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.body;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       const result = await GamificationService.updateStreak(userId);
       res.json(result);
     } catch (error: any) {
@@ -1352,9 +1447,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check achievements
-  app.post("/api/gamification/check-achievements", async (req, res) => {
+  app.post("/api/gamification/check-achievements", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.body;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       const newAchievements = await GamificationService.checkAchievements(userId);
       res.json({ newAchievements });
     } catch (error: any) {
@@ -1363,9 +1474,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user achievements
-  app.get("/api/gamification/achievements/:userId", async (req, res) => {
+  app.get("/api/gamification/achievements/:userId", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.params;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       const achievements = await GamificationService.getUserAchievements(userId);
       res.json(achievements);
     } catch (error: any) {
@@ -1374,9 +1501,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get daily challenges
-  app.get("/api/gamification/daily-challenges/:userId", async (req, res) => {
+  app.get("/api/gamification/daily-challenges/:userId", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId } = req.params;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       const challenges = await GamificationService.getDailyChallenges(userId);
       res.json(challenges);
     } catch (error: any) {
@@ -1385,9 +1529,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update challenge progress
-  app.post("/api/gamification/challenge-progress", async (req, res) => {
+  app.post("/api/gamification/challenge-progress", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId, challengeId, progress } = req.body;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       const completed = await GamificationService.updateChallengeProgress(userId, challengeId, progress);
       res.json({ completed });
     } catch (error: any) {
@@ -1396,7 +1556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get leaderboard
-  app.get("/api/gamification/leaderboard", async (req, res) => {
+  app.get("/api/gamification/leaderboard", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { type = 'all_time', limit = 10 } = req.query;
       const leaderboard = await GamificationService.getLeaderboard(type as string, parseInt(limit as string));
@@ -1407,9 +1567,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update chapter progress
-  app.post("/api/gamification/chapter-progress", async (req, res) => {
+  app.post("/api/gamification/chapter-progress", requireAuthWithPasswordCheck, async (req, res) => {
     try {
       const { userId, chapterId, updates } = req.body;
+      const currentUserId = getCurrentUser(req);
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (currentUserId !== userId) {
+        const [currentUser] = await db
+          .select({ isAdmin: users.isAdmin, isOwner: users.isOwner })
+          .from(users)
+          .where(eq(users.id, currentUserId))
+          .limit(1);
+        const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+        if (!isPrivileged) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       await GamificationService.updateChapterProgress(userId, chapterId, updates);
       res.json({ success: true });
     } catch (error: any) {

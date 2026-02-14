@@ -3,23 +3,19 @@ import { GamificationService } from "./gamification";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 
 export const gamificationRoutes = Router();
 
-// Middleware to ensure user is authenticated (Session based)
-const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-    next();
-};
-
-gamificationRoutes.use(requireAuth);
+gamificationRoutes.use(requireAuthWithPasswordCheck);
 
 gamificationRoutes.post("/award-xp", async (req, res) => {
     try {
         const { userId, amount, source } = req.body;
-        const currentUserId = req.session.userId;
+        const currentUserId = getCurrentUser(req);
+        if (!currentUserId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
         // Security check: ensure user is modifying their own data or is admin
         // We need to fetch the current user to check if admin
@@ -40,7 +36,10 @@ gamificationRoutes.post("/award-xp", async (req, res) => {
 gamificationRoutes.post("/update-streak", async (req, res) => {
     try {
         const { userId } = req.body;
-        const currentUserId = req.session.userId;
+        const currentUserId = getCurrentUser(req);
+        if (!currentUserId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
         if (!userId) {
             return res.status(400).json({ message: "userId is required" });
@@ -79,6 +78,16 @@ gamificationRoutes.get("/leaderboard", async (req, res) => {
 gamificationRoutes.get("/achievements/:userId", async (req, res) => {
     try {
         const { userId } = req.params;
+        const currentUserId = getCurrentUser(req);
+        if (!currentUserId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (currentUserId !== userId) {
+            const [currentUser] = await db.select().from(users).where(eq(users.id, currentUserId)).limit(1);
+            if (!currentUser?.isAdmin) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+        }
 
         // Check for achievements first
         await GamificationService.checkAchievements(userId);
@@ -94,7 +103,10 @@ gamificationRoutes.get("/achievements/:userId", async (req, res) => {
 
 gamificationRoutes.get("/daily-challenges", async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = getCurrentUser(req);
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         const challenges = await GamificationService.getDailyChallenges(userId);
         res.json(challenges);
     } catch (error: any) {
@@ -107,7 +119,10 @@ gamificationRoutes.post("/daily-challenges/:challengeId/progress", async (req, r
     try {
         const { challengeId } = req.params;
         const { progress } = req.body;
-        const userId = req.session.userId;
+        const userId = getCurrentUser(req);
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
         const result = await GamificationService.updateChallengeProgress(
             userId,

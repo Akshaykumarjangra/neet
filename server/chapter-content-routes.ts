@@ -8,7 +8,7 @@ import {
   mentors,
   contentAssets
 } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 type ChapterContentInsert = typeof chapterContent.$inferInsert;
 type ChapterContentUpdate = typeof chapterContent.$inferSelect;
@@ -59,13 +59,15 @@ router.get("/", async (req: Request, res: Response) => {
     const userId = req.session?.userId;
     let isPremium = false;
 
+    let isPrivileged = false;
     if (userId) {
       const [user] = await db
-        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner, isAdmin: users.isAdmin })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
       isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+      isPrivileged = !!(user?.isAdmin || user?.isOwner);
     }
 
     let query = db.select().from(chapterContent);
@@ -80,8 +82,10 @@ router.get("/", async (req: Request, res: Response) => {
     if (classLevel) {
       conditions.push(eq(chapterContent.classLevel, classLevel as string));
     }
-    if (status) {
+    if (status && isPrivileged) {
       conditions.push(eq(chapterContent.status, status as any));
+    } else if (!isPrivileged) {
+      conditions.push(eq(chapterContent.status, "published"));
     }
 
     // Filter premium chapters if user is not premium
@@ -105,6 +109,15 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
     const { subject, classLevel, chapterNumber } = req.params;
 
     const normalizedSubject = normalizeSubject(subject) ?? subject;
+    const sessionUserId = req.session?.userId;
+    const [currentUser] = sessionUserId
+      ? await db
+        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner, isAdmin: users.isAdmin })
+        .from(users)
+        .where(eq(users.id, sessionUserId))
+        .limit(1)
+      : [];
+    const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
 
     const [chapter] = await db
       .select()
@@ -122,18 +135,14 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
       return res.status(404).json({ error: "Chapter not found" });
     }
 
+    if (!isPrivileged && chapter.status !== "published") {
+      return res.status(403).json({ error: "Chapter not accessible" });
+    }
+
     // Check if user is premium for chapters > 3
     if (chapter.chapterNumber > 3) {
-      const userId = req.session?.userId;
-      if (userId) {
-        const [user] = await db
-          .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
-
-        const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
-
+      if (currentUser) {
+        const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
         if (!isPremium) {
           return res.status(402).json({
             error: "PAYMENT_REQUIRED",
@@ -158,6 +167,15 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const sessionUserId = req.session?.userId;
+    const [currentUser] = sessionUserId
+      ? await db
+        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner, isAdmin: users.isAdmin })
+        .from(users)
+        .where(eq(users.id, sessionUserId))
+        .limit(1)
+      : [];
+    const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
 
     const [chapter] = await db
       .select()
@@ -169,18 +187,14 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Chapter not found" });
     }
 
+    if (!isPrivileged && chapter.status !== "published") {
+      return res.status(403).json({ error: "Chapter not accessible" });
+    }
+
     // Check if user is premium for chapters > 3
     if (chapter.chapterNumber > 3) {
-      const userId = req.session?.userId;
-      if (userId) {
-        const [user] = await db
-          .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
-
-        const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
-
+      if (currentUser) {
+        const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
         if (!isPremium) {
           return res.status(402).json({
             error: "PAYMENT_REQUIRED",

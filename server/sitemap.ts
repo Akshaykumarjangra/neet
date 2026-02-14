@@ -2,6 +2,8 @@ import { Router } from "express";
 import { db } from "./db";
 import { contentTopics, chapterContent } from "@shared/schema";
 
+type SitemapEntry = { url: string; priority: string; changefreq: string; lastmod?: string };
+
 const router = Router();
 
 // Generate sitemap.xml
@@ -10,7 +12,7 @@ router.get("/sitemap.xml", async (req, res) => {
         const baseUrl = process.env.BASE_URL || "https://neet.zeropage.in";
 
         // Static pages with priority and change frequency
-        const staticPages = [
+        const staticPages: SitemapEntry[] = [
             { url: "/", priority: "1.0", changefreq: "daily" },
             { url: "/practice", priority: "0.9", changefreq: "daily" },
             { url: "/mock-tests", priority: "0.9", changefreq: "weekly" },
@@ -26,7 +28,7 @@ router.get("/sitemap.xml", async (req, res) => {
 
         // Fetch dynamic content - chapters
         const chapters = await db.select().from(chapterContent);
-        const chapterUrls = chapters.map((chapter) => ({
+        const chapterUrls: SitemapEntry[] = chapters.map((chapter) => ({
             url: `/library/${chapter.subject?.toLowerCase()}/${chapter.classLevel}/${chapter.chapterNumber}`,
             priority: "0.7",
             changefreq: "weekly",
@@ -35,14 +37,14 @@ router.get("/sitemap.xml", async (req, res) => {
 
         // Fetch dynamic content - topics
         const topics = await db.select().from(contentTopics);
-        const topicUrls = topics.map((topic) => ({
+        const topicUrls: SitemapEntry[] = topics.map((topic) => ({
             url: `/practice?topicId=${topic.id}`,
             priority: "0.6",
             changefreq: "weekly",
         }));
 
         // Combine all URLs
-        const allUrls = [...staticPages, ...chapterUrls, ...topicUrls];
+        const allUrls: SitemapEntry[] = [...staticPages, ...chapterUrls, ...topicUrls];
 
         // Generate XML
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';

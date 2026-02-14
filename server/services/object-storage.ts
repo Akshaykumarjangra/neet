@@ -1,11 +1,15 @@
 
-import { Express } from "express";
 import fs from "fs";
 import path from "path";
 import { writeFile, unlink } from "fs/promises";
 
+type UploadedFile = {
+    originalname: string;
+    buffer: Buffer;
+};
+
 export interface IObjectStorage {
-    uploadFile(file: Express.Multer.File, folder?: string): Promise<string>;
+    uploadFile(file: UploadedFile, folder?: string): Promise<string>;
     deleteFile(key: string): Promise<boolean>;
     getSignedUrl(key: string, expiresIn?: number): Promise<string>;
 }
@@ -25,7 +29,7 @@ export class LocalObjectStorage implements IObjectStorage {
         }
     }
 
-    async uploadFile(file: Express.Multer.File, folder: string = "misc"): Promise<string> {
+    async uploadFile(file: UploadedFile, folder: string = "misc"): Promise<string> {
         const timestamp = Date.now();
         const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
 

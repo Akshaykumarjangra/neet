@@ -2,8 +2,11 @@ import { Router, Request, Response } from "express";
 import { db } from "./db";
 import { questions, contentTopics, formulas, keypoints } from "@shared/schema";
 import { sql, ilike, or, eq, and } from "drizzle-orm";
+import { requireAuthWithPasswordCheck, requireActiveSubscription } from "./auth";
 
 const router = Router();
+
+router.use(requireAuthWithPasswordCheck, requireActiveSubscription());
 
 interface SearchResult {
   type: "question" | "topic" | "formula" | "keypoint";
