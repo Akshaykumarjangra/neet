@@ -157,6 +157,52 @@ export const SEO_PAGES: Record<string, SEOConfig> = {
             "NEET premium subscription"
         ],
     },
+
+    comparePW: {
+        title: "ZeroPage vs PhysicsWallah (PW) | Best NEET Online Coaching Comparison",
+        description: "Compare ZeroPage vs PhysicsWallah for NEET 2026. See why students are switching to ZeroPage for personalized analytics, higher quality mock tests, and 1-on-1 mentorship.",
+        keywords: [
+            "PhysicsWallah alternative",
+            "ZeroPage vs PW",
+            "better than physics wallah",
+            "physics wallah vs zeropage",
+            "online neet coaching comparison"
+        ]
+    },
+
+    compareAllen: {
+        title: "ZeroPage vs Allen Career Institute | NEET Online vs Offline Coaching",
+        description: "Detailed comparison: ZeroPage Online vs Allen Offline/Online. Save lakhs in fees while getting superior analytics, doubt solving, and flexible learning.",
+        keywords: [
+            "Allen alternative",
+            "ZeroPage vs Allen",
+            "Allen online test series vs ZeroPage",
+            "Allen kota vs online coaching"
+        ]
+    },
+
+    compareAakash: {
+        title: "ZeroPage vs Aakash Institute | NEET Preparation Platform Review",
+        description: "Aakash vs ZeroPage: Which is better for NEET? Compare test series quality, faculty mentorship, and pricing. Get the best value for your medical preparation.",
+        keywords: [
+            "Aakash alternative",
+            "ZeroPage vs Aakash",
+            "Aakash iTutor vs ZeroPage",
+            "best neet test series comparison"
+        ]
+    },
+
+    doctorRoadmap: {
+        title: "How to Become a Doctor in India | Complete Step-by-Step Roadmap",
+        description: "The ultimate guide to becoming a doctor in India. From Class 11 subject selection to clearing NEET, MBBS admission, and specialization. Start your medical journey here.",
+        keywords: [
+            "how to become a doctor",
+            "NEET roadmap",
+            "MBBS journey",
+            "medical student pathway",
+            "career in medicine india"
+        ]
+    }
 };
 
 // Generate structured data for organization

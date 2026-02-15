@@ -72,7 +72,7 @@ export function QuestionCard({
   };
 
   return (
-    <Card className="w-full" data-testid={`card-question-${questionNumber}`}>
+    <Card className="w-full border-2 border-primary/5 bg-card/50 backdrop-blur-sm shadow-xl" data-testid={`card-question-${questionNumber}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -110,7 +110,7 @@ export function QuestionCard({
           )}
         </div>
 
-        <CardTitle className="text-lg leading-relaxed font-medium">
+        <CardTitle className="text-xl md:text-2xl leading-relaxed font-semibold text-foreground/90">
           {question}
         </CardTitle>
       </CardHeader>
@@ -126,20 +126,18 @@ export function QuestionCard({
                 transition={{ delay: index * 0.05 }}
                 onClick={() => !(lockOnSubmit && isSubmitted) && setSelectedAnswer(option.id)}
                 disabled={lockOnSubmit && isSubmitted}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
-                  selectedAnswer === option.id
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${selectedAnswer === option.id
                     ? "border-primary bg-primary/10 shadow-sm"
                     : "border-border hover:border-primary/50 hover:bg-muted/50"
-                } ${lockOnSubmit && isSubmitted ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
+                  } ${lockOnSubmit && isSubmitted ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
                 data-testid={`option-${String(option.label ?? option.id).toLowerCase()}`}
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-semibold text-sm shrink-0 ${
-                      selectedAnswer === option.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-muted-foreground/30"
-                    }`}
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-semibold text-sm shrink-0 ${selectedAnswer === option.id
+                        ? "border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                        : "border-muted-foreground/30 bg-background/50"
+                      }`}
                   >
                     {option.label ?? option.id}
                   </span>

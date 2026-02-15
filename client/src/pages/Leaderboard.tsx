@@ -85,7 +85,7 @@ export default function Leaderboard() {
       <div className="min-h-screen bg-background">
         <Header
           activeSubject="all"
-          onSubjectChange={() => {}}
+          onSubjectChange={() => { }}
           userPoints={points}
           userLevel={level}
           studyStreak={streak}
@@ -116,7 +116,8 @@ export default function Leaderboard() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+              <Card className="mb-6 glass-panel border-primary/20 shadow-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
@@ -200,7 +201,7 @@ export default function Leaderboard() {
                       </div>
                       <h3 className="text-xl font-semibold">Unable to Load Rankings</h3>
                       <p className="text-muted-foreground max-w-md mx-auto">
-                        {error instanceof Error && error.message.includes('profile') 
+                        {error instanceof Error && error.message.includes('profile')
                           ? `Complete your profile to view ${selectedScope} rankings. Add your location details to compete with others nearby!`
                           : "We couldn't load the leaderboard right now. Please check your connection and try again."}
                       </p>
@@ -219,61 +220,61 @@ export default function Leaderboard() {
                         transition={{ duration: 0.3 }}
                         className="space-y-2"
                       >
-                          {leaderboardData.map((entry, index) => {
-                            const tier = getRankTier(entry.rank);
-                            const isCurrentUser = entry.id === user?.id;
+                        {leaderboardData.map((entry, index) => {
+                          const tier = getRankTier(entry.rank);
+                          const isCurrentUser = entry.id === user?.id;
 
-                            return (
-                              <motion.div
-                                key={entry.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.05 }}
-                              >
-                                <Card className={`hover-elevate ${isCurrentUser ? 'border-primary bg-primary/5' : ''}`}>
-                                  <CardContent className="p-4">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-4 flex-1">
-                                        <div className="flex items-center gap-2 min-w-[60px]">
-                                          {getTierIcon(entry.rank)}
-                                          <span className="text-lg font-bold">#{entry.rank}</span>
-                                        </div>
-
-                                        <Avatar className="h-10 w-10">
-                                          <AvatarFallback className="bg-muted">
-                                            {entry.username.substring(0, 2).toUpperCase()}
-                                          </AvatarFallback>
-                                        </Avatar>
-
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-semibold">{entry.username}</span>
-                                            {isCurrentUser && (
-                                              <Badge variant="outline" className="text-xs">You</Badge>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                            <span>Level {entry.level}</span>
-                                            <span>•</span>
-                                            <span>{entry.streak} day streak</span>
-                                          </div>
-                                        </div>
+                          return (
+                            <motion.div
+                              key={entry.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                              <Card className={`hover-elevate ${isCurrentUser ? 'border-primary bg-primary/5' : ''}`}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4 flex-1">
+                                      <div className="flex items-center gap-2 min-w-[60px]">
+                                        {getTierIcon(entry.rank)}
+                                        <span className="text-lg font-bold">#{entry.rank}</span>
                                       </div>
 
-                                      <div className="flex items-center gap-4">
-                                        <Badge className={`bg-gradient-to-r ${getTierColor(tier)} text-white border-0`}>
-                                          {tier}
-                                        </Badge>
-                                        <div className="text-right">
-                                          <p className="text-xl font-bold text-primary">{formatINR.format(entry.points)}</p>
-                                          <p className="text-xs text-muted-foreground">XP</p>
+                                      <Avatar className="h-10 w-10">
+                                        <AvatarFallback className="bg-muted">
+                                          {entry.username.substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-semibold">{entry.username}</span>
+                                          {isCurrentUser && (
+                                            <Badge variant="outline" className="text-xs">You</Badge>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                          <span>Level {entry.level}</span>
+                                          <span>•</span>
+                                          <span>{entry.streak} day streak</span>
                                         </div>
                                       </div>
                                     </div>
-                                  </CardContent>
-                                </Card>
-                              </motion.div>
-                            );
+
+                                    <div className="flex items-center gap-4">
+                                      <Badge className={`bg-gradient-to-r ${getTierColor(tier)} text-white border-0`}>
+                                        {tier}
+                                      </Badge>
+                                      <div className="text-right">
+                                        <p className="text-xl font-bold text-primary">{formatINR.format(entry.points)}</p>
+                                        <p className="text-xs text-muted-foreground">XP</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          );
                         })}
                       </motion.div>
                     </AnimatePresence>

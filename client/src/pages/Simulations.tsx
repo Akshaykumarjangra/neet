@@ -21,6 +21,7 @@ import {
   Orbit,
   Waves,
   ArrowLeft,
+  Calculator,
 } from "lucide-react";
 import { PhETSimulation } from "@/components/PhETSimulation";
 import ProjectileMotion from "@/components/simulations/ProjectileMotion";
@@ -28,172 +29,14 @@ import CircuitBuilder from "@/components/simulations/CircuitBuilder";
 import MoleculeViewer from "@/components/simulations/MoleculeViewer";
 import { Paywall } from "@/components/Paywall";
 
-interface SimulationItem {
-  id: string;
-  title: string;
-  description: string;
-  subject: "Physics" | "Chemistry" | "Botany" | "Zoology";
-  type: "phet" | "custom";
-  phetId?: string;
-  component?: string;
-  topics: string[];
-  chapter?: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
-  icon: React.ReactNode;
-}
-
-const simulations: SimulationItem[] = [
-  {
-    id: "projectile-motion",
-    title: "Projectile Motion",
-    description: "Simulate projectile motion with adjustable velocity, angle, and gravity. Visualize trajectory, max height, and range in real-time.",
-    subject: "Physics",
-    type: "custom",
-    component: "ProjectileMotion",
-    topics: ["Kinematics", "Motion in 2D", "Vectors"],
-    chapter: "Motion in a Plane",
-    difficulty: "Beginner",
-    icon: <Orbit className="h-6 w-6" />,
-  },
-  {
-    id: "circuit-builder",
-    title: "Simple Circuit Simulator",
-    description: "Build and analyze simple circuits with battery, resistor, and bulb. Observe current flow and verify Ohm's Law.",
-    subject: "Physics",
-    type: "custom",
-    component: "CircuitBuilder",
-    topics: ["Current Electricity", "Ohm's Law", "Circuits"],
-    chapter: "Current Electricity",
-    difficulty: "Beginner",
-    icon: <Zap className="h-6 w-6" />,
-  },
-  {
-    id: "molecule-viewer",
-    title: "3D Molecule Viewer",
-    description: "Explore molecular structures in 3D. View H₂O, CO₂, CH₄, NH₃, and glucose with bond angles and lengths.",
-    subject: "Chemistry",
-    type: "custom",
-    component: "MoleculeViewer",
-    topics: ["Molecular Structure", "Chemical Bonding", "VSEPR Theory"],
-    chapter: "Chemical Bonding",
-    difficulty: "Intermediate",
-    icon: <Atom className="h-6 w-6" />,
-  },
-  {
-    id: "build-a-molecule",
-    title: "Build a Molecule",
-    description: "Construct molecules from atoms. Learn about chemical formulas and molecular structure by building real molecules.",
-    subject: "Chemistry",
-    type: "phet",
-    phetId: "build-a-molecule",
-    topics: ["Stoichiometry", "Molecular Formula", "Chemical Bonds"],
-    chapter: "Some Basic Concepts of Chemistry",
-    difficulty: "Beginner",
-    icon: <TestTubes className="h-6 w-6" />,
-  },
-  {
-    id: "balancing-chemical-equations",
-    title: "Balancing Chemical Equations",
-    description: "Practice balancing chemical equations interactively. Understand the law of conservation of mass.",
-    subject: "Chemistry",
-    type: "phet",
-    phetId: "balancing-chemical-equations",
-    topics: ["Stoichiometry", "Chemical Reactions", "Conservation of Mass"],
-    chapter: "Some Basic Concepts of Chemistry",
-    difficulty: "Beginner",
-    icon: <FlaskConical className="h-6 w-6" />,
-  },
-  {
-    id: "states-of-matter",
-    title: "States of Matter",
-    description: "Explore how heating and cooling affects molecular motion. Observe phase changes between solid, liquid, and gas.",
-    subject: "Chemistry",
-    type: "phet",
-    phetId: "states-of-matter-basics",
-    topics: ["States of Matter", "Kinetic Theory", "Phase Transitions"],
-    chapter: "States of Matter",
-    difficulty: "Beginner",
-    icon: <Waves className="h-6 w-6" />,
-  },
-  {
-    id: "ph-scale",
-    title: "pH Scale",
-    description: "Measure the pH of common substances and understand acids, bases, and neutral solutions.",
-    subject: "Chemistry",
-    type: "phet",
-    phetId: "ph-scale",
-    topics: ["Acids & Bases", "pH", "Ionic Equilibrium"],
-    chapter: "Ionic Equilibrium",
-    difficulty: "Intermediate",
-    icon: <TestTubes className="h-6 w-6" />,
-  },
-  {
-    id: "energy-skate-park",
-    title: "Energy Skate Park",
-    description: "Learn about conservation of energy with a skater on a track. Observe kinetic, potential, and thermal energy.",
-    subject: "Physics",
-    type: "phet",
-    phetId: "energy-skate-park-basics",
-    topics: ["Energy Conservation", "Kinetic Energy", "Potential Energy"],
-    chapter: "Work, Energy and Power",
-    difficulty: "Beginner",
-    icon: <Lightbulb className="h-6 w-6" />,
-  },
-  {
-    id: "wave-on-string",
-    title: "Wave on a String",
-    description: "Explore wave properties like amplitude, frequency, and wavelength. See how waves reflect at boundaries.",
-    subject: "Physics",
-    type: "phet",
-    phetId: "wave-on-a-string",
-    topics: ["Waves", "Oscillations", "Wave Properties"],
-    chapter: "Waves",
-    difficulty: "Intermediate",
-    icon: <Waves className="h-6 w-6" />,
-  },
-  {
-    id: "pendulum-lab",
-    title: "Pendulum Lab",
-    description: "Experiment with pendulum length, mass, and gravity. Discover what affects the period of oscillation.",
-    subject: "Physics",
-    type: "phet",
-    phetId: "pendulum-lab",
-    topics: ["Simple Harmonic Motion", "Oscillations", "Period"],
-    chapter: "Oscillations",
-    difficulty: "Intermediate",
-    icon: <Orbit className="h-6 w-6" />,
-  },
-  {
-    id: "coulombs-law",
-    title: "Coulomb's Law",
-    description: "Explore electrostatic force between charges. See how distance and charge magnitude affect the force.",
-    subject: "Physics",
-    type: "phet",
-    phetId: "coulombs-law",
-    topics: ["Electrostatics", "Electric Force", "Coulomb's Law"],
-    chapter: "Electric Charges and Fields",
-    difficulty: "Intermediate",
-    icon: <Zap className="h-6 w-6" />,
-  },
-  {
-    id: "natural-selection",
-    title: "Natural Selection",
-    description: "Observe how natural selection changes bunny populations over time based on environmental factors.",
-    subject: "Zoology",
-    type: "phet",
-    phetId: "natural-selection",
-    topics: ["Evolution", "Natural Selection", "Genetics"],
-    chapter: "Evolution",
-    difficulty: "Intermediate",
-    icon: <Leaf className="h-6 w-6" />,
-  },
-];
+import { simulations, SimulationItem } from "@/data/simulations";
 
 const subjectColors: Record<string, { bg: string; text: string; border: string }> = {
   Physics: { bg: "bg-blue-500/10", text: "text-blue-600", border: "border-blue-500/30" },
   Chemistry: { bg: "bg-purple-500/10", text: "text-purple-600", border: "border-purple-500/30" },
   Botany: { bg: "bg-emerald-500/10", text: "text-emerald-600", border: "border-emerald-500/30" },
   Zoology: { bg: "bg-amber-500/10", text: "text-amber-600", border: "border-amber-500/30" },
+  Math: { bg: "bg-orange-500/10", text: "text-orange-600", border: "border-orange-500/30" },
 };
 
 const subjectIcons: Record<string, React.ReactNode> = {
@@ -201,6 +44,7 @@ const subjectIcons: Record<string, React.ReactNode> = {
   Chemistry: <FlaskConical className="h-4 w-4" />,
   Botany: <Leaf className="h-4 w-4" />,
   Zoology: <Bug className="h-4 w-4" />,
+  Math: <Calculator className="h-4 w-4" />,
 };
 
 export default function Simulations() {
@@ -210,11 +54,13 @@ export default function Simulations() {
 
   const filteredSimulations = useMemo(() => {
     return simulations.filter((sim) => {
+      // Safety check: ensure topics array exists
+      const topics = sim.topics || [];
       const matchesSearch =
         searchQuery === "" ||
         sim.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         sim.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sim.topics.some((topic) => topic.toLowerCase().includes(searchQuery.toLowerCase()));
+        topics.some((topic) => topic.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesSubject = activeSubject === "all" || sim.subject === activeSubject;
       return matchesSearch && matchesSubject;
     });
@@ -341,6 +187,10 @@ export default function Simulations() {
               <Bug className="h-4 w-4 mr-1" />
               Zoology
             </TabsTrigger>
+            <TabsTrigger value="Math" data-testid="tab-math">
+              <Calculator className="h-4 w-4 mr-1" />
+              Math
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeSubject} className="mt-6 space-y-8">
@@ -444,7 +294,9 @@ function SimulationCard({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className={`p-2 rounded-lg ${colors.bg}`}>
-              <span className={colors.text}>{simulation.icon}</span>
+              <span className={colors.text}>
+                {simulation.icon || subjectIcons[simulation.subject]}
+              </span>
             </div>
             <div className="flex gap-1">
               <Badge

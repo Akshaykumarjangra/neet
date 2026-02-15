@@ -160,10 +160,14 @@ router.get("/threads/:id/messages", requireAuth, async (req, res) => {
       }
     }
 
-    // TODO: Allow any mentor to view unassigned threads to pick them up? 
-    // For now strict check.
-    if (!isOwner && !isAssignedMentor && !user?.isAdmin) { // Admins can view
-      return res.status(403).json({ error: "Access denied" });
+    // Allow any mentor to view unassigned threads to pick them up
+    if (!isOwner && !isAssignedMentor && !user?.isAdmin) {
+      // If user is a mentor and the thread has no mentor assigned, allow access
+      if (user?.role === 'mentor' && !thread.mentorId) {
+        // Allowed
+      } else {
+        return res.status(403).json({ error: "Access denied" });
+      }
     }
 
     const messages = await db

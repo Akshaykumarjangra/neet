@@ -1597,7 +1597,9 @@ export default function Practice() {
                   </motion.div>
                 </div>
               </motion.div>
-              <DialogTitle className="text-center text-2xl">Practice Session Complete!</DialogTitle>
+              <DialogTitle className="text-center text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Practice Session Complete!
+              </DialogTitle>
               <DialogDescription className="text-center">
                 Great job! Here's your performance summary.
               </DialogDescription>
@@ -1806,7 +1808,7 @@ export default function Practice() {
                 Back to Dashboard
               </Button>
               <Button
-                onClick={handlePracticeAgain}
+                variant="premium"
                 className="w-full sm:w-auto"
                 data-testid="button-practice-again"
               >

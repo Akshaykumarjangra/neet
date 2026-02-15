@@ -74,7 +74,7 @@ function CircularProgress({
             stroke="currentColor"
             strokeWidth={6}
             fill="none"
-            className="text-muted/30"
+            className="text-muted/10"
           />
           <motion.circle
             cx={30}
@@ -471,7 +471,7 @@ export default function GameLobbyDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="glass-panel-strong glow-halo border-2 border-primary/20 overflow-hidden">
+            <Card className="glass-panel-strong glow-halo border-2 border-primary/20 overflow-hidden shadow-2xl">
               <CardContent className="p-6 md:p-8">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                   <div className="flex-1">
@@ -870,7 +870,8 @@ export default function GameLobbyDashboard() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * index }}
-                        className="flex items-center gap-4"
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--muted), 0.5)" }}
+                        className="flex items-center gap-4 p-2 rounded-lg transition-colors cursor-default"
                         data-testid={`activity-item-${activity.id}`}
                       >
                         <div

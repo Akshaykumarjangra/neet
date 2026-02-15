@@ -54,6 +54,10 @@ const Class12 = lazy(() => import("@/pages/Class12"));
 const ClassWiseContent = lazy(() => import("@/pages/ClassWiseContent"));
 const Community = lazy(() => import("@/pages/Community"));
 const Simulations = lazy(() => import("@/pages/Simulations"));
+const Videos = lazy(() => import("@/pages/Videos"));
+const Offline = lazy(() => import("@/pages/Offline"));
+const Compare = lazy(() => import("@/pages/Compare"));
+const DoctorRoadmap = lazy(() => import("@/pages/DoctorRoadmap"));
 const Syllabus = lazy(() => import("@/pages/Syllabus"));
 const Search = lazy(() => import("@/pages/Search"));
 const Physics = lazy(() => import("@/pages/Physics"));
@@ -156,6 +160,11 @@ function Router() {
           <Route path="/">
             <Home />
           </Route>
+          <Route path="/simulations" component={Simulations} />
+          <Route path="/videos" component={Videos} />
+          <Route path="/offline" component={Offline} />
+          <Route path="/compare/:competitor" component={Compare} />
+          <Route path="/guide/doctor-roadmap" component={DoctorRoadmap} />
           <Route path="/neet-faq" component={NEETFAQPage} />
           <Route path="/guide" component={NEETAppGuide} />
           <Route path="/pricing">
@@ -367,6 +376,11 @@ function Router() {
           </Route>
           <Route path="/preview/simulations">
             <SimulationsPreview />
+          </Route>
+          <Route path="/videos">
+            <ProtectedRoute>
+              <Videos />
+            </ProtectedRoute>
           </Route>
           <Route path="/syllabus">
             <ProtectedRoute>

@@ -372,9 +372,9 @@ export default function Home() {
                 India's Most Advanced NEET Prep Platform
               </Badge>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight" data-testid="text-hero-headline">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight" data-testid="text-hero-headline">
                 Crack NEET with{" "}
-                <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm">
                   AI-Powered
                 </span>{" "}
                 Learning
@@ -484,9 +484,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-16">
+        <section className="py-24">
           <div className="container mx-auto px-4">
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 p-8 text-white shadow-2xl">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.5em] text-emerald-300">NEET Blast</p>
@@ -835,9 +836,31 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/mock-tests" className="hover:text-foreground transition-colors">Mock Tests</Link></li>
-                <li><Link href="/flashcards" className="hover:text-foreground transition-colors">Flashcards</Link></li>
-                <li><Link href="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link></li>
+                <li>
+                  <a href="/articles/" className="hover:text-primary transition-colors">
+                    Study Guides & Articles
+                  </a>
+                </li>
+                <li>
+                  <Link href="/simulations" className="hover:text-primary transition-colors">
+                    Interactive Simulations
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/videos" className="hover:text-primary transition-colors">
+                    Video Library
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/mock-tests" className="hover:text-primary transition-colors">
+                    Mock Tests
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/guide/doctor-roadmap" className="hover:text-primary transition-colors">
+                    MBBS Roadmap
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>

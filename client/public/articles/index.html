@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEET 2026 Study Resources & Strategy Guides | ZeroPage</title>
+    <meta name="description" content="30+ comprehensive NEET preparation guides. Expert strategies, case studies, and tips from Allen, Aakash, PW toppers.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+    :root {
+        --primary: #6366f1;
+        --text: #1e293b;
+        --bg: #f8fafc;
+        --card: #ffffff;
+    }
+    body {
+        font-family: 'Inter', system-ui, sans-serif;
+        line-height: 1.7;
+        color: var(--text);
+        background: var(--bg);
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        background: var(--card);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .nav-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logo {
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--primary);
+        text-decoration: none;
+    }
+    .cta-button {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+    }
+    .cta-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+    }
+    main {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    article {
+        background: var(--card);
+        padding: 3rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        font-size: 2.75rem;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        color: #0f172a;
+        font-weight: 800;
+    }
+    .meta {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .hero-image {
+        width: 100%;
+        height: auto;
+        border-radius: 0.75rem;
+        margin-bottom: 2.5rem;
+        background: #e2e8f0;
+    }
+    h2 {
+        color: #1e293b;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        font-size: 2rem;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+    }
+    h3 {
+        color: #334155;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    ul, ol {
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    li {
+        margin-bottom: 0.75rem;
+        line-height: 1.7;
+    }
+    p {
+        margin-bottom: 1.25rem;
+        line-height: 1.8;
+    }
+    .highlight-box {
+        background: #eef2ff;
+        border-left: 4px solid var(--primary);
+        padding: 1.5rem;
+        margin: 2.5rem 0;
+        border-radius: 0.5rem;
+    }
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .comparison-table th {
+        background: #f1f5f9;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .comparison-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .comparison-table tr:hover {
+        background: #f8fafc;
+    }
+    .testimonial-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0.75rem;
+        font-style: italic;
+    }
+    .testimonial-author {
+        font-style: normal;
+        font-weight: 600;
+        color: var(--primary);
+        margin-top: 1rem;
+    }
+    .case-study {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin: 2.5rem 0;
+    }
+    .case-study h3 {
+        color: white;
+    }
+    footer {
+        text-align: center;
+        padding: 3rem 0;
+        color: #64748b;
+        margin-top: 3rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 2rem;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .agent-signature {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-style: italic;
+        margin-top: 1rem;
+    }
+    @media (max-width: 600px) {
+        h1 { font-size: 2rem; }
+        article { padding: 1.5rem; }
+        h2 { font-size: 1.5rem; }
+    }
+</style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">ZeroPage NEET</a>
+            <a href="/signup" class="cta-button">Start Free</a>
+        </div>
+    </header>
+    <main>
+        <h1 style="text-align: center; margin-top: 2rem;">NEET 2026 Complete Study Resource Library</h1>
+        <p style="text-align: center; color: #64748b; max-width: 600px; margin: 1rem auto 3rem;">Expert-written guides combining strategies from Allen, Aakash, PhysicsWallah & Kota institutes. Each guide: 2000+ words, 8 specialized content agents.</p>
+        
+        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/neet-2026-roadmap.html" style="text-decoration: none; color: #1e293b;">NEET 2026 Roadmap: A Month-by-Month Guide</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/neet-2026-roadmap.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Physics</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/physics-chapter-weightage.html" style="text-decoration: none; color: #1e293b;">Physics Chapter Wise Weightage for NEET 2026</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/physics-chapter-weightage.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/chemistry-chapter-weightage.html" style="text-decoration: none; color: #1e293b;">Chemistry Chapter Wise Weightage for NEET 2026</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/chemistry-chapter-weightage.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Biology</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/biology-chapter-weightage.html" style="text-decoration: none; color: #1e293b;">Biology Chapter Wise Weightage for NEET 2026</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/biology-chapter-weightage.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Resources</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/best-books-neet-physics.html" style="text-decoration: none; color: #1e293b;">Best Books for NEET Physics Preparation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/best-books-neet-physics.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Resources</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/best-books-neet-chemistry.html" style="text-decoration: none; color: #1e293b;">Best Books for NEET Chemistry Preparation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/best-books-neet-chemistry.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Resources</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/best-books-neet-biology.html" style="text-decoration: none; color: #1e293b;">Best Books for NEET Biology Preparation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/best-books-neet-biology.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/how-to-score-650-plus-neet.html" style="text-decoration: none; color: #1e293b;">How to Score 650+ in NEET: Proven Strategies</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/how-to-score-650-plus-neet.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Physics</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/neet-vs-jee-physics.html" style="text-decoration: none; color: #1e293b;">NEET vs JEE Physics: What's the Difference?</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/neet-vs-jee-physics.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/dropper-strategy-neet.html" style="text-decoration: none; color: #1e293b;">Dropper Strategy for NEET 2026: From Failure to Rank 1</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/dropper-strategy-neet.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/class-11-neet-strategy.html" style="text-decoration: none; color: #1e293b;">Class 11 NEET Strategy: Building a Strong Foundation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/class-11-neet-strategy.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/class-12-neet-strategy.html" style="text-decoration: none; color: #1e293b;">Class 12 NEET Strategy: Balancing Boards and Entrance</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/class-12-neet-strategy.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Tips</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/mistake-notebook-strategy.html" style="text-decoration: none; color: #1e293b;">Mistake Notebook: The Secret Weapon of Toppers</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/mistake-notebook-strategy.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/importance-of-mock-tests.html" style="text-decoration: none; color: #1e293b;">Why Mock Tests are Crucial for NEET Selection</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/importance-of-mock-tests.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/analyze-mock-tests.html" style="text-decoration: none; color: #1e293b;">How to Analyze NEET Mock Tests Effectively</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/analyze-mock-tests.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Strategy</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/last-month-revision-neet.html" style="text-decoration: none; color: #1e293b;">Last Month Revision Strategy for NEET</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/last-month-revision-neet.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Physics</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/physics-formula-sheet.html" style="text-decoration: none; color: #1e293b;">Important Physics Formulas for NEET PDF</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/physics-formula-sheet.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/organic-chemistry-reactions.html" style="text-decoration: none; color: #1e293b;">All Organic Chemistry Name Reactions for NEET</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/organic-chemistry-reactions.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/periodic-table-trends.html" style="text-decoration: none; color: #1e293b;">Periodic Table Trends: Tricks to Remember</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/periodic-table-trends.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Biology</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/morphology-plants-mnemonics.html" style="text-decoration: none; color: #1e293b;">Morphology of Flowering Plants: Mnemonics</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/morphology-plants-mnemonics.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Biology</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/animal-kingdom-tricks.html" style="text-decoration: none; color: #1e293b;">Animal Kingdom: Easy Tricks to Learn Phyla</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/animal-kingdom-tricks.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Biology</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/human-physiology-diagrams.html" style="text-decoration: none; color: #1e293b;">Top 50 Diagrams in Human Physiology</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/human-physiology-diagrams.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Biology</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/genetics-simplified.html" style="text-decoration: none; color: #1e293b;">Genetics: Mendelian Principles Simplified</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/genetics-simplified.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Physics</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/electrostatics-revision.html" style="text-decoration: none; color: #1e293b;">Electrostatics: Quick Revision Notes</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/electrostatics-revision.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Physics</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/ray-optics-formulas.html" style="text-decoration: none; color: #1e293b;">Ray Optics Formulas and Sign Conventions</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/ray-optics-formulas.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Comparisons</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/thermodynamics-concepts.html" style="text-decoration: none; color: #1e293b;">Thermodynamics: Physics vs Chemistry Concepts</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/thermodynamics-concepts.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/chemical-equilibrium-shortcuts.html" style="text-decoration: none; color: #1e293b;">Chemical Equilibrium: Shortcuts for Calculation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/chemical-equilibrium-shortcuts.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/chemical-bonding-vsepr.html" style="text-decoration: none; color: #1e293b;">Chemical Bonding: Master VSEPR Theory</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/chemical-bonding-vsepr.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Chemistry</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/coordination-compounds-naming.html" style="text-decoration: none; color: #1e293b;">Coordination Compounds: IUPAC Naming Rules</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/coordination-compounds-naming.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; transition: all 0.2s;">
+                    <div style="font-size: 0.75rem; color: white; background: var(--primary); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem;">Wellness</div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; line-height: 1.4;"><a href="/articles/neet-motivation-guide.html" style="text-decoration: none; color: #1e293b;">How to Stay Motivated During NEET Preparation</a></h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Comprehensive 2000+ word guide with case studies, FAQs, and practice strategies.</p>
+                    <a href="/articles/neet-motivation-guide.html" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.875rem;">Read Full Guide →</a>
+                </div>
+            
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2026 ZeroPage NEET. All rights reserved.</p>
+    </footer>
+</body>
+</html>
