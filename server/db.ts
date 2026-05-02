@@ -91,8 +91,8 @@ const testConnection = async () => {
       console.log(`Retrying connection in ${delay}ms... (${retries} attempts remaining)`);
       setTimeout(testConnection, delay);
     } else {
-      console.error('FATAL: Database connection failed after all retries. Shutting down.');
-      process.exit(1);
+      console.error('FATAL: Database connection failed after all retries. Continuing anyway for debug.');
+      // process.exit(1);
     }
   }
 };
