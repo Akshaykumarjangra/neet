@@ -33,42 +33,79 @@ import { nanoid } from "nanoid";
 
 console.log("[DEBUG] Dependencies imported");
 
+async function ensureOwnerAccount() {
+  console.log("[DEBUG] Checking owner account");
+  const ownerEmail = process.env.OWNER_EMAIL;
+  const ownerPassword = process.env.OWNER_PASSWORD;
+
+  if (!ownerEmail || !ownerPassword) {
+    console.log("[DEBUG] Owner credentials not set, skipping");
+    return;
+  }
+
+  try {
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, ownerEmail))
+      .limit(1);
+
+    if (existingUser) {
+      console.log(`[Owner Account] Verified owner status for ${ownerEmail}`);
+    } else {
+      const passwordHash = await bcrypt.hash(ownerPassword, 10);
+      await db.insert(users).values({
+        email: ownerEmail,
+        name: "Super Admin",
+        passwordHash,
+        role: "admin",
+        isAdmin: true,
+        isOwner: true,
+        isPaidUser: true,
+      } as any);
+      log(`[Owner Account] Created new owner account: ${ownerEmail}`);
+    }
+  } catch (err) {
+    console.error("[Owner Account] Error during setup:", err);
+  }
+}
+
 (async () => {
   console.log("[DEBUG] Running async startup");
   try {
     const app = express();
     console.log("[DEBUG] Express app created");
 
-    // Security middleware
-    app.use(helmet({
-      contentSecurityPolicy: false, // Loosen for debug
-      crossOriginEmbedderPolicy: false,
-    }));
-    console.log("[DEBUG] Helmet initialized");
+    // Skip owner setup for now to avoid DB issues during boot
+    // await ensureOwnerAccount();
 
-    app.use(compression());
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: false }));
-
-    const allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map(o => o.trim()).filter(Boolean);
-    app.use(cors({ origin: allowedOrigins, credentials: true }));
-    console.log("[DEBUG] CORS initialized");
+    const sessionStore = new (ConnectPgSimple(session))({
+      pool,
+      createTableIfMissing: true,
+    });
 
     const sessionMiddleware = session({
-      secret: process.env.SESSION_SECRET || "debug_secret",
+      store: sessionStore,
+      secret: process.env.SESSION_SECRET || "akg45272@gmail.com",
       resave: false,
       saveUninitialized: false,
-      cookie: { secure: process.env.NODE_ENV === "production" }
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      }
     });
+
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: false }));
     app.use(sessionMiddleware);
-    console.log("[DEBUG] Session initialized");
+    console.log("[DEBUG] Middleware initialized");
 
     const server = await registerRoutes(app);
     console.log("[DEBUG] Routes registered");
 
     const port = parseInt(process.env.PORT || '5001', 10);
     server.listen(port, "0.0.0.0", () => {
-      console.log(`[DEBUG] Server listening on port ${port}`);
+      console.log(`[DEBUG] Full app listening on port ${port}`);
     });
 
   } catch (error) {
