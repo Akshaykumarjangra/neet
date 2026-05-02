@@ -15,11 +15,12 @@ req = urllib.request.Request(
     headers=headers
 )
 res = json.load(urllib.request.urlopen(req))
-print(f"Status: {res['status']}")
-print(f"Updated: {res['updated_at']}")
 
-if res['status'] == 'failed':
-    logs = json.loads(res.get('logs', '[]'))
-    for entry in logs[-20:]:
+logs = json.loads(res.get('logs', '[]'))
+
+# Find the build error - look for build:server and errors
+for entry in logs:
+    output = entry.get('output', '')
+    if 'build:server' in output or 'error' in output.lower() or 'ERROR' in output or 'unresolved' in output.lower() or 'external' in output.lower():
         if not entry.get('hidden', False):
-            print(f"[{entry.get('type','')}] {entry.get('output','')}")
+            print(f"[{entry.get('type','')}] {output}")

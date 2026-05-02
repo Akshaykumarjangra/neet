@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "./db";
 import { userDevices } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-import { recordAuditLog } from "./audit-logger";
+import { recordAuditLog } from "./lib/audit";
 
 const router = Router();
 

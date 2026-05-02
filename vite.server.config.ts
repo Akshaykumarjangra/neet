@@ -17,6 +17,11 @@ export default defineConfig({
         sourcemap: true,
         minify: false, // Check if minification causes issues, usually fine to disable for server
         rollupOptions: {
+            external: [
+                "node-fetch",
+                "firebase-admin",
+                /^node:.*/,
+            ],
             output: {
                 format: "esm",
                 entryFileNames: "index.js",
