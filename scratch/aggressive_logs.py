@@ -1,6 +1,9 @@
 import urllib.request
 import json
+import sys
 import time
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_URL = "http://82.25.104.62:8000/api/v1"
 TOKEN = "3|Zrv2NbvsSPNlmoIsXMdP9J5sAHwVzsgaLprJNMqY3ef99588"
