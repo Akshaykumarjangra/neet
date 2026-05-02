@@ -10,7 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build -c vite.server.config.ts",
-    "start": "echo '--- STARTING APP ---' && cross-env NODE_ENV=production node dist/index.js",
+    "start": "echo '--- STARTING APP ---' && node dist/index.js",
     "start:pm2": "pm2 start ecosystem.config.cjs",
     "stop:pm2": "pm2 stop neet-prep",
     "restart:pm2": "pm2 restart neet-prep",
