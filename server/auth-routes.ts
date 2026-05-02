@@ -190,6 +190,7 @@ router.post("/login", async (req: Request, res: Response) => {
     const user = await authenticateUser(email, password);
 
     if (!user) {
+      console.warn(`[Auth] Login failed for ${normalizedEmail}. Possible reasons: User not found, password mismatch, or DB timeout.`);
       // Increment failed attempts on the matched account (if any)
       if (preAuthUser) {
         const newAttempts = (preAuthUser.failedLoginAttempts ?? 0) + 1;

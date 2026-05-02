@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, queryWithRetry } from "./db";
 import { questions, contentTopics, chapterContent, subscriptionPlans, users, questionPreviewLimits, questionTags, userPerformance, dailyChallenges, userDailyChallenges } from "@shared/schema";
 import { GamificationService } from "./gamification";
 import { nanoid } from "nanoid";
@@ -132,8 +132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
     try {
-      // Check database connection
-      await db.execute(sql`SELECT 1`);
+      // Check database connection with retry
+      await queryWithRetry(() => db.execute(sql`SELECT 1`));
       res.status(200).json({
         status: "healthy",
         timestamp: new Date().toISOString(),

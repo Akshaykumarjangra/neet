@@ -1,0 +1,23 @@
+import urllib.request
+import json
+
+BASE_URL = "http://82.25.104.62:8000/api/v1"
+TOKEN = "3|Zrv2NbvsSPNlmoIsXMdP9J5sAHwVzsgaLprJNMqY3ef99588"
+APP_UUID = "zo8c8sgcckg84cw8480888gw"
+
+headers = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Accept": "application/json"
+}
+
+def make_request(endpoint):
+    url = f"{BASE_URL}{endpoint}"
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        return json.load(response)
+
+if __name__ == "__main__":
+    envs = make_request(f"/applications/{APP_UUID}/envs")
+    for env in envs:
+        if env['key'] == "DATABASE_SSL":
+            print(f"Key: {env['key']}, UUID: {env['uuid']}, Value: {env['value']}")

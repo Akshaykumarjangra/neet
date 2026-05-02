@@ -52,7 +52,28 @@ pool.on('remove', () => {
   console.log('Database connection removed from pool');
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
 export const db = drizzle(pool, { schema });
+
+// Helper for retrying queries
+export async function queryWithRetry<T>(queryFn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await queryFn();
+    } catch (err: any) {
+      lastError = err;
+      console.error(`Query failed (attempt ${i + 1}/${maxRetries}):`, err.message);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
 
 // Test connection on startup with retry and backoff
 let retries = 5;
