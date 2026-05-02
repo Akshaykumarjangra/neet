@@ -3,18 +3,20 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-if (!process.env.DATABASE_URL) {
+const databaseUrl = process.env.PROD_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!databaseUrl) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "DATABASE_URL or PROD_DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
 // Optimized connection pool configuration for Coolify/Docker
 const isProduction = process.env.NODE_ENV === 'production';
-const dbHost = new URL(process.env.DATABASE_URL).hostname;
+const dbHost = new URL(databaseUrl).hostname;
 
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 
   // Connection pool sizing (optimized for high concurrency)
