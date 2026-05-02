@@ -101,6 +101,7 @@ export default function Help() {
           </div>
         </div>
       </div>
+    </div>
     </>
   );
 }

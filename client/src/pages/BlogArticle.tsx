@@ -173,6 +173,7 @@ export default function BlogArticle() {
           <p className="font-medium text-xl mt-8 text-center">The future is predictive. Are you ready?</p>
         </article>
       </div>
+    </div>
     </>
   );
 }
