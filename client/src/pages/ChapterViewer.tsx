@@ -1,3 +1,5 @@
+"use strict";
+
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
@@ -51,6 +53,7 @@ import {
 } from "lucide-react";
 import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema";
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
+import { ChapterVideoPlayer } from "@/components/ChapterVideoPlayer";
 import { ViewportActivatedVisualization } from "@/components/visualizations/ViewportActivatedVisualization";
 import { PhetSimulationViewer } from "@/components/PhetSimulationViewer";
 import { ChapterChatbot } from "@/components/ChapterChatbot";
@@ -59,39 +62,34 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Seo } from "@/components/Seo";
+import { getBreadcrumbSchema, getArticleSchema } from "@/config/seo";
 
 export default function ChapterViewer() {
   const params = useParams<{ subject: string; classLevel: string; chapterNumber: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  // Access Control check — progressive disclosure allows previewing
+  const { user, isLoading: authLoading } = useAuth();
+  const isPremiumChapter = chapterNumber && parseInt(chapterNumber) > 3;
+
+  // We will let the API return the preview and we'll check if the chapter has `isPremiumLocked` set.
+  const isPaywalled = !authLoading && isPremiumChapter && !user?.isPaidUser;
+
   const sessionIdRef = useRef<number | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-
   const { subject, classLevel, chapterNumber } = params;
-
-  // Access Control check
-  useEffect(() => {
-    if (chapterNumber && parseInt(chapterNumber) > 3 && !user?.isPaidUser) {
-      if (user) {
-        // Only redirect if user IS loaded
-        navigate("/pricing");
-        toast({
-          title: "Premium Content",
-          description: "This chapter is locked. Upgrade to access.",
-          variant: "destructive",
-        });
-      }
-    }
-  }, [chapterNumber, user, navigate, toast]);
 
   const [activeTab, setActiveTab] = useState("read");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [copiedKeypointId, setCopiedKeypointId] = useState<number | null>(null);
   const [copiedFormulaId, setCopiedFormulaId] = useState<number | null>(null);
   const [readingProgress, setReadingProgress] = useState(0);
-  const [fontSize, setFontSize] = useState(18);
+  const [fontSize, setFontSize] = useState(() => {
+    try { return parseInt(localStorage.getItem("chapter-font-size") || "18", 10); }
+    catch { return 18; }
+  });
   const [showToc, setShowToc] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isChapterComplete, setIsChapterComplete] = useState(false);
@@ -101,6 +99,17 @@ export default function ChapterViewer() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Prevent UI flashing or race conditions while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Skeleton className="h-12 w-12 rounded-full mb-4" />
+        <Skeleton className="h-4 w-48 mb-2" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    );
+  }
 
   const normalizedSubject = useMemo(() => {
     if (!subject) return "";
@@ -121,7 +130,7 @@ export default function ChapterViewer() {
       }
       return response.json();
     },
-    enabled: !!subject && !!classLevel && !!chapterNumber,
+    enabled: !authLoading && !!subject && !!classLevel && !!chapterNumber,
   });
 
   const { data: chapterIndex = [] } = useQuery<ChapterContent[]>({
@@ -185,6 +194,63 @@ export default function ChapterViewer() {
     },
     enabled: !!chapter?.id,
   });
+
+  const { data: userProgress } = useQuery<any>({
+    queryKey: ['/api/lms/mastery', chapter?.subject, chapter?.classLevel, chapter?.chapterNumber],
+    queryFn: async () => {
+      const chapterId = `${chapter?.subject}-${chapter?.classLevel}-${chapter?.chapterNumber}`;
+      const response = await fetch(`/api/lms/mastery/${chapterId}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!chapter && !!user?.id,
+  });
+
+  const scrollRestoredRef = useRef(false);
+  useEffect(() => {
+    scrollRestoredRef.current = false;
+  }, [chapter?.id]);
+
+  useEffect(() => {
+    if (userProgress && contentRef.current && !scrollRestoredRef.current) {
+      const percentage = userProgress.completionPercentage || 0;
+      if (percentage > 0) {
+        // Delay to allow content to fully render
+        const timer = setTimeout(() => {
+          if (contentRef.current) {
+            const element = contentRef.current;
+            const scrollHeight = element.scrollHeight - window.innerHeight;
+            if (scrollHeight > 0) {
+              const targetScroll = (percentage / 100) * scrollHeight + element.offsetTop;
+              window.scrollTo({ top: targetScroll, behavior: 'auto' });
+              scrollRestoredRef.current = true;
+            }
+          }
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [userProgress, chapter?.id]);
+
+  const saveProgressMutation = useMutation({
+    mutationFn: async (percentage: number) => {
+      if (!chapter || !user?.id) return;
+      const chapterId = `${chapter.subject}-${chapter.classLevel}-${chapter.chapterNumber}`;
+      return await apiRequest('POST', '/api/lms/progress', {
+        chapterId,
+        completionPercentage: Math.round(percentage),
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (readingProgress > 0 && scrollRestoredRef.current) {
+      const timer = setTimeout(() => {
+        saveProgressMutation.mutate(readingProgress);
+      }, 5000); // Save every 5 seconds of scrolling
+      return () => clearTimeout(timer);
+    }
+  }, [readingProgress]);
 
   const chapterKeyConcepts = chapter?.keyConcepts || [];
   const chapterFormulas = chapter?.formulas || [];
@@ -257,7 +323,11 @@ export default function ChapterViewer() {
       if (scrollHeight > 0) {
         progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
       }
-      setReadingProgress(Number.isFinite(progress) ? progress : 0);
+      setReadingProgress(prev => {
+        const next = Number.isFinite(progress) ? progress : 0;
+        // Only update if change is significant (> 1%) to avoid excessive re-renders
+        return Math.abs(next - prev) > 1 ? next : prev;
+      });
     }
   }, []);
 
@@ -482,7 +552,11 @@ export default function ChapterViewer() {
   };
 
   const adjustFontSize = (delta: number) => {
-    setFontSize(prev => Math.min(24, Math.max(14, prev + delta)));
+    setFontSize(prev => {
+      const next = Math.min(24, Math.max(14, prev + delta));
+      try { localStorage.setItem("chapter-font-size", String(next)); } catch {}
+      return next;
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -532,7 +606,7 @@ export default function ChapterViewer() {
     ? Math.ceil(chapter.estimatedStudyMinutes * 0.6)
     : 15;
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background">
@@ -566,7 +640,7 @@ export default function ChapterViewer() {
               Back to Chapters
             </Button>
 
-            {isPaymentRequired ? (
+            {isPaymentRequired || isPaywalled ? (
               <Card className="border-primary/50 bg-primary/5 shadow-xl overflow-hidden">
                 <div className="absolute top-0 right-0 p-4">
                   <Crown className="h-12 w-12 text-primary/20 rotate-12" />
@@ -664,6 +738,27 @@ export default function ChapterViewer() {
   return (
     <ThemeProvider>
       <TooltipProvider>
+        <Seo 
+          title={`${chapter.chapterTitle} - Chapter ${chapter.chapterNumber} | ZERO AI`}
+          description={chapter.chapterContent ? chapter.chapterContent.slice(0, 150).replace(/[#*`_]/g, '') + '...' : `Master ${chapter.chapterTitle} with ZERO AI.`}
+          url={`/library/${subject}/${classLevel}/${chapter.chapterNumber}`}
+          keywords={[chapter.subject, chapter.chapterTitle, 'NEET Prep', 'Chapter Notes']}
+          structuredData={[
+            getBreadcrumbSchema([
+              { name: "Home", url: "/" },
+              { name: "Library", url: "/library" },
+              { name: normalizedSubject, url: `/${subjectPath}` },
+              { name: chapter.chapterTitle, url: `/chapter/${subjectPath}/${classLevel}/${chapter.chapterNumber}` }
+            ]),
+            getArticleSchema({
+              title: chapter.chapterTitle,
+              description: chapter.chapterContent ? chapter.chapterContent.slice(0, 160).replace(/[#*`_]/g, '') : `Master ${chapter.chapterTitle} with ZeroPage AI.`,
+              url: `https://neet.zeropage.in/chapter/${subjectPath}/${classLevel}/${chapter.chapterNumber}`,
+              dateModified: chapter.updatedAt ? new Date(chapter.updatedAt).toISOString().split('T')[0] : undefined,
+              author: "ZeroPage AI"
+            })
+          ]}
+        />
         <div className="min-h-screen bg-background">
           <Header />
 
@@ -678,7 +773,7 @@ export default function ChapterViewer() {
                         <Menu className="h-4 w-4" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
+                    <SheetContent side="left" className="w-[85vw] sm:w-[400px] p-0 overflow-hidden">
                       <SheetHeader className="p-4 border-b text-left">
                         <SheetTitle>Chapters</SheetTitle>
                       </SheetHeader>
@@ -745,7 +840,23 @@ export default function ChapterViewer() {
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-6 max-w-7xl" ref={contentRef}>
+          <div className="container mx-auto px-4 py-6 max-w-7xl overflow-hidden" ref={contentRef}>
+            {/* Breadcrumb Navigation */}
+            <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4 overflow-x-auto whitespace-nowrap scrollbar-hide" aria-label="Breadcrumb">
+              <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
+                <Home className="h-3.5 w-3.5" />
+                <span>Home</span>
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 opacity-40 shrink-0" />
+              <Link href={`/${subjectPath}`} className="hover:text-primary transition-colors capitalize">
+                {normalizedSubject}
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 opacity-40 shrink-0" />
+              <span className="text-foreground font-medium truncate">
+                Chapter {chapter.chapterNumber}: {chapter.chapterTitle}
+              </span>
+            </nav>
+
             <div className="flex gap-8">
               {/* Desktop Sidebar */}
               <div className="hidden lg:block w-64 shrink-0 space-y-4 sticky top-24 h-[calc(100vh-8rem)]">
@@ -1008,7 +1119,7 @@ export default function ChapterViewer() {
                         <Card id="content">
                           <CardContent className="pt-6">
                             <div
-                              className="prose dark:prose-invert max-w-none prose-headings:font-serif prose-p:leading-relaxed"
+                              className="prose dark:prose-invert max-w-full overflow-x-hidden prose-headings:font-serif prose-p:leading-relaxed break-words"
                               style={{ fontSize: `${fontSize}px`, fontFamily: 'Georgia, serif', lineHeight: '1.8' }}
                             >
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -1018,8 +1129,26 @@ export default function ChapterViewer() {
                           </CardContent>
                         </Card>
 
-                        <Card className="border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
-                          <CardHeader className="pb-3">
+                        {(chapter as any).isPremiumLocked ? (
+                          <Card className="border-primary/50 bg-primary/5 shadow-xl overflow-hidden mt-8 relative">
+                            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none -mt-40 h-40" />
+                            <div className="relative z-20 text-center pb-8 pt-8">
+                              <div className="mx-auto p-4 rounded-full bg-primary/10 w-fit mb-4">
+                                <Crown className="h-10 w-10 text-primary" />
+                              </div>
+                              <CardTitle className="text-3xl font-bold tracking-tight mb-2">Unlock Full Chapter</CardTitle>
+                              <CardDescription className="text-lg mb-6 max-w-md mx-auto">
+                                You are viewing a preview. Upgrade to Premium to access the full chapter content, key concepts, formulas, and AI chat.
+                              </CardDescription>
+                              <Button size="lg" onClick={() => navigate("/pricing")} className="px-8 text-lg font-semibold">
+                                Upgrade to Premium
+                              </Button>
+                            </div>
+                          </Card>
+                        ) : (
+                          <>
+                            <Card className="border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
+                              <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
                               <AlertTriangle className="h-5 w-5" />
                               Common Mistakes to Avoid
@@ -1134,7 +1263,9 @@ export default function ChapterViewer() {
                               </div>
                             )}
                           </CardContent>
-                        </Card>
+                          </Card>
+                        </>
+                      )}
                       </div>
 
                       <div className="lg:col-span-1">
@@ -1183,6 +1314,14 @@ export default function ChapterViewer() {
                             </Card>
                           )}
 
+                          {/* Video Lessons — overflow-safe */}
+                          <ChapterVideoPlayer
+                            videoLinks={chapter.videoLinks || []}
+                            contentAssets={mentorAssets.filter((a: any) => a.type === 'video')}
+                            chapterTitle={chapter.chapterTitle}
+                            subject={normalizedSubject}
+                          />
+
                           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800">
                             <CardContent className="pt-4">
                               <Button
@@ -1212,6 +1351,67 @@ export default function ChapterViewer() {
                               </Button>
                             </CardContent>
                           </Card>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chapter Navigation & Related Content */}
+                    <div className="mt-12 space-y-12">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-8">
+                        {previousChapter ? (
+                          <Card className="hover:border-primary transition-colors cursor-pointer group" onClick={handlePreviousChapter}>
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <div className="p-2 rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+                                <ChevronLeft className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Previous</p>
+                                <p className="text-sm font-bold truncate italic">{previousChapter.chapterTitle}</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ) : <div />}
+
+                        {nextChapter ? (
+                          <Card className="hover:border-primary transition-colors cursor-pointer group text-right" onClick={handleNextChapter}>
+                            <CardContent className="p-4 flex items-center justify-end gap-4">
+                              <div className="min-w-0">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Next</p>
+                                <p className="text-sm font-bold truncate italic">{nextChapter.chapterTitle}</p>
+                              </div>
+                              <div className="p-2 rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+                                <ChevronRight className="h-5 w-5" />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ) : <div />}
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-black italic tracking-tighter flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          Related {normalizedSubject} Chapters
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {orderedChapters
+                            .filter(c => c.id !== chapter.id)
+                            .slice(0, 3)
+                            .map((rel) => (
+                              <Card 
+                                key={rel.id} 
+                                className="glass-card hover:glow-primary transition-all cursor-pointer overflow-hidden"
+                                onClick={() => navigate(`/chapter/${subjectPath}/${rel.classLevel}/${rel.chapterNumber}`)}
+                              >
+                                <CardContent className="p-4 space-y-2">
+                                  <Badge variant="secondary" className="text-[10px] uppercase font-bold">Class {rel.classLevel}</Badge>
+                                  <h4 className="font-bold text-sm leading-tight line-clamp-2 italic">{rel.chapterTitle}</h4>
+                                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold">
+                                    <Clock className="h-3 w-3" />
+                                    {rel.estimatedStudyMinutes || 45} mins
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
                         </div>
                       </div>
                     </div>
@@ -1470,7 +1670,7 @@ export default function ChapterViewer() {
                                 <span className="font-bold text-green-600">
                                   {practiceQuestions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length}
                                 </span>{' '}
-                                out of {practiceQuestions.length} correct
+                                out of {practiceQuestions.length} correct in {formatTime(timeSpent)}
                               </p>
                               <div className="flex justify-center gap-4">
                                 <Button

@@ -293,7 +293,7 @@ export default function SpringEnergyBar() {
           </Button>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-3 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Kinetic Energy</p>
             <p className="text-xl font-bold text-blue-600">{kineticEnergy.toFixed(2)} J</p>

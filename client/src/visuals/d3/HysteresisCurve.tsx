@@ -333,7 +333,7 @@ export default function HysteresisCurve() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-red-500">Remanence (Mr)</p>
             <p>50 A/m</p>

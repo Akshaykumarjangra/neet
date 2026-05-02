@@ -46,10 +46,13 @@ import {
   Filter,
   ArrowUpDown,
   Lock,
+  ClipboardList,
 } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
+import { getCourseSchema } from "@/config/seo";
 import {
   biologySections,
   categorizeBiologyChapter,
@@ -147,7 +150,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = chapter.chapterNumber > 3 && !isPremium;
+  const isLocked = !chapter.isFree && !isPremium;
 
   return (
     <motion.div
@@ -568,6 +571,13 @@ export default function Biology({ initialSection }: BiologyProps = {}) {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title={`NEET ${heroTitle} Class ${selectedClass} - Concept & Questions | ZERO AI`}
+        description={`Prepare for NEET ${heroTitle} Class ${selectedClass} with our comprehensive library of 20,000+ biology diagrams, charts, and practice MCQs.`}
+        url={initialSection ? `/${initialSection.toLowerCase()}` : `/biology`}
+        keywords={['NEET Biology', 'Botany', 'Zoology', `Class ${selectedClass} Biology`, 'NEET Prep']}
+        structuredData={getCourseSchema(heroTitle)}
+      />
       <Header />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
@@ -603,7 +613,15 @@ export default function Biology({ initialSection }: BiologyProps = {}) {
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-biology-title">
                       {heroTitle}
                     </h1>
-                    <p className="text-white/80 text-sm sm:text-base">{heroSubtitle}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white/80 text-sm sm:text-base">{heroSubtitle}</p>
+                      <Link href="/progress/analytics">
+                        <Button variant="link" className="text-white p-0 h-auto text-xs font-normal underline decoration-white/30 hover:decoration-white transition-all">
+                          <ClipboardList className="h-3 w-3 mr-1" />
+                          Review Questions
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

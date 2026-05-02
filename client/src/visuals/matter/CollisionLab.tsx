@@ -110,7 +110,7 @@ export default function CollisionLab() {
       <CardContent className="space-y-4">
         <div ref={sceneRef} className="w-full border rounded-lg overflow-hidden" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Mass 1 (Blue): {mass1[0]} kg

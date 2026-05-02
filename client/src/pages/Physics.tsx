@@ -49,10 +49,13 @@ import {
   Filter,
   ArrowUpDown,
   Lock,
+  ClipboardList,
 } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
+import { getCourseSchema } from "@/config/seo";
 
 interface ChapterData {
   id: number;
@@ -190,7 +193,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = chapter.chapterNumber > 3 && !isPremium;
+  const isLocked = !chapter.isFree && !isPremium;
 
   return (
     <motion.div
@@ -586,6 +589,13 @@ export default function Physics() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title={`NEET Physics Class ${selectedClass} - Concept & Practice | ZERO AI`}
+        description={`Master Class ${selectedClass} Physics for NEET with interactive visualizations, formulas, and 5,000+ practice questions.`}
+        url={`/physics`}
+        keywords={['NEET Physics', `Class ${selectedClass} Physics`, 'Physics Formulas', 'NEET Prep']}
+        structuredData={getCourseSchema("Physics")}
+      />
       <Header />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
@@ -621,7 +631,15 @@ export default function Physics() {
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-physics-title">
                       Physics
                     </h1>
-                    <p className="text-white/80 text-sm sm:text-base">NEET 2025 Complete Syllabus</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white/80 text-sm sm:text-base">NEET 2025 Complete Syllabus</p>
+                      <Link href="/progress/analytics">
+                        <Button variant="link" className="text-white p-0 h-auto text-xs font-normal underline decoration-white/30 hover:decoration-white transition-all">
+                          <ClipboardList className="h-3 w-3 mr-1" />
+                          Review Questions
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

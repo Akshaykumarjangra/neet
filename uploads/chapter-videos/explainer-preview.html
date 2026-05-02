@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Explainer Player - ZERO AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0c0e12;
+            color: #f6f6fc;
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        /* 3D Canvas */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Container */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none; /* Let clicks pass through to 3D except for UI elements */
+            box-sizing: border-box;
+            padding: 40px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: auto;
+        }
+
+        .ai-badge {
+            background: rgba(0, 227, 253, 0.1);
+            border: 1px solid #00e3fd;
+            color: #81ecff;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            font-family: 'Space Grotesk', sans-serif;
+            box-shadow: 0 0 20px rgba(0, 227, 253, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Floating Sidebar (Transcript) */
+        .sidebar {
+            position: absolute;
+            right: 40px;
+            top: 100px;
+            width: 400px;
+            background: rgba(23, 26, 31, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(70, 72, 77, 0.3);
+            border-radius: 24px;
+            padding: 32px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 40px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
+            transition: all 0.5s ease;
+            transform: translateX(500px); /* Hidden initially */
+            opacity: 0;
+        }
+
+        .sidebar.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .chapter-title {
+            font-family: 'Space Grotesk', sans-serif;
+            color: #81ecff;
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(0, 212, 236, 0.4);
+        }
+
+        .slide-heading {
+            font-size: 1.1rem;
+            color: #6e9bff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-bottom: -10px;
+        }
+
+        .transcript-box {
+            background: rgba(12, 14, 18, 0.5);
+            border-radius: 16px;
+            padding: 24px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #f6f6fc;
+            border-left: 3px solid #00e3fd;
+            height: 250px;
+            display: flex;
+            align-items: center;
+        }
+
+        #transcript-text {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Bottom Control Bar */
+        .control-bar {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            background: rgba(35, 38, 44, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(70, 72, 77, 0.3);
+            border-radius: 100px;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #81ecff, #00e3fd);
+            color: #003840;
+            border: none;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 227, 253, 0.4), inset 0 0 10px rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 227, 253, 0.7), inset 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .play-btn.playing {
+            background: rgba(0, 227, 253, 0.1);
+            border: 2px solid #00e3fd;
+            color: #81ecff;
+            box-shadow: none;
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            margin: 0 32px;
+            height: 8px;
+            background: rgba(12, 14, 18, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6e9bff, #00e3fd);
+            border-radius: 10px;
+            transition: width 0.5s linear;
+            box-shadow: 0 0 10px #00e3fd;
+        }
+
+        .status-text {
+            font-family: 'Space Grotesk', sans-serif;
+            color: #aaabb0;
+            font-weight: 500;
+            font-size: 0.9rem;
+            width: 100px;
+            text-align: right;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 3D Animation Background -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer">
+        
+        <div class="top-bar">
+            <div class="ai-badge">Obsidian Lab Interface</div>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="slide-heading" id="slide-num">Slide 1 / 5</div>
+            <h1 class="chapter-title">The Living World</h1>
+            <div class="transcript-box">
+                <div id="transcript-text">"Ever wonder what truly defines life? Welcome to Chapter 1: The Living World, your gateway to understanding the incredible diversity of life on Earth, crucial for your NEET success!"</div>
+            </div>
+        </div>
+
+        <div class="control-bar">
+            <button class="play-btn" id="start-btn" onclick="startPresentation()">▶</button>
+            <div class="progress-container">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <div class="status-text" id="status-label">READY</div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 3D Background Setup (Three.js) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0c0e12, 0.003);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 40;
+        camera.position.x = -15; // Shift camera to left to make room for UI on right
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        let current3DObject = new THREE.Group();
+        scene.add(current3DObject);
+
+        // Floating ambient particles
+        const ambientGeo = new THREE.BufferGeometry();
+        const ambientCount = 2000;
+        const posArray = new Float32Array(ambientCount * 3);
+        for(let i=0; i<ambientCount*3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 150;
+        }
+        ambientGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const ambientMat = new THREE.PointsMaterial({ size: 0.15, color: 0x81ecff, transparent: true, opacity: 0.2 });
+        const ambientParticles = new THREE.Points(ambientGeo, ambientMat);
+        scene.add(ambientParticles);
+
+        let animationFunction = () => {};
+
+        // ── SCENE GENERATORS ──
+
+        function buildScene1() {
+            // DNA Double Helix
+            const group = new THREE.Group();
+            const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const material1 = new THREE.MeshBasicMaterial({ color: 0x81ecff, transparent: true, opacity: 0.9 });
+            const material2 = new THREE.MeshBasicMaterial({ color: 0x6e9bff, transparent: true, opacity: 0.7 });
+            
+            for (let i = 0; i < 150; i++) {
+                const mesh1 = new THREE.Mesh(geometry, material1);
+                const mesh2 = new THREE.Mesh(geometry, material2);
+                const t = i * 0.25;
+                const radius = 6;
+                
+                mesh1.position.set(Math.cos(t) * radius, (i - 75) * 0.6, Math.sin(t) * radius);
+                mesh2.position.set(Math.cos(t + Math.PI) * radius, (i - 75) * 0.6, Math.sin(t + Math.PI) * radius);
+                
+                group.add(mesh1);
+                group.add(mesh2);
+
+                if (i % 2 === 0) {
+                    const lineMat = new THREE.LineBasicMaterial({ color: 0x00e3fd, transparent: true, opacity: 0.2 });
+                    const lineGeo = new THREE.BufferGeometry().setFromPoints([mesh1.position, mesh2.position]);
+                    group.add(new THREE.Line(lineGeo, lineMat));
+                }
+            }
+            
+            animationFunction = () => {
+                group.rotation.y += 0.005;
+                group.rotation.x = 0.1;
+            };
+            return group;
+        }
+
+        function buildScene2() {
+            // Pulsing Cell
+            const group = new THREE.Group();
+            const coreGeo = new THREE.IcosahedronGeometry(6, 2);
+            const coreMat = new THREE.MeshBasicMaterial({ color: 0x00e3fd, wireframe: true, transparent: true, opacity: 0.6 });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            group.add(core);
+
+            const outerGeo = new THREE.IcosahedronGeometry(12, 1);
+            const outerMat = new THREE.MeshBasicMaterial({ color: 0x6e9bff, wireframe: true, transparent: true, opacity: 0.2 });
+            const outer = new THREE.Mesh(outerGeo, outerMat);
+            group.add(outer);
+
+            for (let i=0; i<40; i++) {
+                const orgGeo = new THREE.SphereGeometry(Math.random() * 1.5 + 0.3, 8, 8);
+                const orgMat = new THREE.MeshBasicMaterial({ color: 0x81ecff, opacity: 0.8, transparent: true });
+                const org = new THREE.Mesh(orgGeo, orgMat);
+                org.position.set((Math.random()-0.5)*18, (Math.random()-0.5)*18, (Math.random()-0.5)*18);
+                group.add(org);
+            }
+            
+            let time = 0;
+            animationFunction = () => {
+                time += 0.05;
+                group.rotation.y -= 0.003;
+                group.rotation.x += 0.002;
+                core.scale.setScalar(1 + Math.sin(time) * 0.1);
+                outer.scale.setScalar(1 + Math.cos(time*0.5) * 0.05);
+            };
+            return group;
+        }
+
+        function buildScene3() {
+            // Biodiversity Globe
+            const group = new THREE.Group();
+            const globeGeo = new THREE.SphereGeometry(15, 64, 64);
+            const globeMat = new THREE.MeshBasicMaterial({ color: 0x0c0e12 });
+            const globe = new THREE.Mesh(globeGeo, globeMat);
+            group.add(globe);
+
+            const wireMat = new THREE.MeshBasicMaterial({ color: 0x005762, wireframe: true, transparent: true, opacity: 0.6 });
+            const wireGlobe = new THREE.Mesh(globeGeo, wireMat);
+            wireGlobe.scale.setScalar(1.02);
+            group.add(wireGlobe);
+
+            for(let i=0; i<400; i++) {
+                const dotGeo = new THREE.SphereGeometry(0.2, 8, 8);
+                const dotMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x81ecff : 0x6e9bff });
+                const dot = new THREE.Mesh(dotGeo, dotMat);
+                
+                const phi = Math.acos(-1 + (2 * i) / 400);
+                const theta = Math.sqrt(400 * Math.PI) * phi;
+                const r = 15.5;
+                dot.position.set(r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi));
+                group.add(dot);
+            }
+            
+            animationFunction = () => { group.rotation.y += 0.004; group.rotation.x = 0.1; };
+            return group;
+        }
+
+        function buildScene4() {
+            // Taxonomy Hierarchy Pyramid
+            const group = new THREE.Group();
+            const levels = 7;
+            const colors = [0x81ecff, 0x00e3fd, 0x00d4ec, 0x6e9bff, 0x0f6df3, 0x0058ca, 0x004baf];
+
+            for(let i=0; i<levels; i++) {
+                const width = (levels - i) * 2.5;
+                const geo = new THREE.BoxGeometry(width, 1.5, width);
+                const mat = new THREE.MeshBasicMaterial({ color: colors[i], wireframe: true, transparent: true, opacity: 0.9 });
+                const layer = new THREE.Mesh(geo, mat);
+                layer.position.y = (i - levels/2) * 2.5;
+                group.add(layer);
+            }
+            
+            animationFunction = () => {
+                group.rotation.y += 0.005;
+                group.children.forEach((child, index) => {
+                    child.rotation.y = Math.sin(Date.now() * 0.001 + index) * 0.1;
+                });
+            };
+            return group;
+        }
+
+        function buildScene5() {
+            // Nomenclature Rings
+            const group = new THREE.Group();
+            const ring1Geo = new THREE.TorusGeometry(10, 0.2, 16, 100);
+            const ring1Mat = new THREE.MeshBasicMaterial({ color: 0x81ecff, wireframe: true });
+            const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
+            group.add(ring1);
+
+            const ring2Geo = new THREE.TorusGeometry(7, 0.2, 16, 100);
+            const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x6e9bff, wireframe: true });
+            const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+            group.add(ring2);
+            
+            animationFunction = () => {
+                ring1.rotation.x += 0.01; ring1.rotation.y += 0.005;
+                ring2.rotation.x -= 0.008; ring2.rotation.y += 0.012;
+            };
+            return group;
+        }
+
+        const sceneGenerators = [buildScene1, buildScene2, buildScene3, buildScene4, buildScene5];
+
+        function switch3DScene(index) {
+            scene.remove(current3DObject);
+            current3DObject = sceneGenerators[index]();
+            scene.add(current3DObject);
+            
+            current3DObject.scale.set(0.01, 0.01, 0.01);
+            let s = 0.01;
+            const grow = setInterval(() => {
+                s += 0.05;
+                if(s >= 1) { s = 1; clearInterval(grow); }
+                current3DObject.scale.set(s,s,s);
+            }, 16);
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            ambientParticles.rotation.y -= 0.001;
+            animationFunction();
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- Presentation Logic ---
+        let currentSlide = 0;
+        let isPlaying = false;
+        let speechSynth = window.speechSynthesis;
+
+        const scenes = [
+            { title: "The Living World", text: "Ever wonder what truly defines life? Welcome to Chapter 1: The Living World, your gateway to understanding the incredible diversity of life on Earth, crucial for your NEET success!" },
+            { title: "Characteristics of Life", text: "At its heart, life is defined by five key characteristics. Living organisms grow, they reproduce, they exhibit complex metabolism, they are made of cells, and they possess consciousness." },
+            { title: "Biodiversity", text: "Our planet is a treasure trove of biodiversity! Scientists have described over 1.7 million species, from microscopic bacteria to massive blue whales." },
+            { title: "Taxonomy Hierarchy", text: "Taxonomy is the science of classifying life. Remember the hierarchy: Kingdom, Phylum, Class, Order, Family, Genus, Species! Keep Pond Clean Or Fish Get Sick." },
+            { title: "Nomenclature", text: "Carl Linnaeus gave us a universal naming system. Genus first, species second. For example, we are Homo sapiens, and the mango tree is Mangifera indica." }
+        ];
+
+        switch3DScene(0);
+
+        function startPresentation() {
+            if (isPlaying) {
+                // Pause logic if needed, or simply let it run
+                return;
+            }
+            isPlaying = true;
+            
+            const btn = document.getElementById('start-btn');
+            btn.innerHTML = '⏸';
+            btn.classList.add('playing');
+            document.getElementById('status-label').innerText = "PLAYING";
+            document.getElementById('sidebar').classList.add('visible');
+            
+            playScene(0);
+        }
+
+        function playScene(index) {
+            if (index >= scenes.length) {
+                const btn = document.getElementById('start-btn');
+                btn.innerHTML = '▶';
+                btn.classList.remove('playing');
+                document.getElementById('status-label').innerText = "FINISHED";
+                isPlaying = false;
+                switch3DScene(0);
+                return;
+            }
+
+            const progress = ((index) / scenes.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+
+            // Update UI Sidebar
+            document.getElementById('slide-num').innerText = `SLIDE ${index + 1} / ${scenes.length}`;
+            document.querySelector('.chapter-title').innerText = scenes[index].title;
+            
+            const textEl = document.getElementById('transcript-text');
+            textEl.style.animation = 'none';
+            textEl.offsetHeight; /* trigger reflow */
+            textEl.style.animation = null; 
+            textEl.innerText = `"${scenes[index].text}"`;
+
+            if(index > 0) switch3DScene(index);
+
+            // Audio
+            const utterance = new SpeechSynthesisUtterance(scenes[index].text);
+            utterance.rate = 0.95;
+            utterance.pitch = 1.05;
+            
+            const voices = speechSynth.getVoices();
+            const preferredVoice = voices.find(v => v.name.includes('Google') || v.lang.includes('en-US'));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            // Animate progress bar filling during the scene
+            const startTime = Date.now();
+            // Estimate duration based on text length (avg 15 chars/sec reading speed)
+            const estDurationMs = (scenes[index].text.length / 15) * 1000; 
+            
+            const progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const chunkProgress = Math.min(100, (elapsed / estDurationMs) * 100);
+                const totalProgress = ((index + (chunkProgress/100)) / scenes.length) * 100;
+                document.getElementById('progress').style.width = totalProgress + '%';
+            }, 100);
+
+            utterance.onend = () => {
+                clearInterval(progressInterval);
+                document.getElementById('progress').style.width = ((index + 1) / scenes.length) * 100 + '%';
+                setTimeout(() => playScene(index + 1), 800); 
+            };
+
+            speechSynth.speak(utterance);
+        }
+
+        speechSynth.onvoiceschanged = () => { speechSynth.getVoices(); };
+
+    </script>
+</body>
+</html>

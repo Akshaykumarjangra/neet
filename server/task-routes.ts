@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { requireOwner } from "./auth";
+import { requireAdmin } from "./auth";
 import { listJobs, queueJob, resetJobForRetry, markJobCancelled, processJob, getJobById, JobType } from "./job-service";
 
 const router = Router();
 
-router.get("/", requireOwner, async (_req, res) => {
+router.get("/", requireAdmin, async (_req, res) => {
   const jobs = await listJobs();
   res.json({ jobs });
 });
 
-router.post("/", requireOwner, async (req, res) => {
+router.post("/", requireAdmin, async (req, res) => {
   const { jobType } = req.body as { jobType?: JobType };
   if (!jobType) {
     return res.status(400).json({ error: "jobType is required" });
@@ -21,7 +21,7 @@ router.post("/", requireOwner, async (req, res) => {
   res.status(201).json({ job });
 });
 
-router.post("/:id/retry", requireOwner, async (req, res) => {
+router.post("/:id/retry", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid job id" });
@@ -33,7 +33,7 @@ router.post("/:id/retry", requireOwner, async (req, res) => {
   res.json({ job });
 });
 
-router.post("/:id/cancel", requireOwner, async (req, res) => {
+router.post("/:id/cancel", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid job id" });
@@ -45,7 +45,7 @@ router.post("/:id/cancel", requireOwner, async (req, res) => {
   res.json({ job });
 });
 
-router.post("/:id/restart", requireOwner, async (req, res) => {
+router.post("/:id/restart", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid job id" });

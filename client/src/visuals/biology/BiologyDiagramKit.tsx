@@ -67,7 +67,7 @@ function FlowchartCanvas() {
 
 function TableCanvas() {
   return (
-    <div className="grid grid-cols-3 gap-2 text-xs">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
       {["Structure", "Role", "Example"].map((header) => (
         <div key={header} className="rounded-md bg-muted/50 p-2 font-semibold">
           {header}

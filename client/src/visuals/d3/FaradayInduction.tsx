@@ -376,7 +376,7 @@ export default function FaradayInduction() {
       <CardContent className="space-y-4">
         <svg ref={svgRef} width={width} height={height} className="border rounded-lg bg-background" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Magnet Speed: {magnetSpeed[0]}
@@ -410,7 +410,7 @@ export default function FaradayInduction() {
           </div>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-2 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Current EMF</p>
             <p className="text-2xl font-bold text-blue-600">{emf.toFixed(2)} V</p>

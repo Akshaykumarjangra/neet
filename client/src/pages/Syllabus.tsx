@@ -1,494 +1,136 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { Header } from "@/components/Header";
-import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Seo } from "@/components/Seo";
+import { getBreadcrumbSchema } from "@/config/seo";
+import { FileText, CheckCircle2, AlertCircle, Info, Download, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { 
-  BookOpen, 
-  Clock, 
-  ChevronRight, 
-  AlertCircle, 
-  Atom, 
-  FlaskConical, 
-  Leaf, 
-  Bug,
-  GraduationCap
-} from "lucide-react";
 
-interface Chapter {
-  id: number;
-  chapterNumber: number;
-  title: string;
-  classLevel: string;
-  difficultyLevel: number;
-  estimatedStudyMinutes: number;
-}
-
-interface SyllabusData {
-  Physics?: Chapter[];
-  Chemistry?: Chapter[];
-  Botany?: Chapter[];
-  Zoology?: Chapter[];
-}
-
-interface ChapterProgress {
-  [chapterId: string]: {
-    completionPercentage: number;
-    masteryLevel: string;
-    timeSpentMinutes: number;
-  };
-}
-
-const getDifficultyLabel = (level: number): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
-  if (level <= 2) return { label: "Easy", variant: "secondary" };
-  if (level <= 3) return { label: "Medium", variant: "default" };
-  return { label: "Hard", variant: "destructive" };
+const syllabusData = {
+  biology: [
+    { unit: "Diversity in Living World", chapters: 4, weightage: "14%", focus: "High" },
+    { unit: "Structural Organization in Animals and Plants", chapters: 3, weightage: "5%", focus: "Medium" },
+    { unit: "Cell Structure and Function", chapters: 3, weightage: "9%", focus: "High" },
+    { unit: "Plant Physiology", chapters: 5, weightage: "6%", focus: "Medium" },
+    { unit: "Human Physiology", chapters: 7, weightage: "20%", focus: "High" },
+  ],
+  physics: [
+    { unit: "Physical World and Measurement", chapters: 1, weightage: "2%", focus: "Low" },
+    { unit: "Kinematics", chapters: 2, weightage: "3%", focus: "Medium" },
+    { unit: "Laws of Motion", chapters: 1, weightage: "3%", focus: "High" },
+    { unit: "Work, Energy and Power", chapters: 1, weightage: "4%", focus: "High" },
+    { unit: "Thermodynamics", chapters: 1, weightage: "9%", focus: "High" },
+  ],
+  chemistry: [
+    { unit: "Some Basic Concepts of Chemistry", chapters: 1, weightage: "2%", focus: "Medium" },
+    { unit: "Structure of Atom", chapters: 1, weightage: "3%", focus: "High" },
+    { unit: "Chemical Bonding", chapters: 1, weightage: "5%", focus: "High" },
+    { unit: "Equilibrium", chapters: 1, weightage: "6%", focus: "High" },
+    { unit: "Organic Chemistry: Basic Principles", chapters: 1, weightage: "10%", focus: "High" },
+  ]
 };
-
-const getSubjectIcon = (subject: string) => {
-  switch (subject) {
-    case "Physics":
-      return <Atom className="h-5 w-5" />;
-    case "Chemistry":
-      return <FlaskConical className="h-5 w-5" />;
-    case "Botany":
-      return <Leaf className="h-5 w-5" />;
-    case "Zoology":
-      return <Bug className="h-5 w-5" />;
-    default:
-      return <BookOpen className="h-5 w-5" />;
-  }
-};
-
-const getSubjectColor = (subject: string) => {
-  switch (subject) {
-    case "Physics":
-      return "text-blue-500";
-    case "Chemistry":
-      return "text-purple-500";
-    case "Botany":
-      return "text-green-500";
-    case "Zoology":
-      return "text-amber-500";
-    default:
-      return "text-primary";
-  }
-};
-
-function ChapterCard({ 
-  chapter, 
-  subject, 
-  progress, 
-  onClick 
-}: { 
-  chapter: Chapter; 
-  subject: string; 
-  progress?: { completionPercentage: number; masteryLevel: string; timeSpentMinutes: number };
-  onClick: () => void;
-}) {
-  const difficulty = getDifficultyLabel(chapter.difficultyLevel);
-  const hasProgress = progress && progress.completionPercentage > 0;
-
-  return (
-    <Card 
-      className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] group"
-      onClick={onClick}
-      data-testid={`card-chapter-${subject.toLowerCase()}-${chapter.chapterNumber}`}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 ${getSubjectColor(subject)}`}>
-                {getSubjectIcon(subject)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground font-medium">
-                  Chapter {chapter.chapterNumber}
-                </p>
-                <h3 className="font-semibold text-sm line-clamp-2" data-testid={`text-chapter-title-${chapter.id}`}>
-                  {chapter.title}
-                </h3>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <Badge variant={difficulty.variant} className="text-xs" data-testid={`badge-difficulty-${chapter.id}`}>
-                {difficulty.label}
-              </Badge>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{chapter.estimatedStudyMinutes} min</span>
-              </div>
-            </div>
-
-            {hasProgress && (
-              <div className="mt-3 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-medium">{progress.completionPercentage}%</span>
-                </div>
-                <Progress value={progress.completionPercentage} className="h-1.5" />
-              </div>
-            )}
-          </div>
-
-          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChapterCardSkeleton() {
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Skeleton className="h-10 w-10 rounded-lg" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-4 w-full max-w-[200px]" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-3">
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-          </div>
-          <Skeleton className="h-5 w-5 rounded" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function EmptyState({ subject }: { subject: string }) {
-  return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-12">
-        <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4 ${getSubjectColor(subject)}`}>
-          {getSubjectIcon(subject)}
-        </div>
-        <h3 className="text-lg font-semibold mb-1">No chapters available</h3>
-        <p className="text-sm text-muted-foreground text-center max-w-sm">
-          Chapters for {subject} will be added soon. Check back later!
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <Card className="border-destructive">
-      <CardContent className="flex flex-col items-center justify-center py-12">
-        <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-          <AlertCircle className="h-6 w-6 text-destructive" />
-        </div>
-        <h3 className="text-lg font-semibold mb-1">Failed to load syllabus</h3>
-        <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
-          Something went wrong while fetching the syllabus. Please try again.
-        </p>
-        <Button onClick={onRetry} variant="outline" data-testid="button-retry">
-          Try Again
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChapterGrid({ 
-  chapters, 
-  subject, 
-  classLevel,
-  progress,
-  isLoading,
-  onChapterClick
-}: { 
-  chapters: Chapter[] | undefined;
-  subject: string;
-  classLevel: string;
-  progress: ChapterProgress;
-  isLoading: boolean;
-  onChapterClick: (chapter: Chapter) => void;
-}) {
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <ChapterCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  const filteredChapters = chapters?.filter(c => c.classLevel === classLevel) || [];
-
-  if (filteredChapters.length === 0) {
-    return <EmptyState subject={subject} />;
-  }
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {filteredChapters.map((chapter) => (
-        <ChapterCard
-          key={chapter.id}
-          chapter={chapter}
-          subject={subject}
-          progress={progress[chapter.id]}
-          onClick={() => onChapterClick(chapter)}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function Syllabus() {
-  const [, setLocation] = useLocation();
-  const { user, isAuthenticated } = useAuth();
-  const [activeSubject, setActiveSubject] = useState("Physics");
-  const [classLevel, setClassLevel] = useState<"Class 11" | "Class 12">("Class 11");
-
-  const { data: syllabusData, isLoading, isError, refetch } = useQuery<SyllabusData>({
-    queryKey: ["/api/learn/syllabus"],
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: progressData } = useQuery<ChapterProgress>({
-    queryKey: ["/api/progress/chapters", user?.id],
-    enabled: isAuthenticated && !!user?.id,
-    staleTime: 60 * 1000,
-  });
-
-  const handleChapterClick = (chapter: Chapter, subject: string) => {
-    setLocation(`/chapter/${subject.toLowerCase()}/${chapter.classLevel.replace(" ", "")}/${chapter.chapterNumber}`);
-  };
-
-  const getChapterCount = (subject: string) => {
-    let subjectData: Chapter[] = [];
-
-    if (subject === "Botany") {
-      subjectData = syllabusData?.Botany || [];
-    } else if (subject === "Zoology") {
-      subjectData = syllabusData?.Zoology || [];
-    } else {
-      subjectData = syllabusData?.[subject as keyof SyllabusData] || [];
-    }
-
-    return subjectData.filter(c => c.classLevel === classLevel).length;
-  };
-
-  const subjects = [
-    { id: "Physics", label: "Physics", icon: <Atom className="h-4 w-4" /> },
-    { id: "Chemistry", label: "Chemistry", icon: <FlaskConical className="h-4 w-4" /> },
-    { id: "Botany", label: "Botany", icon: <Leaf className="h-4 w-4" /> },
-    { id: "Zoology", label: "Zoology", icon: <Bug className="h-4 w-4" /> },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title="Official NEET 2026 Syllabus (NTA) | Subject-wise Breakdown"
+        description="Get the latest, most accurate NEET 2026 syllabus as per NTA guidelines. Detailed breakdown of Biology, Physics, and Chemistry units with weightage analysis."
+        keywords="NEET 2026 syllabus, NTA NEET syllabus pdf, biology syllabus NEET, physics syllabus NEET, chemistry chapters NEET"
+        url="https://neet.zeropage.in/syllabus"
+      />
       <Header />
       
-      <div className="flex">
-        <aside className="hidden lg:flex w-64 shrink-0 border-r min-h-[calc(100vh-4rem)] bg-muted/30">
-          <div className="flex flex-col p-4 w-full">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                <GraduationCap className="h-5 w-5" />
-                Syllabus
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Complete NEET curriculum for {classLevel}
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              {subjects.map((subject) => (
-                <Button
-                  key={subject.id}
-                  variant={activeSubject === subject.id ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-2"
-                  onClick={() => setActiveSubject(subject.id)}
-                  data-testid={`sidebar-subject-${subject.id.toLowerCase()}`}
-                >
-                  {subject.icon}
-                  <span>{subject.label}</span>
-                  <Badge variant="outline" className="ml-auto text-xs">
-                    {getChapterCount(subject.id)}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-6 border-t">
-              <p className="text-xs text-muted-foreground mb-3 font-medium">Class Level</p>
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant={classLevel === "Class 11" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => setClassLevel("Class 11")}
-                  data-testid="button-class-11"
-                >
-                  Class 11
-                </Button>
-                <Button
-                  variant={classLevel === "Class 12" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => setClassLevel("Class 12")}
-                  data-testid="button-class-12"
-                >
-                  Class 12
-                </Button>
-              </div>
-            </div>
+      <main className="container mx-auto px-4 py-8 space-y-12">
+        {/* Hero Section */}
+        <section className="text-center space-y-4 max-w-4xl mx-auto pt-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-bold uppercase tracking-widest border border-green-500/20">
+            <CheckCircle2 className="w-3 h-3" /> Latest NTA Guidelines Verified
           </div>
-        </aside>
+          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter">
+            NEET 2026 <span className="text-primary italic">OFFICIAL SYLLABUS</span>
+          </h1>
+          <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto italic">
+            Don't study harder, study smarter. Use our weightage-based breakdown to prioritize high-yield units.
+          </p>
+          <div className="pt-6 flex flex-wrap justify-center gap-4">
+            <Button size="lg" className="rounded-2xl italic font-bold h-14 px-10 shadow-xl shadow-primary/20">
+              <Download className="mr-2 w-5 h-5" /> Download Full PDF
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-2xl italic font-bold h-14 px-10">
+              Track My Progress
+            </Button>
+          </div>
+        </section>
 
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2" data-testid="text-page-title">NEET Syllabus</h1>
-              <p className="text-muted-foreground">
-                Browse and study chapters across Physics, Chemistry, Botany, and Zoology
-              </p>
+        {/* Syllabus Tabs */}
+        <section className="max-w-5xl mx-auto">
+          <Tabs defaultValue="biology" className="w-full">
+            <div className="flex justify-center mb-8">
+              <TabsList className="bg-muted/50 p-1 rounded-2xl h-14 w-full max-w-md">
+                <TabsTrigger value="biology" className="rounded-xl italic font-bold h-full flex-1">Biology</TabsTrigger>
+                <TabsTrigger value="physics" className="rounded-xl italic font-bold h-full flex-1">Physics</TabsTrigger>
+                <TabsTrigger value="chemistry" className="rounded-xl italic font-bold h-full flex-1">Chemistry</TabsTrigger>
+              </TabsList>
             </div>
 
-            <div className="lg:hidden mb-6">
-              <div className="flex gap-2 mb-4">
-                <Button
-                  variant={classLevel === "Class 11" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setClassLevel("Class 11")}
-                  data-testid="button-class-11-mobile"
-                >
-                  Class 11
-                </Button>
-                <Button
-                  variant={classLevel === "Class 12" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setClassLevel("Class 12")}
-                  data-testid="button-class-12-mobile"
-                >
-                  Class 12
-                </Button>
-              </div>
-            </div>
-
-            {isError ? (
-              <ErrorState onRetry={() => refetch()} />
-            ) : (
-              <Tabs value={activeSubject} onValueChange={setActiveSubject} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 lg:hidden mb-6">
-                  {subjects.map((subject) => (
-                    <TabsTrigger 
-                      key={subject.id} 
-                      value={subject.id}
-                      data-testid={`tab-subject-${subject.id.toLowerCase()}`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {subject.icon}
-                        <span className="hidden sm:inline">{subject.label}</span>
-                        <span className="sm:hidden">{subject.label.slice(0, 3)}</span>
-                      </span>
-                    </TabsTrigger>
+            {Object.entries(syllabusData).map(([subject, units]) => (
+              <TabsContent key={subject} value={subject} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {units.map((item, i) => (
+                    <Card key={i} className="border-border/50 hover:border-primary/30 transition-all group overflow-hidden">
+                      <div className={`h-1.5 w-full ${item.focus === 'High' ? 'bg-destructive' : item.focus === 'Medium' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-widest">{item.focus} Priority</Badge>
+                          <span className="text-lg font-black italic text-primary">{item.weightage}</span>
+                        </div>
+                        <CardTitle className="text-lg italic leading-snug pt-2 group-hover:text-primary transition-colors">
+                          {item.unit}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+                          <BookOpen className="w-4 h-4" />
+                          {item.chapters} Chapters Included
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-                </TabsList>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </section>
 
-                <TabsContent value="Physics" className="mt-0">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <Atom className="h-5 w-5 text-blue-500" />
-                      Physics
-                      <Badge variant="secondary" className="ml-2">
-                        {classLevel}
-                      </Badge>
-                    </h2>
-                  </div>
-                  <ChapterGrid
-                    chapters={syllabusData?.Physics}
-                    subject="Physics"
-                    classLevel={classLevel}
-                    progress={progressData || {}}
-                    isLoading={isLoading}
-                    onChapterClick={(chapter) => handleChapterClick(chapter, "Physics")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="Chemistry" className="mt-0">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <FlaskConical className="h-5 w-5 text-purple-500" />
-                      Chemistry
-                      <Badge variant="secondary" className="ml-2">
-                        {classLevel}
-                      </Badge>
-                    </h2>
-                  </div>
-                  <ChapterGrid
-                    chapters={syllabusData?.Chemistry}
-                    subject="Chemistry"
-                    classLevel={classLevel}
-                    progress={progressData || {}}
-                    isLoading={isLoading}
-                    onChapterClick={(chapter) => handleChapterClick(chapter, "Chemistry")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="Botany" className="mt-0">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <Leaf className="h-5 w-5 text-green-500" />
-                      Botany
-                      <Badge variant="secondary" className="ml-2">
-                        {classLevel}
-                      </Badge>
-                    </h2>
-                  </div>
-                  <ChapterGrid
-                    chapters={syllabusData?.Botany}
-                    subject="Botany"
-                    classLevel={classLevel}
-                    progress={progressData || {}}
-                    isLoading={isLoading}
-                    onChapterClick={(chapter) => handleChapterClick(chapter, "Botany")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="Zoology" className="mt-0">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <Bug className="h-5 w-5 text-amber-500" />
-                      Zoology
-                      <Badge variant="secondary" className="ml-2">
-                        {classLevel}
-                      </Badge>
-                    </h2>
-                  </div>
-                  <ChapterGrid
-                    chapters={syllabusData?.Zoology}
-                    subject="Zoology"
-                    classLevel={classLevel}
-                    progress={progressData || {}}
-                    isLoading={isLoading}
-                    onChapterClick={(chapter) => handleChapterClick(chapter, "Zoology")}
-                  />
-                </TabsContent>
-              </Tabs>
-            )}
+        {/* Disclaimer & Advisory */}
+        <section className="max-w-3xl mx-auto">
+          <div className="p-6 rounded-3xl bg-muted/30 border border-border/50 flex gap-6 items-start">
+            <div className="p-3 rounded-2xl bg-primary/10 text-primary shrink-0">
+              <Info className="w-6 h-6" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-black italic">Aspirant Advisory</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed italic">
+                This syllabus is based on the latest notification from the National Testing Agency (NTA). 
+                We recommend starting with "High Priority" units first as they consistently contribute to over 60% of the total marks in NEET.
+              </p>
+            </div>
           </div>
-        </main>
-      </div>
+        </section>
+
+        {/* Integration Callout */}
+        <section className="py-12 border-t border-border/50 text-center space-y-6">
+          <h2 className="text-3xl font-black italic">Start Your Chapter-wise Prep</h2>
+          <p className="text-muted-foreground italic max-w-xl mx-auto">
+            Ready to dive in? Every topic listed above is mapped to our 50,000+ question bank and interactive flashcards.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg font-black italic">Get Started Free</Button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

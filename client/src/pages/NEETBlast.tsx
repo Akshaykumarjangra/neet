@@ -12,6 +12,7 @@ import {
   Rocket,
   Award,
 } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 const timeline = [
   {
@@ -94,8 +95,14 @@ export default function NEETBlast() {
   const xp = data?.xp;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-background">
-      <Header />
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <Seo 
+        title="NEET Blast 2026 | Daily Mock Test Challenges & Streaks"
+        description="Challenge yourself with NEET Blast! Take daily mock tests, maintain your streak, earn XP, and climb the leaderboard. The ultimate gamified NEET preparation experience."
+        keywords={["NEET blast", "daily mock tests NEET", "NEET preparation challenges", "NEET study streaks", "gamified NEET learning"]}
+        url="https://neet.zeropage.in/blast"
+      />
+      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px]" />
 
       <main className="container mx-auto px-4 py-10 space-y-10">
         <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-900/80 via-purple-900/80 to-slate-900/80 p-8 text-white shadow-xl shadow-purple-500/20">

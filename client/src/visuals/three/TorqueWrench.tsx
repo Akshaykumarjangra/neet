@@ -397,7 +397,7 @@ export default function TorqueWrench() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-red-600">Applied Force</p>
             <p className="font-mono text-xl">{force[0]} N</p>

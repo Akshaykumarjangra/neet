@@ -1,11 +1,35 @@
-// @ts-nocheck
+// Authentication routes — login, signup, logout, password management
 import { Router, type Request, type Response } from "express";
 import nodemailer from "nodemailer";
 import { z } from "zod";
 import { authenticateUser, createUser, getCurrentUser, hashPassword, verifyPassword } from "./auth";
 import { db } from "./db";
 import { users } from "../shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { authLimiter, passwordResetLimiter } from "./middleware/rate-limits";
+import { recordAuditLog } from "./lib/audit";
+
+// Strong password policy:
+// - Min 10 chars
+// - At least 1 uppercase, 1 lowercase, 1 number
+// - At least 1 special char OR length >= 14 (long passphrase exemption)
+const PASSWORD_REQUIREMENTS_MESSAGE =
+  "Password must be at least 10 characters and include uppercase, lowercase, and a number, plus a special character (or be 14+ characters).";
+
+const strongPassword = z
+  .string()
+  .min(10, PASSWORD_REQUIREMENTS_MESSAGE)
+  .max(200)
+  .refine((val) => /[A-Z]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+  .refine((val) => /[a-z]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+  .refine((val) => /[0-9]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+  .refine(
+    (val) => val.length >= 14 || /[^A-Za-z0-9]/.test(val),
+    PASSWORD_REQUIREMENTS_MESSAGE,
+  );
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
 async function sendPasswordChangeEmail(userEmail: string, userName: string) {
   // Check for required environment variables
@@ -49,11 +73,16 @@ async function sendPasswordChangeEmail(userEmail: string, userName: string) {
 
 const router = Router();
 
+// Apply auth rate limiting to all sensitive endpoints
+router.use("/login", authLimiter);
+router.use("/signup", authLimiter);
+router.use("/change-password", authLimiter);
+
 // Validation schemas
 const signupSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: strongPassword,
   role: z.enum(["student", "mentor"]).default("student"),
   inviteToken: z.string().min(8).optional(),
 });
@@ -65,7 +94,7 @@ const loginSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string(),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  newPassword: strongPassword,
 });
 
 // Sign up new user
@@ -89,30 +118,46 @@ router.post("/signup", async (req: Request, res: Response) => {
       isPaidUser: false,
     });
 
-    // Create session
-    req.session.userId = user.id;
+    // Create session (regenerate to prevent fixation)
+    req.session.regenerate(async (err) => {
+      if (err) {
+        console.error("Session regeneration error:", err);
+        return res.status(500).json({ error: "Failed to create session" });
+      }
 
-    // Fetch full user details
-    const [fullUser] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        currentLevel: users.currentLevel,
-        totalPoints: users.totalPoints,
-        studyStreak: users.studyStreak,
-        isAdmin: users.isAdmin,
-        isPaidUser: users.isPaidUser,
-        isOwner: users.isOwner,
-        avatarUrl: users.avatarUrl,
-        headline: users.headline,
-      })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1);
+      req.session.userId = user.id;
+      // Clear CSRF token to force rotation
+      delete req.session.csrfToken;
 
-    res.json({ user: fullUser });
+      await recordAuditLog(req, {
+        action: "signup",
+        entityType: "user",
+        entityId: user.id,
+        userId: user.id
+      });
+
+      // Fetch full user details
+      const [fullUser] = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          role: users.role,
+          currentLevel: users.currentLevel,
+          totalPoints: users.totalPoints,
+          studyStreak: users.studyStreak,
+          isAdmin: users.isAdmin,
+          isPaidUser: users.isPaidUser,
+          isOwner: users.isOwner,
+          avatarUrl: users.avatarUrl,
+          headline: users.headline,
+        })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+
+      res.json({ user: fullUser });
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
@@ -126,10 +171,53 @@ router.post("/signup", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Pre-auth: check if account is currently locked
+    const [preAuthUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
+
+    if (preAuthUser?.lockedUntil && preAuthUser.lockedUntil > new Date()) {
+      return res.status(429).json({
+        error: `Account locked due to too many failed login attempts. Try again at ${preAuthUser.lockedUntil.toISOString()}.`,
+        lockedUntil: preAuthUser.lockedUntil,
+      });
+    }
 
     const user = await authenticateUser(email, password);
 
     if (!user) {
+      // Increment failed attempts on the matched account (if any)
+      if (preAuthUser) {
+        const newAttempts = (preAuthUser.failedLoginAttempts ?? 0) + 1;
+        const shouldLock = newAttempts >= MAX_FAILED_ATTEMPTS;
+        await db
+          .update(users)
+          .set({
+            failedLoginAttempts: newAttempts,
+            lockedUntil: shouldLock
+              ? new Date(Date.now() + LOCKOUT_DURATION_MS)
+              : preAuthUser.lockedUntil ?? null,
+          })
+          .where(eq(users.id, preAuthUser.id));
+
+        await recordAuditLog(req, {
+          action: shouldLock ? "account_lockout" : "login_failed",
+          entityType: "user",
+          entityId: preAuthUser.id,
+          userId: preAuthUser.id,
+          newValue: { attempts: newAttempts }
+        });
+
+        if (shouldLock) {
+          return res.status(429).json({
+            error: `Account locked due to too many failed login attempts. Try again in 30 minutes.`,
+          });
+        }
+      }
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
@@ -141,34 +229,62 @@ router.post("/login", async (req: Request, res: Response) => {
       .limit(1);
 
     if (userDetails?.isDisabled) {
+      await recordAuditLog(req, {
+        action: "login_disabled_account",
+        entityType: "user",
+        entityId: user.id,
+        userId: user.id
+      });
       return res.status(403).json({ error: "Your account has been disabled. Please contact support." });
     }
 
-    // Create session
-    req.session.userId = user.id;
+    // Successful login: reset lockout counters
+    await db
+      .update(users)
+      .set({ failedLoginAttempts: 0, lockedUntil: null })
+      .where(eq(users.id, user.id));
 
-    // Fetch full user details including mustChangePassword
-    const [fullUser] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        currentLevel: users.currentLevel,
-        totalPoints: users.totalPoints,
-        studyStreak: users.studyStreak,
-        isAdmin: users.isAdmin,
-        isPaidUser: users.isPaidUser,
-        isOwner: users.isOwner,
-        mustChangePassword: users.mustChangePassword,
-        avatarUrl: users.avatarUrl,
-        headline: users.headline,
-      })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1);
+    // Create session (regenerate to prevent fixation)
+    req.session.regenerate(async (err) => {
+      if (err) {
+        console.error("Session regeneration error:", err);
+        return res.status(500).json({ error: "Failed to create session" });
+      }
 
-    res.json({ user: fullUser });
+      req.session.userId = user.id;
+      // Clear CSRF token to force rotation
+      delete req.session.csrfToken;
+
+      await recordAuditLog(req, {
+        action: "login",
+        entityType: "user",
+        entityId: user.id,
+        userId: user.id
+      });
+
+      // Fetch full user details including mustChangePassword
+      const [fullUser] = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          role: users.role,
+          currentLevel: users.currentLevel,
+          totalPoints: users.totalPoints,
+          studyStreak: users.studyStreak,
+          isAdmin: users.isAdmin,
+          isPaidUser: users.isPaidUser,
+          isOwner: users.isOwner,
+          mustChangePassword: users.mustChangePassword,
+          avatarUrl: users.avatarUrl,
+          headline: users.headline,
+        })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+
+      res.json({ user: fullUser });
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
@@ -286,75 +402,6 @@ router.post("/change-password", async (req: Request, res: Response) => {
   }
 });
 
-// Admin Impersonation
-router.post("/admin/impersonate", async (req: Request, res: Response) => {
-  const adminId = getCurrentUser(req);
 
-  if (!adminId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  try {
-    // 1. Verify the requester is an admin
-    const [admin] = await db
-      .select({ isAdmin: users.isAdmin })
-      .from(users)
-      .where(eq(users.id, adminId))
-      .limit(1);
-
-    if (!admin || !admin.isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    // 2. Validate target user exists
-    const { targetUserId } = z.object({ targetUserId: z.string() }).parse(req.body);
-
-    const [targetUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, targetUserId))
-      .limit(1);
-
-    if (!targetUser) {
-      return res.status(404).json({ error: "Target user not found" });
-    }
-
-    // 3. Create session for target user
-    req.session.userId = targetUser.id;
-
-    // 4. Return user details similar to login
-    const [fullUser] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        currentLevel: users.currentLevel,
-        totalPoints: users.totalPoints,
-        studyStreak: users.studyStreak,
-        isAdmin: users.isAdmin,
-        isPaidUser: users.isPaidUser,
-        isOwner: users.isOwner,
-        mustChangePassword: users.mustChangePassword,
-        avatarUrl: users.avatarUrl,
-        headline: users.headline,
-      })
-      .from(users)
-      .where(eq(users.id, targetUser.id))
-      .limit(1);
-
-    res.json({
-      user: fullUser,
-      message: `Successfully impersonating ${targetUser.name}`
-    });
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error("Impersonation error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 export default router;

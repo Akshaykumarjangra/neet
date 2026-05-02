@@ -19,6 +19,93 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: neet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neet-app
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/neetprep
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      PORT: 5001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: neet-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # First boot: docker exec neet-ollama ollama pull qwen2.5-coder:1.5b && ollama pull phi3.5
+
+  marketing-swarm:
+    build:
+      context: ../marketing_swarm
+      dockerfile: Dockerfile
+    container_name: neet-marketing-swarm
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MODEL: gemini/gemini-1.5-flash
+    depends_on:
+      - app
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8001"]
+
+  # Automated DB backups (Phase 7.6)
+  db-backup:
+    image: postgres:16
+    container_name: neet-db-backup
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backups:/backups
+    entrypoint: >
+      sh -c "while true; do
+        pg_dump -h postgres -U postgres neetprep > /backups/neetprep_$$(date +%Y%m%d_%H%M%S).sql;
+        find /backups -name '*.sql' -mtime +7 -delete;
+        sleep 86400;
+      done"
+
 volumes:
   pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  uploads:
+    driver: local
+  backups:
+    driver: local
+  ollama:
     driver: local

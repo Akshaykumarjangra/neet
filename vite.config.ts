@@ -1,11 +1,38 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { VitePWA } from "vite-plugin-pwa";
 
 
 export default defineConfig({
   plugins: [
     react(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "robots.txt"],
+      manifest: {
+        name: "NEETPrep",
+        short_name: "NEETPrep",
+        description: "Most advanced NEET preparation app",
+        theme_color: "#6366f1",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/",
+        icons: [
+          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        runtimeCaching: [
+          { urlPattern: ({ url }) => url.pathname.startsWith("/api/chapters"), handler: "StaleWhileRevalidate", options: { cacheName: "chapters" } },
+          { urlPattern: ({ url }) => url.pathname.startsWith("/api/practice"), handler: "NetworkFirst", options: { cacheName: "practice", networkTimeoutSeconds: 5 } },
+          { urlPattern: /\.(png|jpg|jpeg|webp|svg)$/, handler: "CacheFirst", options: { cacheName: "img", expiration: { maxEntries: 200 } } },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {

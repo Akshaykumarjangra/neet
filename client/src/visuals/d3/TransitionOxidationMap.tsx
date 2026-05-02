@@ -78,21 +78,23 @@ export default function TransitionOxidationMap() {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
-          {oxidationStates.map((state) => {
-            const active = selectedElement.states.includes(state);
-            return (
-              <div
-                key={state}
-                className={`rounded-md border p-3 text-center text-sm ${
-                  active ? "bg-emerald-500/20 border-emerald-500" : "bg-muted/30"
-                }`}
-              >
-                <div className="font-semibold">+{state}</div>
-                <div className={`mt-2 h-2 rounded ${active ? "bg-emerald-500" : "bg-muted"}`} />
-              </div>
-            );
-          })}
+        <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="grid grid-cols-7 min-w-[400px] gap-2">
+            {oxidationStates.map((state) => {
+              const active = selectedElement.states.includes(state);
+              return (
+                <div
+                  key={state}
+                  className={`rounded-md border p-3 text-center text-sm ${
+                    active ? "bg-emerald-500/20 border-emerald-500" : "bg-muted/30"
+                  }`}
+                >
+                  <div className="font-semibold">+{state}</div>
+                  <div className={`mt-2 h-2 rounded ${active ? "bg-emerald-500" : "bg-muted"}`} />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="rounded-lg border bg-muted/20 p-4 text-sm">

@@ -15,14 +15,13 @@ import {
   xpTransactions,
 } from "@shared/schema";
 import { eq, sql, inArray, desc } from "drizzle-orm";
-import { requireOwner, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import { requireAdmin, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 const router = Router();
 
-function ensureOwner(req: Request, res: any, next: any) {
-  return requireOwner(req, res, next);
-}
 
-router.get("/content-versions/:chapterId", ensureOwner, async (req, res) => {
+
+router.get("/content-versions/:chapterId", requireAdmin, async (req, res) => {
   try {
     const chapterId = Number(req.params.chapterId);
     if (!Number.isInteger(chapterId)) {
@@ -43,7 +42,7 @@ router.get("/content-versions/:chapterId", ensureOwner, async (req, res) => {
   }
 });
 
-router.post("/content-assets", ensureOwner, async (req, res) => {
+router.post("/content-assets", requireAdmin, async (req, res) => {
   try {
     const { title, url, type = "pdf", description, metadata } = req.body;
 
@@ -69,6 +68,14 @@ router.post("/content-assets", ensureOwner, async (req, res) => {
       })
       .returning();
 
+    await recordAuditLog(req, {
+      action: "create_content_asset",
+      resourceType: "content_asset",
+      resourceId: asset.id.toString(),
+      status: "success",
+      details: { title, type, url }
+    });
+
     res.status(201).json({ asset });
   } catch (error) {
     console.error("Error creating asset:", error);
@@ -76,7 +83,7 @@ router.post("/content-assets", ensureOwner, async (req, res) => {
   }
 });
 
-router.get("/progress/summary", ensureOwner, async (_req, res) => {
+router.get("/progress/summary", requireAdmin, async (_req, res) => {
   try {
     const [xpRow] = await db
       .select({
@@ -122,7 +129,7 @@ router.get("/progress/summary", ensureOwner, async (_req, res) => {
   }
 });
 
-router.get("/mentor/onboarding", ensureOwner, async (_req, res) => {
+router.get("/mentor/onboarding", requireAdmin, async (_req, res) => {
   try {
     const steps = [
       {
@@ -151,14 +158,13 @@ router.get("/mentor/onboarding", ensureOwner, async (_req, res) => {
   }
 });
 
-router.post("/mentor/onboarding", ensureOwner, async (req, res) => {
+router.post("/mentor/onboarding", requireAdmin, async (req, res) => {
   try {
     const { email, availability, pricing } = req.body;
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
-    await db.insert(auditLogs).values({
-      userId: req.session?.userId || null,
+    await recordAuditLog(req, {
       action: "submit_mentor_onboarding",
       entityType: "mentor_onboarding",
       entityId: email,
@@ -171,7 +177,7 @@ router.post("/mentor/onboarding", ensureOwner, async (req, res) => {
   }
 });
 
-router.get("/mentor/payouts", ensureOwner, async (_req, res) => {
+router.get("/mentor/payouts", requireAdmin, async (_req, res) => {
   try {
     const payouts = await db
       .select({
@@ -198,7 +204,7 @@ router.get("/mentor/payouts", ensureOwner, async (_req, res) => {
   }
 });
 
-router.get("/mentor/scheduler", ensureOwner, async (_req, res) => {
+router.get("/mentor/scheduler", requireAdmin, async (_req, res) => {
   try {
     const bookings = await db
       .select({
@@ -226,7 +232,7 @@ router.get("/mentor/scheduler", ensureOwner, async (_req, res) => {
   }
 });
 
-router.post("/mentor/scheduler/:id/decision", ensureOwner, async (req, res) => {
+router.post("/mentor/scheduler/:id/decision", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { status } = req.body as { status: string };
@@ -237,6 +243,14 @@ router.post("/mentor/scheduler/:id/decision", ensureOwner, async (req, res) => {
       .update(mentorBookings)
       .set({ status, updatedAt: sql`now()` })
       .where(eq(mentorBookings.id, id));
+    await recordAuditLog(req, {
+      action: "mentor_scheduling_decision",
+      resourceType: "mentor_booking",
+      resourceId: id.toString(),
+      status: "success",
+      details: { status }
+    });
+
     res.json({ success: true });
   } catch (error) {
     console.error("Scheduling decision error:", error);
@@ -282,7 +296,7 @@ router.get("/learning-path/personalized", requireAuthWithPasswordCheck, async (r
   }
 });
 
-router.get("/gamification/config", ensureOwner, async (_req, res) => {
+router.get("/gamification/config", requireAdmin, async (_req, res) => {
   try {
     const keys = ["gamification_streak_threshold", "gamification_badge_xp"];
     const settings = await db.select().from(adminSettings).where(inArray(adminSettings.key, keys as any));
@@ -297,7 +311,7 @@ router.get("/gamification/config", ensureOwner, async (_req, res) => {
   }
 });
 
-router.post("/gamification/config", ensureOwner, async (req, res) => {
+router.post("/gamification/config", requireAdmin, async (req, res) => {
   try {
     const {
       gamification_streak_threshold,
@@ -323,8 +337,7 @@ router.post("/gamification/config", ensureOwner, async (req, res) => {
       }
     }
 
-    await db.insert(auditLogs).values({
-      userId: req.session?.userId || null,
+    await recordAuditLog(req, {
       action: "update_gamification_config",
       entityType: "admin_setting",
       newValue: entries.map(([key, value]) => ({ key, value })),

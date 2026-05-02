@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,12 +15,23 @@ import {
   Check,
   Sparkles,
   Trash2,
-  ShieldCheck
+  ShieldCheck,
+  RotateCcw,
+  Bot,
+  User,
+  Zap,
+  Star
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, fetchCsrfToken } from '@/lib/queryClient';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface Message {
   id: string;
@@ -67,9 +78,40 @@ export function ChapterChatbot({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [failedMessage, setFailedMessage] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
+
+  const storageKey = `chapter-chat-${chapterId}`;
+
+  const { data: historyData } = useQuery({
+    queryKey: ["/api/chapters", chapterId, "history"],
+    queryFn: async () => {
+      if (!chapterId) return [];
+      try {
+        return await apiRequest("GET", `/api/chapters/${chapterId}/history`);
+      } catch (err) {
+        console.error("Failed to fetch chat history:", err);
+        return [];
+      }
+    },
+    enabled: !!chapterId && isOpen && isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (historyData && Array.isArray(historyData) && historyData.length > 0) {
+      const formatted = historyData.map((m: any) => ({
+        id: m.id.toString(),
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.createdAt),
+      }));
+      setMessages(formatted);
+    }
+  }, [historyData]);
+
   const { data: chatHealth } = useQuery({
     queryKey: ["/api/chapters/chat/health"],
     queryFn: async () => {
@@ -85,20 +127,7 @@ export function ChapterChatbot({
   const hasContext = Boolean(chapterId);
   const isChatConfigured = chatHealth?.configured !== false;
   const title = chapterTitle || 'Chapter assistant';
-  const conceptTags = keyConcepts
-    .map((item) => item?.title)
-    .filter(Boolean)
-    .slice(0, 3);
-  const statusLabel = !isChatConfigured ? "AI offline" : hasContext ? "Live now" : "Loading context";
-  const statusVariant = !isChatConfigured ? "destructive" : hasContext ? "default" : "outline";
-  const statusDotClass = !isChatConfigured
-    ? "bg-destructive"
-    : hasContext
-    ? "bg-emerald-500 animate-pulse"
-    : "bg-amber-400";
-  const isSheetLayout = layout === "sheet";
-  const sheetToggleLabel = isOpen ? "Close assistant" : "Ask NEET AI";
-  const sheetToggleHint = isOpen ? "Assistant open" : "Need help in this chapter?";
+  const isSheetLayout = layout === 'sheet';
 
   useEffect(() => {
     if (isOpen && endRef.current) {
@@ -107,188 +136,168 @@ export function ChapterChatbot({
   }, [messages, isOpen]);
 
   const chatMutation = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({ message, history }: { message: string; history: Message[] }) => {
       if (!chapterId) {
         throw new Error('Chapter context not ready yet. Please wait a moment.');
       }
 
-      const response = await apiRequest('POST', `/api/chapters/${chapterId}/chat`, {
-        message,
-        chapterContext: {
-          title: chapterTitle,
-          subject: chapterSubject,
-          keyConcepts: keyConcepts.slice(0, 10),
-          formulas: formulas.slice(0, 10),
+      const assistantId = crypto.randomUUID();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
         },
+      ]);
+
+      const response = await fetch(`/api/chapters/${chapterId}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': (await fetchCsrfToken()) || "",
+        },
+        body: JSON.stringify({
+          message,
+          stream: true,
+          chapterContext: {
+            title: chapterTitle,
+            subject: chapterSubject,
+            keyConcepts: keyConcepts.slice(0, 10),
+            formulas: formulas.slice(0, 10),
+          },
+          history: history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+        }),
       });
-      return response as { answer: string };
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Response body is not readable');
+
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                fullContent += parsed.content;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId ? { ...m, content: fullContent } : m
+                  )
+                );
+              } else if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE chunk:', e);
+            }
+          }
+        }
+      }
+
+      return { answer: fullContent };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
+      setFailedMessage(null);
+    },
+    onError: (error: any) => {
+      console.error('Chatbot error:', error);
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant' && !last.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+
+      const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+      if (lastUserMsg) setFailedMessage(lastUserMsg.content);
+
+      let errorMessage = error?.message || 'Failed to get response. Please try again.';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: data.answer,
+          content: `I encountered an error: ${errorMessage}. Please try again.`,
           timestamp: new Date(),
         },
       ]);
     },
-    onError: (error: any) => {
-      console.error('Chatbot error:', error);
-
-      let errorMessage = error?.message || error?.error || 'Failed to get response. Please try again.';
-      if (typeof errorMessage === 'string' && errorMessage.includes(':')) {
-        const parts = errorMessage.split(':');
-        if (parts.length > 1) {
-          errorMessage = parts.slice(1).join(':').trim();
-        }
-      }
-
-      const isAuthError =
-        error?.message?.includes('401') ||
-        errorMessage.includes('401') ||
-        errorMessage.toLowerCase().includes('authentication') ||
-        errorMessage.toLowerCase().includes('not authenticated');
-
-      const isConfigError =
-        errorMessage.toLowerCase().includes('not configured') ||
-        errorMessage.startsWith('503');
-
-      if (isConfigError) {
-        toast({
-          title: 'AI assistant offline',
-          description: 'Chapter chat is not configured yet. Please try again later.',
-          variant: 'destructive',
-          duration: 5000,
-        });
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: 'The chapter assistant is offline right now. Please check back later.',
-            timestamp: new Date(),
-          },
-        ]);
-        return;
-      }
-
-      if (isAuthError) {
-        toast({
-          title: 'Authentication required',
-          description: 'Please log in to use the chapter assistant.',
-          variant: 'destructive',
-          duration: 5000,
-        });
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: 'I need you to be logged in to help you with this chapter. Please log in and try again.',
-            timestamp: new Date(),
-          },
-        ]);
-      } else if (errorMessage.toLowerCase().includes('timeout')) {
-        toast({
-          title: 'Request timeout',
-          description: 'The request took too long. Please try again.',
-          variant: 'destructive',
-          duration: 5000,
-        });
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: 'I apologize, but the request timed out. Please try asking your question again.',
-            timestamp: new Date(),
-          },
-        ]);
-      } else {
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-          duration: 5000,
-        });
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: `I encountered an error: ${errorMessage}. Please try asking your question again.`,
-            timestamp: new Date(),
-          },
-        ]);
-      }
-    },
   });
 
-  const handleSend = () => {
-    const trimmed = input.trim();
+  const handleSend = useCallback((directMessage?: string) => {
+    const trimmed = (directMessage || input).trim();
     if (!trimmed || chatMutation.isPending) return;
 
     if (!hasContext) {
-      toast({
-        title: 'Still loading the chapter',
-        description: 'Once the chapter data is ready you can ask questions.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Still loading the chapter', description: 'Once the chapter data is ready you can ask questions.', variant: 'destructive' });
       return;
     }
-
     if (!isChatConfigured) {
-      toast({
-        title: 'AI assistant not configured',
-        description: 'Chapter chat is offline. Please try again later.',
-        variant: 'destructive',
-      });
+      toast({ title: 'AI assistant not configured', description: 'Chapter chat is offline. Please try again later.', variant: 'destructive' });
       return;
     }
-
     if (!isAuthenticated) {
-      toast({
-        title: 'Login required',
-        description: 'Sign in to chat about this chapter.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Login required', description: 'Sign in to chat about this chapter.', variant: 'destructive' });
       return;
     }
-
     if (trimmed.length < 3) {
-      toast({
-        title: 'Message too short',
-        description: 'Please enter at least 3 characters.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Message too short', description: 'Please enter at least 3 characters.', variant: 'destructive' });
       return;
     }
-
     if (trimmed.length > MAX_MESSAGE_LENGTH) {
-      toast({
-        title: 'Message too long',
-        description: `Your message is ${trimmed.length} characters. Please keep it under ${MAX_MESSAGE_LENGTH}.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Message too long', description: `Keep it under ${MAX_MESSAGE_LENGTH} characters.`, variant: 'destructive' });
       return;
     }
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: trimmed,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const userMessage: Message = { id: crypto.randomUUID(), role: 'user', content: trimmed, timestamp: new Date() };
+    const currentMessages = [...messages, userMessage];
+    setMessages(currentMessages);
     setInput('');
-    chatMutation.mutate(trimmed);
-  };
+    chatMutation.mutate({ message: trimmed, history: messages });
+  }, [input, chatMutation, hasContext, isChatConfigured, isAuthenticated, toast, messages]);
 
   const handleQuickPrompt = (prompt: string) => {
-    setInput(prompt);
+    handleSend(prompt);
+  };
+
+  const handleRetry = () => {
+    if (failedMessage) {
+      setFailedMessage(null);
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant' && last.content.includes('error')) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+      chatMutation.mutate({ message: failedMessage, history: messages });
+    }
   };
 
   const handleCopy = async (messageId: string, content: string) => {
@@ -296,25 +305,16 @@ export function ChapterChatbot({
       await navigator.clipboard.writeText(content);
       setCopiedId(messageId);
       setTimeout(() => setCopiedId(null), 2000);
-      toast({
-        title: 'Copied!',
-        description: 'Message copied to clipboard',
-      });
+      toast({ title: 'Copied!', description: 'Message copied to clipboard' });
     } catch (error) {
-      toast({
-        title: 'Failed to copy',
-        description: 'Could not copy message to clipboard',
-        variant: 'destructive',
-      });
+      toast({ title: 'Failed to copy', description: 'Could not copy message to clipboard', variant: 'destructive' });
     }
   };
 
   const handleClearChat = () => {
     setMessages([]);
-    toast({
-      title: 'Chat cleared',
-      description: 'Message history has been cleared',
-    });
+    setFailedMessage(null);
+    toast({ title: 'Chat cleared', description: 'Message history has been cleared' });
   };
 
   const formatTime = (date: Date) => {
@@ -324,312 +324,273 @@ export function ChapterChatbot({
     }).format(date);
   };
 
-  const renderChatCard = (containerClassName: string, cardWrapperClassName: string) => (
-    <div className={containerClassName}>
-      <div className={cardWrapperClassName}>
-        <div
-          className="pointer-events-none absolute inset-0 -z-10 rounded-3xl bg-gradient-to-r from-primary/25 via-fuchsia-400/15 to-sky-400/20 blur-3xl"
-          aria-hidden
-        />
-        <Card
-          className={cn(
-            "overflow-hidden border border-white/10 bg-background/95 backdrop-blur-xl shadow-[0_24px_80px_-24px_rgba(0,0,0,0.6)]",
-            isSheetLayout && "h-full flex flex-col"
-          )}
-        >
-          <CardHeader className="pb-3 border-b bg-gradient-to-r from-background/80 via-background/70 to-background/80 shrink-0">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-sky-500 text-white shadow-lg">
-                  <Sparkles className="h-5 w-5" />
-                </div>
+  const renderChatCard = (containerClass: string, cardClass: string) => (
+    <div className={containerClass}>
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className={cardClass}
+      >
+        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/60 dark:bg-slate-950/40 rounded-[2rem]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
+          <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <motion.div 
+                  whileHover={{ rotate: 15, scale: 1.1 }}
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_8px_32px_-8px_rgba(59,130,246,0.5)]"
+                >
+                  <Bot className="h-7 w-7" />
+                </motion.div>
                 <div className="space-y-1">
-                  <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                    Chapter assistant
-                  </p>
-                  <CardTitle className="text-lg leading-tight">{title}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary/80">NEET AI EXPERT</p>
+                    <div className="h-1 w-1 rounded-full bg-primary/40" />
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                      <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
+                      Pro
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    {title}
+                  </CardTitle>
                   <div className="flex flex-wrap gap-2">
                     {chapterSubject && (
-                      <Badge variant="secondary" className="text-xs capitalize">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-primary/5 border-primary/20 text-primary px-2 py-0.5 rounded-md">
                         {chapterSubject}
                       </Badge>
                     )}
                     <Badge
-                      variant={statusVariant}
-                      className="text-xs flex items-center gap-1"
+                      variant="outline"
+                      className={cn("text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded-md", 
+                        isChatConfigured ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/5 border-rose-500/20 text-rose-600"
+                      )}
                     >
-                      <span className={cn("h-2 w-2 rounded-full", statusDotClass)} />
-                      {statusLabel}
+                      <motion.span 
+                        animate={isChatConfigured ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : {}}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className={cn("h-1.5 w-1.5 rounded-full", isChatConfigured ? "bg-emerald-500" : "bg-rose-500")} 
+                      />
+                      {isChatConfigured ? "Live" : "Offline"}
                     </Badge>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2.5 shrink-0">
                 {messages.length > 0 && (
-                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear chat" className="rounded-full">
-                    <Trash2 className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear chat" className="rounded-full hover:bg-rose-500/10 hover:text-rose-500 transition-colors">
+                    <Trash2 className="h-4.5 w-4.5" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" onClick={onToggle} title="Close assistant" className="rounded-full">
-                  <X className="h-4 w-4" />
+                <Button variant="ghost" size="icon" onClick={onToggle} title="Close assistant" className="rounded-full hover:bg-background/80 transition-colors">
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             </div>
-            {conceptTags.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">Understands:</span>
-                {conceptTags.map((concept) => (
-                  <span
-                    key={concept}
-                    className="rounded-full border border-border/70 bg-background/70 px-3 py-1"
-                  >
-                    {concept}
-                  </span>
-                ))}
-              </div>
-            )}
           </CardHeader>
 
-          <CardContent
-            className={cn(
-              "space-y-4 pt-4",
-              isSheetLayout && "flex flex-col flex-1 min-h-0 overflow-hidden"
-            )}
-          >
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {getQuickPrompts(title).map((prompt, idx) => (
-                <Button
-                  key={idx}
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full bg-muted/60 hover:bg-muted text-xs"
-                  onClick={() => handleQuickPrompt(prompt)}
-                  disabled={!isAuthenticated || chatMutation.isPending || !isChatConfigured}
-                >
-                  <Sparkles className="mr-1 h-3 w-3 text-primary" />
-                  {prompt}
-                </Button>
-              ))}
-            </div>
-            {!isChatConfigured && (
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                AI assistant is not configured on the server. Set AI_INTEGRATIONS_OPENAI_API_KEY to enable chapter chat.
-              </div>
-            )}
-
-            <div className="rounded-2xl border border-border/60 bg-muted/30 flex-1 min-h-0 overflow-hidden">
-              <ScrollArea className={isSheetLayout ? "h-full" : "h-[360px] sm:h-[420px]"}>
-                <div className="space-y-4 p-4 pr-3 pb-32 sm:pb-28">
+          <CardContent className={cn("p-0 flex flex-col flex-1 min-h-0 overflow-hidden", isSheetLayout ? "h-full" : "h-[75vh]")}>
+            <div className="flex-1 min-h-0 relative overflow-hidden bg-slate-500/5">
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-6">
                   {!isChatConfigured ? (
-                    <div className="text-center py-10 space-y-4">
-                      <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto opacity-60" />
-                      <div>
-                        <p className="text-sm font-semibold mb-1">Assistant offline</p>
-                        <p className="text-sm text-muted-foreground">
-                          The chapter chatbot is not configured yet. Please check back later.
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-20 space-y-6 max-w-sm mx-auto">
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-rose-500 blur-3xl opacity-20" />
+                        <MessageCircle className="h-20 w-20 text-rose-500/60 mx-auto relative" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xl font-bold tracking-tight">System on Maintenance</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          We're currently upgrading the AI engine for this chapter. Please check back in a moment for even smarter insights.
                         </p>
                       </div>
-                    </div>
+                    </motion.div>
                   ) : !isAuthenticated ? (
-                    <div className="text-center py-10 space-y-4">
-                      <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto opacity-60" />
-                      <div>
-                        <p className="text-sm font-semibold mb-1">Sign in to chat</p>
-                        <p className="text-sm text-muted-foreground">
-                          The assistant can explain concepts, formulas, and exam tricks tailored to this chapter.
-                        </p>
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-20 space-y-6 max-w-sm mx-auto">
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-primary blur-3xl opacity-20" />
+                        <ShieldCheck className="h-20 w-20 text-primary/60 mx-auto relative" />
                       </div>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="space-y-4">
-                      <div className="text-center py-8">
-                        <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-60" />
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Ask me anything about this chapter.
+                      <div className="space-y-2">
+                        <p className="text-xl font-bold tracking-tight">Unlock AI Mentorship</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Sign in to start your personalized NEET preparation with real-time concept explanation and exam-winning strategies.
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          I understand the chapter context and can help explain concepts, formulas, and provide study tips.
-                        </p>
+                        <Button className="mt-4 rounded-full px-8 shadow-lg shadow-primary/20">Sign in to Start</Button>
                       </div>
-                    </div>
+                    </motion.div>
                   ) : (
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={cn(
-                            'flex flex-col gap-1',
-                            message.role === 'user' ? 'items-end' : 'items-start'
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'rounded-2xl px-4 py-3 max-w-[90%] shadow-sm backdrop-blur-sm',
-                              message.role === 'user'
-                                ? 'bg-gradient-to-r from-primary/90 to-fuchsia-500/90 text-primary-foreground'
-                                : 'bg-background/90 border border-border/60'
-                            )}
+                    <>
+                      <AnimatePresence initial={false}>
+                        {messages.length === 0 && (
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 py-4">
+                            <div className="text-center space-y-4">
+                              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+                                <Sparkles className="h-3.5 w-3.5" />
+                                Interactive AI Guide
+                              </div>
+                              <h2 className="text-2xl font-bold tracking-tight px-4">
+                                How can I accelerate your <span className="text-primary italic">NEET prep</span> today?
+                              </h2>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-2">
+                              {getQuickPrompts(title).map((prompt, idx) => (
+                                <motion.button
+                                  key={idx}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => handleQuickPrompt(prompt)}
+                                  className="group flex items-start gap-3 p-4 text-left rounded-2xl border border-border/40 bg-background/40 backdrop-blur-sm hover:border-primary/30 transition-all shadow-sm"
+                                >
+                                  <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                    <Star className="h-4 w-4" />
+                                  </div>
+                                  <span className="text-sm font-medium leading-snug">{prompt}</span>
+                                </motion.button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <div className="space-y-8">
+                        {messages.map((message) => (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                            className={cn('flex gap-4 group', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
                           >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                              {message.content}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground px-1">
-                            <span>{formatTime(message.timestamp)}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => handleCopy(message.id, message.content)}
-                              title="Copy message"
-                            >
-                              {copiedId === message.id ? (
-                                <Check className="h-3 w-3" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      {chatMutation.isPending && (
-                        <div className="flex items-start gap-2">
-                          <div className="bg-background/90 border border-border/70 rounded-2xl px-3 py-2 flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Thinking...</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                            <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-md mt-1 transition-transform group-hover:scale-110', message.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white')}>
+                              {message.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
+                            </div>
+                            <div className={cn('flex flex-col gap-2 max-w-[82%]', message.role === 'user' ? 'items-end' : 'items-start')}>
+                              <div className={cn('relative rounded-[1.5rem] px-5 py-4 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)] overflow-hidden', message.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-border/40 text-foreground rounded-tl-none')}>
+                                {message.role === 'user' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
+                                {message.role === 'assistant' ? (
+                                  <div className="text-[15px] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-slate-950/5 dark:[&_pre]:bg-slate-950/40 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-slate-100 dark:[&_code]:bg-slate-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-primary [&_strong]:text-primary">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{message.content}</ReactMarkdown>
+                                  </div>
+                                ) : (
+                                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words font-medium">{message.content}</p>
+                                )}
+                              </div>
+                              <div className={cn('flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 opacity-0 group-hover:opacity-100 transition-opacity', message.role === 'user' ? 'justify-end' : 'justify-start')}>
+                                <span>{formatTime(message.timestamp)}</span>
+                                <div className="h-1 w-1 rounded-full bg-border" />
+                                <button className="hover:text-primary transition-colors flex items-center gap-1" onClick={() => handleCopy(message.id, message.content)}>
+                                  {copiedId === message.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                  {copiedId === message.id ? 'Copied' : 'Copy'}
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                        {chatMutation.isPending && (
+                          <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg mt-1"><Bot className="h-5 w-5" /></div>
+                            <div className="bg-white dark:bg-slate-900 border border-border/40 rounded-[1.5rem] rounded-tl-none px-6 py-4 flex items-center gap-3 shadow-sm">
+                              <div className="flex gap-1.5">
+                                <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }} className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }} className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              </div>
+                              <span className="text-[13px] font-semibold text-primary/60 tracking-tight">Synthesizing insight...</span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    </>
                   )}
                   <div ref={endRef} />
                 </div>
               </ScrollArea>
             </div>
 
-            <div className="space-y-2 shrink-0">
-              <div className="flex gap-2 items-end">
+            <div className="p-6 pt-4 bg-background/40 backdrop-blur-md border-t border-border/40">
+              <div className="flex gap-3 items-end">
                 <div className="flex-1 relative">
                   <Textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }}
-                    placeholder={
-                      !isChatConfigured
-                        ? "AI assistant is offline..."
-                        : isAuthenticated
-                        ? "Ask about this chapter..."
-                        : "Log in to ask questions..."
-                    }
-                    className="min-h-[80px] rounded-2xl border-border/60 bg-background/70 pr-12"
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    placeholder={!isChatConfigured ? "Assistant currently offline..." : isAuthenticated ? "Message your expert AI mentor..." : "Sign in to begin mentorship..."}
+                    className="min-h-[56px] max-h-[160px] rounded-2xl border-border/40 bg-background/80 dark:bg-slate-900/80 px-5 py-4 text-[15px] shadow-inner focus-visible:ring-primary/20 focus-visible:border-primary/40 resize-none transition-all"
                     disabled={chatMutation.isPending || !isAuthenticated || !hasContext || !isChatConfigured}
                     maxLength={MAX_MESSAGE_LENGTH}
                   />
                   {input.length > 0 && (
-                    <div className="absolute bottom-2 right-3 text-[11px] text-muted-foreground">
-                      {input.length}/{MAX_MESSAGE_LENGTH}
-                    </div>
+                    <div className="absolute top-[-24px] right-2 text-[10px] font-bold text-muted-foreground/40 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{input.length} / {MAX_MESSAGE_LENGTH}</div>
                   )}
                 </div>
-                <Button
-                  onClick={handleSend}
-                  disabled={
-                    !isAuthenticated ||
-                    !hasContext ||
-                    !isChatConfigured ||
-                    !input.trim() ||
-                    chatMutation.isPending ||
-                    input.trim().length < 3
-                  }
-                  size="icon"
-                  className="h-[80px] w-14 sm:w-16 rounded-2xl bg-gradient-to-br from-primary to-fuchsia-500 text-white shadow-lg"
-                >
-                  {chatMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={() => handleSend()}
+                    disabled={!isAuthenticated || !hasContext || !isChatConfigured || !input.trim() || chatMutation.isPending || input.trim().length < 2}
+                    size="icon"
+                    className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_8px_24px_-8px_rgba(59,130,246,0.5)] border-none shrink-0"
+                  >
+                    {chatMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
+                </motion.div>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
-                <span>Press Enter to send, Shift+Enter for new line</span>
-                {!hasContext && <span className="text-amber-500">Loading chapter context...</span>}
+              <div className="mt-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 px-1">
+                <div className="flex items-center gap-1.5"><Star className="h-3 w-3 fill-amber-500/20 text-amber-500" /><span>NEET-Tailored AI Engine</span></div>
+                {!hasContext && <span className="text-amber-500 animate-pulse">Syncing context...</span>}
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 
   if (layout === 'sheet') {
     return (
       <>
-      <Sheet open={isOpen} onOpenChange={(open) => !open && onToggle()}>
-        <SheetContent side="right" className="w-full sm:max-w-[560px] p-4 pt-8 z-[80]">
-          {renderChatCard("w-full h-full", "relative w-full h-full")}
-        </SheetContent>
-      </Sheet>
-      <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70]">
-        <Button
-          onClick={onToggle}
-            className={cn(
-              "group flex items-center gap-3 rounded-full px-4 sm:px-5 h-14 sm:h-12 shadow-[0_20px_60px_-24px_rgba(59,130,246,0.75)] transition-all",
-              isOpen
-                ? "bg-slate-900 text-white hover:bg-slate-800"
-                : "bg-gradient-to-r from-primary via-purple-500 to-sky-500 text-white hover:translate-y-[-1px]"
-            )}
-            size="lg"
-            aria-label={sheetToggleLabel}
-            aria-pressed={isOpen}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              {isOpen ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
-            </span>
-            <div className="hidden sm:flex flex-col text-left leading-tight">
-              <span className="text-[11px] uppercase tracking-[0.08em] text-white/80">
-                {sheetToggleHint}
-              </span>
-              <span className="text-sm font-semibold">{sheetToggleLabel}</span>
-            </div>
-            {!isOpen && <Sparkles className="h-5 w-5 hidden sm:block opacity-80" />}
-          </Button>
+        <Sheet open={isOpen} onOpenChange={(open) => !open && onToggle()}>
+          <SheetContent side="right" className="w-full sm:max-w-[640px] p-0 z-[80] border-l-0 bg-transparent shadow-none">
+            {renderChatCard("w-full h-full p-4", "w-full h-full")}
+          </SheetContent>
+        </Sheet>
+        <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70]">
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={onToggle}
+              className={cn("group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] transition-all overflow-hidden border-none", isOpen ? "bg-slate-950 text-white" : "bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white")}
+              size="lg"
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner">{isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}</span>
+              <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">NEET Expert</span><span className="text-base font-bold tracking-tight">{isOpen ? "Close Assistant" : "Ask AI Mentor"}</span></div>
+              {!isOpen && <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />}
+            </Button>
+          </motion.div>
         </div>
       </>
     );
   }
 
-  if (!isOpen) {
-    return (
-      <div className="fixed right-3 sm:right-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70]">
-        <Button
-          onClick={onToggle}
-          className="group flex items-center gap-3 rounded-full px-4 sm:px-5 h-14 sm:h-12 shadow-[0_20px_60px_-24px_rgba(59,130,246,0.75)] bg-gradient-to-r from-primary via-purple-500 to-sky-500 text-white hover:translate-y-[-1px] transition-all"
-          size="lg"
-          aria-label="Open chapter assistant"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-            <MessageCircle className="h-5 w-5" />
-          </span>
-          <div className="hidden sm:flex flex-col text-left leading-tight">
-            <span className="text-[11px] uppercase tracking-[0.08em] text-white/80">
-              Need help in this chapter?
-            </span>
-            <span className="text-sm font-semibold">Ask NEET AI</span>
-          </div>
-          <Sparkles className="h-5 w-5 hidden sm:block opacity-80" />
-        </Button>
-      </div>
-    );
-  }
-
-  return renderChatCard(
-    "fixed inset-x-3 sm:inset-auto sm:right-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70]",
-    "relative mx-auto sm:mx-0 w-full max-w-[540px]"
+  return (
+    <AnimatePresence>
+      {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full max-w-[580px]") : (
+        <div className="fixed right-3 sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]">
+          <motion.div initial={{ scale: 0.8, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={onToggle} className="group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white border-none transition-all overflow-hidden" size="lg">
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner"><MessageCircle className="h-6 w-6" /></span>
+              <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">Concept Helper</span><span className="text-base font-bold tracking-tight">AI Revision Guide</span></div>
+              <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />
+            </Button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

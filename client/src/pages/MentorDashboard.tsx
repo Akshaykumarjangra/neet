@@ -987,11 +987,12 @@ export default function MentorDashboard() {
           </Card>
         ) : isMentor && mentor ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4" data-testid="tabs-list">
+            <TabsList className="grid w-full grid-cols-5" data-testid="tabs-list">
               <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
               <TabsTrigger value="profile" data-testid="tab-profile">Profile</TabsTrigger>
               <TabsTrigger value="availability" data-testid="tab-availability">Availability</TabsTrigger>
               <TabsTrigger value="bookings" data-testid="tab-bookings">Bookings</TabsTrigger>
+              <TabsTrigger value="reviews" data-testid="tab-reviews">Reviews</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -1364,7 +1365,7 @@ export default function MentorDashboard() {
                         control={availabilityForm.control}
                         name="dayOfWeek"
                         render={({ field }) => (
-                          <FormItem className="flex-1 min-w-[150px]">
+                          <FormItem className="flex-1 min-w-0 basis-[150px]">
                             <FormLabel>Day</FormLabel>
                             <Select onValueChange={(val) => field.onChange(parseInt(val))} value={field.value?.toString()}>
                               <FormControl>
@@ -1389,7 +1390,7 @@ export default function MentorDashboard() {
                         control={availabilityForm.control}
                         name="startTime"
                         render={({ field }) => (
-                          <FormItem className="flex-1 min-w-[120px]">
+                          <FormItem className="flex-1 min-w-0 basis-[120px]">
                             <FormLabel>Start Time</FormLabel>
                             <FormControl>
                               <Input type="time" data-testid="input-start-time" {...field} />
@@ -1403,7 +1404,7 @@ export default function MentorDashboard() {
                         control={availabilityForm.control}
                         name="endTime"
                         render={({ field }) => (
-                          <FormItem className="flex-1 min-w-[120px]">
+                          <FormItem className="flex-1 min-w-0 basis-[120px]">
                             <FormLabel>End Time</FormLabel>
                             <FormControl>
                               <Input type="time" data-testid="input-end-time" {...field} />
@@ -1629,6 +1630,83 @@ export default function MentorDashboard() {
                     </div>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No past bookings</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                        <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+                        Student Reviews
+                      </CardTitle>
+                      <CardDescription>
+                        Feedback from students who have completed sessions with you
+                      </CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">{mentor.avgRating?.toFixed(1) || "0.0"}</div>
+                      <div className="flex items-center gap-1 text-yellow-500 justify-end">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`h-4 w-4 ${i < Math.round(mentor.avgRating || 0) ? "fill-yellow-500" : "text-muted"}`} 
+                          />
+                        ))}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{mentor.reviewCount || 0} reviews total</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {(mentor as any).reviews && (mentor as any).reviews.length > 0 ? (
+                    <div className="space-y-6">
+                      {(mentor as any).reviews.map((review: any) => (
+                        <div key={review.id} className="border-b border-border pb-6 last:border-0 last:pb-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <Avatar>
+                                <AvatarImage src={review.studentAvatar} />
+                                <AvatarFallback>{review.studentName?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-semibold">{review.studentName}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`h-3 w-3 ${i < review.rating ? "text-yellow-500 fill-yellow-500" : "text-muted"}`} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-foreground italic">"{review.comment}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                        <Star className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-medium">No reviews yet</h3>
+                      <p className="text-sm text-muted-foreground max-w-xs">
+                        Reviews will appear here once students complete sessions and provide feedback.
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>

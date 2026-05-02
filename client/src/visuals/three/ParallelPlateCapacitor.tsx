@@ -254,7 +254,7 @@ export default function ParallelPlateCapacitor() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
           <div>
             <p className="text-sm font-semibold">Electric Field (E)</p>
             <p className="text-lg font-mono">{E.toFixed(2)} V/unit</p>

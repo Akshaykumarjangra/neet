@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Helmet } from 'react-helmet-async';
+import { Seo } from "@/components/Seo";
 import { SEO_PAGES } from "@/config/seo";
 import { motion } from "framer-motion";
 
@@ -54,11 +54,11 @@ export default function DoctorRoadmap() {
 
     return (
         <div className="min-h-screen bg-background font-sans">
-            <Helmet>
-                <title>{seo.title}</title>
-                <meta name="description" content={seo.description} />
-                <meta name="keywords" content={seo.keywords.join(", ")} />
-            </Helmet>
+            <Seo 
+                title={seo.title} 
+                description={seo.description} 
+                keywords={seo.keywords} 
+            />
 
             {/* Emotional Hero Section */}
             <section className="relative py-24 px-4 overflow-hidden">

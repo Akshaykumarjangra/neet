@@ -40,6 +40,8 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Seo } from "@/components/Seo";
+import { getOrganizationSchema, getFAQSchema } from "@/config/seo";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -240,6 +242,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title="Crack NEET with AI-Powered Learning | ZERO AI"
+        description="Experience personalized learning with adaptive AI, expert mentors, gamified progress tracking, and 50,000+ practice questions. Join 10,000+ aspirants achieving their medical dreams."
+        structuredData={[
+          getOrganizationSchema(),
+          getFAQSchema([
+            { question: "Is ZERO AI NEET free to use?", answer: "Yes, we offer a generous free tier that includes 3 chapters per subject, daily practice questions, and access to the community." },
+            { question: "How does the AI personalization work?", answer: "Our AI engine analyzes your response patterns and micro-hesitations to identify conceptual gaps and recommends topics to study next." },
+            { question: "Can I use it on mobile?", answer: "Absolutely! ZERO AI is a Progressive Web App (PWA) that works perfectly on all mobile browsers and can be installed as an app." }
+          ])
+        ]}
+      />
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -837,17 +851,17 @@ export default function Home() {
               <h3 className="font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="/articles/" className="hover:text-primary transition-colors">
+                  <Link href="/blog/ai-in-neet" className="hover:text-primary transition-colors">
                     Study Guides & Articles
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/simulations" className="hover:text-primary transition-colors">
+                  <Link href="/interactive-simulations" className="hover:text-primary transition-colors">
                     Interactive Simulations
                   </Link>
                 </li>
                 <li>
-                  <Link href="/videos" className="hover:text-primary transition-colors">
+                  <Link href="/video-library" className="hover:text-primary transition-colors">
                     Video Library
                   </Link>
                 </li>
@@ -857,7 +871,7 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/guide/doctor-roadmap" className="hover:text-primary transition-colors">
+                  <Link href="/mbbs-roadmap" className="hover:text-primary transition-colors">
                     MBBS Roadmap
                   </Link>
                 </li>

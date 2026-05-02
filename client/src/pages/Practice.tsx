@@ -368,9 +368,9 @@ export default function Practice() {
 
   const neet720Equivalent = useMemo(() => {
     if (sessionStats.questionsAttempted === 0) return 0;
-    const accuracy = sessionStats.correctAnswers / sessionStats.questionsAttempted;
-    return Math.round(accuracy * 720);
-  }, [sessionStats.correctAnswers, sessionStats.questionsAttempted]);
+    const maxPossibleMarks = sessionStats.questionsAttempted * 4;
+    return Math.max(0, Math.round((neetNetScore / maxPossibleMarks) * 720));
+  }, [neetNetScore, sessionStats.questionsAttempted]);
 
   const { data: comboData } = useQuery<{ currentCombo: number; maxCombo: number }>({
     queryKey: ['/api/game/combo', user?.id, effectiveSubject],
@@ -489,7 +489,6 @@ export default function Practice() {
       setShowSolution(true);
       setIsTimerRunning(false);
 
-      const neetMarksChange = variables.isCorrect ? 4 : (variables.selectedAnswer ? 1 : 0);
 
       setSessionStats(prev => ({
         ...prev,

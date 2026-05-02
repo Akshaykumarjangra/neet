@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { Router } from "express";
 import { db } from "./db";
 import {
@@ -734,16 +734,29 @@ router.post("/attempts/:attemptId/focus-loss", async (req, res) => {
     }
 
     const now = new Date();
+    const currentCount = (attempt.focusLossCount || 0) + 1;
+    const maxViolations = parseInt(process.env.MAX_FOCUS_VIOLATIONS || "5", 10);
+    const autoSubmitted = currentCount >= maxViolations;
+
     const [updated] = await db
       .update(mockExamAttempts)
       .set({
-        focusLossCount: sql`${mockExamAttempts.focusLossCount} + 1`,
+        focusLossCount: currentCount,
         lastFocusLossAt: now,
+        ...(autoSubmitted && {
+          status: "auto_submitted",
+          submittedAt: now,
+        }),
       })
       .where(eq(mockExamAttempts.id, attemptId))
       .returning();
 
-    res.json({ focusLossCount: updated?.focusLossCount ?? attempt.focusLossCount + 1, lastFocusLossAt: now });
+    res.json({
+      focusLossCount: updated?.focusLossCount ?? currentCount,
+      lastFocusLossAt: now,
+      autoSubmitted,
+      maxViolations,
+    });
   } catch (error) {
     console.error("Failed to record focus loss:", error);
     res.status(500).json({ error: "Failed to record focus loss" });
@@ -1031,7 +1044,7 @@ router.get("/attempts/:attemptId/review", async (req, res) => {
 
     if (attemptQuestions.length) {
       reviewItems = attemptQuestions.map((aq) => {
-        const snapshot = aq.snapshot || {};
+        const snapshot = (aq.snapshot as any) || {};
         const opts = snapshot.options || [];
         const resp = responseByQuestion.get(aq.questionId);
         const correctOptionIds = opts.filter((o: any) => o.isCorrect).map((o: any) => o.id);
@@ -1193,6 +1206,50 @@ router.get("/attempts/:attemptId/analytics", async (req, res) => {
       return res.status(400).json({ error: "Attempt not submitted yet" });
     }
 
+    // 1. Deep Analytics (Rank/Percentile/Topper/Average)
+    const allAttempts = await db
+      .select({
+        id: mockExamAttempts.id,
+        score: mockExamAttempts.score,
+        totalTimeSeconds: mockExamAttempts.totalTimeSeconds,
+        correctCount: mockExamAttempts.correctCount,
+        wrongCount: mockExamAttempts.wrongCount,
+        unansweredCount: mockExamAttempts.unansweredCount,
+      })
+      .from(mockExamAttempts)
+      .where(
+        and(
+          eq(mockExamAttempts.paperId, attempt.paperId),
+          inArray(mockExamAttempts.status, ["submitted", "auto_submitted", "expired"])
+        )
+      );
+
+    const validAttempts = allAttempts.filter(a => a.score != null);
+    validAttempts.sort((a, b) => {
+      if ((b.score || 0) !== (a.score || 0)) {
+        return (b.score || 0) - (a.score || 0);
+      }
+      return (a.totalTimeSeconds || 0) - (b.totalTimeSeconds || 0);
+    });
+
+    const totalParticipants = validAttempts.length;
+    const currentRank = validAttempts.findIndex(a => a.id === attemptId) + 1;
+    const peopleBelowMe = validAttempts.filter(a => (a.score || 0) < (attempt.score || 0)).length;
+    const percentile = totalParticipants > 1
+      ? (peopleBelowMe / totalParticipants) * 100
+      : 100;
+
+    const topper = validAttempts[0] || null;
+    const topperStats = topper ? {
+      score: topper.score,
+      timeTaken: topper.totalTimeSeconds,
+      accuracy: topper.correctCount ? (topper.correctCount / ((topper.correctCount + (topper.wrongCount || 0)) || 1)) * 100 : 0
+    } : null;
+
+    const avgScore = validAttempts.reduce((acc, curr) => acc + (curr.score || 0), 0) / (totalParticipants || 1);
+    const avgTime = validAttempts.reduce((acc, curr) => acc + (curr.totalTimeSeconds || 0), 0) / (totalParticipants || 1);
+
+    // 2. Breakdown Analytics (Subject/Section/Topic/Subtopic)
     const responses = await db
       .select()
       .from(mockExamResponses)
@@ -1211,7 +1268,7 @@ router.get("/attempts/:attemptId/analytics", async (req, res) => {
     const questionById: Record<number, any> = {};
     const sectionByQuestion: Record<number, number> = {};
     for (const aq of attemptQuestions) {
-      questionById[aq.questionId] = aq.snapshot || {};
+      questionById[aq.questionId] = (aq.snapshot as any) || {};
       sectionByQuestion[aq.questionId] = aq.sectionId;
     }
 
@@ -1258,109 +1315,78 @@ router.get("/attempts/:attemptId/analytics", async (req, res) => {
       totalTimeSeconds += timeSpent;
 
       let bucketKey = "unanswered";
-      if (resp.isCorrect === true) {
-        bucketKey = "correct";
-      } else if (resp.isCorrect === false) {
-        bucketKey = "wrong";
-      }
+      if (resp.isCorrect === true) bucketKey = "correct";
+      else if (resp.isCorrect === false) bucketKey = "wrong";
 
-      if (bucketKey === "correct") correct += 1;
-      if (bucketKey === "wrong") wrong += 1;
-      if (bucketKey === "unanswered") unanswered += 1;
+      if (bucketKey === "correct") correct++;
+      else if (bucketKey === "wrong") wrong++;
+      else unanswered++;
 
       if (!bySubject[subject]) {
-        bySubject[subject] = {
-          subject,
-          correct: 0,
-          wrong: 0,
-          unanswered: 0,
-          totalTimeSeconds: 0,
-        };
+        bySubject[subject] = { subject, correct: 0, wrong: 0, unanswered: 0, totalQuestions: 0, totalTimeSeconds: 0 };
       }
-      bySubject[subject][bucketKey] += 1;
+      bySubject[subject][bucketKey]++;
+      bySubject[subject].totalQuestions++;
       bySubject[subject].totalTimeSeconds += timeSpent;
 
       const topicKey = `${subject}::${topic}`;
       if (!byTopic[topicKey]) {
-        byTopic[topicKey] = {
-          subject,
-          topic,
-          correct: 0,
-          wrong: 0,
-          unanswered: 0,
-          totalTimeSeconds: 0,
-        };
+        byTopic[topicKey] = { subject, topic, correct: 0, wrong: 0, unanswered: 0, totalQuestions: 0, totalTimeSeconds: 0 };
       }
-      byTopic[topicKey][bucketKey] += 1;
+      byTopic[topicKey][bucketKey]++;
+      byTopic[topicKey].totalQuestions++;
       byTopic[topicKey].totalTimeSeconds += timeSpent;
 
       const subtopicKey = `${subject}::${topic}::${subtopic}`;
       if (!bySubtopic[subtopicKey]) {
-        bySubtopic[subtopicKey] = {
-          subject,
-          topic,
-          subtopic,
-          correct: 0,
-          wrong: 0,
-          unanswered: 0,
-          totalTimeSeconds: 0,
-        };
+        bySubtopic[subtopicKey] = { subject, topic, subtopic, correct: 0, wrong: 0, unanswered: 0, totalQuestions: 0, totalTimeSeconds: 0 };
       }
-      bySubtopic[subtopicKey][bucketKey] += 1;
+      bySubtopic[subtopicKey][bucketKey]++;
+      bySubtopic[subtopicKey].totalQuestions++;
       bySubtopic[subtopicKey].totalTimeSeconds += timeSpent;
 
       if (sectionId) {
         if (!bySection[sectionId]) {
-          bySection[sectionId] = {
-            sectionId,
-            name: sectionMeta[sectionId]?.name || "Unknown",
-            correct: 0,
-            wrong: 0,
-            unanswered: 0,
-            totalTimeSeconds: 0,
-          };
+          bySection[sectionId] = { sectionId, name: sectionMeta[sectionId]?.name || "Unknown", correct: 0, wrong: 0, unanswered: 0, totalQuestions: 0, totalTimeSeconds: 0 };
         }
-        bySection[sectionId][bucketKey] += 1;
+        bySection[sectionId][bucketKey]++;
+        bySection[sectionId].totalQuestions++;
         bySection[sectionId].totalTimeSeconds += timeSpent;
       }
     }
 
-    const totalQuestions = correct + wrong + unanswered;
-    const accuracy = totalQuestions ? Number((correct / totalQuestions).toFixed(4)) : 0;
-
-    const bySubjectArray = Object.values(bySubject).map((s: any) => ({
-      ...s,
-      totalQuestions: s.correct + s.wrong + s.unanswered,
-      accuracy: s.correct + s.wrong + s.unanswered ? Number((s.correct / (s.correct + s.wrong + s.unanswered)).toFixed(4)) : 0,
-    }));
-
-    const bySectionArray = Object.values(bySection).map((s: any) => ({
-      ...s,
-      totalQuestions: s.correct + s.wrong + s.unanswered,
-      accuracy: s.correct + s.wrong + s.unanswered ? Number((s.correct / (s.correct + s.wrong + s.unanswered)).toFixed(4)) : 0,
-    }));
-
     res.json({
-      attemptId,
+      rank: currentRank,
+      percentile: Number(percentile.toFixed(2)),
+      totalParticipants,
+      topperStats,
+      averageStats: {
+        score: avgScore,
+        timeTaken: avgTime
+      },
       totals: {
-        totalQuestions,
+        totalQuestions: correct + wrong + unanswered,
         correct,
         wrong,
         unanswered,
-        accuracy,
+        accuracy: (correct / (correct + wrong || 1)) * 100,
         totalTimeSeconds,
       },
-      bySubject: bySubjectArray,
-      bySection: bySectionArray,
+      bySubject: Object.values(bySubject).map((s: any) => ({
+        ...s,
+        accuracy: (s.correct / (s.correct + s.wrong || 1)) * 100,
+      })),
+      bySection: Object.values(bySection).map((s: any) => ({
+        ...s,
+        accuracy: (s.correct / (s.correct + s.wrong || 1)) * 100,
+      })),
       byTopic: Object.values(byTopic).map((s: any) => ({
         ...s,
-        totalQuestions: s.correct + s.wrong + s.unanswered,
-        accuracy: s.correct + s.wrong + s.unanswered ? Number((s.correct / (s.correct + s.wrong + s.unanswered)).toFixed(4)) : 0,
+        accuracy: (s.correct / (s.correct + s.wrong || 1)) * 100,
       })),
       bySubtopic: Object.values(bySubtopic).map((s: any) => ({
         ...s,
-        totalQuestions: s.correct + s.wrong + s.unanswered,
-        accuracy: s.correct + s.wrong + s.unanswered ? Number((s.correct / (s.correct + s.wrong + s.unanswered)).toFixed(4)) : 0,
+        accuracy: (s.correct / (s.correct + s.wrong || 1)) * 100,
       })),
     });
   } catch (error) {
@@ -1412,7 +1438,7 @@ router.get("/attempts/:attemptId/summary", async (req, res) => {
     const questionById: Record<number, any> = {};
     const sectionByQuestion: Record<number, number> = {};
     for (const aq of attemptQuestions) {
-      questionById[aq.questionId] = aq.snapshot || {};
+      questionById[aq.questionId] = (aq.snapshot as any) || {};
       sectionByQuestion[aq.questionId] = aq.sectionId;
     }
 
@@ -1606,180 +1632,7 @@ router.get("/attempts", async (req, res) => {
 });
 
 
-router.get("/attempts/:attemptId/analytics", async (req, res) => {
-  try {
-    const attemptId = Number(req.params.attemptId);
-    if (!Number.isInteger(attemptId)) {
-      return res.status(400).json({ error: "Invalid attempt id" });
-    }
 
-    const userId = getCurrentUser(req);
-    if (!userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
-    const [attempt] = await db
-      .select()
-      .from(mockExamAttempts)
-      .where(eq(mockExamAttempts.id, attemptId))
-      .limit(1);
-
-    if (!attempt || attempt.userId !== userId) {
-      return res.status(404).json({ error: "Attempt not found" });
-    }
-
-    // Allow viewing analytics for submitted or expired tests
-    if (attempt.status === "in_progress") {
-      return res.status(400).json({ error: "Test is still in progress" });
-    }
-
-    // --- Deep Analytics Calculation ---
-
-    // 1. Fetch all attempts for this paper (for Rank/Percentile)
-    const allAttempts = await db
-      .select({
-        id: mockExamAttempts.id,
-        score: mockExamAttempts.score,
-        totalTimeSeconds: mockExamAttempts.totalTimeSeconds,
-        correctCount: mockExamAttempts.correctCount,
-        wrongCount: mockExamAttempts.wrongCount,
-        unansweredCount: mockExamAttempts.unansweredCount,
-        userId: mockExamAttempts.userId,
-      })
-      .from(mockExamAttempts)
-      .where(
-        and(
-          eq(mockExamAttempts.paperId, attempt.paperId),
-          inArray(mockExamAttempts.status, ["submitted", "auto_submitted", "expired"])
-        )
-      );
-
-    // Filter to only valid scored attempts (exclude null scores if any)
-    const validAttempts = allAttempts.filter(a => a.score != null);
-
-    // Sort by score descending, then time ascending (tie-breaker)
-    validAttempts.sort((a, b) => {
-      if ((b.score || 0) !== (a.score || 0)) {
-        return (b.score || 0) - (a.score || 0);
-      }
-      return (a.totalTimeSeconds || 0) - (b.totalTimeSeconds || 0);
-    });
-
-    const totalParticipants = validAttempts.length;
-    const currentRank = validAttempts.findIndex(a => a.id === attemptId) + 1;
-
-    // Percentile = (Number of people behind you / Total people) * 100
-    // "Behind you" means strictly lower rank (higher index in our sorted list)
-    // Actually, standard percentile definition: (Number of scores < your score / Total scores) * 100
-    const peopleBelowMe = validAttempts.filter(a => (a.score || 0) < (attempt.score || 0)).length;
-    const percentile = totalParticipants > 1
-      ? (peopleBelowMe / totalParticipants) * 100
-      : 100; // If you're the only one, you're top 100%? Or 99.9? Let's say 100 for purely ego reasons or 0.
-
-    // 2. Topper Stats
-    const topper = validAttempts[0] || null;
-    const topperStats = topper ? {
-      score: topper.score,
-      timeTaken: topper.totalTimeSeconds,
-      accuracy: topper.correctCount ? (topper.correctCount / ((topper.correctCount + (topper.wrongCount || 0)) || 1)) * 100 : 0
-    } : null;
-
-    // 3. Average Stats
-    const avgScore = validAttempts.reduce((acc, curr) => acc + (curr.score || 0), 0) / (totalParticipants || 1);
-    const avgTime = validAttempts.reduce((acc, curr) => acc + (curr.totalTimeSeconds || 0), 0) / (totalParticipants || 1);
-
-    // 4. Subject-wise breakdown (existing logic from report, but simplified for analytics chart)
-    const sections = await db
-      .select()
-      .from(mockExamSections)
-      .where(eq(mockExamSections.paperId, attempt.paperId));
-
-    const attemptSections = await db
-      .select()
-      .from(mockExamAttemptSections)
-      .where(eq(mockExamAttemptSections.attemptId, attemptId));
-
-    // Need per-subject accuracy. 
-    // This is expensive to calculate deeply from raw responses every time?
-    // Optimization: We could reuse the logic from `report` or trust the user to hit `report` for detailed item analysis.
-    // For this endpoint, we will stick to the "Result Overview" data needed for the charts.
-
-    // Let's re-use the basic aggregates we already have or can easily get.
-    // Actually, `mockExamAttemptSections` tracks time spent, but not correctness per section unless we query questions.
-    // Let's do a quick aggregate on responses for subject breakdown.
-
-    const questionsWithSections = await db
-      .select({
-        questionId: mockExamPaperQuestions.questionId,
-        sectionId: mockExamPaperQuestions.sectionId,
-        sectionName: mockExamSections.name,
-        subject: mockExamQuestions.subject
-      })
-      .from(mockExamPaperQuestions)
-      .leftJoin(mockExamQuestions, eq(mockExamPaperQuestions.questionId, mockExamQuestions.id))
-      .leftJoin(mockExamSections, eq(mockExamPaperQuestions.sectionId, mockExamSections.id))
-      .where(eq(mockExamPaperQuestions.paperId, attempt.paperId));
-
-    const responses = await db
-      .select()
-      .from(mockExamResponses)
-      .where(eq(mockExamResponses.attemptId, attemptId));
-
-    const responseMap = new Map(responses.map(r => [r.questionId, r]));
-
-    const bySubject: Record<string, { correct: number, wrong: number, unanswered: number, totalQuestions: number, totalTimeSeconds: number }> = {};
-
-    questionsWithSections.forEach(q => {
-      const subject = q.subject || "General";
-      if (!bySubject[subject]) {
-        bySubject[subject] = { correct: 0, wrong: 0, unanswered: 0, totalQuestions: 0, totalTimeSeconds: 0 };
-      }
-
-      const resp = responseMap.get(q.questionId);
-      bySubject[subject].totalQuestions++;
-
-      if (resp) {
-        if (resp.isCorrect) bySubject[subject].correct++;
-        else if (resp.isCorrect === false) bySubject[subject].wrong++; // strictly false
-        else bySubject[subject].unanswered++; // null or undefined
-
-        bySubject[subject].totalTimeSeconds += (resp.timeSpentSeconds || 0);
-      } else {
-        bySubject[subject].unanswered++;
-      }
-    });
-
-    const bySubjectArray = Object.entries(bySubject).map(([subject, stats]) => ({
-      subject,
-      ...stats,
-      accuracy: (stats.correct / ((stats.correct + stats.wrong) || 1)) * 100
-    }));
-
-    res.json({
-      rank: currentRank,
-      percentile: Number(percentile.toFixed(2)),
-      totalParticipants,
-      totals: {
-        totalQuestions: questionsWithSections.length,
-        correct: attempt.correctCount,
-        wrong: attempt.wrongCount,
-        unanswered: attempt.unansweredCount,
-        accuracy: attempt.correctCount ? (attempt.correctCount / ((attempt.correctCount + (attempt.wrongCount || 0)) || 1)) * 100 : 0,
-        totalTimeSeconds: attempt.totalTimeSeconds
-      },
-      topperStats,
-      averageStats: {
-        score: avgScore,
-        timeTaken: avgTime
-      },
-      bySubject: bySubjectArray
-    });
-
-  } catch (error) {
-    console.error("Failed to fetch mock exam analytics:", error);
-    res.status(500).json({ error: "Failed to fetch analytics" });
-  }
-});
 
 router.get("/attempts/:attemptId/report", async (req, res) => {
   try {
@@ -1852,7 +1705,7 @@ router.get("/attempts/:attemptId/report", async (req, res) => {
 
     if (attemptQuestions.length) {
       items = attemptQuestions.map((aq) => {
-        const snapshot = aq.snapshot || {};
+        const snapshot = (aq.snapshot as any) || {};
         const opts = snapshot.options || [];
         const correctOptionIds = opts.filter((o: any) => o.isCorrect).map((o: any) => o.id);
         const section = sectionMap.get(aq.sectionId);

@@ -274,6 +274,63 @@ export const getBreadcrumbSchema = (items: Array<{ name: string; url: string }>)
     }))
 });
 
+// Generate structured data for articles
+export function getArticleSchema(article: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished?: string;
+  dateModified?: string;
+  author?: string;
+  image?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.description,
+    url: article.url,
+    datePublished: article.datePublished || "2025-01-01",
+    dateModified: article.dateModified || new Date().toISOString().split('T')[0],
+    author: {
+      "@type": "Organization",
+      name: article.author || "ZeroPage",
+      url: "https://neet.zeropage.in",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "ZeroPage",
+      url: "https://neet.zeropage.in",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://neet.zeropage.in/favicon.png",
+      },
+    },
+    image: article.image || "https://neet.zeropage.in/og-image.png",
+    mainEntityOfPage: { "@type": "WebPage", "@id": article.url },
+  };
+}
+
+// Generate structured data for HowTo
+export function getHowToSchema(howTo: {
+  name: string;
+  description: string;
+  steps: Array<{ name: string; text: string }>;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: howTo.name,
+    description: howTo.description,
+    step: howTo.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+    })),
+  };
+}
+
 // Generate exam schema for mock tests
 export const getExamSchema = (examName: string, description: string) => ({
     "@context": "https://schema.org",

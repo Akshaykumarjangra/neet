@@ -168,7 +168,7 @@ export default function AvogadroJar() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div className="bg-muted p-3 rounded">
             <p className="text-2xl font-bold">{moleculeCount[0].toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">{hindi ? 'अणु' : 'Molecules'}</p>

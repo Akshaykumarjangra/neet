@@ -33,7 +33,7 @@ import billingRoutes from "./billing-routes";
 import lmsAutomationRoutes from "./lms-automation-routes";
 import announcementRoutes from "./announcement-routes";
 import chatRoutes from "./chat-routes";
-import { requireActiveSubscription, requireOwner, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import { requireActiveSubscription, requireAdmin, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
 import taskRoutes from "./task-routes";
 import questionTagRoutes from "./question-tag-routes";
 import analyticsRoutes from "./analytics-routes";
@@ -41,9 +41,21 @@ import telemetryRoutes from "./telemetry-routes";
 import profileRoutes from "./profile-routes";
 import explainRoutes from "./explain-routes";
 import chapterChatRoutes from "./chapter-chat-routes";
-import adminImpersonationRoutes from "./admin-impersonation-routes";
+import adminImpersonationRoutes, { enforceImpersonationTimeLimit } from "./admin-impersonation-routes";
 import growthRoutes from "./growth-routes";
+import marketingRoutes from "./marketing-routes";
 import sitemapRoutes from "./sitemap";
+import aiDoubtSolverRoutes from "./ai-doubt-solver-routes";
+import adaptivePracticeRoutes from "./adaptive-practice-routes";
+import battleRoutes from "./battle-routes";
+import rankPredictorRoutes from "./rank-predictor-routes";
+import anticheatRoutes from "./anticheat-routes";
+import lifecycleRoutes from "./lifecycle-routes";
+import seoRoutes from "./seo-routes";
+import squadRoutes from "./squad-routes";
+import parentRoutes from "./parent-routes";
+import scholarshipRoutes from "./scholarship-routes";
+import notificationRoutes from "./notification-routes";
 import multer from "multer";
 import { objectStorage } from "./services/object-storage";
 
@@ -151,12 +163,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Growth/Marketing routes
   app.use("/api/growth", growthRoutes);
 
+  // Marketing automation routes
+  app.use("/api/marketing", marketingRoutes);
+
   // SEO routes (sitemap)
   app.use("", sitemapRoutes);
+
+  // SEO/AEO/GEO routes (llms.txt, ai.txt, schema.org markup)
+  app.use("", seoRoutes);
 
   // Game/Gamification routes
   app.use("/api/game", gameRoutes);
   app.use("/api/gamification", gamificationRoutes);
+
+  // Enforce 1-hour cap on any request made under an active impersonation
+  // session (mounted on /api so it covers the full authenticated surface
+  // area, not just admin endpoints).
+  app.use("/api", enforceImpersonationTimeLimit);
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
@@ -196,6 +219,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Search routes (Full-text search across topics, questions, formulas, keypoints)
   app.use("/api/search", searchRoutes);
+
+  // === Phase 1: AI Tutor & Personalization ===
+  app.use("/api/ai", requireActiveSubscription(), aiDoubtSolverRoutes);
+  app.use("/api/adaptive", requireActiveSubscription(), adaptivePracticeRoutes);
+  app.use("/api/predict", requireActiveSubscription(), rankPredictorRoutes);
+
+  // === Phase 3: Engagement & Retention ===
+  app.use("/api/battle", requireActiveSubscription(), battleRoutes);
+
+  // === Phase 5d: Lifecycle Marketing ===
+  app.use("/api/lifecycle", lifecycleRoutes);
+
+  // === Phase 7: Quality & Compliance ===
+  app.use("/api/anticheat", anticheatRoutes);
+  app.use("/api/squads", squadRoutes);
+  app.use("/api/parent", parentRoutes);
+  app.use("/api/scholarship", scholarshipRoutes);
+  app.use("/api/notifications", notificationRoutes);
+
+  app.use("/api/growth", growthRoutes);
 
   app.use("/api/billing", billingRoutes);
 
@@ -325,7 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/topics", requireOwner, async (req, res) => {
+  app.post("/api/topics", requireAdmin, async (req, res) => {
     try {
       const validatedData = insertContentTopicSchema.parse(req.body) as ContentTopicInsert;
       const topic = await storage.createTopic(validatedData);
@@ -1379,7 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk question generation endpoints
-  app.post("/api/questions/generate-bulk", requireOwner, async (req, res) => {
+  app.post("/api/questions/generate-bulk", requireAdmin, async (req, res) => {
     res.status(503).json({
       error: "Background jobs are disabled on this environment.",
     });
@@ -1600,8 +1643,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 50 * 1024 * 1024, // 50MB limit
+      fileSize: 10 * 1024 * 1024, // Reduced to 10MB limit for security
     },
+    fileFilter: (_req: any, file: any, cb: any) => {
+      const allowedMimes = [
+        "image/jpeg", "image/png", "image/gif", "image/webp", 
+        "application/pdf"
+      ];
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Invalid file type. Only JPG, PNG, GIF, WEBP, and PDF are allowed.") as any, false);
+      }
+    }
   });
 
   app.post("/api/upload", requireAuthWithPasswordCheck, upload.single("file"), async (req, res) => {

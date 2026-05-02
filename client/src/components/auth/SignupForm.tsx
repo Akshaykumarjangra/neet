@@ -18,10 +18,22 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 
+const PASSWORD_REQUIREMENTS_MESSAGE =
+  "Password must be at least 10 chars, include upper/lowercase, a number, and a special char (or be 14+ chars).";
+
 const signupSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string()
+      .min(10, PASSWORD_REQUIREMENTS_MESSAGE)
+      .max(200)
+      .refine((val) => /[A-Z]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+      .refine((val) => /[a-z]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+      .refine((val) => /[0-9]/.test(val), PASSWORD_REQUIREMENTS_MESSAGE)
+      .refine(
+        (val) => val.length >= 14 || /[^A-Za-z0-9]/.test(val),
+        PASSWORD_REQUIREMENTS_MESSAGE,
+      ),
     confirmPassword: z.string(),
     role: z.enum(["student", "mentor"]).default("student"),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -140,7 +152,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
                                     <Input
                                         data-testid="input-password"
                                         type={showPassword ? "text" : "password"}
-                                        placeholder="Create a password (min 8 characters)"
+                                        placeholder="Create a password (min 10 chars, mixed case, number)"
                                         autoComplete="new-password"
                                         {...field}
                                     />

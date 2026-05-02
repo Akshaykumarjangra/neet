@@ -52,10 +52,13 @@ import {
   TestTubes,
   Sparkles,
   Lock,
+  ClipboardList,
 } from "lucide-react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
+import { getCourseSchema } from "@/config/seo";
 
 interface ChapterData {
   id: number;
@@ -192,7 +195,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = chapter.chapterNumber > 3 && !isPremium;
+  const isLocked = !chapter.isFree && !isPremium;
 
   return (
     <motion.div
@@ -591,6 +594,13 @@ export default function Chemistry() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title={`NEET Chemistry Class ${selectedClass} - Organic, Inorganic & Physical | ZERO AI`}
+        description={`Master Class ${selectedClass} Chemistry for NEET. Complete coverage of Organic, Inorganic, and Physical Chemistry with 10,000+ solved examples.`}
+        url={`/chemistry`}
+        keywords={['NEET Chemistry', `Class ${selectedClass} Chemistry`, 'Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry']}
+        structuredData={getCourseSchema("Chemistry")}
+      />
       <Header />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
@@ -626,7 +636,15 @@ export default function Chemistry() {
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-chemistry-title">
                       Chemistry
                     </h1>
-                    <p className="text-white/80 text-sm sm:text-base">NEET 2025 Chemistry Syllabus</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white/80 text-sm sm:text-base">NEET 2025 Chemistry Syllabus</p>
+                      <Link href="/progress/analytics">
+                        <Button variant="link" className="text-white p-0 h-auto text-xs font-normal underline decoration-white/30 hover:decoration-white transition-all">
+                          <ClipboardList className="h-3 w-3 mr-1" />
+                          Review Questions
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

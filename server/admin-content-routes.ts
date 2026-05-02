@@ -1,6 +1,7 @@
-// @ts-nocheck
+
 import { Router, type Request, type Response } from "express";
 import { db } from "./db";
+import { requireAdmin, requireAdminOrMentor } from "./auth";
 import {
   users,
   questions,
@@ -22,34 +23,12 @@ import {
   chapterContent,
 } from "@shared/schema";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { recordAuditLog } from "./lib/audit";
 import { z } from "zod";
 
 const router = Router();
 
-const requireAdmin = async (req: any, res: any, next: any) => {
-  const userId = req.session?.userId;
 
-  if (!userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  try {
-    const [user] = await db
-      .select({ isAdmin: users.isAdmin })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    next();
-  } catch (error) {
-    console.error("Admin check error:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
 
 // ============ QUESTIONS ROUTES ============
 
@@ -97,6 +76,14 @@ router.post("/questions", requireAdmin, async (req, res) => {
   try {
     const validatedData = insertQuestionSchema.parse(req.body);
     const [newQuestion] = await db.insert(questions).values(validatedData).returning();
+    
+    await recordAuditLog(req, {
+      action: "create_question",
+      entityType: "question",
+      entityId: newQuestion.id,
+      newValue: newQuestion,
+    });
+
     res.status(201).json(newQuestion);
   } catch (error: any) {
     console.error("Error creating question:", error);
@@ -122,6 +109,13 @@ router.put("/questions/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "Question not found" });
     }
 
+    await recordAuditLog(req, {
+      action: "update_question",
+      entityType: "question",
+      entityId: updated.id,
+      newValue: updated,
+    });
+
     res.json(updated);
   } catch (error) {
     console.error("Error updating question:", error);
@@ -141,6 +135,13 @@ router.delete("/questions/:id", requireAdmin, async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Question not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "delete_question",
+      entityType: "question",
+      entityId: deleted.id,
+      oldValue: deleted,
+    });
 
     res.json({ success: true, deleted });
   } catch (error) {
@@ -170,6 +171,15 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
       }
     }
 
+    await recordAuditLog(req, {
+      action: "bulk_import_questions",
+      entityType: "question",
+      newValue: {
+        importedCount: imported.length,
+        errorCount: errors.length,
+      },
+    });
+
     res.json({
       success: true,
       imported: imported.length,
@@ -184,7 +194,7 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
 
 // ============ TOPICS ROUTES ============
 
-router.get("/topics", requireAdmin, async (req, res) => {
+router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
     const allTopics = await db.select().from(contentTopics).orderBy(contentTopics.subject, contentTopics.topicName);
 
@@ -212,6 +222,14 @@ router.post("/topics", requireAdmin, async (req, res) => {
   try {
     const validatedData = insertContentTopicSchema.parse(req.body);
     const [newTopic] = await db.insert(contentTopics).values(validatedData).returning();
+    
+    await recordAuditLog(req, {
+      action: "create_topic",
+      entityType: "topic",
+      entityId: newTopic.id,
+      newValue: newTopic,
+    });
+
     res.status(201).json(newTopic);
   } catch (error: any) {
     console.error("Error creating topic:", error);
@@ -236,6 +254,13 @@ router.put("/topics/:id", requireAdmin, async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: "Topic not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "update_topic",
+      entityType: "topic",
+      entityId: updated.id,
+      newValue: updated,
+    });
 
     res.json(updated);
   } catch (error) {
@@ -268,6 +293,13 @@ router.delete("/topics/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "Topic not found" });
     }
 
+    await recordAuditLog(req, {
+      action: "delete_topic",
+      entityType: "topic",
+      entityId: deleted.id,
+      oldValue: deleted,
+    });
+
     res.json({ success: true, deleted });
   } catch (error) {
     console.error("Error deleting topic:", error);
@@ -297,6 +329,14 @@ router.post("/mock-tests", requireAdmin, async (req, res) => {
   try {
     const validatedData = insertMockTestSchema.parse(req.body);
     const [newTest] = await db.insert(mockTests).values(validatedData).returning();
+    
+    await recordAuditLog(req, {
+      action: "create_mock_test",
+      entityType: "mock_test",
+      entityId: newTest.id,
+      newValue: newTest,
+    });
+
     res.status(201).json(newTest);
   } catch (error: any) {
     console.error("Error creating mock test:", error);
@@ -322,6 +362,13 @@ router.put("/mock-tests/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "Mock test not found" });
     }
 
+    await recordAuditLog(req, {
+      action: "update_mock_test",
+      entityType: "mock_test",
+      entityId: updated.id,
+      newValue: updated,
+    });
+
     res.json(updated);
   } catch (error) {
     console.error("Error updating mock test:", error);
@@ -341,6 +388,13 @@ router.delete("/mock-tests/:id", requireAdmin, async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Mock test not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "delete_mock_test",
+      entityType: "mock_test",
+      entityId: deleted.id,
+      oldValue: deleted,
+    });
 
     res.json({ success: true, deleted });
   } catch (error) {
@@ -363,6 +417,13 @@ router.put("/mock-tests/:id/publish", requireAdmin, async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: "Mock test not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "publish_mock_test",
+      entityType: "mock_test",
+      entityId: updated.id,
+      newValue: { isPublished: updated.isPublished },
+    });
 
     res.json(updated);
   } catch (error) {
@@ -413,6 +474,14 @@ router.post("/flashcard-decks", requireAdmin, async (req, res) => {
   try {
     const validatedData = insertFlashcardDeckSchema.parse(req.body);
     const [newDeck] = await db.insert(flashcardDecks).values(validatedData).returning();
+    
+    await recordAuditLog(req, {
+      action: "create_flashcard_deck",
+      entityType: "flashcard_deck",
+      entityId: newDeck.id,
+      newValue: newDeck,
+    });
+
     res.status(201).json(newDeck);
   } catch (error: any) {
     console.error("Error creating flashcard deck:", error);
@@ -437,6 +506,13 @@ router.put("/flashcard-decks/:id", requireAdmin, async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: "Flashcard deck not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "update_flashcard_deck",
+      entityType: "flashcard_deck",
+      entityId: updated.id,
+      newValue: updated,
+    });
 
     res.json(updated);
   } catch (error) {
@@ -472,6 +548,13 @@ router.delete("/flashcard-decks/:id", requireAdmin, async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Flashcard deck not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "delete_flashcard_deck",
+      entityType: "flashcard_deck",
+      entityId: deleted.id,
+      oldValue: deleted,
+    });
 
     res.json({ success: true, deleted });
   } catch (error) {
@@ -559,6 +642,16 @@ router.post("/flashcard-decks/:id/cards", requireAdmin, async (req, res) => {
       }
     }
 
+    await recordAuditLog(req, {
+      action: "bulk_import_flashcards",
+      entityType: "flashcard",
+      newValue: {
+        deckId,
+        importedCount: imported.length,
+        errorCount: errors.length,
+      },
+    });
+
     res.json({
       success: true,
       imported: imported.length,
@@ -600,6 +693,13 @@ router.delete("/flashcard-decks/:deckId/cards/:cardId", requireAdmin, async (req
       return res.status(404).json({ error: "Flashcard not found" });
     }
 
+    await recordAuditLog(req, {
+      action: "delete_flashcard",
+      entityType: "flashcard",
+      entityId: deleted.id,
+      oldValue: deleted,
+    });
+
     res.json({ success: true, deleted });
   } catch (error) {
     console.error("Error deleting flashcard:", error);
@@ -623,6 +723,14 @@ router.post("/mock-exam-series", requireAdmin, async (req, res) => {
   try {
     const validatedData = insertMockTestSeriesSchema.parse(req.body);
     const [newSeries] = await db.insert(mockTestSeries).values(validatedData).returning();
+    
+    await recordAuditLog(req, {
+      action: "create_mock_test_series",
+      entityType: "mock_test_series",
+      entityId: newSeries.id,
+      newValue: newSeries,
+    });
+
     res.status(201).json(newSeries);
   } catch (error: any) {
     console.error("Error creating test series:", error);
@@ -674,6 +782,13 @@ router.post("/mock-exam-papers", requireAdmin, async (req, res) => {
       createdBy: req.session?.userId
     }).returning();
 
+    await recordAuditLog(req, {
+      action: "create_mock_exam_paper",
+      entityType: "mock_exam_paper",
+      entityId: newPaper.id,
+      newValue: newPaper,
+    });
+
     res.status(201).json(newPaper);
   } catch (error: any) {
     console.error("Error creating exam paper:", error);
@@ -702,6 +817,13 @@ router.put("/mock-exam-papers/:id", requireAdmin, async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: "Exam paper not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "update_mock_exam_paper",
+      entityType: "mock_exam_paper",
+      entityId: updated.id,
+      newValue: updated,
+    });
 
     res.json(updated);
   } catch (error) {
@@ -830,6 +952,13 @@ router.post("/content-approvals/:id/:action", requireAdmin, async (req, res) => 
     } else {
       return res.status(400).json({ error: "Invalid action" });
     }
+
+    await recordAuditLog(req, {
+      action: action === 'approve' ? "approve_content" : "reject_content",
+      entityType: "chapter_content_version",
+      entityId: parseInt(id),
+      newValue: { status: action === 'approve' ? 'approved' : 'rejected', reviewNotes },
+    });
 
     res.json({ success: true, status: action === 'approve' ? 'approved' : 'rejected' });
   } catch (error) {

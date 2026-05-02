@@ -41,6 +41,8 @@ import { useAuth } from "@/hooks/useAuth";
 import type { SubscriptionPlan } from "@shared/schema";
 import { Seo } from "@/components/Seo";
 import { apiRequest } from "@/lib/queryClient";
+import { getFAQSchema } from "@/config/seo";
+import { FAQSection } from "@/components/AEOComponents";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -292,6 +294,12 @@ export default function Pricing() {
       <Seo
         title="Pricing | NEET Prep"
         description="Choose the right NEET prep plan: start free, quarterly at ₹1,000/3 months, or talk to sales for institutions."
+        structuredData={getFAQSchema([
+          { question: "Can I cancel my subscription anytime?", answer: "Yes, you can cancel your subscription at any time. Your access will continue until the end of your billing period." },
+          { question: "Is there a free trial for Premium?", answer: "Yes! You get a 7-day free trial when you sign up for Premium. No credit card required to start." },
+          { question: "What payment methods do you accept?", answer: "We accept all major credit/debit cards, UPI, net banking, and popular wallets." },
+          { question: "Do you offer refunds?", answer: "We offer a 7-day money-back guarantee if you're not satisfied with our Premium plan." }
+        ])}
       />
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">

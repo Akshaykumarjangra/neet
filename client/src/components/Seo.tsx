@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 
 interface SeoProps {
   title: string;
@@ -17,106 +17,81 @@ export function Seo({
   keywords = [],
   ogImage,
   structuredData,
-  noindex = false
+  noindex = false,
 }: SeoProps) {
-  useEffect(() => {
-    if (title) {
-      document.title = title;
-    }
+  const dataArray = structuredData
+    ? Array.isArray(structuredData)
+      ? structuredData
+      : [structuredData]
+    : [];
 
-    const ensureMeta = (name: string, content: string) => {
-      if (!content) return;
-      let tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.content = content;
-    };
+  return (
+    <Helmet>
+      <title>{title}</title>
+      
+      {description && <meta name="description" content={description} />}
+      {keywords.length > 0 && <meta name="keywords" content={keywords.join(", ")} />}
+      
+      <meta 
+        name="robots" 
+        content={
+          noindex
+            ? "noindex, nofollow"
+            : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        } 
+      />
+      
+      <meta property="og:title" content={title} />
+      {description && <meta property="og:description" content={description} />}
+      <meta property="og:type" content="website" />
+      <meta property="og:locale" content="en_IN" />
+      {ogImage && <meta property="og:image" content={ogImage} />}
+      {url && <meta property="og:url" content={url} />}
+      
+      <meta property="twitter:card" content="summary_large_image" />
+      <meta property="twitter:title" content={title} />
+      {description && <meta property="twitter:description" content={description} />}
+      {ogImage && <meta property="twitter:image" content={ogImage} />}
+      {url && <meta property="twitter:url" content={url} />}
+      
+      <meta name="geo.region" content="IN" />
+      <meta name="geo.placename" content="India" />
+      <meta name="language" content="English" />
+      
+      {url && <link rel="canonical" href={url} />}
 
-    const ensureProperty = (property: string, content: string) => {
-      if (!content) return;
-      let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("property", property);
-        document.head.appendChild(tag);
-      }
-      tag.content = content;
-    };
+      {/* Breadcrumb Schema */}
+      {url && (
+        <script type="application/ld+json">
+          {(() => {
+            const pathSegments = new URL(url).pathname.split('/').filter(Boolean);
+            return JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://neet.zeropage.in"
+                },
+                ...pathSegments.map((part, index) => ({
+                  "@type": "ListItem",
+                  "position": index + 2,
+                  "name": part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' '),
+                  "item": `https://neet.zeropage.in/${pathSegments.slice(0, index + 1).join('/')}`
+                }))
+              ]
+            });
+          })()}
+        </script>
+      )}
 
-    // Primary meta tags
-    if (description) {
-      ensureMeta("description", description);
-      ensureProperty("og:description", description);
-      ensureProperty("twitter:description", description);
-    }
-
-    if (keywords.length > 0) {
-      ensureMeta("keywords", keywords.join(", "));
-    }
-
-    // Robots meta
-    ensureMeta("robots", noindex
-      ? "noindex, nofollow"
-      : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
-    );
-
-    // Open Graph
-    ensureProperty("og:title", title);
-    ensureProperty("og:type", "website");
-    ensureProperty("og:locale", "en_IN");
-
-    if (ogImage) {
-      ensureProperty("og:image", ogImage);
-    }
-
-    // Twitter
-    ensureProperty("twitter:card", "summary_large_image");
-    ensureProperty("twitter:title", title);
-    if (ogImage) {
-      ensureProperty("twitter:image", ogImage);
-    }
-
-    // India/NEET specific
-    ensureMeta("geo.region", "IN");
-    ensureMeta("geo.placename", "India");
-    ensureMeta("language", "English");
-
-    if (url) {
-      ensureProperty("og:url", url);
-      ensureProperty("twitter:url", url);
-      let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
-      if (!canonical) {
-        canonical = document.createElement("link");
-        canonical.setAttribute("rel", "canonical");
-        document.head.appendChild(canonical);
-      }
-      canonical.href = url;
-    }
-
-    // Structured Data (JSON-LD)
-    if (structuredData) {
-      const dataArray = Array.isArray(structuredData) ? structuredData : [structuredData];
-
-      // Remove existing structured data scripts
-      document.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
-        if (script.getAttribute('data-seo-component') === 'true') {
-          script.remove();
-        }
-      });
-
-      // Add new structured data
-      dataArray.forEach((data, index) => {
-        const script = document.createElement('script');
-        script.type = 'application/ld+json';
-        script.setAttribute('data-seo-component', 'true');
-        script.textContent = JSON.stringify(data);
-        document.head.appendChild(script);
-      });
-    }
-  }, [title, description, url, keywords, ogImage, structuredData, noindex]);
-
-  return null;
+      {dataArray.map((data, index) => (
+        <script type="application/ld+json" key={`structured-data-${index}`}>
+          {JSON.stringify(data)}
+        </script>
+      ))}
+    </Helmet>
+  );
 }

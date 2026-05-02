@@ -1,4 +1,6 @@
 
+"use strict";
+
 import { Header } from "@/components/Header";
 import { QuestionCard } from "@/components/QuestionCard";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -33,6 +35,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Grid as FixedSizeGrid } from "react-window";
 const FixedSizeGridAny = FixedSizeGrid as any;
 
@@ -89,6 +92,7 @@ type MockExamStartPayload = {
 
 export default function MockTestPage() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const routeMatch = useRoute<{ id: string }>("/mock-test/:id") as [boolean, { id: string } | null] | null;
   const testId = routeMatch?.[1]?.id ?? "";
   const paperId = Number(testId);
@@ -116,14 +120,46 @@ export default function MockTestPage() {
   const questionStartRef = useRef<number>(Date.now());
   const currentQuestionIdRef = useRef<number | null>(null);
 
+  // Focus Loss Detection (Anti-Cheat)
+  useEffect(() => {
+    if (!isTestStarted || isTestSubmitted || !attemptId) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        apiRequest("POST", `/api/mock-exams/attempts/${attemptId}/focus-loss`)
+          .then((res: any) => {
+            if (res.autoSubmitted) {
+              setIsTestSubmitted(true);
+              setIsTestStarted(false);
+              toast({
+                variant: "destructive",
+                title: "Test Auto-Submitted",
+                description: "You exceeded the maximum number of tab switches allowed.",
+              });
+              setLocation(`/mock-test/${paperId}/results?attemptId=${attemptId}`);
+            } else {
+              toast({
+                variant: "destructive",
+                title: "Anti-Cheat Warning",
+                description: `Tab switch detected! (Violation ${res.focusLossCount}/${res.maxViolations})`,
+              });
+            }
+          })
+          .catch(err => console.error("Focus loss reporting failed", err));
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isTestStarted, isTestSubmitted, attemptId, paperId, toast, setLocation]);
+
   // Heartbeat Effect
   useEffect(() => {
     if (!isTestStarted || isTestSubmitted || !attemptId) return;
 
     const heartbeatInterval = setInterval(() => {
-      // Calculate time spent delta (approximate) or just send heartbeat
-      // For now we assume server tracks total time via start/end, or we can send client accumulating time
-      // Let's send a simple ping
       apiRequest("POST", `/api/mock-exams/attempts/${attemptId}/heartbeat`, {
         timeRemainingSeconds: timeRemaining
       }).catch(err => console.error("Heartbeat failed", err));
@@ -585,7 +621,7 @@ export default function MockTestPage() {
       <div className="min-h-screen bg-background">
         <Header activeSubject="Mock Test" userPoints={2450} userLevel={12} studyStreak={7} />
 
-        <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <main className="container mx-auto px-4 py-8 max-w-7xl overflow-hidden">
           <div className="mb-6">
             <Button variant="ghost" onClick={() => setLocation('/')} data-testid="button-back">
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -621,12 +657,12 @@ export default function MockTestPage() {
                       Questions
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <SheetContent side="right" className="w-[85vw] sm:w-[400px] overflow-hidden">
                     <SheetHeader className="mb-4">
                       <SheetTitle>Question Palette</SheetTitle>
                     </SheetHeader>
                     <ScrollArea className="h-[calc(100vh-100px)] pr-4">
-                      <div className="grid grid-cols-5 gap-2">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 overflow-hidden">
                         {questions.map((question, index) => (
                           <button
                             key={question.id}
@@ -689,7 +725,7 @@ export default function MockTestPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between flex-wrap gap-4">
-                    <CardTitle data-testid="text-test-title">{startData.paper.title}</CardTitle>
+                    <CardTitle data-testid="text-test-title" className="truncate max-w-full">{startData.paper.title}</CardTitle>
                     {isTestStarted ? (
                       <div
                         className={cn(

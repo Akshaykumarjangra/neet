@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 import { eq, and, inArray, desc } from "drizzle-orm";
 import { requireAuthWithPasswordCheck } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 
 const router = Router();
 
@@ -182,6 +183,13 @@ async function markSubscriptionActive(
         } as Partial<UserInsert>)
         .where(eq(users.id, existing.userId));
     });
+    recordAuditLog(null, {
+      action: "activate_subscription",
+      entityType: "subscription",
+      entityId: subscriptionId,
+      userId: existing.userId,
+      newValue: { status: "active", transactionId }
+    });
     console.log(`[Billing] Successfully activated subscription ${subscriptionId}`);
   } catch (error) {
     console.error(`[Billing] Failed to activate subscription ${subscriptionId}:`, error);
@@ -197,6 +205,12 @@ async function markSubscriptionFailed(
 ) {
   try {
     await db.transaction(async (tx) => {
+      const [sub] = await tx
+        .select({ userId: userSubscriptions.userId })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.id, subscriptionId))
+        .limit(1);
+
       await tx
         .update(userSubscriptions)
         .set({
@@ -215,6 +229,16 @@ async function markSubscriptionFailed(
           updatedAt: new Date(),
         } as Partial<PaymentTransactionInsert>)
         .where(eq(paymentTransactions.id, transactionId));
+
+      if (sub) {
+        recordAuditLog(null, {
+          action: "subscription_failed",
+          entityType: "subscription",
+          entityId: subscriptionId,
+          userId: sub.userId,
+          newValue: { status: "failed", reason }
+        });
+      }
     });
     console.log(`[Billing] Marked subscription ${subscriptionId} as failed: ${reason}`);
   } catch (error) {
@@ -223,7 +247,9 @@ async function markSubscriptionFailed(
   }
 }
 
-router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
+import { paymentLimiter } from "./middleware/rate-limits";
+
+router.post("/checkout", requireAuthWithPasswordCheck, paymentLimiter, async (req, res) => {
   try {
     const userId = req.session!.userId!;
     const { planId, billingInterval = "monthly", provider } = req.body as {
@@ -428,6 +454,18 @@ router.post("/checkout", requireAuthWithPasswordCheck, async (req, res) => {
       } as Partial<PaymentTransactionInsert>)
       .where(eq(paymentTransactions.id, transaction.id));
 
+    recordAuditLog(req, {
+      action: "checkout_initiated",
+      entityType: "payment_transaction",
+      entityId: transaction.id,
+      newValue: {
+        planId,
+        billingInterval: interval,
+        provider: chosenProvider,
+        amount
+      }
+    });
+
     console.log(`[Checkout] Stripe session created: ${session.id} for user ${userId}`);
     return res.json({
       provider: "stripe",
@@ -480,6 +518,7 @@ router.get("/status", requireAuthWithPasswordCheck, async (req, res) => {
 router.post(
   "/razorpay/verify",
   requireAuthWithPasswordCheck,
+  paymentLimiter,
   async (req, res) => {
     try {
       const {
@@ -620,7 +659,17 @@ router.post(
     }
 
     const signature = req.headers["x-razorpay-signature"] as string;
-    const payload = (req as any).rawBody ? (req as any).rawBody.toString() : JSON.stringify(req.body);
+    let payload = "";
+    if (Buffer.isBuffer((req as any).rawBody)) {
+      payload = (req as any).rawBody.toString();
+    } else if (typeof (req as any).rawBody === 'string') {
+      payload = (req as any).rawBody;
+    } else {
+      // If we don't have rawBody, we cannot safely verify the signature.
+      // JSON.stringify will break the payload hash.
+      console.error("[Razorpay Webhook] Missing rawBody. Cannot verify signature.");
+      return res.status(400).send("Webhook configuration error: rawBody missing");
+    }
 
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
@@ -632,15 +681,20 @@ router.post(
       return res.status(400).send("Invalid signature");
     }
 
-    const eventData = typeof req.body === 'object' && !((req as any).rawBody) ? req.body : JSON.parse(payload);
+    let eventData;
+    try {
+      eventData = JSON.parse(payload);
+    } catch (e) {
+      return res.status(400).send("Invalid JSON payload");
+    }
 
     await db
       .insert(webhookEvents)
       .values({
         provider: "razorpay",
-        eventId: payload.id,
-        eventType: payload.event,
-        payload,
+        eventId: eventData.id,
+        eventType: eventData.event,
+        payload: eventData,
         processed: true,
         processedAt: new Date(),
       } as WebhookEventInsert)

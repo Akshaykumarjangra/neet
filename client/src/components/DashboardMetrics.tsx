@@ -11,23 +11,24 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon, trend, subtitle }: MetricCardProps) {
   return (
-    <Card className="glass-panel hover-elevate glow-halo">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+    <Card className="glass-card hover:glow-primary hover:scale-[1.02] transition-all duration-300 border-primary/10 overflow-hidden relative group">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1 relative z-10">
+        <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
           {title}
         </CardTitle>
-        <div className="text-primary">{icon}</div>
+        <div className="text-primary p-2 rounded-xl bg-primary/10 glow-primary">{icon}</div>
       </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent" data-testid={`metric-${title.toLowerCase().replace(/\s+/g, '-')}`}>{value}</div>
+      <CardContent className="relative z-10">
+        <div className="text-3xl font-black italic tracking-tighter bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-transparent" data-testid={`metric-${title.toLowerCase().replace(/\s+/g, '-')}`}>{value}</div>
         {trend && (
-          <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+          <p className="text-xs text-green-500 dark:text-green-400 mt-1 flex items-center gap-1 font-bold italic">
             <TrendingUp className="h-3 w-3" />
             {trend}
           </p>
         )}
         {subtitle && (
-          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-1 font-medium italic">{subtitle}</p>
         )}
       </CardContent>
     </Card>
@@ -80,6 +81,19 @@ export function DashboardMetrics({
           icon={<TrendingUp className="h-4 w-4" />}
           subtitle="67% percentile"
         />
+        <div className="mt-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full text-[10px] uppercase tracking-widest font-black italic hover:text-primary transition-colors"
+            onClick={() => {
+              const text = `I just scored ${mockTestScore}/720 in a NEET Mock Test on ZERO AI! 🚀 Join me at https://neet.zeropage.in`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            }}
+          >
+            Share My Score 🚀
+          </Button>
+        </div>
       </div>
     </div>
   );

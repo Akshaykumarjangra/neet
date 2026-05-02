@@ -1,20 +1,24 @@
 import { Router, type Request, type Response } from 'express';
 import { db } from './db';
-import { chapterContent } from '@shared/schema';
-import { eq } from 'drizzle-orm';
-import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from './auth';
+import { chapterContent, userChats, users } from '@shared/schema';
+import { eq, desc, and } from 'drizzle-orm';
+import { requireAuth, getCurrentUser } from './auth';
 import OpenAI from 'openai';
+import { z } from 'zod';
 
 const router = Router();
 
-const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-});
+// Only initialize OpenAI client when the key is actually set
+const openai = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  ? new OpenAI({
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    })
+  : null;
 
 const miniModel = process.env.OPENAI_MINI_MODEL || 'gpt-4o-mini';
 const MAX_MESSAGE_LENGTH = 1000;
-const MAX_TOKENS = 500;
+const MAX_TOKENS = 1000;
 
 interface ChapterContext {
   title: string;
@@ -33,7 +37,7 @@ function buildSystemPrompt(chapter: any, context?: ChapterContext): string {
 
   if (keyConcepts.length > 0) {
     prompt += `Key concepts in this chapter:\n`;
-    keyConcepts.slice(0, 10).forEach((concept, idx) => {
+    keyConcepts.slice(0, 10).forEach((concept: { title: string; description: string; formula?: string }, idx: number) => {
       prompt += `${idx + 1}. ${concept.title}: ${concept.description}\n`;
       if (concept.formula) {
         prompt += `   Formula: ${concept.formula}\n`;
@@ -44,7 +48,7 @@ function buildSystemPrompt(chapter: any, context?: ChapterContext): string {
 
   if (formulas.length > 0) {
     prompt += `Important formulas:\n`;
-    formulas.slice(0, 10).forEach((formula, idx) => {
+    formulas.slice(0, 10).forEach((formula: string, idx: number) => {
       prompt += `${idx + 1}. ${formula}\n`;
     });
     prompt += '\n';
@@ -72,7 +76,8 @@ function buildSystemPrompt(chapter: any, context?: ChapterContext): string {
 - If asked about something not in this chapter, acknowledge it and offer to help with chapter content instead
 - Keep responses focused and educational (aim for 2-4 sentences per point)
 - Use examples when helpful
-- Format formulas clearly when mentioned (use LaTeX notation if needed)
+- Format formulas clearly using LaTeX notation wrapped in $...$ for inline and $$...$$ for block
+- Use markdown formatting: **bold** for key terms, bullet lists for steps, code blocks for formulas
 - Be encouraging and supportive
 - If the student seems confused, break down concepts into smaller parts
 - Always relate answers back to NEET exam relevance when possible\n`;
@@ -82,15 +87,44 @@ function buildSystemPrompt(chapter: any, context?: ChapterContext): string {
 
 router.get("/chat/health", (_req: Request, res: Response) => {
   res.json({
-    configured: Boolean(process.env.AI_INTEGRATIONS_OPENAI_API_KEY),
+    configured: Boolean(process.env.AI_INTEGRATIONS_OPENAI_API_KEY) && openai !== null,
     model: miniModel,
   });
 });
 
-router.post('/:id/chat', requireAuthWithPasswordCheck, requireActiveSubscription(), async (req: Request, res: Response) => {
+// Get chat history for a chapter
+router.get("/:id/history", requireAuth, async (req, res) => {
   try {
     const chapterId = parseInt(req.params.id);
-    const { message, chapterContext } = req.body;
+    const userId = req.session.userId!;
+
+    if (!Number.isInteger(chapterId)) {
+      return res.status(400).json({ error: 'Invalid chapter ID' });
+    }
+
+    const history = await db
+      .select()
+      .from(userChats)
+      .where(
+        and(
+          eq(userChats.userId, userId),
+          eq(userChats.chapterId, chapterId)
+        )
+      )
+      .orderBy(userChats.createdAt)
+      .limit(50);
+
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({ error: 'Failed to fetch chat history' });
+  }
+});
+
+router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const chapterId = parseInt(req.params.id);
+    const { message, chapterContext, history = [], stream = false } = req.body;
 
     if (!Number.isInteger(chapterId) || chapterId <= 0) {
       return res.status(400).json({ error: 'Invalid chapter ID' });
@@ -107,17 +141,10 @@ router.post('/:id/chat', requireAuthWithPasswordCheck, requireActiveSubscription
       });
     }
 
-    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-      return res.status(400).json({
-        error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
-      });
-    }
-
-    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+    if (!openai) {
       return res.status(503).json({ error: 'AI service is not configured' });
     }
 
-    // Fetch chapter from database
     const [chapter] = await db
       .select()
       .from(chapterContent)
@@ -128,52 +155,104 @@ router.post('/:id/chat', requireAuthWithPasswordCheck, requireActiveSubscription
       return res.status(404).json({ error: 'Chapter not found' });
     }
 
-    // Build system prompt with chapter context
-    const systemPrompt = buildSystemPrompt(chapter, chapterContext);
+    if (!chapter.isFree) {
+      const [user] = await db
+        .select({ isPaidUser: users.isPaidUser, role: users.role, isOwner: users.isOwner })
+        .from(users)
+        .where(eq(users.id, req.session.userId!))
+        .limit(1);
 
-    // Call OpenAI with timeout protection
-    const completionPromise = openai.chat.completions.create({
+      const isPremiumUser = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+      
+      if (!isPremiumUser) {
+        return res.status(403).json({ error: 'This is a premium chapter. Please upgrade your subscription to chat.' });
+      }
+    }
+
+    // Save user message to database
+    await db.insert(userChats).values({
+      userId: req.session.userId!,
+      chapterId: chapterId,
+      role: 'user',
+      content: trimmedMessage,
+    });
+
+    let systemPrompt = buildSystemPrompt(chapter, chapterContext);
+    const recentHistory = Array.isArray(history) ? history.slice(-10).map((msg: any) => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: String(msg.content).substring(0, 1000)
+    })) : [];
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...recentHistory,
+      { role: 'user', content: trimmedMessage },
+    ];
+
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      try {
+        const streamResponse = await openai.chat.completions.create({
+          model: miniModel,
+          messages: messages as any[],
+          max_tokens: MAX_TOKENS,
+          temperature: 0.7,
+          stream: true,
+        });
+
+        let fullContent = '';
+        for await (const chunk of streamResponse) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) {
+            fullContent += content;
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+          }
+        }
+
+        // Save assistant message to database
+        if (fullContent) {
+          await db.insert(userChats).values({
+            userId: req.session.userId!,
+            chapterId: chapterId,
+            role: 'assistant',
+            content: fullContent,
+          });
+        }
+
+        res.write('data: [DONE]\n\n');
+        return res.end();
+      } catch (streamError: any) {
+        console.error('Streaming error:', streamError);
+        res.write(`data: ${JSON.stringify({ error: streamError.message })}\n\n`);
+        return res.end();
+      }
+    }
+
+    // Non-streaming fallback
+    const completion = await openai.chat.completions.create({
       model: miniModel,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: trimmedMessage },
-      ],
+      messages: messages as any[],
       max_tokens: MAX_TOKENS,
       temperature: 0.7,
     });
 
-    // Add timeout (30 seconds)
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timeout - please try again')), 30000)
-    );
-
-    const completion = await Promise.race([completionPromise, timeoutPromise]);
-
-    const answer = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
-
-    res.json({
-      answer,
-      usage: {
-        tokens: completion.usage?.total_tokens,
-        model: miniModel,
-      },
+    const answer = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.';
+    
+    // Save assistant message to database
+    await db.insert(userChats).values({
+      userId: req.session.userId!,
+      chapterId: chapterId,
+      role: 'assistant',
+      content: answer,
     });
+
+    res.json({ answer });
+
   } catch (error: any) {
     console.error('Error in chapter chat:', error);
-
-    // Handle specific OpenAI errors
-    if (error?.status === 429) {
-      return res.status(429).json({
-        error: 'Rate limit exceeded. Please try again in a moment.',
-      });
-    }
-
-    if (error?.status === 503 || error?.message?.includes('service unavailable')) {
-      return res.status(503).json({
-        error: 'AI service is temporarily unavailable. Please try again later.',
-      });
-    }
-
     res.status(500).json({
       error: error?.message || 'Failed to generate response. Please try again.',
     });

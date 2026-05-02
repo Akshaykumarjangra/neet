@@ -134,7 +134,7 @@ export default function ScrewGauge() {
         </div>
 
         <div className="bg-muted p-4 rounded-lg space-y-2">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Main Scale Reading</p>
               <p className="text-lg font-bold">{mainScaleReading.toFixed(2)} mm</p>

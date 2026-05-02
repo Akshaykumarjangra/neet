@@ -43,7 +43,7 @@ import {
   Legend
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useRoute, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -415,10 +415,10 @@ export default function MockTestResults() {
               <CardContent>
                 <div className="text-center">
                   <div className="text-5xl font-bold mb-2 text-indigo-500" data-testid="text-rank">
-                    #{analyticsData?.rank ?? "-"}
+                    {analyticsData?.rank && analyticsData.rank > 0 ? `#${analyticsData.rank}` : "-"}
                   </div>
                   <div className="text-lg text-muted-foreground mb-4">
-                    Top {analyticsData?.percentile ?? 0}%ile
+                    {analyticsData?.percentile && analyticsData.percentile > 0 ? `Top ${analyticsData.percentile}%ile` : "Ranking pending"}
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Badge variant="outline" className="px-3">
@@ -568,7 +568,11 @@ export default function MockTestResults() {
                 {results.subjects.map((subject) => (
                   <div key={subject.name} className="space-y-2" data-testid={`subject-breakdown-${subject.name.toLowerCase()}`}>
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{subject.name}</span>
+                      <span className="font-medium">
+                        <Link href={`/${subject.name.toLowerCase()}`} className="hover:underline text-primary transition-colors">
+                          {subject.name}
+                        </Link>
+                      </span>
                       <span className="text-sm text-muted-foreground">
                         {Math.max(0, subject.score)}/{subject.maxScore}
                       </span>
@@ -723,9 +727,11 @@ export default function MockTestResults() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="text-xs">
-                              {result.subject}
-                            </Badge>
+                            <Link href={`/${result.subject.toLowerCase()}`}>
+                              <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors">
+                                {result.subject}
+                              </Badge>
+                            </Link>
                             {result.isAttempted ? (
                               result.isCorrect ? (
                                 <Badge className="bg-green-500 text-xs">Correct (+4)</Badge>
@@ -803,14 +809,17 @@ export default function MockTestResults() {
                           </div>
                         </div>
 
-                        {result.question.explanation && (
-                          <div>
-                            <h4 className="font-medium mb-2">Explanation:</h4>
-                            <p className="text-sm bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
-                              {result.question.explanation}
-                            </p>
-                          </div>
-                        )}
+                        <div>
+                          <h4 className="font-medium mb-2">Explanation:</h4>
+                          <p className={cn(
+                            "text-sm p-3 rounded-lg border",
+                            result.question.explanation 
+                              ? "bg-blue-500/10 border-blue-500/20" 
+                              : "bg-muted/50 border-dashed border-muted-foreground/20 italic text-muted-foreground"
+                          )}>
+                            {result.question.explanation || "No detailed explanation available for this question yet."}
+                          </p>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>

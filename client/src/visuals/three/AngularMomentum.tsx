@@ -230,7 +230,7 @@ export default function AngularMomentum() {
           className="w-full h-[400px] border rounded-lg bg-slate-900"
         />
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Angular Velocity (ω): {angularVelocity[0]} rad/s
@@ -280,7 +280,7 @@ export default function AngularMomentum() {
           </div>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-3 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Moment of Inertia (I)</p>
             <p className="text-2xl font-bold text-blue-600">
@@ -335,7 +335,7 @@ export default function AngularMomentum() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded space-y-1 text-sm">
             <p className="font-semibold">Direction of L:</p>
             <p className="text-muted-foreground">• Right-hand rule</p>

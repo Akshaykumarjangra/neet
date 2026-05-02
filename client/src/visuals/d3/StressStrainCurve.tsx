@@ -212,7 +212,7 @@ export default function StressStrainCurve() {
           className="w-full h-auto border rounded-lg bg-white dark:bg-slate-950"
         />
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-3 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Strain (ε)</p>
             <p className="text-xl font-bold">{(currentPoint.strain * 100).toFixed(2)}%</p>

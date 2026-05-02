@@ -242,7 +242,7 @@ export default function PhotoelectricEffect() {
       <CardContent className="space-y-4">
         <svg ref={svgRef} className="w-full h-[400px] border rounded-lg bg-background" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Frequency (f): {frequency[0]} × 10¹⁴ Hz
@@ -274,7 +274,7 @@ export default function PhotoelectricEffect() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-blue-600">KE_max</p>
             <p className="font-mono">{Math.max(0, KEmaxEV).toFixed(2)} eV</p>

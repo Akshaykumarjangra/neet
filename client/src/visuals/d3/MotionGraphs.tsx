@@ -267,7 +267,7 @@ export default function MotionGraphs() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-blue-600">Position</p>
             <p className="font-mono text-2xl">{currentPosition.toFixed(2)} m</p>

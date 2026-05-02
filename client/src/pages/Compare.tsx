@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Helmet } from "react-helmet";
+import { Seo } from "@/components/Seo";
 import { SEO_PAGES } from "@/config/seo";
 
 interface CompetitorData {
@@ -103,11 +103,11 @@ export default function Compare() {
 
     return (
         <div className="min-h-screen bg-background">
-            <Helmet>
-                <title>{seo.title}</title>
-                <meta name="description" content={seo.description} />
-                <meta name="keywords" content={seo.keywords.join(", ")} />
-            </Helmet>
+            <Seo 
+                title={seo.title} 
+                description={seo.description} 
+                keywords={seo.keywords} 
+            />
 
             {/* Hero Section */}
             <section className="relative py-20 px-4 overflow-hidden bg-gradient-to-b from-primary/5 to-background">

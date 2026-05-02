@@ -262,7 +262,7 @@ export default function ProjectileMotion() {
           </Button>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-2 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Range</p>
             <p className="text-xl font-bold">{range.toFixed(2)} m</p>

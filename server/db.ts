@@ -9,29 +9,32 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Optimized connection pool configuration
+// Optimized connection pool configuration for Coolify/Docker
+const isProduction = process.env.NODE_ENV === 'production';
+const dbHost = new URL(process.env.DATABASE_URL).hostname;
+
 const poolConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 
-  // Connection pool sizing (optimized for production)
-  max: parseInt(process.env.DB_POOL_MAX || '20'), // Max connections
-  min: parseInt(process.env.DB_POOL_MIN || '2'),  // Min connections
+  // Connection pool sizing (optimized for high concurrency)
+  max: parseInt(process.env.DB_POOL_MAX || (isProduction ? '30' : '10')), 
+  min: parseInt(process.env.DB_POOL_MIN || '2'),
 
-  // Timeout configurations
-  idleTimeoutMillis: 30000,        // Close idle connections after 30s (increased from 5s)
-  connectionTimeoutMillis: 10000,  // Wait 10s for connection (increased from 2s)
-  // Loosen timeouts for heavy reads (e.g., library view) on remote DB
-  query_timeout: 60000,            // Query timeout 60s
-  statement_timeout: 60000,        // Statement timeout 60s
+  // Timeout configurations (loosened for internal networking reliability)
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 15000, // 15s wait for internal network hops
+  query_timeout: 90000,           // 90s for complex analytical reads
+  statement_timeout: 90000,
 
-  // Keep-alive for long-running connections
+  // Keep-alive for long-running connections (Prevents Docker from killing idle sockets)
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
 
-  // Allow pool to exit when idle (useful for serverless)
-  allowExitOnIdle: process.env.NODE_ENV !== 'production',
+  allowExitOnIdle: !isProduction,
 };
+
+console.log(`[Database] Initializing pool for host: ${dbHost}`);
 
 export const pool = new Pool(poolConfig);
 
@@ -67,7 +70,8 @@ const testConnection = async () => {
       console.log(`Retrying connection in ${delay}ms... (${retries} attempts remaining)`);
       setTimeout(testConnection, delay);
     } else {
-      console.error('⚠️  Database connection failed after all retries. Server will continue but database operations may fail.');
+      console.error('FATAL: Database connection failed after all retries. Shutting down.');
+      process.exit(1);
     }
   }
 };

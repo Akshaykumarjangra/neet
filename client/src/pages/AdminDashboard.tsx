@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (user && !user.isAdmin) {
+    if (user && !user.isAdminOrMentor) {
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user || !user.isAdmin) {
+  if (!user || !user.isAdminOrMentor) {
     return null;
   }
 
@@ -438,6 +438,7 @@ export default function AdminDashboard() {
       bgColor: "bg-blue-500/10",
       action: () => setShowUserManagement(!showUserManagement),
       badge: stats.totalUsers,
+      adminOnly: true,
     },
     {
       id: "mentors",
@@ -449,6 +450,7 @@ export default function AdminDashboard() {
       action: () => setShowMentorVerification(!showMentorVerification),
       badge: stats.pendingMentors,
       badgeVariant: stats.pendingMentors > 0 ? "destructive" : "secondary",
+      adminOnly: true,
     },
     {
       id: "questions",
@@ -459,6 +461,7 @@ export default function AdminDashboard() {
       bgColor: "bg-green-500/10",
       action: () => setLocation("/admin/content?tab=questions"),
       badge: contentStats?.totalQuestions || 0,
+      adminOnly: true,
     },
     {
       id: "tests",
@@ -469,6 +472,7 @@ export default function AdminDashboard() {
       bgColor: "bg-orange-500/10",
       action: () => setLocation("/admin/content?tab=mock-tests"),
       badge: contentStats?.totalTests || 0,
+      adminOnly: true,
     },
     {
       id: "flashcards",
@@ -479,6 +483,7 @@ export default function AdminDashboard() {
       bgColor: "bg-pink-500/10",
       action: () => setLocation("/admin/content?tab=flashcards"),
       badge: contentStats?.totalFlashcards || 0,
+      adminOnly: true,
     },
     {
       id: "chapters",
@@ -499,6 +504,7 @@ export default function AdminDashboard() {
       bgColor: "bg-red-500/10",
       action: () => setLocation("/admin/test-series"),
       badge: 0,
+      adminOnly: true,
     },
     {
       id: "approvals",
@@ -509,8 +515,20 @@ export default function AdminDashboard() {
       bgColor: "bg-indigo-500/10",
       action: () => setLocation("/admin/approvals"),
       badge: 0,
+      adminOnly: true,
     },
-  ];
+    {
+      id: "marketing",
+      title: "Marketing",
+      description: "AI-powered marketing automation",
+      icon: TrendingUp,
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-500/10",
+      action: () => setLocation("/admin/marketing"),
+      badge: 0,
+      adminOnly: true,
+    },
+  ].filter(card => !card.adminOnly || user.isAdmin);
 
   return (
     <div className="min-h-screen bg-background">
@@ -657,164 +675,168 @@ export default function AdminDashboard() {
           </div>
 
           {/* Performance Overview */}
-          <Card className="glass-panel mb-8">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-indigo-500" />
-                  Performance Overview
-                </CardTitle>
-                <CardDescription>Aggregated attempts, accuracy, avg time, XP per user.</CardDescription>
-              </div>
-              <Badge variant="outline">
-                {perfMeta?.userCount ?? 0} users
-              </Badge>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="text-muted-foreground">
-                  <tr className="border-b">
-                    <th className="py-2 pr-4 text-left">User</th>
-                    <th className="py-2 pr-4 text-right">Attempts</th>
-                    <th className="py-2 pr-4 text-right">Correct</th>
-                    <th className="py-2 pr-4 text-right">Accuracy</th>
-                    <th className="py-2 pr-4 text-right">Avg time</th>
-                    <th className="py-2 pr-4 text-right">XP</th>
-                    <th className="py-2 pr-4 text-left">Last attempt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {perfTableLoading ? (
-                    <tr>
-                      <td className="py-3 text-muted-foreground" colSpan={7}>Loading performance…</td>
-                    </tr>
-                  ) : perfTable.length === 0 ? (
-                    <tr>
-                      <td className="py-3 text-muted-foreground" colSpan={7}>No performance data yet.</td>
-                    </tr>
-                  ) : (
-                    perfTable.map((row) => {
-                      const attempts = row.total_attempts ?? 0;
-                      const correct = row.correct_answers ?? 0;
-                      const accuracy = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
-                      const avgTime = row.avg_time_sec ? `${Math.round(row.avg_time_sec)}s` : "—";
-                      const last = row.last_attempt ? new Date(row.last_attempt).toLocaleString() : "—";
-                      return (
-                        <tr key={row.user_id} className="border-b last:border-0">
-                          <td className="py-2 pr-4">
-                            <div className="font-medium">{row.name || "—"}</div>
-                            <div className="text-xs text-muted-foreground">{row.email || row.user_id}</div>
-                          </td>
-                          <td className="py-2 pr-4 text-right">{attempts}</td>
-                          <td className="py-2 pr-4 text-right">{correct}</td>
-                          <td className="py-2 pr-4 text-right">{accuracy}%</td>
-                          <td className="py-2 pr-4 text-right">{avgTime}</td>
-                          <td className="py-2 pr-4 text-right">{row.total_xp ?? 0}</td>
-                          <td className="py-2 pr-4 text-left">{last}</td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-
-          {/* Question Bank Generator */}
-          <Card className="glass-panel mb-8" data-testid="question-generator-section">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          {user.isAdmin && (
+            <Card className="glass-panel mb-8">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-indigo-500" />
-                    Question Bank Generator
+                    <TrendingUp className="h-5 w-5 text-indigo-500" />
+                    Performance Overview
                   </CardTitle>
-                  <CardDescription>
-                    Generate 50,000+ NEET practice questions automatically
-                  </CardDescription>
+                  <CardDescription>Aggregated attempts, accuracy, avg time, XP per user.</CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => refetchStatus()}
-                    disabled={isGenerating}
-                    data-testid="button-refresh-status"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                  </Button>
-                  <Button
-                    onClick={handleGenerateQuestions}
-                    disabled={isGenerating || generateMutation.isPending || isComplete}
-                    data-testid="button-generate-questions"
-                  >
-                    {generateMutation.isPending ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Starting...
-                      </>
-                    ) : isGenerating ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : isComplete ? (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Complete
-                      </>
+                <Badge variant="outline">
+                  {perfMeta?.userCount ?? 0} users
+                </Badge>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="text-muted-foreground">
+                    <tr className="border-b">
+                      <th className="py-2 pr-4 text-left">User</th>
+                      <th className="py-2 pr-4 text-right">Attempts</th>
+                      <th className="py-2 pr-4 text-right">Correct</th>
+                      <th className="py-2 pr-4 text-right">Accuracy</th>
+                      <th className="py-2 pr-4 text-right">Avg time</th>
+                      <th className="py-2 pr-4 text-right">XP</th>
+                      <th className="py-2 pr-4 text-left">Last attempt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {perfTableLoading ? (
+                      <tr>
+                        <td className="py-3 text-muted-foreground" colSpan={7}>Loading performance…</td>
+                      </tr>
+                    ) : perfTable.length === 0 ? (
+                      <tr>
+                        <td className="py-3 text-muted-foreground" colSpan={7}>No performance data yet.</td>
+                      </tr>
                     ) : (
-                      <>
-                        <Play className="mr-2 h-4 w-4" />
-                        Generate Questions
-                      </>
+                      perfTable.map((row) => {
+                        const attempts = row.total_attempts ?? 0;
+                        const correct = row.correct_answers ?? 0;
+                        const accuracy = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
+                        const avgTime = row.avg_time_sec ? `${Math.round(row.avg_time_sec)}s` : "—";
+                        const last = row.last_attempt ? new Date(row.last_attempt).toLocaleString() : "—";
+                        return (
+                          <tr key={row.user_id} className="border-b last:border-0">
+                            <td className="py-2 pr-4">
+                              <div className="font-medium">{row.name || "—"}</div>
+                              <div className="text-xs text-muted-foreground">{row.email || row.user_id}</div>
+                            </td>
+                            <td className="py-2 pr-4 text-right">{attempts}</td>
+                            <td className="py-2 pr-4 text-right">{correct}</td>
+                            <td className="py-2 pr-4 text-right">{accuracy}%</td>
+                            <td className="py-2 pr-4 text-right">{avgTime}</td>
+                            <td className="py-2 pr-4 text-right">{row.total_xp ?? 0}</td>
+                            <td className="py-2 pr-4 text-left">{last}</td>
+                          </tr>
+                        );
+                      })
                     )}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Total Questions</p>
-                  <p className="text-2xl font-bold">{totalQuestions.toLocaleString()}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Question Sets</p>
-                  <p className="text-2xl font-bold">{generationStatus?.estimatedSets || Math.floor(totalQuestions / 100)}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Topics Covered</p>
-                  <p className="text-2xl font-bold">{generationStatus?.totalTopics || contentStats?.totalTopics || 0}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge variant={isComplete ? "default" : "secondary"} className="mt-1">
-                    {isComplete ? <><Check className="h-3 w-3 mr-1" /> Complete</> : 'In Progress'}
-                  </Badge>
-                </div>
-              </div>
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Progress to 50,000 questions</span>
-                  <span className="font-semibold">{generationProgress.toFixed(1)}%</span>
+          {/* Question Bank Generator */}
+          {user.isAdmin && (
+            <Card className="glass-panel mb-8" data-testid="question-generator-section">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="h-5 w-5 text-indigo-500" />
+                      Question Bank Generator
+                    </CardTitle>
+                    <CardDescription>
+                      Generate 50,000+ NEET practice questions automatically
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refetchStatus()}
+                      disabled={isGenerating}
+                      data-testid="button-refresh-status"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                    </Button>
+                    <Button
+                      onClick={handleGenerateQuestions}
+                      disabled={isGenerating || generateMutation.isPending || isComplete}
+                      data-testid="button-generate-questions"
+                    >
+                      {generateMutation.isPending ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Starting...
+                        </>
+                      ) : isGenerating ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : isComplete ? (
+                        <>
+                          <Check className="mr-2 h-4 w-4" />
+                          Complete
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-2 h-4 w-4" />
+                          Generate Questions
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <Progress value={generationProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground">
-                  {50000 - totalQuestions > 0
-                    ? `${(50000 - totalQuestions).toLocaleString()} questions remaining`
-                    : 'Target achieved! 🎉'}
-                </p>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">Total Questions</p>
+                    <p className="text-2xl font-bold">{totalQuestions.toLocaleString()}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">Question Sets</p>
+                    <p className="text-2xl font-bold">{generationStatus?.estimatedSets || Math.floor(totalQuestions / 100)}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">Topics Covered</p>
+                    <p className="text-2xl font-bold">{generationStatus?.totalTopics || contentStats?.totalTopics || 0}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <Badge variant={isComplete ? "default" : "secondary"} className="mt-1">
+                      {isComplete ? <><Check className="h-3 w-3 mr-1" /> Complete</> : 'In Progress'}
+                    </Badge>
+                  </div>
+                </div>
 
-              {isGenerating && (
-                <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm">
-                  ⏳ Generation in progress... This may take several minutes. The progress updates automatically.
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress to 50,000 questions</span>
+                    <span className="font-semibold">{generationProgress.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={generationProgress} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {50000 - totalQuestions > 0
+                      ? `${(50000 - totalQuestions).toLocaleString()} questions remaining`
+                      : 'Target achieved! 🎉'}
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {isGenerating && (
+                  <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm">
+                    ⏳ Generation in progress... This may take several minutes. The progress updates automatically.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recent Activity Section */}
           <Card className="glass-panel mb-8" data-testid="recent-activity-section">
@@ -1166,11 +1188,11 @@ export default function AdminDashboard() {
                       </div>
                       <Button
                         onClick={() => addUserMutation.mutate({ email: newUserEmail, username: newUserUsername })}
-                        disabled={addUserMutation.isPending || !newUserEmail || !newUserUsername}
+                        disabled={addUserMutation.isPending || !newUserEmail || !newUserUsername || !(user as any)?.isOwner}
                         className="w-full"
                         data-testid="button-add-user"
                       >
-                        Add User
+                        {!(user as any)?.isOwner ? 'Owner Access Required' : 'Add User'}
                       </Button>
                     </div>
 
@@ -1188,11 +1210,11 @@ export default function AdminDashboard() {
                       />
                       <Button
                         onClick={handleBulkImport}
-                        disabled={bulkImportMutation.isPending || !bulkEmails.trim()}
+                        disabled={bulkImportMutation.isPending || !bulkEmails.trim() || !(user as any)?.isOwner}
                         className="w-full"
                         data-testid="button-bulk-import"
                       >
-                        Import Users
+                        {!(user as any)?.isOwner ? 'Owner Access Required' : 'Import Users'}
                       </Button>
                     </div>
                   </div>
@@ -1234,7 +1256,7 @@ export default function AdminDashboard() {
                                 <Button
                                   size="sm"
                                   onClick={() => grantAccessMutation.mutate(u.id)}
-                                  disabled={grantAccessMutation.isPending}
+                                  disabled={grantAccessMutation.isPending || !(user as any)?.isOwner}
                                   data-testid={`button-grant-${u.id}`}
                                 >
                                   Grant Access
@@ -1244,7 +1266,7 @@ export default function AdminDashboard() {
                                   size="sm"
                                   variant="destructive"
                                   onClick={() => revokeAccessMutation.mutate(u.id)}
-                                  disabled={revokeAccessMutation.isPending}
+                                  disabled={revokeAccessMutation.isPending || !(user as any)?.isOwner}
                                   data-testid={`button-revoke-${u.id}`}
                                 >
                                   Revoke

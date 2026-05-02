@@ -147,7 +147,9 @@ export function OnboardingModal({
   const [studyGoal, setStudyGoal] = useState<number>(60);
   const [focusArea, setFocusArea] = useState<string>("balanced");
 
-  const totalSteps = 4;
+  const [classLevel, setClassLevel] = useState<string>("11");
+
+  const totalSteps = 5;
   const progress = ((step + 1) / totalSteps) * 100;
 
   const handleNext = () => {
@@ -164,16 +166,30 @@ export function OnboardingModal({
     }
   };
 
-  const handleComplete = () => {
-    const preferences: UserPreferences = {
+  const handleComplete = async () => {
+    const preferences: UserPreferences & { classLevel: string } = {
       subjects: selectedSubjects.length > 0 ? selectedSubjects : ["Physics", "Chemistry", "Botany", "Zoology"],
       studyGoal,
       focusArea,
+      classLevel,
       onboardingCompleted: true,
       completedAt: new Date().toISOString(),
     };
 
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+
+    try {
+      await fetch("/api/profile/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          classLevel, 
+          learningGoals: [focusArea, ...selectedSubjects] 
+        })
+      });
+    } catch (e) {
+      console.error("Failed to save onboarding to backend", e);
+    }
 
     confetti({
       particleCount: 150,
@@ -187,10 +203,11 @@ export function OnboardingModal({
   };
 
   const handleSkip = () => {
-    const defaultPreferences: UserPreferences = {
+    const defaultPreferences: UserPreferences & { classLevel: string } = {
       subjects: ["Physics", "Chemistry", "Botany", "Zoology"],
       studyGoal: 60,
       focusArea: "balanced",
+      classLevel: "11",
       onboardingCompleted: true,
       completedAt: new Date().toISOString(),
     };
@@ -383,6 +400,44 @@ export function OnboardingModal({
         );
 
       case 3:
+        return (
+          <motion.div
+            key="class-level"
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="space-y-6"
+          >
+            <div className="text-center">
+              <h2 className="text-2xl font-bold">Which class are you in?</h2>
+              <p className="text-muted-foreground mt-2">
+                This helps us align the syllabus.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 max-w-xs mx-auto">
+              {["11", "12", "Dropper"].map((level) => {
+                const isSelected = classLevel === level;
+                return (
+                  <Button
+                    key={level}
+                    variant={isSelected ? "default" : "outline"}
+                    size="lg"
+                    className={`w-full ${isSelected ? "bg-primary text-primary-foreground" : ""}`}
+                    onClick={() => setClassLevel(level)}
+                  >
+                    {level === "Dropper" ? "Dropper" : `Class ${level}`}
+                    {isSelected && <Check className="ml-2 h-4 w-4" />}
+                  </Button>
+                );
+              })}
+            </div>
+          </motion.div>
+        );
+
+      case 4:
         return (
           <motion.div
             key="focus-area"

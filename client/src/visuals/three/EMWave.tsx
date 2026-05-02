@@ -277,7 +277,7 @@ export default function EMWave() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-cyan-600">Wavelength (λ)</p>
             <p className="font-mono">{wavelength.toFixed(2)} m</p>

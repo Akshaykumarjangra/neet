@@ -302,7 +302,7 @@ export default function MagneticFieldLines() {
           className="w-full h-[400px] border rounded-lg bg-slate-900"
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Magnet Strength: {magnetStrength[0]}
@@ -371,7 +371,7 @@ export default function MagneticFieldLines() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded space-y-1 text-sm">
             <p className="font-semibold">Bar Magnet Properties:</p>
             <p className="text-muted-foreground">• Two poles: N and S</p>

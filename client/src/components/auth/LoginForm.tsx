@@ -90,6 +90,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     type="email"
                                     placeholder="Enter your email"
                                     autoComplete="email"
+                                    disabled={isLoading || loginMutation.isPending}
                                     {...field}
                                 />
                             </FormControl>
@@ -111,6 +112,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Enter your password"
                                         autoComplete="current-password"
+                                        disabled={isLoading || loginMutation.isPending}
                                         {...field}
                                     />
                                 </FormControl>
@@ -140,9 +142,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                     data-testid="button-login"
                     type="submit"
                     className="w-full"
-                    disabled={isLoading}
+                    disabled={isLoading || loginMutation.isPending}
                 >
-                    {isLoading ? "Logging in..." : "Log In"}
+                    {isLoading || loginMutation.isPending ? "Logging in..." : "Log In"}
                 </Button>
             </form>
         </Form>

@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
 import {
   GraduationCap,
@@ -126,6 +130,9 @@ export default function MentorProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageContent, setMessageContent] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
   const [selectedMentor, setSelectedMentor] = useState<MentorForBooking | null>(null);
 
   const { data: mentor, isLoading, error } = useQuery<MentorDetailData>({
@@ -146,6 +153,37 @@ export default function MentorProfile() {
       return response.json();
     },
     enabled: !!mentorId,
+  });
+
+  const messageMutation = useMutation({
+    mutationFn: async (data: { content: string; subject: string }) => {
+      const response = await fetch(`/api/mentors/${mentorId}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send message");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the mentor.",
+      });
+      setShowMessageDialog(false);
+      setMessageContent("");
+      setMessageSubject("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const handleBookSession = () => {
@@ -319,9 +357,13 @@ export default function MentorProfile() {
               <Calendar className="h-5 w-5 mr-2" />
               Book Session
             </Button>
-            <Button variant="outline" size="lg" disabled>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => setShowMessageDialog(true)}
+            >
               <MessageCircle className="h-5 w-5 mr-2" />
-              Message (Coming Soon)
+              Message Mentor
             </Button>
           </div>
 
@@ -552,6 +594,61 @@ export default function MentorProfile() {
           }}
         />
       )}
+
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Message {mentor.userName}</DialogTitle>
+            <DialogDescription>
+              Have a question before booking? Send a message to {mentor.userName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 overflow-y-auto pr-2 flex-1">
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject</Label>
+              <Input
+                id="subject"
+                placeholder="e.g. Question about your Physics methodology"
+                value={messageSubject}
+                onChange={(e) => setMessageSubject(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Type your message here..."
+                rows={5}
+                value={messageContent}
+                onChange={(e) => setMessageContent(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowMessageDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                messageMutation.mutate({
+                  content: messageContent,
+                  subject: messageSubject,
+                })
+              }
+              disabled={!messageContent.trim() || messageMutation.isPending}
+            >
+              {messageMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -185,4 +185,29 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
+router.post("/onboarding", requireAuth, async (req, res) => {
+  const userId = getCurrentUser(req);
+  if (!userId) return res.status(401).json({ error: "Not authenticated" });
+
+  try {
+    const { classLevel, learningGoals } = req.body;
+    
+    const [user] = await db.select({ adaptiveProfile: users.adaptiveProfile }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const updatedProfile = {
+      ...(user.adaptiveProfile || {}),
+      classLevel: classLevel || "11",
+      learningGoals: Array.isArray(learningGoals) ? learningGoals : [],
+    };
+
+    await db.update(users).set({ adaptiveProfile: updatedProfile }).where(eq(users.id, userId));
+    
+    res.json({ message: "Onboarding complete", adaptiveProfile: updatedProfile });
+  } catch (error) {
+    console.error("Onboarding error:", error);
+    res.status(500).json({ error: "Failed to save onboarding data" });
+  }
+});
+
 export default router;

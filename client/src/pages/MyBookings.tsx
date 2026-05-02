@@ -350,7 +350,7 @@ export default function MyBookings() {
                     const canJoin = booking.status === "confirmed" && booking.meetingLink && isUpcoming;
                     const canCancel = isUpcoming && booking.status !== "cancelled";
                     const canReschedule = isUpcoming && booking.status !== "cancelled";
-                    const canReview = booking.status === "completed" && isPast(endDate);
+                    const canReview = (booking.status === "completed" || booking.status === "confirmed") && isPast(endDate);
 
                     return (
                       <div

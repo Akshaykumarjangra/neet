@@ -270,7 +270,7 @@ export default function ACCircuit() {
       <CardContent className="space-y-4">
         <svg ref={svgRef} className="w-full h-[400px] border rounded-lg bg-background" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Resistance (R): {resistance[0]} Ω</label>
             <Slider

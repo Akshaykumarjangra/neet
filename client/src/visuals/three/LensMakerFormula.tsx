@@ -264,7 +264,7 @@ export default function LensMakerFormula() {
           className="w-full h-[400px] border rounded-lg bg-slate-900"
         />
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Refractive Index (n): {refractiveIndex[0].toFixed(2)}
@@ -314,7 +314,7 @@ export default function LensMakerFormula() {
           </div>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-2 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Focal Length (f)</p>
             <p className="text-2xl font-bold text-blue-600">
@@ -356,7 +356,7 @@ export default function LensMakerFormula() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded space-y-1 text-sm">
             <p className="font-semibold">Convex Lens (R₁ {'>'} 0, R₂ {'<'} 0):</p>
             <p className="text-muted-foreground">• f is positive</p>

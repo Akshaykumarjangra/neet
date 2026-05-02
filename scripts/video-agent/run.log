@@ -1,0 +1,251 @@
+[2026-04-28T18:18:16.530Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:18:16.581Z] [WARN] DB unavailable (ECONNREFUSED). Using mock data for dry run.
+[2026-04-28T18:18:16.582Z] [INFO] Found 3 chapters to process
+[2026-04-28T18:18:16.582Z] [INFO] Subjects: Physics
+[2026-04-28T18:18:16.582Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:18:16.583Z] [INFO] ▶ Processing [1/3] Physics Ch1: Physics Chapter 1
+[2026-04-28T18:18:16.583Z] [INFO]   📝 Generating script...
+[2026-04-28T18:18:27.151Z] [INFO]   [DRY RUN] Script: "NEET Physics: Introduction to Core Concepts - Master Your Foundation!"
+[2026-04-28T18:18:27.152Z] [INFO]   [DRY RUN] Video prompt: Generate a 60-second 3D animated educational video. The scene opens with a wide shot of a deep, dark...
+[2026-04-28T18:18:27.152Z] [INFO] ▶ Processing [2/3] Physics Ch2: Physics Chapter 2
+[2026-04-28T18:18:27.152Z] [INFO]   📝 Generating script...
+[2026-04-28T18:18:39.042Z] [ERROR]   ❌ Failed: Unterminated string in JSON at position 2067 (line 5 column 23)
+[2026-04-28T18:18:39.043Z] [INFO] ▶ Processing [3/3] Physics Ch3: Physics Chapter 3
+[2026-04-28T18:18:39.043Z] [INFO]   📝 Generating script...
+[2026-04-28T18:18:50.157Z] [ERROR]   ❌ Failed: Unterminated string in JSON at position 2361 (line 6 column 31)
+[2026-04-28T18:18:50.157Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:18:50.157Z] [INFO] 📊 Run Complete in 0.6 minutes
+[2026-04-28T18:18:50.157Z] [INFO]    Total:   3
+[2026-04-28T18:18:50.157Z] [SUCCESS]    Success: 0
+[2026-04-28T18:18:50.157Z] [ERROR]    Failed:  2
+[2026-04-28T18:18:50.157Z] [INFO]    Skipped: 1
+[2026-04-28T18:18:50.157Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:19:38.699Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:19:38.744Z] [WARN] DB unavailable (ECONNREFUSED). Using mock data for dry run.
+[2026-04-28T18:19:38.744Z] [INFO] Found 3 chapters to process
+[2026-04-28T18:19:38.745Z] [INFO] Subjects: Physics
+[2026-04-28T18:19:38.745Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:19:38.745Z] [INFO] ▶ Processing [1/3] Physics Ch1: Physics Chapter 1
+[2026-04-28T18:19:38.746Z] [INFO]   📝 Generating script...
+[2026-04-28T18:19:51.037Z] [INFO]   [DRY RUN] Script: "NEET Physics: Chapter 1 - Introduction to Physics Concepts | 3D Animation"
+[2026-04-28T18:19:51.038Z] [INFO]   [DRY RUN] Video prompt: A 60-second 3D animated educational video. The scene opens with a wide, cinematic shot of a dark, st...
+[2026-04-28T18:19:51.039Z] [INFO] ▶ Processing [2/3] Physics Ch2: Physics Chapter 2
+[2026-04-28T18:19:51.042Z] [INFO]   📝 Generating script...
+[2026-04-28T18:20:02.409Z] [INFO]   [DRY RUN] Script: "NEET Physics: Units, Dimensions & Measurement - Chapter 2 Intro"
+[2026-04-28T18:20:02.409Z] [INFO]   [DRY RUN] Video prompt: 3D animated educational video about Physics Chapter 2 for NEET Physics. Dark background with vibrant...
+[2026-04-28T18:20:02.409Z] [INFO] ▶ Processing [3/3] Physics Ch3: Physics Chapter 3
+[2026-04-28T18:20:02.409Z] [INFO]   📝 Generating script...
+[2026-04-28T18:20:14.384Z] [INFO]   [DRY RUN] Script: "NEET Physics Foundation: Master Chapter 3 Introduction"
+[2026-04-28T18:20:14.384Z] [INFO]   [DRY RUN] Video prompt: 3D animated educational video about Physics Chapter 3 for NEET Physics. Dark background with vibrant...
+[2026-04-28T18:20:14.384Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:20:14.384Z] [INFO] 📊 Run Complete in 0.6 minutes
+[2026-04-28T18:20:14.384Z] [INFO]    Total:   3
+[2026-04-28T18:20:14.385Z] [SUCCESS]    Success: 0
+[2026-04-28T18:20:14.385Z] [INFO]    Skipped: 3
+[2026-04-28T18:20:14.385Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:21:53.338Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:21:53.375Z] [WARN] DB unavailable (ECONNREFUSED). Using mock data for dry run.
+[2026-04-28T18:21:53.376Z] [INFO] Found 6 chapters to process
+[2026-04-28T18:21:53.376Z] [INFO] Subjects: Physics, Chemistry
+[2026-04-28T18:21:53.376Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:21:53.377Z] [INFO] ▶ Processing [1/6] Physics Ch1: Physics Chapter 1
+[2026-04-28T18:21:53.377Z] [INFO]   📝 Generating script...
+[2026-04-28T18:22:05.468Z] [INFO]   [DRY RUN] Script: "NEET Physics: Chapter 1 - Introduction to Core Concepts (Class 11)"
+[2026-04-28T18:22:05.468Z] [INFO]   [DRY RUN] Video prompt: A 60-second 3D animated educational video. The scene opens with a breathtaking cinematic orbit aroun...
+[2026-04-28T18:22:05.469Z] [INFO] ▶ Processing [2/6] Physics Ch2: Physics Chapter 2
+[2026-04-28T18:22:05.469Z] [INFO]   📝 Generating script...
+[2026-04-28T18:22:16.880Z] [INFO]   [DRY RUN] Script: "NEET Physics: Chapter 2 - Mastering Core Concepts & Vector Fundamentals"
+[2026-04-28T18:22:16.880Z] [INFO]   [DRY RUN] Video prompt: 3D animated educational video about Physics Chapter 2 for NEET Physics. Dark background with vibrant...
+[2026-04-28T18:22:16.880Z] [INFO] ▶ Processing [3/6] Physics Ch3: Physics Chapter 3
+[2026-04-28T18:22:16.880Z] [INFO]   📝 Generating script...
+[2026-04-28T18:22:28.975Z] [INFO]   [DRY RUN] Script: "NEET Physics: Chapter 3 Introduction - Core Concepts Explored"
+[2026-04-28T18:22:28.975Z] [INFO]   [DRY RUN] Video prompt: The 60-second 3D animation opens with a breathtaking cinematic orbit around a swirling galaxy, rende...
+[2026-04-28T18:22:28.975Z] [INFO] ▶ Processing [4/6] Chemistry Ch1: Chemistry Chapter 1
+[2026-04-28T18:22:28.976Z] [INFO]   📝 Generating script...
+[2026-04-28T18:22:39.027Z] [INFO]   [DRY RUN] Script: "NEET Chemistry Chapter 1: Introduction to Basic Concepts - 3D Animation"
+[2026-04-28T18:22:39.027Z] [INFO]   [DRY RUN] Video prompt: A 60-second 3D animated educational video. The scene opens in a deep dark, almost black void, with v...
+[2026-04-28T18:22:39.028Z] [INFO] ▶ Processing [5/6] Chemistry Ch2: Chemistry Chapter 2
+[2026-04-28T18:22:39.028Z] [INFO]   📝 Generating script...
+[2026-04-28T18:22:49.487Z] [INFO]   [DRY RUN] Script: "NEET Chemistry: Mastering Chemistry Topic 2 - Fundamentals & Concepts"
+[2026-04-28T18:22:49.488Z] [INFO]   [DRY RUN] Video prompt: The scene opens with a slow, cinematic orbital pan around a stylized, glowing atom (e.g., carbon) ag...
+[2026-04-28T18:22:49.488Z] [INFO] ⏸  Batch pause (60s)...
+[2026-04-28T18:23:49.509Z] [INFO] ▶ Processing [6/6] Chemistry Ch3: Chemistry Chapter 3
+[2026-04-28T18:23:49.510Z] [INFO]   📝 Generating script...
+[2026-04-28T18:24:03.190Z] [INFO]   [DRY RUN] Script: "NEET Chemistry: Periodic Trends Explained | Class 11 Chapter 3"
+[2026-04-28T18:24:03.191Z] [INFO]   [DRY RUN] Video prompt: A dynamic 60-second 3D educational animation on 'Classification of Elements and Periodicity in Prope...
+[2026-04-28T18:24:03.191Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:24:03.191Z] [INFO] 📊 Run Complete in 2.2 minutes
+[2026-04-28T18:24:03.191Z] [INFO]    Total:   6
+[2026-04-28T18:24:03.191Z] [SUCCESS]    Success: 0
+[2026-04-28T18:24:03.191Z] [INFO]    Skipped: 6
+[2026-04-28T18:24:03.191Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:27:10.033Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:27:10.633Z] [INFO] Found 3 chapters to process
+[2026-04-28T18:27:10.634Z] [INFO] Subjects: Physics
+[2026-04-28T18:27:10.634Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:27:10.635Z] [INFO] ▶ Processing [1/3] Physics Ch1: Physical World
+[2026-04-28T18:27:10.635Z] [INFO]   📝 Generating script...
+[2026-04-28T18:27:21.981Z] [INFO]   [DRY RUN] Script: "NEET Physics: The Physical World - Introduction to Fundamental Concepts"
+[2026-04-28T18:27:21.981Z] [INFO]   [DRY RUN] Video prompt: A dynamic 3D animated sequence set against a deep space, dark background. The scene opens with a slo...
+[2026-04-28T18:27:21.982Z] [INFO] ▶ Processing [2/3] Physics Ch2: Units and Measurements
+[2026-04-28T18:27:21.982Z] [INFO]   📝 Generating script...
+[2026-04-28T18:27:33.791Z] [INFO]   [DRY RUN] Script: "NEET Physics: Units & Measurements - Master Precision & Accuracy!"
+[2026-04-28T18:27:33.791Z] [INFO]   [DRY RUN] Video prompt: A 60-second dynamic 3D animated explainer video. The scene opens with a futuristic, dark void backgr...
+[2026-04-28T18:27:33.791Z] [INFO] ▶ Processing [3/3] Physics Ch3: Motion in a Straight Line
+[2026-04-28T18:27:33.791Z] [INFO]   📝 Generating script...
+[2026-04-28T18:27:44.943Z] [INFO]   [DRY RUN] Script: "NEET Physics: Motion in a Straight Line | Kinematics 1D Explained (3D Animation)"
+[2026-04-28T18:27:44.944Z] [INFO]   [DRY RUN] Video prompt: A 60-second 3D animated educational scene depicting 'Motion in a Straight Line'. The setting is a da...
+[2026-04-28T18:27:44.944Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:27:44.944Z] [INFO] 📊 Run Complete in 0.6 minutes
+[2026-04-28T18:27:44.944Z] [INFO]    Total:   3
+[2026-04-28T18:27:44.944Z] [SUCCESS]    Success: 0
+[2026-04-28T18:27:44.944Z] [INFO]    Skipped: 3
+[2026-04-28T18:27:44.944Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:28:34.573Z] [ERROR] Fatal error: relation "video_agent_runs" does not exist
+[2026-04-28T18:28:58.272Z] [INFO] Videos generated today: 0/50
+[2026-04-28T18:28:58.274Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:28:58.563Z] [INFO] Found 1 chapters to process
+[2026-04-28T18:28:58.563Z] [INFO] Subjects: Physics
+[2026-04-28T18:28:58.563Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:28:58.564Z] [INFO] ▶ Processing [1/1] Physics Ch1: Physical World
+[2026-04-28T18:28:58.564Z] [INFO]   📝 Generating script...
+[2026-04-28T18:29:10.064Z] [INFO]   🖼️  Generating thumbnail...
+[2026-04-28T18:29:10.213Z] [INFO]   🎥 Generating video (this may take 2-5 min)...
+[2026-04-28T18:29:10.775Z] [ERROR]   ❌ Failed: Veo API error (404): {
+  "error": {
+    "code": 404,
+    "message": "models/veo-2.0-generate-001 is not found for API version v1beta, or is not supported for predict. Call ListModels to see the list of available models and their supported methods.",
+    "status": "NOT_FOUND"
+  }
+}
+
+[2026-04-28T18:29:11.145Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:29:11.145Z] [INFO] 📊 Run Complete in 0.2 minutes
+[2026-04-28T18:29:11.145Z] [INFO]    Total:   1
+[2026-04-28T18:29:11.145Z] [SUCCESS]    Success: 0
+[2026-04-28T18:29:11.145Z] [ERROR]    Failed:  1
+[2026-04-28T18:29:11.146Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:29:59.370Z] [INFO] Videos generated today: 0/50
+[2026-04-28T18:29:59.371Z] [INFO] Fetching chapters without videos...
+[2026-04-28T18:29:59.622Z] [INFO] Found 1 chapters to process
+[2026-04-28T18:29:59.623Z] [INFO] Subjects: Physics
+[2026-04-28T18:29:59.623Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-04-28T18:29:59.624Z] [INFO] ▶ Processing [1/1] Physics Ch1: Physical World
+[2026-04-28T18:29:59.624Z] [INFO]   📝 Generating script...
+[2026-04-28T18:30:12.117Z] [INFO]   🖼️  Generating thumbnail...
+[2026-04-28T18:30:12.256Z] [INFO]   🎥 Generating video (this may take 2-5 min)...
+[2026-04-28T18:30:13.747Z] [INFO]   💾 Saving to database...
+[2026-04-28T18:30:14.163Z] [SUCCESS]   ✅ Done in 14.4s → Asset #1
+[2026-04-28T18:30:14.163Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-04-28T18:30:14.163Z] [INFO] 📊 Run Complete in 0.3 minutes
+[2026-04-28T18:30:14.163Z] [INFO]    Total:   1
+[2026-04-28T18:30:14.163Z] [SUCCESS]    Success: 1
+[2026-04-28T18:30:14.163Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:38:56.166Z] [INFO] Fetching chapters without videos...
+[2026-05-02T14:38:56.804Z] [INFO] Found 1 chapters to process
+[2026-05-02T14:38:56.805Z] [INFO] Subjects: Biology
+[2026-05-02T14:38:56.805Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-05-02T14:38:56.806Z] [INFO] ▶ Processing [1/1] Biology Ch1: The Living World
+[2026-05-02T14:38:56.806Z] [INFO]   📝 Generating script...
+[2026-05-02T14:38:56.809Z] [ERROR]   ❌ Failed: chapter.keyConcepts?.slice(...).map is not a function
+[2026-05-02T14:38:56.809Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:38:56.809Z] [INFO] 📊 Run Complete in 0.0 minutes
+[2026-05-02T14:38:56.809Z] [INFO]    Total:   1
+[2026-05-02T14:38:56.809Z] [SUCCESS]    Success: 0
+[2026-05-02T14:38:56.809Z] [ERROR]    Failed:  1
+[2026-05-02T14:38:56.809Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:39:45.185Z] [INFO] Fetching chapters without videos...
+[2026-05-02T14:39:45.836Z] [INFO] Found 1 chapters to process
+[2026-05-02T14:39:45.836Z] [INFO] Subjects: Biology
+[2026-05-02T14:39:45.836Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-05-02T14:39:45.837Z] [INFO] ▶ Processing [1/1] Biology Ch1: The Living World
+[2026-05-02T14:39:45.837Z] [INFO]   📝 Generating script...
+[2026-05-02T14:39:46.833Z] [ERROR]   ❌ Failed: Gemini API error (404): {
+  "error": {
+    "code": 404,
+    "message": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+    "status": "NOT_FOUND"
+  }
+}
+
+[2026-05-02T14:39:46.833Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:39:46.834Z] [INFO] 📊 Run Complete in 0.0 minutes
+[2026-05-02T14:39:46.834Z] [INFO]    Total:   1
+[2026-05-02T14:39:46.834Z] [SUCCESS]    Success: 0
+[2026-05-02T14:39:46.834Z] [ERROR]    Failed:  1
+[2026-05-02T14:39:46.834Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:44:08.208Z] [INFO] Fetching chapters without videos...
+[2026-05-02T14:44:08.949Z] [INFO] Found 1 chapters to process
+[2026-05-02T14:44:08.950Z] [INFO] Subjects: Biology
+[2026-05-02T14:44:08.950Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-05-02T14:44:08.951Z] [INFO] ▶ Processing [1/1] Biology Ch1: The Living World
+[2026-05-02T14:44:08.952Z] [INFO]   📝 Generating script...
+[2026-05-02T14:44:10.170Z] [ERROR]   ❌ Failed: Gemini API error (404): {
+  "error": {
+    "code": 404,
+    "message": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+    "status": "NOT_FOUND"
+  }
+}
+
+[2026-05-02T14:44:10.171Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:44:10.172Z] [INFO] 📊 Run Complete in 0.0 minutes
+[2026-05-02T14:44:10.172Z] [INFO]    Total:   1
+[2026-05-02T14:44:10.172Z] [SUCCESS]    Success: 0
+[2026-05-02T14:44:10.172Z] [ERROR]    Failed:  1
+[2026-05-02T14:44:10.172Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:44:47.620Z] [INFO] Fetching chapters without videos...
+[2026-05-02T14:44:48.493Z] [INFO] Found 1 chapters to process
+[2026-05-02T14:44:48.493Z] [INFO] Subjects: Biology
+[2026-05-02T14:44:48.493Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-05-02T14:44:48.494Z] [INFO] ▶ Processing [1/1] Biology Ch1: The Living World
+[2026-05-02T14:44:48.494Z] [INFO]   📝 Generating script...
+[2026-05-02T14:44:49.845Z] [ERROR]   ❌ Failed: Gemini API error (403): {
+  "error": {
+    "code": 403,
+    "message": "Your project has been denied access. Please contact support.",
+    "status": "PERMISSION_DENIED"
+  }
+}
+
+[2026-05-02T14:44:49.845Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:44:49.845Z] [INFO] 📊 Run Complete in 0.0 minutes
+[2026-05-02T14:44:49.845Z] [INFO]    Total:   1
+[2026-05-02T14:44:49.846Z] [SUCCESS]    Success: 0
+[2026-05-02T14:44:49.846Z] [ERROR]    Failed:  1
+[2026-05-02T14:44:49.846Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:46:37.367Z] [INFO] Fetching chapters without videos...
+[2026-05-02T14:46:38.049Z] [INFO] Found 1 chapters to process
+[2026-05-02T14:46:38.050Z] [INFO] Subjects: Biology
+[2026-05-02T14:46:38.050Z] [INFO] ────────────────────────────────────────────────────────────
+[2026-05-02T14:46:38.051Z] [INFO] ▶ Processing [1/1] Biology Ch1: The Living World
+[2026-05-02T14:46:38.051Z] [INFO]   📝 Generating script...
+[2026-05-02T14:46:38.825Z] [ERROR]   ❌ Failed: Gemini API error (400): {
+  "error": {
+    "code": 400,
+    "message": "API key expired. Please renew the API key.",
+    "status": "INVALID_ARGUMENT",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "API_KEY_INVALID",
+        "domain": "googleapis.com",
+        "metadata": {
+          "service": "generativelanguage.googleapis.com"
+        }
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+        "locale": "en-US",
+        "message": "API key expired. Please renew the API key."
+      }
+    ]
+  }
+}
+
+[2026-05-02T14:46:38.825Z] [INFO] ════════════════════════════════════════════════════════════
+[2026-05-02T14:46:38.826Z] [INFO] 📊 Run Complete in 0.0 minutes
+[2026-05-02T14:46:38.826Z] [INFO]    Total:   1
+[2026-05-02T14:46:38.826Z] [SUCCESS]    Success: 0
+[2026-05-02T14:46:38.826Z] [ERROR]    Failed:  1
+[2026-05-02T14:46:38.826Z] [INFO] ════════════════════════════════════════════════════════════

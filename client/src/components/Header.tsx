@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -16,8 +16,10 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { queryClient } from "@/lib/queryClient";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface HeaderProps {
   activeSubject?: string;
@@ -38,6 +40,7 @@ export function Header({
 }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { user, isImpersonating } = useAuth();
+  const { permission } = usePushNotifications();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const [location, setLocation] = useLocation();
   const subjects = ["Physics", "Chemistry", "Botany", "Zoology"];
@@ -113,29 +116,34 @@ export function Header({
   };
 
   return (
-    <header className="header">
+    <header className="header glass-panel sticky top-0 z-50 border-b border-white/10">
       {isImpersonating && (
-        <div className="impersonation-banner">
+        <div className="impersonation-banner bg-destructive text-white py-1 px-4 text-xs font-bold flex items-center justify-center gap-4">
           <span className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Viewing as {user?.displayName} ({user?.role})
+            ADMIN IMPERSONATION: Viewing as {user?.displayName}
           </span>
           <Button
             variant="secondary"
             size="sm"
-            className="h-7 text-xs bg-white text-[var(--status-busy)] hover:bg-orange-50 border-0"
+            className="h-6 px-2 text-[10px] uppercase tracking-widest bg-white text-destructive hover:bg-white/90"
             onClick={handleStopImpersonation}
           >
             Exit View
           </Button>
         </div>
       )}
-      <div className="header-container">
-        <div className="logo-section" onClick={handleHomeClick}>
-          <div className="logo-box">
-            NP
+      <div className="header-container max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
+        <div className="logo-section flex items-center gap-2 cursor-pointer group" onClick={handleHomeClick}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-black italic text-xl glow-primary group-hover:scale-110 transition-transform">
+            Z
           </div>
-          <h1 className="logo-text hidden sm:block">NEET Prep</h1>
+          <div className="flex flex-col">
+            <h1 className="logo-text hidden sm:block text-xl font-black italic tracking-tighter leading-none">
+              ZERO<span className="text-primary">AI</span>
+            </h1>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground leading-none hidden sm:block">NEET 2026</span>
+          </div>
         </div>
 
         <nav className="hidden md:flex flex-1 items-center gap-1 ml-6">
@@ -201,6 +209,23 @@ export function Header({
                     <DropdownMenuItem onClick={() => setLocation('/progress/analytics')} className="gap-2">
                       <ChartBar className="h-4 w-4" />
                       Analytics
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setLocation('/battle')} className="gap-2">
+                      <Swords className="h-4 w-4" />
+                      Battle Mode
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/doubt')} className="gap-2">
+                      <HelpCircle className="h-4 w-4" />
+                      Doubt Solver
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/concepts')} className="gap-2">
+                      <Map className="h-4 w-4" />
+                      Concept Map
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/exam-day')} className="gap-2">
+                      <ClipboardCheck className="h-4 w-4" />
+                      Exam Day Coach
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -285,6 +310,23 @@ export function Header({
                       Admin
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocation('/battle')} data-testid="menu-mobile-battle">
+                    <Swords className="h-4 w-4 mr-2" />
+                    Battle Mode
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation('/doubt')} data-testid="menu-mobile-doubt">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Doubt Solver
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation('/concepts')} data-testid="menu-mobile-concepts">
+                    <Map className="h-4 w-4 mr-2" />
+                    Concept Map
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation('/exam-day')} data-testid="menu-mobile-exam-day">
+                    <ClipboardCheck className="h-4 w-4 mr-2" />
+                    Exam Day
+                  </DropdownMenuItem>
                 </>
               ) : (
                 navPublic.map((link) => (

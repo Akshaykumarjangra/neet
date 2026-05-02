@@ -159,7 +159,7 @@ export default function ResonanceTube() {
       <CardContent className="space-y-4">
         <svg ref={svgRef} className="w-full h-[500px] border rounded-lg bg-background" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Frequency: {frequency[0]} Hz
@@ -197,7 +197,7 @@ export default function ResonanceTube() {
           <p className="font-semibold mb-2">
             {isResonating ? "🔊 RESONANCE DETECTED!" : "Adjust water level for resonance"}
           </p>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Wavelength</p>
               <p className="font-mono">{wavelengthCm.toFixed(2)} cm</p>

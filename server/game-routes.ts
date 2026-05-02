@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Router } from "express";
 import { db } from "./db";
 import { 
@@ -14,6 +13,7 @@ import {
 } from "@shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 
 const router = Router();
 
@@ -642,6 +642,13 @@ router.post("/achievements/check", requireAuthWithPasswordCheck, async (req, res
           source: 'achievement',
           sourceId: achievement.id.toString(),
           description: `Unlocked achievement: ${achievement.name}`,
+        });
+
+        await recordAuditLog(req, {
+          action: "unlock_achievement",
+          entityType: "achievement",
+          entityId: achievement.id,
+          newValue: { name: achievement.name, xpAwarded: achievement.xpReward }
         });
 
         // Fix: Only update points once using the transaction

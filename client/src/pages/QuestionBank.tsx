@@ -6,6 +6,8 @@ import { Paywall } from "@/components/Paywall";
 import { useAuth } from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Seo } from "@/components/Seo";
+import { getBreadcrumbSchema } from "@/config/seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -570,6 +572,15 @@ export default function QuestionBank() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <Seo 
+        title="NEET Question Bank - 50,000+ Chapter-wise MCQs | ZERO AI"
+        description="Access India's largest NEET question bank with 50,000+ chapter-wise MCQs, previous year questions (PYQs), and detailed solutions for Physics, Chemistry, and Biology."
+        url="/question-bank"
+        structuredData={getBreadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Question Bank", url: "/question-bank" }
+        ])}
+      />
       <Header />
 
       <main className="container mx-auto px-4 py-8" data-testid="page-question-bank">

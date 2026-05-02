@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Router, type Request, type Response } from "express";
 import { db } from "./db";
 import {
@@ -707,6 +706,38 @@ router.get("/mastery/:chapterId", requireAuthWithPasswordCheck, requireActiveSub
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/progress", requireAuthWithPasswordCheck, async (req, res) => {
+  try {
+    const userId = req.session.userId!;
+    const { chapterId, completionPercentage } = req.body;
+
+    if (!chapterId) {
+      return res.status(400).json({ error: "chapterId is required" });
+    }
+
+    const [progress] = await db
+      .insert(userChapterProgress)
+      .values({
+        userId,
+        chapterId,
+        completionPercentage: Math.min(100, Math.max(0, parseInt(completionPercentage) || 0)),
+        lastAccessedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [userChapterProgress.userId, userChapterProgress.chapterId],
+        set: {
+          completionPercentage: Math.min(100, Math.max(0, parseInt(completionPercentage) || 0)),
+          lastAccessedAt: new Date(),
+        },
+      })
+      .returning();
+
+    res.json(progress);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
   }
 });
 

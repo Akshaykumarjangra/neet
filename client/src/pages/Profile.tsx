@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow, format } from "date-fns";
 import { useLocation } from "wouter";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import {
   User,
   Mail,
@@ -57,6 +58,11 @@ import {
   Check,
   MapPin,
   Building2,
+  Phone,
+  Key,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
 } from "lucide-react";
  
 interface SubjectProgress {
@@ -107,6 +113,7 @@ export default function Profile() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const { permission, requestPermission } = usePushNotifications();
   
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -869,7 +876,7 @@ export default function Profile() {
 
           {/* Tabs for different sections */}
           <Tabs defaultValue="overview" className="space-y-6" data-testid="profile-tabs">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-2 bg-transparent p-0">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-2 bg-transparent p-0">
               <TabsTrigger 
                 value="overview" 
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
@@ -893,6 +900,14 @@ export default function Profile() {
               >
                 <Trophy className="h-4 w-4 mr-2" />
                 Achievements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="parental" 
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
+                data-testid="tab-parental"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Parental
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
@@ -1188,6 +1203,26 @@ export default function Profile() {
               </Card>
             </TabsContent>
 
+            {/* Parental Control Tab */}
+            <TabsContent value="parental" className="space-y-6" data-testid="content-parental">
+              <Card className="glass-panel" data-testid="card-parent-link">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    Parental Account Linking
+                  </CardTitle>
+                  <CardDescription>
+                    Link your account with your parent's phone number to share progress and receive guidance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <ParentLinkSection />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6" data-testid="content-settings">
               <Card className="glass-panel" data-testid="card-settings">
@@ -1227,6 +1262,13 @@ export default function Profile() {
                       variant="outline"
                       className="w-full justify-start h-14 text-left"
                       data-testid="button-notifications"
+                      onClick={() => {
+                        if (permission !== 'granted') {
+                          requestPermission();
+                        } else {
+                          toast({ title: "Notifications active", description: "You're already set to receive push notifications." });
+                        }
+                      }}
                     >
                       <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 mr-3">
                         <Bell className="h-5 w-5 text-white" />
@@ -1234,10 +1276,14 @@ export default function Profile() {
                       <div className="flex-1">
                         <p className="font-semibold">Notifications</p>
                         <p className="text-xs text-muted-foreground">
-                          Manage email and push notifications
+                          {permission === 'granted' ? 'Notifications enabled' : 'Manage email and push notifications'}
                         </p>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      {permission === 'granted' ? (
+                        <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-600 uppercase tracking-wider">Active</div>
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      )}
                     </Button>
                   </motion.div>
 
@@ -1433,5 +1479,185 @@ export default function Profile() {
         </Dialog>
       </div>
     </ThemeProvider>
+  );
+}
+
+function ParentLinkSection() {
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"link" | "verify">("link");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: links = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/parent/links"],
+    queryFn: async () => {
+      const res = await fetch("/api/parent/links");
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const linkMutation = useMutation({
+    mutationFn: async (parentPhone: string) => {
+      const res = await apiRequest("POST", "/api/parent/link", { parentPhone });
+      return res;
+    },
+    onSuccess: () => {
+      setStep("verify");
+      toast({ title: "OTP Sent", description: "A verification code has been sent to your parent's phone." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Linking failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (otpCode: string) => {
+      const res = await apiRequest("POST", "/api/parent/verify", { parentPhone: phone, otp: otpCode });
+      return res;
+    },
+    onSuccess: () => {
+      setStep("link");
+      setPhone("");
+      setOtp("");
+      queryClient.invalidateQueries({ queryKey: ["/api/parent/links"] });
+      toast({ title: "Account Linked!", description: "Your account is now securely linked with your parent." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  const verifiedLink = links.find(l => l.status === 'verified');
+  const pendingLink = links.find(l => l.status === 'pending');
+
+  const { data: tokenData } = useQuery<{ token: string }>({
+    queryKey: ["/api/parent/link/token"],
+    enabled: !!links.find(l => l.status === 'verified'),
+    queryFn: async () => apiRequest("POST", "/api/parent/link/token"),
+  });
+
+  if (verifiedLink) {
+    const shareLink = `${window.location.origin}/parent/progress/${tokenData?.token}`;
+    
+    return (
+      <div className="space-y-6">
+        <Alert className="bg-green-500/10 border-green-500/20">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-green-700 font-medium">
+            Your account is linked to parent: {verifiedLink.parentPhone}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-border/40 space-y-4">
+          <div>
+            <p className="text-sm font-semibold mb-1">Parent Share Link</p>
+            <p className="text-xs text-muted-foreground">Share this secure link with your parent to let them track your progress.</p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Input readOnly value={tokenData?.token ? shareLink : "Generating link..."} className="bg-white dark:bg-slate-950 font-mono text-xs" />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => {
+                navigator.clipboard.writeText(shareLink);
+                toast({ title: "Copied!", description: "Link copied to clipboard." });
+              }}
+              disabled={!tokenData?.token}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Your parent can now view your learning progress and mock test performance using the secure link above.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md space-y-6">
+      {step === "link" ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="parent-phone">Parent's Phone Number (MSG91 format)</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="parent-phone"
+                placeholder="e.g. 919876543210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Include country code without + (e.g., 91 for India).</p>
+          </div>
+          {pendingLink && !linkMutation.isPending && (
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-amber-800">Verification Pending</p>
+                <p className="text-amber-700/80">A request for {pendingLink.parentPhone} is waiting for OTP.</p>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-amber-600 font-bold" 
+                  onClick={() => { setPhone(pendingLink.parentPhone); setStep("verify"); }}
+                >
+                  Enter OTP now
+                </Button>
+              </div>
+            </div>
+          )}
+          <Button 
+            className="w-full" 
+            onClick={() => linkMutation.mutate(phone)}
+            disabled={linkMutation.isPending || phone.length < 10}
+          >
+            {linkMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Phone className="h-4 w-4 mr-2" />}
+            Send Verification Code
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="parent-otp">Verification Code (OTP)</Label>
+            <div className="relative">
+              <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="parent-otp"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button 
+              className="w-full" 
+              onClick={() => verifyMutation.mutate(otp)}
+              disabled={verifyMutation.isPending || otp.length < 4}
+            >
+              {verifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+              Verify & Link Account
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full text-muted-foreground" 
+              onClick={() => setStep("link")}
+            >
+              Back to change number
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

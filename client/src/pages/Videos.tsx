@@ -21,6 +21,7 @@ import {
     Youtube,
     PlayCircle
 } from "lucide-react";
+import { Seo } from "@/components/Seo";
 import { videos, VideoItem } from "@/data/videos";
 
 const subjectColors: Record<string, { bg: string; text: string; border: string }> = {
@@ -58,6 +59,12 @@ export default function Videos() {
 
     return (
         <div className="min-h-screen bg-background" data-testid="page-videos">
+            <Seo 
+                title="NEET Video Lectures & Curated Tutorials | ZERO AI NEET"
+                description="Watch curated educational videos for NEET Physics, Chemistry, Biology, and Math. Master complex concepts with expert tutorials and high-quality video content."
+                keywords={["NEET videos", "NEET lectures", "medical entrance video tutorials", "biology neet videos", "physics neet lectures"]}
+                url="https://neet.zeropage.in/videos"
+            />
             <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -231,7 +238,7 @@ function VideoCard({ video, onSelect }: { video: VideoItem; onSelect: () => void
                     <div className="flex items-center justify-between pt-1">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Youtube className="h-3 w-3" />
-                            <span className="truncate max-w-[100px]">{video.channel}</span>
+                            <span className="truncate min-w-0 flex-1">{video.channel}</span>
                         </div>
                         <Badge variant="outline" className="text-[10px] h-5">
                             {video.difficulty}

@@ -251,7 +251,7 @@ export default function CompoundMicroscope() {
           </div>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-2 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Objective Magnification</p>
             <p className="text-2xl font-bold text-blue-600">{mo.toFixed(1)}×</p>

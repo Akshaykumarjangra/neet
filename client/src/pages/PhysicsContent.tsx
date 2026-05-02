@@ -1,20 +1,12 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { PhysicsChapter1 } from "@/components/PhysicsChapter1";
-import { PhysicsChapter10 } from "@/components/PhysicsChapter10";
-import { PhysicsChapter11 } from "@/components/PhysicsChapter11";
-import { PhysicsChapter12 } from "@/components/PhysicsChapter12";
-import { PhysicsChapter13 } from "@/components/PhysicsChapter13";
-import { PhysicsChapter14 } from "@/components/PhysicsChapter14";
 import { ChevronLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { ChapterPlaceholder } from "@/components/ChapterPlaceholder";
 
 // Map chapter IDs to topic IDs
 const chapterToTopicMap: { [key: number]: number } = {
@@ -43,16 +35,6 @@ const chapterToTopicMap: { [key: number]: number } = {
   23: 35, // Dual Nature of Radiation and Matter
 };
 
-// Component Map 
-const chapterComponents: { [key: number]: React.ComponentType } = {
-  1: PhysicsChapter1,
-  10: PhysicsChapter10,
-  11: PhysicsChapter11,
-  12: PhysicsChapter12,
-  13: PhysicsChapter13,
-  14: PhysicsChapter14,
-};
-
 const chapters = [
   { id: 1, title: "Physical World and Measurement" },
   { id: 2, title: "Kinematics" },
@@ -71,7 +53,6 @@ const chapters = [
 ];
 
 export default function PhysicsContent() {
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const isPremium = user?.isPaidUser || false;
@@ -82,73 +63,13 @@ export default function PhysicsContent() {
 
   const getQuestionCountForChapter = (chapterId: number): number => {
     if (!topicsWithCounts) return 0;
-
     const topicId = chapterToTopicMap[chapterId];
     if (!topicId) return 0;
-
     const matchingTopic = topicsWithCounts.find(t => t.id === topicId);
     return matchingTopic?.questionCount || 0;
   };
 
-  // Get total questions available
   const totalPhysicsQuestions = topicsWithCounts?.reduce((sum, topic) => sum + topic.questionCount, 0) || 0;
-
-  if (selectedChapter) {
-    const SelectedChapterComponent = chapterComponents[selectedChapter];
-    const chapterMeta = chapters.find((chapter) => chapter.id === selectedChapter) || null;
-    const questionCount = getQuestionCountForChapter(selectedChapter);
-    const topicId = chapterToTopicMap[selectedChapter];
-    const practiceHref = topicId ? `/practice?topicId=${topicId}` : undefined;
-    const hasInteractiveContent = Boolean(SelectedChapterComponent);
-    const isLocked = selectedChapter > 3 && !isPremium;
-
-    if (isLocked) {
-      setLocation("/pricing");
-      return null;
-    }
-
-    return (
-      <ThemeProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto p-6 space-y-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedChapter(null)}
-              className="w-fit"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to chapters
-            </Button>
-
-            <div>
-              <p className="text-sm text-muted-foreground">Class XI / Physics</p>
-              <h1 className="text-3xl font-bold mt-1">
-                Chapter {selectedChapter}: {chapterMeta?.title ?? "Coming soon"}
-              </h1>
-              {!hasInteractiveContent && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  We're finalizing the detailed reading experience for this chapter. Practice remains available below.
-                </p>
-              )}
-            </div>
-
-            {hasInteractiveContent && SelectedChapterComponent ? (
-              <SelectedChapterComponent />
-            ) : (
-              <ChapterPlaceholder
-                subject="Physics"
-                chapterNumber={selectedChapter}
-                title={chapterMeta?.title}
-                questionCount={questionCount}
-                practiceHref={practiceHref}
-              />
-            )}
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
 
   return (
     <ThemeProvider>
@@ -179,7 +100,7 @@ export default function PhysicsContent() {
                     if (isLocked) {
                       setLocation("/pricing");
                     } else {
-                      setSelectedChapter(chapter.id);
+                      setLocation(`/chapter/physics/11/${chapter.id}`);
                     }
                   }}
                 >

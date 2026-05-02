@@ -4,12 +4,12 @@ export function SchemaOrg() {
     const organizationSchema = {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "NP: NEET Prep",
-        "url": "https://neetprep.ai",
-        "logo": "https://neetprep.ai/logo.png",
+        "name": "ZERO AI NEET",
+        "url": "https://neet.zeropage.in",
+        "logo": "https://neet.zeropage.in/logo.png",
         "sameAs": [
-            "https://twitter.com/neetprep_ai",
-            "https://youtube.com/c/neetprep_ai"
+            "https://twitter.com/zeropage_ai",
+            "https://youtube.com/c/zeropage_ai"
         ],
         "description": "India's most advanced AI-powered NEET preparation platform."
     };

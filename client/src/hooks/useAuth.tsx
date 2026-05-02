@@ -34,6 +34,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isImpersonating: boolean;
+  isAdmin: boolean;
+  isMentor: boolean;
+  isAdminOrMentor: boolean;
+  isOwner: boolean;
   refetch: () => void;
   forceRefreshAuth: () => Promise<{ user: User }>;
 }
@@ -87,6 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = data?.user ?? null;
   const isImpersonating = data?.isImpersonating ?? false;
   const isAuthenticated = !!user;
+  const isAdmin = user?.role === "admin" || user?.isAdmin || false;
+  const isMentor = user?.role === "mentor" || false;
+  const isAdminOrMentor = isAdmin || isMentor;
+  const isOwner = user?.isOwner || false;
 
   const forceRefreshAuth = useCallback(async (): Promise<{ user: User }> => {
     queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
@@ -103,7 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, isImpersonating, refetch, forceRefreshAuth }}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      isAuthenticated,
+      isImpersonating,
+      isAdmin,
+      isMentor,
+      isAdminOrMentor,
+      isOwner,
+      refetch,
+      forceRefreshAuth
+    }}>
       {children}
     </AuthContext.Provider>
   );

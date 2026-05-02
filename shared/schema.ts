@@ -27,6 +27,7 @@ export const contentTopics = pgTable("content_topics", {
   referenceBooks: jsonb("reference_books").$type<string[]>(),
 }, (table) => ({
   subjectClassIdx: index("content_topics_subject_class_idx").on(table.subject, table.classLevel),
+  topicNameIdx: index("content_topics_topic_name_idx").on(table.topicName),
 }));
 
 export const questions = pgTable("questions", {
@@ -100,6 +101,8 @@ export const users = pgTable("users", {
   isOwner: boolean("is_owner").notNull().default(false),
   isDisabled: boolean("is_disabled").notNull().default(false),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
+  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+  lockedUntil: timestamp("locked_until"),
 });
 
 export const questionPreviewLimits = pgTable("question_preview_limits", {
@@ -328,6 +331,14 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const userRatings = pgTable("user_ratings", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  rating: real("rating").notNull().default(1500),
+  rd: real("rd").notNull().default(350),
+  volatility: real("volatility").notNull().default(0.06),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+});
+
 export const chapterPrerequisites = pgTable("chapter_prerequisites", {
   id: serial("id").primaryKey(),
   chapterId: varchar("chapter_id", { length: 50 }).notNull(),
@@ -534,9 +545,6 @@ export const mockExamAttempts = pgTable("mock_exam_attempts", {
   unansweredCount: integer("unanswered_count").default(0),
   focusLossCount: integer("focus_loss_count").notNull().default(0),
   lastFocusLossAt: timestamp("last_focus_loss_at"),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  userAgent: text("user_agent"),
-  deviceFingerprint: varchar("device_fingerprint", { length: 200 }),
   lastActiveAt: timestamp("last_active_at"),
 }, (table) => ({
   mockExamAttemptUserPaperIdx: uniqueIndex("mock_exam_attempt_user_paper_idx").on(table.paperId, table.userId, table.attemptNumber),
@@ -602,6 +610,7 @@ export const chapterContent = pgTable("chapter_content", {
   classLevel: varchar("class_level", { length: 20 }).notNull(),
   chapterNumber: integer("chapter_number").notNull(),
   chapterTitle: varchar("chapter_title", { length: 200 }).notNull(),
+  isFree: boolean("is_free").notNull().default(false),
   introduction: text("introduction").notNull(),
   keyConcepts: jsonb("key_concepts").$type<Array<{
     title: string;
@@ -1533,7 +1542,11 @@ export const auditLogs = pgTable("audit_logs", {
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  auditLogsUserIdIdx: index("audit_logs_user_id_idx").on(table.userId),
+  auditLogsActionIdx: index("audit_logs_action_idx").on(table.action),
+  auditLogsCreatedAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
+}));
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),
@@ -1648,6 +1661,25 @@ export const chatMessages = pgTable("chat_messages", {
   isFlagged: boolean("is_flagged").notNull().default(false),
 });
 
+// AI Chat persistence for chapters
+export const userChats = pgTable("user_chats", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  chapterId: integer("chapter_id").references(() => chapterContent.id).notNull(),
+  role: varchar("role", { length: 20 }).notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertUserChatSchema = createInsertSchema(userChats).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export type UserChat = typeof userChats.$inferSelect;
+export type InsertUserChat = z.infer<typeof insertUserChatSchema>;
+
+
 export const insertChatThreadSchema = createInsertSchema(chatThreads).omit({
   id: true,
   createdAt: true,
@@ -1712,6 +1744,50 @@ export const upgradingPopups = pgTable("upgrading_popups", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ============ MARKETING AUTOMATION ============
+
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  scheduleCron: varchar("schedule_cron", { length: 100 }),
+  isActive: boolean("is_active").notNull().default(true),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+  config: jsonb("config").$type<{
+    websiteUrl?: string;
+    industry?: string;
+    autoPublish?: boolean;
+  }>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const marketingReports = pgTable("marketing_reports", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+  outputSummary: text("output_summary"),
+  fullOutput: text("full_output"),
+  tasksCompleted: integer("tasks_completed").notNull().default(0),
+  totalTasks: integer("total_tasks").notNull().default(0),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const marketingAgentLogs = pgTable("marketing_agent_logs", {
+  id: serial("id").primaryKey(),
+  reportId: integer("report_id").references(() => marketingReports.id).notNull(),
+  agentName: varchar("agent_name", { length: 100 }).notNull(),
+  taskName: varchar("task_name", { length: 255 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  output: text("output"),
+  durationSeconds: integer("duration_seconds"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertLeadMagnetSchema = createInsertSchema(leadMagnets).omit({
   id: true,
@@ -1729,6 +1805,22 @@ export const insertUpgradingPopupSchema = createInsertSchema(upgradingPopups).om
   createdAt: true,
 } as any);
 
+export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+} as any);
+
+export const insertMarketingReportSchema = createInsertSchema(marketingReports).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export const insertMarketingAgentLogSchema = createInsertSchema(marketingAgentLogs).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
 // Types
 export type LeadMagnet = typeof leadMagnets.$inferSelect;
 export type InsertLeadMagnet = z.infer<typeof insertLeadMagnetSchema>;
@@ -1738,3 +1830,67 @@ export type InsertUserLead = z.infer<typeof insertUserLeadSchema>;
 
 export type UpgradingPopup = typeof upgradingPopups.$inferSelect;
 export type InsertUpgradingPopup = z.infer<typeof insertUpgradingPopupSchema>;
+
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+export type InsertMarketingCampaign = z.infer<typeof insertMarketingCampaignSchema>;
+
+export type MarketingReport = typeof marketingReports.$inferSelect;
+export type InsertMarketingReport = z.infer<typeof insertMarketingReportSchema>;
+
+export type MarketingAgentLog = typeof marketingAgentLogs.$inferSelect;
+export type InsertMarketingAgentLog = z.infer<typeof insertMarketingAgentLogSchema>;
+
+// Parent Linking
+export const parentLinks = pgTable("parent_links", {
+  parentPhone: varchar("parent_phone", { length: 20 }).notNull(),
+  studentUserId: varchar("student_user_id", { length: 50 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey(table.parentPhone, table.studentUserId),
+}));
+
+export const insertParentLinkSchema = createInsertSchema(parentLinks).omit({
+  createdAt: true,
+  verifiedAt: true,
+} as any);
+
+export type ParentLink = typeof parentLinks.$inferSelect;
+export type InsertParentLink = z.infer<typeof insertParentLinkSchema>;
+
+// Lifecycle & Push
+export const lifecycleSends = pgTable("lifecycle_sends", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  event: varchar("event", { length: 50 }).notNull(),
+  channel: varchar("channel", { length: 20 }).notNull(),
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+});
+
+export const pushQueue = pgTable("push_queue", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userDevices = pgTable("user_devices", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  fcmToken: text("fcm_token").notNull().unique(),
+  deviceType: varchar("device_type", { length: 20 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userTokenIdx: uniqueIndex("user_token_idx").on(table.userId, table.fcmToken),
+}));
+
+export const insertUserDeviceSchema = createInsertSchema(userDevices).omit({
+  id: true,
+  createdAt: true,
+} as any);
+
+export type UserDevice = typeof userDevices.$inferSelect;
+export type InsertUserDevice = z.infer<typeof insertUserDeviceSchema>;

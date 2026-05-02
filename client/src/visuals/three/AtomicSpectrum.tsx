@@ -254,7 +254,7 @@ export default function AtomicSpectrum() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-blue-600">Wavelength</p>
             <p className="font-mono">{wavelengthNm.toFixed(1)} nm</p>

@@ -70,11 +70,30 @@ const formatPrice = (cents: number) => {
 };
 
 export default function AdminPaymentConfig() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSecrets, setShowSecrets] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  if (!user?.isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto py-8 px-4 text-center">
+          <Card>
+            <CardContent className="py-12">
+              <p className="text-muted-foreground">You don't have permission to access this page.</p>
+              <Link href="/">
+                <Button className="mt-4">Back to Home</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
   
   const [paymentSettings, setPaymentSettings] = useState({
     paymentProvider: "none",

@@ -1,0 +1,96 @@
+{
+  "name": "ZERO AI NEET Prep",
+  "short_name": "NEET Prep",
+  "description": "India's most advanced NEET preparation platform powered by AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "categories": ["education", "medical"],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard"
+    },
+    {
+      "src": "/screenshots/practice.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Practice"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Practice",
+      "url": "/practice",
+      "description": "Start practicing questions"
+    },
+    {
+      "name": "Mock Tests",
+      "url": "/mock-tests",
+      "description": "Take a mock test"
+    },
+    {
+      "name": "Flashcards",
+      "url": "/flashcards",
+      "description": "Review flashcards"
+    },
+    {
+      "name": "AI Doubt Solver",
+      "url": "/explain",
+      "description": "Solve doubts with AI"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

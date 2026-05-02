@@ -9,6 +9,8 @@ import {
   contentAssets
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { requireAdmin, requireAdminOrMentor } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 
 type ChapterContentInsert = typeof chapterContent.$inferInsert;
 type ChapterContentUpdate = typeof chapterContent.$inferSelect;
@@ -26,31 +28,6 @@ const normalizeSubject = (value?: string) => {
   return normalized;
 };
 
-const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.session?.userId;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  try {
-    const [user] = await db
-      .select({ isAdmin: users.isAdmin, id: users.id })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error("Admin check error:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
 
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -66,8 +43,8 @@ router.get("/", async (req: Request, res: Response) => {
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
-      isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
-      isPrivileged = !!(user?.isAdmin || user?.isOwner);
+      isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner || user?.role === "mentor");
+      isPrivileged = !!(user?.isAdmin || user?.isOwner || user?.role === "mentor");
     }
 
     let query = db.select().from(chapterContent);
@@ -90,7 +67,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Filter premium chapters if user is not premium
     if (!isPremium) {
-      conditions.push(sql`${chapterContent.chapterNumber} <= 3`);
+      conditions.push(eq(chapterContent.isFree, true));
     }
 
     const chapters = conditions.length > 0
@@ -117,7 +94,7 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
         .where(eq(users.id, sessionUserId))
         .limit(1)
       : [];
-    const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner);
+    const isPrivileged = !!(currentUser?.isAdmin || currentUser?.isOwner || currentUser?.role === "mentor");
 
     const [chapter] = await db
       .select()
@@ -139,21 +116,15 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
       return res.status(403).json({ error: "Chapter not accessible" });
     }
 
-    // Check if user is premium for chapters > 3
-    if (chapter.chapterNumber > 3) {
-      if (currentUser) {
-        const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
-        if (!isPremium) {
-          return res.status(402).json({
-            error: "PAYMENT_REQUIRED",
-            message: "Chapter 4 and beyond are available exclusively for Premium members."
-          });
-        }
-      } else {
-        return res.status(402).json({
-          error: "PAYMENT_REQUIRED",
-          message: "Please log in and upgrade to Premium to access this chapter."
-        });
+    // Check if user is premium for locked chapters
+    if (!chapter.isFree) {
+      const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
+      if (!isPremium) {
+        // Implement progressive disclosure: return preview content
+        chapter.detailedNotes = "Preview mode: This is a premium chapter. " + (chapter.introduction || "").substring(0, 300) + "...";
+        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : null;
+        chapter.formulas = chapter.formulas ? (chapter.formulas as string[]).slice(0, 1) : null;
+        (chapter as any).isPremiumLocked = true;
       }
     }
 
@@ -191,21 +162,15 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Chapter not accessible" });
     }
 
-    // Check if user is premium for chapters > 3
-    if (chapter.chapterNumber > 3) {
-      if (currentUser) {
-        const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
-        if (!isPremium) {
-          return res.status(402).json({
-            error: "PAYMENT_REQUIRED",
-            message: "Chapter 4 and beyond are available exclusively for Premium members."
-          });
-        }
-      } else {
-        return res.status(402).json({
-          error: "PAYMENT_REQUIRED",
-          message: "Please log in and upgrade to Premium to access this chapter."
-        });
+    // Check if user is premium for locked chapters
+    if (!chapter.isFree) {
+      const isPremium = currentUser?.isPaidUser || currentUser?.role === "admin" || currentUser?.isOwner;
+      if (!isPremium) {
+        // Implement progressive disclosure: return preview content
+        chapter.detailedNotes = "Preview mode: This is a premium chapter. " + (chapter.introduction || "").substring(0, 300) + "...";
+        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : null;
+        chapter.formulas = chapter.formulas ? (chapter.formulas as string[]).slice(0, 1) : null;
+        (chapter as any).isPremiumLocked = true;
       }
     }
 
@@ -224,6 +189,13 @@ router.post("/", requireAdmin, async (req: Request, res: Response) => {
       .insert(chapterContent)
       .values(validatedData as ChapterContentInsert)
       .returning();
+
+    await recordAuditLog(req, {
+      action: "create_chapter_content",
+      entityType: "chapter_content",
+      entityId: newChapter.id,
+      newValue: newChapter,
+    });
 
     res.status(201).json(newChapter);
   } catch (error: any) {
@@ -256,6 +228,13 @@ router.put("/:id", requireAdmin, async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Chapter not found" });
     }
 
+    await recordAuditLog(req, {
+      action: "update_chapter_content",
+      entityType: "chapter_content",
+      entityId: updatedChapter.id,
+      newValue: updatedChapter,
+    });
+
     res.json(updatedChapter);
   } catch (error: any) {
     console.error("Error updating chapter:", error);
@@ -278,6 +257,13 @@ router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
     if (!deletedChapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
+
+    await recordAuditLog(req, {
+      action: "delete_chapter_content",
+      entityType: "chapter_content",
+      entityId: deletedChapter.id,
+      oldValue: deletedChapter,
+    });
 
     res.json({ success: true, message: "Chapter deleted successfully" });
   } catch (error) {
@@ -303,7 +289,7 @@ router.get("/:id/assets", async (req: Request, res: Response) => {
     }
 
     // Enforce subscription check for assets of premium chapters
-    if (chapter.chapterNumber > 3) {
+    if (!chapter.isFree) {
       const userId = req.session?.userId;
       let isPremium = false;
       if (userId) {
@@ -368,18 +354,8 @@ router.get("/:id/assets", async (req: Request, res: Response) => {
 export default router;
 
 // Submit a new version of chapter content (Mentor/Admin)
-router.post("/:chapterId/versions", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  const user = req.user as any;
-  // Allow if admin or mentor
-  // Note: 'role' check is basic, ideally check db if not in session
-  if (!user.isAdmin && user.role !== "mentor") {
-    return res.status(403).json({ error: "Only mentors and admins can submit content updates" });
-  }
-
+router.post("/:chapterId/versions", requireAdminOrMentor, async (req: Request, res: Response) => {
+  const user = (req as any).user;
   const { chapterId } = req.params;
   const contentId = parseInt(chapterId);
 
@@ -436,6 +412,13 @@ router.post("/:chapterId/versions", async (req: Request, res: Response) => {
       .insert(chapterContentVersions)
       .values(versionPayload as any)
       .returning();
+
+    await recordAuditLog(req, {
+      action: "submit_chapter_version",
+      entityType: "chapter_content_version",
+      entityId: newVersion.id,
+      newValue: newVersion,
+    });
 
     res.status(201).json(newVersion);
   } catch (error) {

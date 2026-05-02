@@ -27,6 +27,9 @@ import { mentorAvailability, mentors, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { recomputePerformanceSummaryJob } from "./analytics-routes";
+import { initScheduler } from "./services/scheduler";
+import { csrfProtection, csrfTokenHandler } from "./middleware/csrf";
+import { enforceImpersonationTimeLimit } from "./admin-impersonation-routes";
 
 import { nanoid } from "nanoid";
 
@@ -34,8 +37,30 @@ type UserInsert = typeof users.$inferInsert;
 
 
 async function ensureOwnerAccount() {
-  const ownerEmail = process.env.OWNER_EMAIL || "akg45272@gmail.com";
-  const ownerPassword = process.env.OWNER_PASSWORD || "akg45272@gmail.com";
+  const ownerEmail = process.env.OWNER_EMAIL;
+  const ownerPassword = process.env.OWNER_PASSWORD;
+
+  if (!ownerEmail || !ownerPassword) {
+    if (process.env.NODE_ENV === "production") {
+      // In production, refuse to start if owner credentials would silently
+      // fall back. Operators must set these explicitly (or unset both to
+      // skip owner provisioning entirely - which is the recommended path).
+      throw new Error(
+        "[Owner Account] OWNER_EMAIL and OWNER_PASSWORD must both be set explicitly in production, or both left unset to skip owner provisioning. Refusing to start with partial configuration."
+      );
+    }
+    console.warn("\n========================================================");
+    console.warn("[Owner Account] WARNING: OWNER_EMAIL/OWNER_PASSWORD not set.");
+    console.warn("[Owner Account] Skipping owner setup. No hardcoded fallback");
+    console.warn("[Owner Account] credentials will be created.");
+    console.warn("========================================================\n");
+    return;
+  }
+
+  if (ownerPassword.length < 12) {
+    console.error("[Owner Account] OWNER_PASSWORD must be at least 12 characters.");
+    return;
+  }
 
   try {
     const [existingUser] = await db
@@ -44,15 +69,12 @@ async function ensureOwnerAccount() {
       .where(eq(users.email, ownerEmail))
       .limit(1);
 
-    const passwordHash = await bcrypt.hash(ownerPassword, 10);
-
     if (existingUser) {
-      // Always ensure owner status and correct password
+      // Ensure owner status is maintained
       const updatePayload = {
         isOwner: true,
         isAdmin: true,
-        role: "admin",
-        passwordHash: passwordHash // Enforce the requested password
+        role: "admin"
       } as Partial<UserInsert>;
 
       await db
@@ -60,9 +82,9 @@ async function ensureOwnerAccount() {
         .set(updatePayload)
         .where(eq(users.email, ownerEmail));
 
-      log(`[Owner Account] Updated owner account credentials for ${ownerEmail}`);
+      log(`[Owner Account] Verified owner status for ${ownerEmail}`);
     } else {
-
+      const passwordHash = await bcrypt.hash(ownerPassword, 10);
       const newUser = {
         email: ownerEmail,
         name: "Super Admin",
@@ -230,8 +252,14 @@ if (process.env.NODE_ENV === "production") {
 // Trust proxy for secure cookies behind reverse proxies
 app.set("trust proxy", 1);
 
-// Serve uploaded files statically
-app.use("/uploads", express.static("uploads"));
+// Serve uploaded files statically with long-term caching for better SXO
+app.use("/uploads", express.static("uploads", {
+  maxAge: '30d',
+  immutable: true,
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
 
 // Validate SESSION_SECRET
 if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
@@ -288,6 +316,7 @@ export const sessionMiddleware = session({
 });
 
 app.use(sessionMiddleware);
+app.use("/api", enforceImpersonationTimeLimit);
 
 declare module 'http' {
   interface IncomingMessage {
@@ -303,6 +332,19 @@ app.use(express.json({
   limit: '5mb'
 }));
 app.use(express.urlencoded({ extended: false, limit: '5mb' }));
+
+// CSRF protection (synchronizer token pattern). Must be after session + body parsers.
+// Webhook endpoints are exempted because they authenticate via signature verification.
+app.use(
+  csrfProtection({
+    ignorePaths: [
+      "/api/billing/webhook",
+    ],
+  }),
+);
+
+// Endpoint for clients to fetch their current CSRF token.
+app.get("/api/csrf-token", csrfTokenHandler);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -334,6 +376,8 @@ app.use((req, res, next) => {
     await ensureOwnerAccount();
     await ensureSampleMentorAvailability();
     schedulePerformanceSummaryJob();
+    // Initialize marketing scheduler
+    initScheduler().catch(err => console.error("[Scheduler] Failed to initialize:", err));
     // Demo accounts disabled
 
     const server = await registerRoutes(app);
@@ -344,6 +388,14 @@ app.use((req, res, next) => {
     // Initialize WebSocket server with session middleware
     const wsServer = initializeWebSocketServer(server, sessionMiddleware);
     log("📡 WebSocket server initialized at /ws");
+
+    // Battle WS (Phase 3/02) — separate path /ws/battle
+    try { (await import("./ws/battle")).attachBattleWS(server, sessionMiddleware); log("⚔️  Battle WS at /ws/battle"); } catch (e) { log(`battle ws skipped: ${(e as Error).message}`); }
+
+    // Cron schedules (Phase 5/07, 5/08, 7/05). Gated to production unless ENABLE_CRON=1.
+    if (process.env.NODE_ENV === "production" || process.env.ENABLE_CRON === "1") {
+      import("./services/cron").then(() => log("⏰ cron registered")).catch(e => log(`cron skipped: ${e.message}`));
+    }
 
     // Global error handler
     app.use((err: any, req: Request, res: Response, _next: NextFunction) => {

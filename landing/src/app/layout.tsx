@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NP: NEET Prep | AI-Powered Learning Platform",
-  description: "India's most advanced AI-powered NEET preparation platform. 50,000+ questions, expert mentors, and real-time performance analytics. Crack NEET 2026 with NP.",
-  keywords: "NEET preparation, AI learning, medical entrance exam, NEET mock tests, biology quiz, physics practice, chemistry simulation",
+  title: "ZERO AI NEET | AI-Powered NEET Preparation Platform",
+  description: "India's most advanced AI-powered NEET preparation platform. 50,000+ questions, expert mentors, and real-time performance analytics. Crack NEET 2026 with ZERO AI.",
+  keywords: "NEET preparation, AI learning, medical entrance exam, NEET mock tests, biology quiz, physics practice, chemistry simulation, ZERO AI NEET",
   openGraph: {
-    title: "NP: NEET Prep | AI-Powered Learning Platform",
-    description: "Experience personalized NEET preparation with adaptive AI and 3D visualizations. Join 10,000+ aspirants today.",
-    url: "https://neetprep.ai",
-    siteName: "NP: NEET Prep",
+    title: "ZERO AI NEET | AI-Powered NEET Preparation Platform",
+    description: "Experience personalized NEET preparation with adaptive AI and 3D visualizations. Join 50,000+ aspirants today.",
+    url: "https://neet.zeropage.in",
+    siteName: "ZERO AI NEET",
     images: [
       {
         url: "/og-image.jpg",
@@ -34,12 +34,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crack NEET with AI-Powered Learning | NP",
+    title: "Crack NEET with AI-Powered Learning | ZERO AI",
     description: "Adaptive practice, expert mentors, and 3D biology models. The future of NEET prep is here.",
     images: ["/twitter-image.jpg"],
   },
   alternates: {
-    canonical: "https://neetprep.ai",
+    canonical: "https://neet.zeropage.in",
   },
   robots: {
     index: true,

@@ -70,6 +70,28 @@ export const simulations: SimulationItem[] = [
         chapter: "Chemical Bonding",
         difficulty: "Intermediate",
     },
+    {
+        id: "solar-system-viewer",
+        title: "3D Solar System",
+        description: "Explore the solar system in 3D. Visualize planetary orbits, relative speeds, and Kepler's laws of planetary motion.",
+        subject: "Physics",
+        type: "custom",
+        component: "SolarSystemViewer",
+        topics: ["Gravitation", "Kepler's Laws", "Orbits"],
+        chapter: "Gravitation",
+        difficulty: "Beginner",
+    },
+    {
+        id: "dna-helix-viewer",
+        title: "3D DNA Double Helix",
+        description: "Interactive 3D model of the DNA double helix. Explore base pairing, sugar-phosphate backbone, and molecular structure.",
+        subject: "Zoology",
+        type: "custom",
+        component: "DnaHelixViewer",
+        topics: ["DNA", "Genetics", "Molecular Structure"],
+        chapter: "Molecular Basis of Inheritance",
+        difficulty: "Intermediate",
+    },
 
     // --- PHYSICS: MOTION & FORCES ---
     {

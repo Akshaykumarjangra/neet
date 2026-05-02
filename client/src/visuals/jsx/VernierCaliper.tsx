@@ -213,7 +213,7 @@ export default function VernierCaliper() {
         />
         
         <div className="bg-muted p-4 rounded-lg space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-sm text-muted-foreground">Main Scale Reading (MSR)</p>
               <p className="text-2xl font-bold" data-testid="text-main-scale">{mainScaleReading.toFixed(1)} cm</p>
@@ -223,7 +223,7 @@ export default function VernierCaliper() {
               <p className="text-2xl font-bold" data-testid="text-vernier-coincidence">{vernierCoincidence}</p>
             </div>
           </div>
-          <div className="border-t pt-4 grid grid-cols-2 gap-4 text-center">
+          <div className="border-t pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-sm text-muted-foreground">Observed Reading</p>
               <p className="text-lg font-semibold" data-testid="text-observed-reading">

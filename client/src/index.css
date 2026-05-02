@@ -435,8 +435,6 @@ body {
         hsl(156, 60%, 93%) 75%,
         hsl(275, 80%, 92%) 100%);
     background-size: 400% 400%;
-    animation: gradient-shift 15s ease infinite;
-    will-change: background-position;
   }
 
   .gradient-mesh-bg {
@@ -447,8 +445,25 @@ body {
       radial-gradient(circle at 50% 50%, rgba(103, 232, 249, 0.05) 0%, transparent 60%),
       radial-gradient(circle at 10% 80%, rgba(134, 239, 172, 0.04) 0%, transparent 50%);
     background-size: 200% 200%;
-    animation: mesh-move 20s ease-in-out infinite;
-    will-change: background-position;
+  }
+
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    .gradient-hero {
+      animation: gradient-shift 15s ease infinite;
+      will-change: background-position;
+    }
+
+    .gradient-mesh-bg {
+      animation: mesh-move 20s ease-in-out infinite;
+      will-change: background-position;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-hero, .gradient-mesh-bg {
+      animation: none !important;
+      background-position: 0% 0% !important;
+    }
   }
 
   @keyframes gradient-shift {
@@ -674,6 +689,39 @@ body {
 
 .bounce-hover:hover {
   transform: scale(1.05) translateY(-4px);
+}
+
+/* Cyber-Medical Neon Glows */
+.glow-blue {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.2);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5), 0 0 30px rgba(34, 197, 94, 0.2);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+.glow-primary {
+  box-shadow: 0 0 15px hsla(var(--primary), 0.5), 0 0 30px hsla(var(--primary), 0.2);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px hsla(var(--primary), 0.5), 0 0 20px hsla(var(--primary), 0.3);
+}
+
+/* Glassmorphism Variants */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Reduced motion support */

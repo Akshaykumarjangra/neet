@@ -336,7 +336,7 @@ export default function NuclearFission() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-muted p-3 rounded-lg">
             <p className="text-sm font-medium">Status</p>
             <p className="text-lg font-bold capitalize">{step.replace('-', ' ')}</p>

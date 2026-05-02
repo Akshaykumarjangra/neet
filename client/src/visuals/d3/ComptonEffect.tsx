@@ -266,7 +266,7 @@ export default function ComptonEffect() {
       <CardContent className="space-y-4">
         <svg ref={svgRef} width={width} height={height} className="border rounded-lg" />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Incident Energy: {incidentEnergy[0]} keV
@@ -301,7 +301,7 @@ export default function ComptonEffect() {
           </div>
         </div>
 
-        <div className="bg-muted p-4 rounded-lg grid grid-cols-3 gap-4">
+        <div className="bg-muted p-4 rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Wavelength Shift</p>
             <p className="text-lg font-bold text-green-600">
@@ -347,7 +347,7 @@ export default function ComptonEffect() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded space-y-1 text-sm">
             <p className="font-semibold">Historical Significance:</p>
             <p className="text-muted-foreground">• Discovered by Arthur Compton (1923)</p>

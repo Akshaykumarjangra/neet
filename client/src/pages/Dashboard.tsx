@@ -1,3 +1,5 @@
+"use strict";
+
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { SubjectCard } from "@/components/SubjectCard";
@@ -30,6 +32,11 @@ import zoologyIcon from "@assets/generated_images/Zoology_subject_icon_879d7407.
 
 import { NextBestAction } from "@/components/NextBestAction";
 import { LeadMagnetSection } from "@/components/LeadMagnetSection";
+import { DailyPlanCard } from "@/components/DailyPlanCard";
+import { RankCard } from "@/components/RankCard";
+import { OnboardingModal, useOnboarding } from "@/components/OnboardingModal";
+import { Seo } from "@/components/Seo";
+import { NotificationManager } from "@/components/NotificationManager";
 
 interface UserStats {
   totalAttempts: number;
@@ -111,8 +118,15 @@ export default function Dashboard() {
   const { points, level, streak, updateStreak } = useGamification();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { showOnboarding, closeOnboarding, updatePreferences, isNewUser, triggerOnboarding } = useOnboarding();
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState<MentorForBooking | null>(null);
+
+  useEffect(() => {
+    if (isNewUser) {
+      triggerOnboarding();
+    }
+  }, [isNewUser]);
 
   // Update streak on component mount
   useEffect(() => {
@@ -220,18 +234,22 @@ export default function Dashboard() {
   const recommendedMentors = mentorRecommendations?.topRated?.slice(0, 3) || [];
 
   const openQuickBook = (mentor: MentorCardData) => {
+    if (!mentor || !mentor.id || !mentor.userName) {
+      toast({ title: "Error", description: "Invalid mentor data provided.", variant: "destructive" });
+      return;
+    }
     setSelectedMentor({
       id: mentor.id,
       userName: mentor.userName,
       userAvatar: (mentor as any).userAvatar ?? null,
-      subjects: mentor.subjects,
-      hourlyRate: mentor.hourlyRate,
+      subjects: mentor.subjects || [],
+      hourlyRate: mentor.hourlyRate || 0,
     });
     setBookingModalOpen(true);
   };
 
   const quickBookFirst = () => {
-    if (recommendedMentors.length) {
+    if (recommendedMentors && recommendedMentors.length > 0) {
       openQuickBook(recommendedMentors[0]);
     } else {
       setLocation('/mentors');
@@ -312,13 +330,15 @@ export default function Dashboard() {
     };
   });
 
-  if (statsLoading) {
+  const isDashboardLoading = statsLoading || achievementsLoading || challengesLoading || bookingsLoading;
+
+  if (isDashboardLoading) {
     return (
       <ThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Loading your progress...</p>
+            <p className="text-muted-foreground">Loading your dashboard...</p>
           </div>
         </div>
       </ThemeProvider>
@@ -327,7 +347,11 @@ export default function Dashboard() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background gradient-mesh-bg">
+      <Seo 
+        title="Dashboard | ZERO AI NEET Prep"
+        description="Track your NEET preparation progress, daily challenges, and mock test scores."
+      />
+      <div className="min-h-screen bg-background gradient-mesh-bg overflow-x-hidden">
         <Header
           activeSubject={activeSubject}
           onSubjectChange={setActiveSubject}
@@ -335,17 +359,18 @@ export default function Dashboard() {
           userLevel={level}
           studyStreak={streak}
         />
+        <NotificationManager />
 
         <HeroSection
           onGetStarted={() => setLocation('/learning-path')}
           onTakeMockTest={() => setLocation('/mock-tests')}
         />
 
-        <main className="container mx-auto px-4 py-12 max-w-7xl space-y-12">
-          <section>
-            <h2 className="text-3xl font-bold mb-6">Your Progress</h2>
+        <main className="container mx-auto px-4 py-12 max-w-7xl space-y-12 overflow-hidden">
+          <section className="max-w-full">
+            <h2 className="text-3xl font-bold mb-6 truncate">Your Progress</h2>
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 overflow-hidden">
                 <DashboardMetrics
                   questionsSolved={userStats?.totalAttempts || 0}
                   accuracy={userStats?.accuracy || 0}
@@ -353,27 +378,18 @@ export default function Dashboard() {
                   mockTestScore={485}
                 />
               </div>
-              <div>
-                {achievementsLoading || challengesLoading ? (
-                  <Card>
-                    <CardContent className="p-8">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground">Loading gamification data...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : achievementsError || challengesError ? (
+              <div className="max-w-full overflow-hidden">
+                {achievementsError || challengesError ? (
                   <Card className="border-destructive">
                     <CardHeader>
-                      <CardTitle className="text-destructive">Error Loading Data</CardTitle>
+                      <CardTitle className="text-destructive truncate">Error Loading Data</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground break-words">
                         {achievementsError && "Failed to load achievements. "}
                         {challengesError && "Failed to load daily challenges. "}
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {achievementsError && (
                           <Button
                             variant="outline"
@@ -421,18 +437,33 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <section>
-            <NextBestAction
-            />
+          <section className="max-w-full overflow-hidden">
+            <NextBestAction />
           </section>
 
-          <section>
-            <h2 className="text-3xl font-bold mb-6">Subjects</h2>
+          {/* Daily Plan + Rank Card Widgets (Phase 1-7) */}
+          <section className="grid gap-6 lg:grid-cols-2 max-w-full overflow-hidden">
+            <div className="overflow-hidden">
+              <DailyPlanCard />
+            </div>
+            <div className="overflow-hidden">
+              <RankCard
+                name={user?.displayName || "Student"}
+                rank={userPosition?.rank || 0}
+                streak={streak}
+                accuracy={userStats?.accuracy || 0}
+                code={user?.referralCode || "NEET100"}
+              />
+            </div>
+          </section>
+
+          <section className="max-w-full overflow-hidden">
+            <h2 className="text-3xl font-bold mb-6 truncate">Subjects</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {subjects.map((subject, index) => {
                 const floatClass = index % 3 === 0 ? 'float-gentle' : index % 3 === 1 ? 'float-medium' : 'float-slow';
                 return (
-                  <div key={subject.name} className={`cursor-pointer ${floatClass}`}>
+                  <div key={subject.name} className={`cursor-pointer ${floatClass} max-w-full overflow-hidden`}>
                     <SubjectCard
                       subject={subject.name}
                       icon={subject.icon}
@@ -447,81 +478,83 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <section>
+          <section className="max-w-full overflow-hidden">
             <LeadMagnetSection />
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ProgressChart />
+          <div className="grid gap-6 lg:grid-cols-2 max-w-full overflow-hidden">
+            <div className="overflow-hidden">
+              <ProgressChart />
+            </div>
 
-            <Card>
+            <Card className="max-w-full overflow-hidden">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="truncate">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 truncate"
                   variant="outline"
                   onClick={() => setLocation("/syllabus")}
                 >
-                  <BookOpen className="h-4 w-4" />
-                  Complete Syllabus
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Complete Syllabus</span>
                 </Button>
                 <Button
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 truncate"
                   variant="outline"
                   data-testid="button-daily-practice"
                   onClick={() => setLocation('/practice')}
                 >
-                  <BookOpen className="h-4 w-4" />
-                  Start Daily Practice
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Start Daily Practice</span>
                 </Button>
                 <Button
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 truncate"
                   variant="outline"
                   data-testid="button-flashcards"
                   onClick={() => setLocation('/flashcards')}
                 >
-                  <Layers className="h-4 w-4" />
-                  Interactive Flashcards
+                  <Layers className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Interactive Flashcards</span>
                 </Button>
                 <Button
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 truncate"
                   variant="outline"
                   onClick={() => setLocation('/build-test')}
                 >
-                  <Target className="h-4 w-4" />
-                  Build Custom Test
+                  <Target className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Build Custom Test</span>
                 </Button>
                 <Button
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 truncate"
                   variant="outline"
                   data-testid="button-mock-test"
                   onClick={() => setLocation('/mock-tests')}
                 >
-                  <Target className="h-4 w-4" />
-                  Take Mock Test
+                  <Target className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Take Mock Test</span>
                 </Button>
-                <Button className="w-full justify-start gap-2" variant="outline" data-testid="button-weak-areas">
-                  <TrendingUp className="h-4 w-4" />
-                  Review Weak Areas
+                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-weak-areas">
+                  <TrendingUp className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Review Weak Areas</span>
                 </Button>
-                <Button className="w-full justify-start gap-2" variant="outline" data-testid="button-study-plan">
-                  <Calendar className="h-4 w-4" />
-                  View Study Plan
+                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-study-plan">
+                  <Calendar className="h-4 w-4 shrink-0" />
+                  <span className="truncate">View Study Plan</span>
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          <section className="grid gap-6 lg:grid-cols-2">
-            <Card>
+          <section className="grid gap-6 lg:grid-cols-2 max-w-full">
+            <Card className="max-w-full overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Mentor Sessions</span>
-                  <div className="flex items-center gap-2">
+                <CardTitle className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="truncate">Mentor Sessions</span>
+                  <div className="flex flex-wrap items-center gap-2">
                     {nextBooking && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="max-w-full truncate">
                         Next: {new Date(nextBooking.startAt).toLocaleDateString()} at {new Date(nextBooking.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </Badge>
                     )}
@@ -539,116 +572,117 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-sm text-muted-foreground">Pending</div>
-                    <div className="text-2xl font-semibold">{pendingBookings.length}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                  <div className="p-3 rounded-lg bg-muted/40 overflow-hidden">
+                    <div className="text-xs text-muted-foreground truncate">Pending</div>
+                    <div className="text-xl font-semibold">{pendingBookings.length}</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-sm text-muted-foreground">Confirmed</div>
-                    <div className="text-2xl font-semibold">{confirmedBookings.length}</div>
+                  <div className="p-3 rounded-lg bg-muted/40 overflow-hidden">
+                    <div className="text-xs text-muted-foreground truncate">Confirmed</div>
+                    <div className="text-xl font-semibold">{confirmedBookings.length}</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-sm text-muted-foreground">Total</div>
-                    <div className="text-2xl font-semibold">{upcomingBookings.length}</div>
+                  <div className="p-3 rounded-lg bg-muted/40 overflow-hidden">
+                    <div className="text-xs text-muted-foreground truncate">Total</div>
+                    <div className="text-xl font-semibold">{upcomingBookings.length}</div>
                   </div>
                 </div>
 
                 {bookingsLoading ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Loading bookings...
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" /> <span className="truncate">Loading bookings...</span>
                   </div>
                 ) : upcomingBookings.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-3 overflow-hidden">
                     {upcomingBookings.slice(0, 3).map((booking) => (
-                      <div key={booking.id} className="border rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
+                      <div key={booking.id} className="border rounded-lg p-3 max-w-full overflow-hidden">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <Avatar className="h-9 w-9 shrink-0">
                               <AvatarImage src={booking.mentorAvatar || undefined} />
                               <AvatarFallback>{booking.mentorName?.charAt(0) || "M"}</AvatarFallback>
                             </Avatar>
-                            <div>
-                              <div className="font-medium">{booking.mentorName || "Mentor"}</div>
-                              <div className="text-xs text-muted-foreground">
+                            <div className="overflow-hidden">
+                              <div className="font-medium truncate">{booking.mentorName || "Mentor"}</div>
+                              <div className="text-xs text-muted-foreground truncate">
                                 {new Date(booking.startAt).toLocaleDateString()} · {new Date(booking.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                               </div>
                             </div>
                           </div>
-                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>{booking.status}</Badge>
+                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"} className="shrink-0">{booking.status}</Badge>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 mt-3">
+                        <div className="flex flex-wrap gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
                           {booking.timeline?.map((step) => (
-                            <Badge key={`${booking.id}-${step.status}`} variant="outline" className="text-[11px]">
+                            <Badge key={`${booking.id}-${step.status}`} variant="outline" className="text-[10px] whitespace-nowrap shrink-0">
                               {step.label} · {new Date(step.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
                             </Badge>
                           )) || (
-                              <Badge variant="outline" className="text-[11px]">Requested</Badge>
+                              <Badge variant="outline" className="text-[10px] shrink-0">Requested</Badge>
                             )}
                           {booking.meetingLink && (
-                            <Badge variant="secondary" className="text-[11px]">Link ready</Badge>
+                            <Badge variant="secondary" className="text-[10px] shrink-0">Link ready</Badge>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No upcoming mentor bookings yet.</p>
+                  <p className="text-sm text-muted-foreground break-words">No upcoming mentor bookings yet.</p>
                 )}
 
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={quickBookFirst}>
-                    Quick book a mentor
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" onClick={quickBookFirst} className="shrink-0">
+                    Quick book
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setLocation('/mentors')}>
+                  <Button size="sm" variant="outline" onClick={() => setLocation('/mentors')} className="shrink-0">
                     Browse mentors
                   </Button>
                   {upcomingBookings.length > 0 && (
-                    <Button size="sm" variant="outline" onClick={() => setLocation('/my-bookings')}>
-                      View All Bookings
+                    <Button size="sm" variant="outline" onClick={() => setLocation('/my-bookings')} className="shrink-0">
+                      View All
                     </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="max-w-full overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Mentor Recommendations</span>
+                <CardTitle className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="truncate">Mentor Recommendations</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setLocation("/mentors")}
-                    className="text-xs h-auto py-1"
+                    className="text-xs h-auto py-1 shrink-0"
                   >
                     View All
                     <ChevronRight className="h-3 w-3 ml-1" />
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-w-full overflow-hidden">
                 {mentorRecommendations ? (
                   recommendedMentors.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-4 overflow-hidden">
                       {recommendedMentors.map((mentor) => (
-                        <MentorCard
-                          key={mentor.id}
-                          mentor={mentor}
-                          size="compact"
-                          onViewProfile={() => setLocation(`/mentors/${mentor.id}`)}
-                          onBookSession={() => openQuickBook(mentor)}
-                          showQuickBook={true}
-                        />
+                        <div key={mentor.id} className="max-w-full overflow-hidden">
+                          <MentorCard
+                            mentor={mentor}
+                            size="compact"
+                            onViewProfile={() => setLocation(`/mentors/${mentor.id}`)}
+                            onBookSession={() => openQuickBook(mentor)}
+                            showQuickBook={true}
+                          />
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">No recommendations yet. Check back soon.</p>
+                    <p className="text-sm text-muted-foreground text-center py-4 truncate">No recommendations yet.</p>
                   )
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-4">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Loading mentor picks...
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-4 truncate">
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" /> Loading mentor picks...
                   </div>
                 )}
               </CardContent>
@@ -656,76 +690,84 @@ export default function Dashboard() {
           </section>
 
           {/* Leaderboard and Daily Challenges Section */}
-          <section>
-            <h2 className="text-3xl font-bold mb-6">🎯 Today's Challenges & Rankings</h2>
+          <section className="max-w-full overflow-hidden">
+            <h2 className="text-3xl font-bold mb-6 truncate">🎯 Today's Challenges & Rankings</h2>
             <div className="grid gap-6 lg:grid-cols-2">
-              <DailyChallengeCard
-                challenges={
-                  dailyChallenges.length > 0
-                    ? dailyChallenges.map(dc => ({
-                      id: dc.id,
-                      title: dc.challenge.title,
-                      description: dc.challenge.description,
-                      progress: dc.progress,
-                      target: dc.challenge.targetValue,
-                      xpReward: dc.challenge.xpReward,
-                      completed: dc.completed
-                    }))
-                    : [
-                      {
-                        id: 1,
-                        title: "Complete 10 Practice Questions",
-                        description: "Solve 10 questions from any subject",
-                        progress: 3,
-                        target: 10,
-                        xpReward: 50,
-                        completed: false
-                      },
-                      {
-                        id: 2,
-                        title: "Study for 30 Minutes",
-                        description: "Spend at least 30 minutes learning today",
-                        progress: 15,
-                        target: 30,
-                        xpReward: 30,
-                        completed: false
-                      },
-                      {
-                        id: 3,
-                        title: "Maintain Your Streak",
-                        description: "Log in and study every day",
-                        progress: streak,
-                        target: streak + 1,
-                        xpReward: 20,
-                        completed: false
-                      }
-                    ]
-                }
-              />
+              <div className="overflow-hidden">
+                <DailyChallengeCard
+                  challenges={
+                    dailyChallenges.length > 0
+                      ? dailyChallenges.map(dc => ({
+                        id: dc.id,
+                        title: dc.challenge.title,
+                        description: dc.challenge.description,
+                        progress: dc.progress,
+                        target: dc.challenge.targetValue,
+                        xpReward: dc.challenge.xpReward,
+                        completed: dc.completed
+                      }))
+                      : [
+                        {
+                          id: 1,
+                          title: "Complete 10 Practice Questions",
+                          description: "Solve 10 questions from any subject",
+                          progress: 3,
+                          target: 10,
+                          xpReward: 50,
+                          completed: false
+                        },
+                        {
+                          id: 2,
+                          title: "Study for 30 Minutes",
+                          description: "Spend at least 30 minutes learning today",
+                          progress: 15,
+                          target: 30,
+                          xpReward: 30,
+                          completed: false
+                        },
+                        {
+                          id: 3,
+                          title: "Maintain Your Streak",
+                          description: "Log in and study every day",
+                          progress: streak,
+                          target: streak + 1,
+                          xpReward: 20,
+                          completed: false
+                        }
+                      ]
+                  }
+                />
+              </div>
 
-              <LeaderboardPreview
-                players={[
-                  { rank: 1, username: "TopStudent", score: 15420, level: 28, trend: "up" },
-                  { rank: 2, username: "QuizMaster", score: 14250, level: 26, trend: "up" },
-                  { rank: 3, username: "NeetChamp", score: 13890, level: 25, trend: "same" },
-                  { rank: 4, username: "StudyPro", score: 12100, level: 23, trend: "down" },
-                  { rank: 5, username: "BrainBox", score: 11500, level: 22, trend: "up" }
-                ]}
-                currentUserRank={userPosition?.rank}
-              />
+              <div className="overflow-hidden">
+                <LeaderboardPreview
+                  players={[
+                    { rank: 1, username: "TopStudent", score: 15420, level: 28, trend: "up" },
+                    { rank: 2, username: "QuizMaster", score: 14250, level: 26, trend: "up" },
+                    { rank: 3, username: "NeetChamp", score: 13890, level: 25, trend: "same" },
+                    { rank: 4, username: "StudyPro", score: 12100, level: 23, trend: "down" },
+                    { rank: 5, username: "BrainBox", score: 11500, level: 22, trend: "up" }
+                  ]}
+                  currentUserRank={userPosition?.rank}
+                />
+              </div>
             </div>
           </section>
 
-          <section>
-            <h2 className="text-3xl font-bold mb-6">Interactive Learning</h2>
+          <section className="max-w-full overflow-hidden">
+            <h2 className="text-3xl font-bold mb-6 truncate">Interactive Learning</h2>
             <div className="grid gap-6 lg:grid-cols-2">
-              <ThreeDViewer title="Atomic Structure - Carbon Atom" />
-              <PhETEmbed
-                title="Projectile Motion Simulation"
-                simUrl="https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html"
-                subject="Physics"
-                description="Explore projectile motion by firing various objects. Adjust angle, speed, and observe trajectories."
-              />
+              <div className="overflow-hidden">
+                <ThreeDViewer title="Atomic Structure - Carbon Atom" />
+              </div>
+              <div className="overflow-hidden">
+                <PhETEmbed
+                  title="Projectile Motion Simulation"
+                  simUrl="https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html"
+                  subject="Physics"
+                  description="Explore projectile motion by firing various objects. Adjust angle, speed, and observe trajectories."
+                />
+              </div>
             </div>
           </section>
 
@@ -737,6 +779,13 @@ export default function Dashboard() {
               if (!open) setSelectedMentor(null);
             }}
             onBooked={() => refetchBookings()}
+          />
+          
+          <OnboardingModal 
+            isOpen={showOnboarding} 
+            onClose={closeOnboarding} 
+            onComplete={updatePreferences} 
+            userName={user?.name || "Student"} 
           />
         </main>
       </div>

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
-import { requireAuthWithPasswordCheck, requireOwner } from "./auth";
+import { requireAuthWithPasswordCheck, requireAdmin } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 import { db } from "./db";
 import {
   auditLogs,
@@ -14,30 +15,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 const router = Router();
 
 router.use(requireAuthWithPasswordCheck);
-router.use(requireOwner);
-
-async function recordAuditLog(req: any, details: {
-  action: string;
-  entityType: string;
-  entityId?: string | number | null;
-  oldValue?: any;
-  newValue?: any;
-}) {
-  try {
-    await db.insert(auditLogs).values({
-      userId: req.session?.userId || null,
-      action: details.action,
-      entityType: details.entityType,
-      entityId: details.entityId ? String(details.entityId) : null,
-      oldValue: details.oldValue ?? null,
-      newValue: details.newValue ?? null,
-      ipAddress: (req.ip || "").slice(0, 45),
-      userAgent: req.get?.("user-agent"),
-    });
-  } catch (error) {
-    console.error("Failed to record audit log:", error);
-  }
-}
+router.use(requireAdmin);
 
 router.post("/jobs/auto-submit-expired", async (_req, res) => {
   res.status(503).json({ error: "Background jobs are disabled on this environment." });

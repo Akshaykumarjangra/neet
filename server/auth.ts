@@ -1,10 +1,10 @@
-// @ts-nocheck
+
 import passport from "passport";
 
 import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { users, userSubscriptions } from "../shared/schema";
+import { users, userSubscriptions } from "@shared/schema";
 import { eq, and, inArray, desc } from "drizzle-orm";
 
 const SALT_ROUNDS = 10;
@@ -100,6 +100,7 @@ declare module "express-session" {
   interface SessionData {
     userId: string;
     originalAdminId?: string;
+    impersonationStartedAt?: number;
   }
 }
 
@@ -143,9 +144,10 @@ export function getCurrentUser(req: Request): string | null {
   return req.session.userId || null;
 }
 
-export async function requireOwner(req: Request, res: Response, next: NextFunction) {
+// Middleware to allow both Admins and Owners
+export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.session?.userId) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res.status(401).json({ error: "Authentication required" });
   }
 
   try {
@@ -155,14 +157,67 @@ export async function requireOwner(req: Request, res: Response, next: NextFuncti
       .where(eq(users.id, req.session.userId))
       .limit(1);
 
-    if (!user || (!user.isOwner && !user.isAdmin)) {
-      return res.status(403).json({ error: "Admin access required" });
+    if (!user || (!user.isAdmin && !user.isOwner)) {
+      return res.status(403).json({ error: "Administrative access required" });
     }
 
+    (req as any).isAdmin = user.isAdmin;
     (req as any).isOwner = user.isOwner;
     next();
   } catch (error) {
+    console.error("Admin check error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// Strict middleware for Owner-only operations (impersonation, organization management, etc.)
+export async function requireOwner(req: Request, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  try {
+    const [user] = await db
+      .select({ isOwner: users.isOwner })
+      .from(users)
+      .where(eq(users.id, req.session.userId))
+      .limit(1);
+
+    if (!user || !user.isOwner) {
+      return res.status(403).json({ error: "Owner-only access required" });
+    }
+
+    (req as any).isOwner = true;
+    next();
+  } catch (error) {
     console.error("Owner check error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// Middleware to allow Admins, Owners, and Mentors
+export async function requireAdminOrMentor(req: Request, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  try {
+    const [user] = await db
+      .select({ isAdmin: users.isAdmin, isOwner: users.isOwner, role: users.role })
+      .from(users)
+      .where(eq(users.id, req.session.userId))
+      .limit(1);
+
+    if (!user || (!user.isAdmin && !user.isOwner && user.role !== "mentor")) {
+      return res.status(403).json({ error: "Administrative or Mentor access required" });
+    }
+
+    (req as any).user = user;
+    (req as any).isAdmin = !!user.isAdmin;
+    (req as any).isOwner = !!user.isOwner;
+    next();
+  } catch (error) {
+    console.error("Admin/Mentor check error:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 }

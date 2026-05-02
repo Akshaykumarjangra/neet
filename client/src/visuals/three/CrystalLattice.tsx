@@ -179,7 +179,7 @@ export default function CrystalLattice() {
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div className="bg-muted p-3 rounded">
             <p className="font-semibold">Coordination Number</p>
             <p className="text-2xl font-bold text-primary">

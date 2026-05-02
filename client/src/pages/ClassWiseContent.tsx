@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, Leaf, Bug, ArrowRight } from "lucide-react";
+import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, Leaf, Bug, ArrowRight, ClipboardList } from "lucide-react";
+import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { categorizeBiologyChapter } from "@/lib/biologySections";
@@ -126,11 +126,19 @@ export default function ClassWiseContent() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <GraduationCap className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
-              Complete NEET Syllabus
-            </h1>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+            <div className="flex items-center gap-3">
+              <GraduationCap className="h-10 w-10 text-primary" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
+                Complete NEET Syllabus
+              </h1>
+            </div>
+            <Link href="/progress/analytics">
+              <Button variant="outline" className="gap-2 h-10 px-4">
+                <ClipboardList className="h-4 w-4" />
+                Review Performance
+              </Button>
+            </Link>
           </div>
           <p className="text-muted-foreground text-lg">
             Comprehensive chapter-wise content for Class 11 and 12 - Physics, Chemistry, Botany & Zoology

@@ -3,11 +3,71 @@ import { toast } from "@/hooks/use-toast";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+let csrfTokenCache: string | null = null;
+let csrfTokenInflight: Promise<string | null> | null = null;
+
+export async function fetchCsrfToken(): Promise<string | null> {
+  if (csrfTokenCache) return csrfTokenCache;
+  if (csrfTokenInflight) return csrfTokenInflight;
+  csrfTokenInflight = (async () => {
+    try {
+      const res = await fetch("/api/csrf-token", { credentials: "include" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      csrfTokenCache = typeof data?.csrfToken === "string" ? data.csrfToken : null;
+      return csrfTokenCache;
+    } catch {
+      return null;
+    } finally {
+      csrfTokenInflight = null;
+    }
+  })();
+  return csrfTokenInflight;
+}
+
+export function clearCsrfToken() {
+  csrfTokenCache = null;
+}
+
 async function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(input, { credentials: "include", ...init, signal: controller.signal });
+    const method = (init.method || "GET").toUpperCase();
+    const headers = new Headers(init.headers || {});
+    if (UNSAFE_METHODS.has(method)) {
+      const token = await fetchCsrfToken();
+      if (token && !headers.has("x-csrf-token")) {
+        headers.set("x-csrf-token", token);
+      }
+    }
+    let res = await fetch(input, {
+      credentials: "include",
+      ...init,
+      headers,
+      signal: controller.signal,
+    });
+    // If token expired/rotated (e.g. after re-login), retry once.
+    if (res.status === 403 && UNSAFE_METHODS.has(method)) {
+      const cloned = res.clone();
+      let body = "";
+      try { body = await cloned.text(); } catch { /* ignore */ }
+      if (body.includes("CSRF")) {
+        clearCsrfToken();
+        const token = await fetchCsrfToken();
+        if (token) {
+          headers.set("x-csrf-token", token);
+          res = await fetch(input, {
+            credentials: "include",
+            ...init,
+            headers,
+            signal: controller.signal,
+          });
+        }
+      }
+    }
+    return res;
   } finally {
     clearTimeout(timer);
   }

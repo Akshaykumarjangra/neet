@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "./db";
 import { questionTags, questions, contentTopics } from "@shared/schema";
-import { requireAuthWithPasswordCheck, requireOwner } from "./auth";
+import { requireAuthWithPasswordCheck, requireAdmin } from "./auth";
 import { eq, sql, desc, inArray } from "drizzle-orm";
 
 const router = Router();
@@ -47,7 +47,7 @@ router.get("/question/:id", requireAuthWithPasswordCheck, async (req, res) => {
   }
 });
 
-router.post("/assign", requireOwner, async (req, res) => {
+router.post("/assign", requireAdmin, async (req, res) => {
   try {
     const { questionIds, tags } = req.body;
 
@@ -93,7 +93,7 @@ router.post("/assign", requireOwner, async (req, res) => {
   }
 });
 
-router.put("/question/:id", requireOwner, async (req, res) => {
+router.put("/question/:id", requireAdmin, async (req, res) => {
   try {
     const questionId = parseInt(req.params.id, 10);
     const { tags } = req.body;

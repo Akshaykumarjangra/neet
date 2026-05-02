@@ -23,10 +23,13 @@ import {
   ArrowLeft,
   Calculator,
 } from "lucide-react";
+import { Seo } from "@/components/Seo";
 import { PhETSimulation } from "@/components/PhETSimulation";
 import ProjectileMotion from "@/components/simulations/ProjectileMotion";
 import CircuitBuilder from "@/components/simulations/CircuitBuilder";
 import MoleculeViewer from "@/components/simulations/MoleculeViewer";
+import SolarSystemViewer from "@/components/simulations/SolarSystemViewer";
+import DnaHelixViewer from "@/components/simulations/DnaHelixViewer";
 import { Paywall } from "@/components/Paywall";
 
 import { simulations, SimulationItem } from "@/data/simulations";
@@ -83,6 +86,10 @@ export default function Simulations() {
           return <CircuitBuilder />;
         case "MoleculeViewer":
           return <MoleculeViewer />;
+        case "SolarSystemViewer":
+          return <SolarSystemViewer />;
+        case "DnaHelixViewer":
+          return <DnaHelixViewer />;
         default:
           return null;
       }
@@ -130,6 +137,12 @@ export default function Simulations() {
 
   return (
     <div className="min-h-screen bg-background" data-testid="page-simulations">
+      <Seo 
+        title="NEET Interactive 3D Simulations | Physics, Chemistry, Biology"
+        description="Experience 50+ interactive simulations for NEET Physics, Chemistry, and Biology. Visualize complex concepts like projectile motion, molecular structures, and DNA helices in 3D."
+        keywords={["NEET simulations", "interactive physics NEET", "3D molecular viewer", "biology simulations NEET", "PhET simulations NEET"]}
+        url="https://neet.zeropage.in/simulations"
+      />
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row md:items-center gap-4">

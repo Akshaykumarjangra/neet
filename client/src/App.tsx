@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { UpgradePopup } from "@/components/UpgradePopup";
+import { HelmetProvider } from "react-helmet-async";
 
 import AccessDenied from "@/pages/AccessDenied";
 
@@ -19,6 +20,7 @@ import AccessDenied from "@/pages/AccessDenied";
 const Home = lazy(() => import("@/pages/Home"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const GameLobbyDashboard = lazy(() => import("@/pages/GameLobbyDashboard"));
+const BattleLobby = lazy(() => import("@/pages/BattleLobby"));
 const RoleDashboard = lazy(() => import("@/pages/RoleDashboard"));
 const Practice = lazy(() => import("@/pages/Practice"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
@@ -78,7 +80,34 @@ const SampleChapterPreview = lazy(() => import("@/pages/SampleChapterPreview"));
 const MockTestPreview = lazy(() => import("@/pages/MockTestPreview"));
 const SimulationsPreview = lazy(() => import("@/pages/SimulationsPreview"));
 const NEETFAQPage = lazy(() => import("@/pages/NEETFAQPage"));
+const AdminMarketing = lazy(() => import("@/pages/AdminMarketing"));
 const NEETAppGuide = lazy(() => import("@/pages/NEETAppGuide"));
+const DoubtSolver = lazy(() => import("@/pages/DoubtSolver"));
+const ConceptMap = lazy(() => import("@/pages/ConceptMap"));
+const Battle = lazy(() => import("@/pages/Battle"));
+const ExamDay = lazy(() => import("@/pages/ExamDay"));
+const Squad = lazy(() => import("@/pages/Squad"));
+const BlogArticle = lazy(() => import("@/pages/BlogArticle"));
+const Terms = lazy(() => import("@/pages/Terms"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const About = lazy(() => import("@/pages/About"));
+const Help = lazy(() => import("@/pages/Help"));
+const ParentPortal = lazy(() => import("@/pages/ParentPortal"));
+const NEETCutoff = lazy(() => import("@/pages/NEETCutoff"));
+const PYQAnalysis = lazy(() => import("@/pages/PYQAnalysis"));
+const MedicalColleges = lazy(() => import("@/pages/MedicalColleges"));
+const NEETRankPredictor = lazy(() => import("@/pages/NEETRankPredictor"));
+const SyllabusWeightage = lazy(() => import("@/pages/SyllabusWeightage"));
+const BestBooksNEET = lazy(() => import("@/pages/BestBooksNEET"));
+const NEETEligibilityCriteria = lazy(() => import("@/pages/NEETEligibilityCriteria"));
+const NEETExamPattern = lazy(() => import("@/pages/NEETExamPattern"));
+const NEETApplicationForm = lazy(() => import("@/pages/NEETApplicationForm"));
+const NEETCounselling = lazy(() => import("@/pages/NEETCounselling"));
+const NEETAdmitCard = lazy(() => import("@/pages/NEETAdmitCard"));
+
+import { Footer } from "@/components/Footer";
+
 
 // Loading fallback component
 function PageLoader() {
@@ -91,6 +120,16 @@ function PageLoader() {
     </div>
   );
 }
+
+/** Resolves userId from auth and passes to Battle page */
+function BattleWrapper() {
+  const { user } = useAuth();
+  // Battle expects a numeric userId; use a hash of the string ID or 0
+  const numericId = user?.id ? Math.abs(user.id.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0)) : 0;
+  return <Suspense fallback={<PageLoader />}><Battle userId={numericId} /></Suspense>;
+}
+
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 function Router() {
   const [, setLocation] = useLocation();
@@ -134,6 +173,7 @@ function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
       <ErrorBoundary>
+        <Breadcrumbs />
         <Switch>
           <Route path="/access-denied">
             <AccessDenied />
@@ -147,6 +187,41 @@ function Router() {
           <Route path="/explain">
             <Explain />
           </Route>
+          <Route path="/medical-colleges">
+          <Suspense fallback={<PageLoader />}>
+            <MedicalColleges />
+          </Suspense>
+        </Route>
+        <Route path="/best-books-neet">
+          <Suspense fallback={<PageLoader />}>
+            <BestBooksNEET />
+          </Suspense>
+        </Route>
+        <Route path="/neet-eligibility-criteria">
+          <Suspense fallback={<PageLoader />}>
+            <NEETEligibilityCriteria />
+          </Suspense>
+        </Route>
+        <Route path="/neet-exam-pattern">
+          <Suspense fallback={<PageLoader />}>
+            <NEETExamPattern />
+          </Suspense>
+        </Route>
+        <Route path="/neet-application-form">
+          <Suspense fallback={<PageLoader />}>
+            <NEETApplicationForm />
+          </Suspense>
+        </Route>
+        <Route path="/neet-counselling">
+          <Suspense fallback={<PageLoader />}>
+            <NEETCounselling />
+          </Suspense>
+        </Route>
+        <Route path="/neet-admit-card">
+          <Suspense fallback={<PageLoader />}>
+            <NEETAdmitCard />
+          </Suspense>
+        </Route>
           <Route path="/login">
             <GuestRoute>
               <Login />
@@ -167,6 +242,19 @@ function Router() {
           <Route path="/guide/doctor-roadmap" component={DoctorRoadmap} />
           <Route path="/neet-faq" component={NEETFAQPage} />
           <Route path="/guide" component={NEETAppGuide} />
+          <Route path="/blog/:slug" component={BlogArticle} />
+          <Route path="/resources" component={Library} />
+          <Route path="/study-guides" component={Library} />
+          <Route path="/interactive-simulations" component={Simulations} />
+          <Route path="/video-library" component={Videos} />
+          <Route path="/neet-cutoff" component={NEETCutoff} />
+          <Route path="/medical-colleges" component={MedicalColleges} />
+          <Route path="/rank-predictor" component={NEETRankPredictor} />
+          <Route path="/syllabus-weightage" component={SyllabusWeightage} />
+          <Route path="/pyq-analysis" component={PYQAnalysis} />
+          <Route path="/syllabus" component={Syllabus} />
+          <Route path="/mock-tests" component={MockTests} />
+          <Route path="/mbbs-roadmap" component={DoctorRoadmap} />
           <Route path="/pricing">
             <Pricing />
           </Route>
@@ -193,6 +281,11 @@ function Router() {
           <Route path="/dashboard">
             <ProtectedRoute>
               <RoleDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/battle-arena">
+            <ProtectedRoute>
+              <BattleLobby />
             </ProtectedRoute>
           </Route>
           <Route path="/classic">
@@ -351,6 +444,11 @@ function Router() {
               <AdminTestSeries />
             </OwnerRoute>
           </Route>
+          <Route path="/admin/marketing">
+            <OwnerRoute>
+              <AdminMarketing />
+            </OwnerRoute>
+          </Route>
           <Route path="/test-series">
             <ProtectedRoute>
               <StudentTestSeries />
@@ -382,11 +480,6 @@ function Router() {
               <Videos />
             </ProtectedRoute>
           </Route>
-          <Route path="/syllabus">
-            <ProtectedRoute>
-              <Syllabus />
-            </ProtectedRoute>
-          </Route>
           <Route path="/search">
             <ProtectedRoute>
               <Search />
@@ -415,8 +508,36 @@ function Router() {
               <NEETBlast />
             </ProtectedRoute>
           </Route>
+          <Route path="/doubt">
+            <ProtectedRoute>
+              <DoubtSolver />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/concepts">
+            <ProtectedRoute>
+              <ConceptMap />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/battle">{(params) => <ProtectedRoute><BattleWrapper /></ProtectedRoute>}</Route>
+          <Route path="/exam-day">
+            <ProtectedRoute>
+              <ExamDay />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/squad">
+            <ProtectedRoute>
+              <Squad />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/terms" component={Terms} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/about" component={About} />
+          <Route path="/help" component={Help} />
+          <Route path="/parent/progress/:token" component={ParentPortal} />
           <Route component={NotFound} />
         </Switch >
+        <Footer />
       </ErrorBoundary >
     </Suspense >
   );
@@ -428,9 +549,11 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <ThemeProvider>
-            <Toaster />
-            <UpgradePopup />
-            <Router />
+            <HelmetProvider>
+              <Toaster />
+              <UpgradePopup />
+              <Router />
+            </HelmetProvider>
           </ThemeProvider>
         </TooltipProvider>
       </AuthProvider>

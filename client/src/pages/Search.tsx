@@ -16,6 +16,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/Header";
 import { QuickNavigationBar } from "@/components/QuickNavigationBar";
+import { Seo } from "@/components/Seo";
+import { getBreadcrumbSchema } from "@/config/seo";
 import {
   Search as SearchIcon,
   HelpCircle,
@@ -230,6 +232,15 @@ export default function Search() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title="Search NEET Questions & Topics - Physics, Chemistry, Biology | ZERO AI"
+        description="Search across 20,000+ NEET practice questions, high-yield formulas, and detailed chapter notes for Physics, Chemistry, and Biology."
+        url="/search"
+        structuredData={getBreadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Search", url: "/search" }
+        ])}
+      />
       <Header />
       <QuickNavigationBar currentPath="/search" />
 

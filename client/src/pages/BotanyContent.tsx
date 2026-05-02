@@ -7,43 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Leaf, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { BotanyChapter1 } from "@/components/BotanyChapter1";
-import { BotanyChapter2 } from "@/components/BotanyChapter2";
-import { BotanyChapter3 } from "@/components/BotanyChapter3";
-import { BotanyChapter4 } from "@/components/BotanyChapter4";
-import { BotanyChapter5 } from "@/components/BotanyChapter5";
-import { BotanyChapter6 } from "@/components/BotanyChapter6";
-import { BotanyChapter7 } from "@/components/BotanyChapter7";
-import { BotanyChapter8 } from "@/components/BotanyChapter8";
-import { BotanyChapter9 } from "@/components/BotanyChapter9";
-import { BotanyChapter10 } from "@/components/BotanyChapter10";
-import { BotanyChapter11 } from "@/components/BotanyChapter11";
-import { BotanyChapter12 } from "@/components/BotanyChapter12";
-import { BotanyChapter13 } from "@/components/BotanyChapter13";
-import { BotanyChapter14 } from "@/components/BotanyChapter14";
-import { BotanyChapter15 } from "@/components/BotanyChapter15";
-import { BotanyChapter16 } from "@/components/BotanyChapter16";
-import { BotanyChapter17 } from "@/components/BotanyChapter17";
-import { BotanyChapter18 } from "@/components/BotanyChapter18";
-import { BotanyChapter19 } from "@/components/BotanyChapter19";
-import { BotanyChapter20 } from "@/components/BotanyChapter20";
-import { BotanyChapter21 } from "@/components/BotanyChapter21";
-import { BotanyChapter22 } from "@/components/BotanyChapter22";
-import { BotanyChapter23 } from "@/components/BotanyChapter23";
-import { BotanyChapter24 } from "@/components/BotanyChapter24";
-import { BotanyChapter25 } from "@/components/BotanyChapter25";
-import { BotanyChapter26 } from "@/components/BotanyChapter26";
-import { BotanyChapter27 } from "@/components/BotanyChapter27";
-import { BotanyChapter28 } from "@/components/BotanyChapter28";
-import { BotanyChapter29 } from "@/components/BotanyChapter29";
-import { BotanyChapter30 } from "@/components/BotanyChapter30";
-import { BotanyChapter31 } from "@/components/BotanyChapter31";
-import { BotanyChapter32 } from "@/components/BotanyChapter32";
-import { BotanyChapter33 } from "@/components/BotanyChapter33";
-import { BotanyChapter34 } from "@/components/BotanyChapter34";
-import { BotanyChapter35 } from "@/components/BotanyChapter35";
-import { BotanyChapter36 } from "@/components/BotanyChapter36";
-import { BotanyChapter37 } from "@/components/BotanyChapter37";
 
 // Chapter metadata
 const chapters = [
@@ -82,8 +45,8 @@ const chapters = [
   { id: 33, title: "Strategies for Enhancement in Food Production", status: "available", questions: 50 },
   { id: 34, title: "Biotechnology and its Applications", status: "available", questions: 55 },
   { id: 35, title: "Biodiversity & Conservation", status: "available", questions: 50 },
-  { id: 36, title: "Environmental Issues", component: BotanyChapter36 },
-  { id: 37, title: "Biotechnology: Principles & Processes", component: BotanyChapter37 },
+  { id: 36, title: "Environmental Issues", status: "available" },
+  { id: 37, title: "Biotechnology: Principles & Processes", status: "available" },
 ];
 
 const chapterMapping: Record<number, { subject: string; class: string; num: number }> = {
@@ -102,76 +65,14 @@ const chapterMapping: Record<number, { subject: string; class: string; num: numb
   // Class 12
   12: { subject: "biology", class: "12", num: 1 }, // Sexual Repro in Flowering Plants
   13: { subject: "biology", class: "12", num: 2 }, // Principles of Inheritance
-};
-
-const componentMap: Record<number, React.ComponentType> = {
-  1: BotanyChapter1,
-  2: BotanyChapter2,
-  3: BotanyChapter3,
-  4: BotanyChapter4,
-  5: BotanyChapter5,
-  6: BotanyChapter6,
-  7: BotanyChapter7,
-  8: BotanyChapter8,
-  9: BotanyChapter9,
-  10: BotanyChapter10,
-  11: BotanyChapter11,
-  12: BotanyChapter12,
-  13: BotanyChapter13,
-  14: BotanyChapter14,
-  15: BotanyChapter15,
-  16: BotanyChapter16,
-  17: BotanyChapter17,
-  18: BotanyChapter18,
-  19: BotanyChapter19,
-  20: BotanyChapter20,
-  21: BotanyChapter21,
-  22: BotanyChapter22,
-  23: BotanyChapter23,
-  24: BotanyChapter24,
-  25: BotanyChapter25,
-  26: BotanyChapter26,
-  27: BotanyChapter27,
-  28: BotanyChapter28,
-  29: BotanyChapter29,
-  30: BotanyChapter30,
-  31: BotanyChapter31,
-  32: BotanyChapter32,
-  33: BotanyChapter33,
-  34: BotanyChapter34,
-  35: BotanyChapter35,
-  36: BotanyChapter36,
-  37: BotanyChapter37,
+  36: { subject: "biology", class: "12", num: 36 }, 
+  37: { subject: "biology", class: "12", num: 37 },
 };
 
 export default function BotanyContent() {
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const isPremium = user?.isPaidUser || false;
-
-  if (selectedChapter !== null) {
-    const Component = componentMap[selectedChapter];
-    if (Component) {
-      return (
-        <ThemeProvider>
-          <div className="min-h-screen bg-background">
-            <Header />
-            <div className="container mx-auto p-6">
-              <Button
-                variant="ghost"
-                onClick={() => setSelectedChapter(null)}
-                className="mb-4"
-              >
-                ← Back to Chapters
-              </Button>
-              <Component />
-            </div>
-          </div>
-        </ThemeProvider>
-      );
-    }
-  }
 
   return (
     <ThemeProvider>
@@ -205,6 +106,9 @@ export default function BotanyContent() {
                       }
                       if (mapping) {
                         setLocation(`/chapter/${mapping.subject}/${mapping.class}/${mapping.num}`);
+                      } else {
+                        // Fallback mapping if not strictly defined
+                        setLocation(`/chapter/biology/11/${chapter.id}`);
                       }
                     }
                   }}

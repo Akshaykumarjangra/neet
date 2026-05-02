@@ -33,6 +33,7 @@ import {
   GraduationCap,
   Loader2,
   Bug,
+  Swords,
 } from "lucide-react";
 import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
 import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
@@ -738,6 +739,32 @@ export default function GameLobbyDashboard() {
                           {flashcardsData?.dueFlashcards} due
                         </Badge>
                       )}
+                      <ChevronRight className="h-5 w-5 text-muted-foreground ml-2" />
+                    </Button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-14 text-left border-red-500/30 hover:border-red-500/50 hover:bg-red-500/5"
+                      onClick={() => setLocation("/battle-arena")}
+                      data-testid="button-battle-arena"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 mr-3 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                        <Swords className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-red-600 dark:text-red-400">1v1 PvP Battle</p>
+                        <p className="text-xs text-muted-foreground">
+                          Challenge real players live
+                        </p>
+                      </div>
+                      <Badge className="bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.4)]">
+                        LIVE
+                      </Badge>
                       <ChevronRight className="h-5 w-5 text-muted-foreground ml-2" />
                     </Button>
                   </motion.div>

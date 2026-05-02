@@ -1,3 +1,5 @@
+"use strict";
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
@@ -141,7 +143,8 @@ export default function AdminContentManager() {
   const { toast } = useToast();
 
   const searchParams = new URLSearchParams(searchString);
-  const initialTab = searchParams.get("tab") || "questions";
+  const defaultTab = user?.isAdmin ? "questions" : "chapters";
+  const initialTab = searchParams.get("tab") || defaultTab;
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -157,7 +160,7 @@ export default function AdminContentManager() {
     setLocation(`/admin/content?tab=${value}`, { replace: true });
   };
 
-  if (!user || !user.isAdmin) {
+  if (!user || !user.isAdminOrMentor) {
     setLocation("/");
     return null;
   }
@@ -165,7 +168,7 @@ export default function AdminContentManager() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="gradient-mesh-bg p-6">
+      <main className="gradient-mesh-bg p-4 sm:p-6 overflow-hidden">
         <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Button
@@ -185,24 +188,28 @@ export default function AdminContentManager() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto" data-testid="tabs-content-manager">
-            <TabsTrigger value="questions" className="py-3" data-testid="tab-questions">
-              <FileText className="h-4 w-4 mr-2" />
-              Questions
-            </TabsTrigger>
-            <TabsTrigger value="topics" className="py-3" data-testid="tab-topics">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Topics
-            </TabsTrigger>
-            <TabsTrigger value="mock-tests" className="py-3" data-testid="tab-mock-tests">
-              <ClipboardList className="h-4 w-4 mr-2" />
-              Mock Tests
-            </TabsTrigger>
-            <TabsTrigger value="flashcards" className="py-3" data-testid="tab-flashcards">
-              <Layers className="h-4 w-4 mr-2" />
-              Flashcards
-            </TabsTrigger>
-            <TabsTrigger value="chapters" className="py-3" data-testid="tab-chapters">
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide bg-muted p-1 h-auto min-h-[44px]" data-testid="tabs-content-manager">
+            {user.isAdmin && (
+              <>
+                <TabsTrigger value="questions" className="flex-1 py-3 whitespace-nowrap px-4" data-testid="tab-questions">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Questions
+                </TabsTrigger>
+                <TabsTrigger value="topics" className="flex-1 py-3 whitespace-nowrap px-4" data-testid="tab-topics">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Topics
+                </TabsTrigger>
+                <TabsTrigger value="mock-tests" className="flex-1 py-3 whitespace-nowrap px-4" data-testid="tab-mock-tests">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Mock Tests
+                </TabsTrigger>
+                <TabsTrigger value="flashcards" className="flex-1 py-3 whitespace-nowrap px-4" data-testid="tab-flashcards">
+                  <Layers className="h-4 w-4 mr-2" />
+                  Flashcards
+                </TabsTrigger>
+              </>
+            )}
+            <TabsTrigger value="chapters" className="flex-1 py-3 whitespace-nowrap px-4" data-testid="tab-chapters">
               <FolderOpen className="h-4 w-4 mr-2" />
               Chapters
             </TabsTrigger>
@@ -508,7 +515,7 @@ function QuestionsManager() {
           </div>
         ) : (
           <ScrollArea className="h-[500px]">
-            <div className="w-full overflow-x-auto">
+            <div className="w-full overflow-x-auto pb-4 scrollbar-thin">
               <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow>

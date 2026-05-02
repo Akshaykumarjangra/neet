@@ -21,6 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { Seo } from "@/components/Seo";
 
 interface ChapterLibraryItem {
   id: number;
@@ -226,6 +227,12 @@ export default function Library() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo 
+        title="NEET Study Material & NCERT Chapters | ZERO AI NEET 2026"
+        description="Access 98 comprehensive NCERT chapters for NEET preparation. Track your progress, bookmark important topics, and take notes on Biology, Physics, and Chemistry."
+        keywords={["NEET library", "NCERT chapters", "NEET study material", "biology neet notes", "physics neet chapters"]}
+        url="https://neet.zeropage.in/library"
+      />
       <div className="container mx-auto p-6 space-y-6">
         {/* Header with gradient */}
         <motion.div

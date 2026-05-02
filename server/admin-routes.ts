@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { Router } from "express";
 import { db } from "./db";
 import { users, questions, contentTopics, subscriptionPlans, userSubscriptions, adminSettings, auditLogs, organizations, organizationMembers, organizationInvitations } from "@shared/schema";
@@ -6,45 +6,38 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import OpenAI from "openai";
 import { nanoid } from "nanoid";
-import { requireOwner as ensureOwnerMiddleware } from "./auth";
+import { randomBytes } from "crypto";
+import { requireOwner, requireAdmin } from "./auth";
+
+function generateSecurePassword(length = 16): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+  const bytes = randomBytes(length);
+  let result = '';
+  for (let i = 0; i < length; i++) result += charset[bytes[i] % charset.length];
+  return result;
+}
 
 // Initialize OpenAI with Replit AI Integrations
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "dummy_api_key_to_prevent_crash"
 });
+
+import { adminBulkLimiter } from "./middleware/rate-limits";
 
 const router = Router();
 
-async function recordAuditLog(req: any, details: {
-  action: string;
-  entityType: string;
-  entityId?: string | number | null;
-  oldValue?: any;
-  newValue?: any;
-}) {
-  try {
-    await db.insert(auditLogs).values({
-      userId: req.session?.userId || null,
-      action: details.action,
-      entityType: details.entityType,
-      entityId: details.entityId ? String(details.entityId) : null,
-      oldValue: details.oldValue,
-      newValue: details.newValue,
-      ipAddress: (req.ip || "").slice(0, 45),
-      userAgent: req.get?.("user-agent"),
-    });
-  } catch (error) {
-    console.error("Failed to record audit log:", error);
-  }
-}
+// Apply admin rate limiting
+router.use(adminBulkLimiter);
 
-const requireOwner = ensureOwnerMiddleware;
-const requireAdmin = requireOwner;
+import { recordAuditLog } from "./lib/audit";
+
+// All routes in this file require at least Admin access
+router.use(requireAdmin);
 
 // Get all users (admin only) with pagination and filters
-router.get("/users", requireOwner, async (req, res) => {
+router.get("/users", requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 20;
@@ -155,7 +148,7 @@ router.patch("/users/:id/role", requireOwner, async (req, res) => {
       .set({ role, isAdmin: role === "admin" })
       .where(eq(users.id, id));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "change_user_role",
       entityType: "user",
       entityId: id,
@@ -195,7 +188,7 @@ router.patch("/users/:id/premium", requireOwner, async (req, res) => {
       .set({ isPaidUser })
       .where(eq(users.id, id));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "toggle_premium",
       entityType: "user",
       entityId: id,
@@ -239,7 +232,7 @@ router.patch("/users/:id/status", requireOwner, async (req, res) => {
       .set({ isDisabled })
       .where(eq(users.id, id));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "toggle_account_status",
       entityType: "user",
       entityId: id,
@@ -263,7 +256,7 @@ router.post("/grant-access/:userId", requireAdmin, async (req, res) => {
       .set({ isPaidUser: true })
       .where(eq(users.id, userId));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "grant_access",
       entityType: "user",
       entityId: userId,
@@ -286,7 +279,7 @@ router.post("/revoke-access/:userId", requireAdmin, async (req, res) => {
       .set({ isPaidUser: false })
       .where(eq(users.id, userId));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "revoke_access",
       entityType: "user",
       entityId: userId,
@@ -309,8 +302,8 @@ router.post("/add-user", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "Valid email and name required" });
     }
 
-    // Generate random password
-    const randomPassword = Math.random().toString(36).slice(-12);
+    // Generate cryptographically secure random password
+    const randomPassword = generateSecurePassword(16);
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
     const [newUser] = await db.insert(users).values({
@@ -332,7 +325,7 @@ router.post("/add-user", requireAdmin, async (req, res) => {
       temporaryPassword: randomPassword
     };
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "owner_add_user",
       entityType: "user",
       entityId: newUser.id,
@@ -374,8 +367,8 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
         // Generate name from email
         const name = trimmedEmail.split('@')[0] + '_' + Math.random().toString(36).slice(-4);
 
-        // Generate random password
-        const randomPassword = Math.random().toString(36).slice(-12);
+        // Generate cryptographically secure random password
+        const randomPassword = generateSecurePassword(16);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
         const [newUser] = await db.insert(users).values({
@@ -411,7 +404,7 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
       failedEmails: errors
     };
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "owner_bulk_import_users",
       entityType: "user",
       newValue: { importedCount: importedUsers.length, errorCount: errors.length },
@@ -491,7 +484,7 @@ router.post("/invitations", requireOwner, async (req, res) => {
       })
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "create_invitation",
       entityType: "organization_invitation",
       entityId: invitation.id,
@@ -528,7 +521,7 @@ router.post("/invitations/:id/cancel", requireOwner, async (req, res) => {
       .where(eq(organizationInvitations.id, id))
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "cancel_invitation",
       entityType: "organization_invitation",
       entityId: id,
@@ -624,7 +617,7 @@ router.post("/organizations", requireOwner, async (req, res) => {
       })
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "create_organization",
       entityType: "organization",
       entityId: organization.id,
@@ -685,7 +678,7 @@ router.put("/organizations/:id", requireOwner, async (req, res) => {
       .where(eq(organizations.id, id))
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "update_organization",
       entityType: "organization",
       entityId: id,
@@ -723,7 +716,7 @@ router.delete("/organizations/:id", requireOwner, async (req, res) => {
       .where(eq(organizations.id, id))
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "archive_organization",
       entityType: "organization",
       entityId: id,
@@ -833,7 +826,7 @@ router.post("/organizations/:id/invitations/bulk", requireOwner, async (req, res
       }
     }
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "bulk_invite_organization_members",
       entityType: "organization",
       entityId: organizationId,
@@ -1227,8 +1220,7 @@ router.put("/settings/:key", requireAdmin, async (req, res) => {
     }
 
     // Log the change
-    await db.insert(auditLogs).values({
-      userId,
+    recordAuditLog(req, {
       action: existing ? "update_setting" : "create_setting",
       entityType: "admin_setting",
       entityId: key,
@@ -1264,6 +1256,13 @@ router.post("/settings/bulk", requireAdmin, async (req, res) => {
         await db.insert(adminSettings).values({ key, value, updatedBy: userId });
       }
     }
+
+    // Log the bulk update
+    recordAuditLog(req, {
+      action: "bulk_update_settings",
+      entityType: "admin_setting",
+      newValue: settings,
+    });
 
     res.json({ success: true });
   } catch (error) {
@@ -1326,11 +1325,10 @@ router.post("/subscription-plans", requireAdmin, async (req, res) => {
     }).returning();
 
     // Log the creation
-    await db.insert(auditLogs).values({
-      userId,
+    recordAuditLog(req, {
       action: "create_subscription_plan",
       entityType: "subscription_plan",
-      entityId: plan.id.toString(),
+      entityId: plan.id,
       newValue: plan,
     });
 
@@ -1380,8 +1378,7 @@ router.put("/subscription-plans/:id", requireAdmin, async (req, res) => {
       .returning();
 
     // Log the update
-    await db.insert(auditLogs).values({
-      userId,
+    recordAuditLog(req, {
       action: "update_subscription_plan",
       entityType: "subscription_plan",
       entityId: id,
@@ -1424,8 +1421,7 @@ router.delete("/subscription-plans/:id", requireAdmin, async (req, res) => {
     await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, parseInt(id)));
 
     // Log the deletion
-    await db.insert(auditLogs).values({
-      userId,
+    recordAuditLog(req, {
       action: "delete_subscription_plan",
       entityType: "subscription_plan",
       entityId: id,

@@ -1,0 +1,81 @@
+  const chatMutation = useMutation({
+    mutationFn: async ({ message, history }: { message: string; history: Message[] }) => {
+      if (!chapterId) {
+        throw new Error('Chapter context not ready yet. Please wait a moment.');
+      }
+
+      // Add a placeholder assistant message that we will update
+      const assistantId = crypto.randomUUID();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+        },
+      ]);
+
+      const response = await fetch(`/api/chapters/${chapterId}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': (await fetchCsrfToken()) || "",
+        },
+        body: JSON.stringify({
+          message,
+          stream: true,
+          chapterContext: {
+            title: chapterTitle,
+            subject: chapterSubject,
+            keyConcepts: keyConcepts.slice(0, 10),
+            formulas: formulas.slice(0, 10),
+          },
+          history: history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Response body is not readable');
+
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                fullContent += parsed.content;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId ? { ...m, content: fullContent } : m
+                  )
+                );
+              } else if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE chunk:', e);
+            }
+          }
+        }
+      }
+
+      return { answer: fullContent };
+    },

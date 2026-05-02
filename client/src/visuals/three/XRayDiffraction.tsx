@@ -280,7 +280,7 @@ export default function XRayDiffraction() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted rounded-lg text-sm">
           <div>
             <p className="font-semibold text-blue-600">nλ</p>
             <p className="font-mono">{(n * lambda).toFixed(2)} Å</p>

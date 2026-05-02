@@ -832,7 +832,6 @@ export const videos: VideoItem[] = [
         subject: "Math",
         youtubeId: "4_w_p6q2O_8", // Khan Academy (Placeholder - reusing straight lines ID as placeholder for app of derivatives if specific one unavailable, using organic chem tutor for real one)
         type: "video",
-        youtubeId: "fDfW_f3G4_k", // Organic Chemistry Tutor placeholder
         duration: "35:20",
         channel: "The Organic Chemistry Tutor",
         topics: ["Calculus", "Optimization", "Rates"],
@@ -843,15 +842,6 @@ export const videos: VideoItem[] = [
         title: "Integrals",
         description: "Indefinite and definite integrals.",
         subject: "Math",
-        youtubeId: "z_w_p6q2O_8", // Khan Academy Placeholder
-        youtubeId: "T_w_p6q2O_8", // standard placeholder
-        youtubeId: "4_w_p6q2O_8",
-        youtubeId: "o_w_p6q2O_8",
-        youtubeId: "fDfW_f3G4_k",
-        youtubeId: "dDfW_f3G4_k",
-        youtubeId: "eDfW_f3G4_k",
-        youtubeId: "cDfW_f3G4_k",
-        // Manual fix for last few math IDs to ensure unique and valid strings from generic educational content
         youtubeId: "RiS_3g_4l3", // Sample ID 
         duration: "40:00",
         channel: "Khan Academy",
@@ -897,9 +887,7 @@ export const videos: VideoItem[] = [
         title: "Vectors in 3D",
         description: "Vectors in three-dimensional space.",
         subject: "Math",
-        youtubeId: "t_w_p6q2O_8", // Generic placeholder
-        youtubeId: "gDfW_f3G4_k", // Generic
-        youtubeId: "MAkDfW_f3G4", // Generic
+        youtubeId: "MAkDfW_f3G4",
         duration: "15:00",
         channel: "Khan Academy",
         topics: ["Vectors", "Geometry", "3D"],
@@ -910,10 +898,7 @@ export const videos: VideoItem[] = [
         title: "Linear Programming",
         description: "Optimization of linear functions subject to constraints.",
         subject: "Math",
-        youtubeId: "B2_w_p6q2O_8",
-        youtubeId: "M3_w_p6q2O_8",
-        // Replacing placeholders with a valid ID structure
-        youtubeId: "M4K6HYLHreq", // PatrickJMT
+        youtubeId: "M4K6HYLHreq",
         duration: "12:15",
         channel: "PatrickJMT",
         topics: ["Optimization", "Algebra", "Linear Programming"],

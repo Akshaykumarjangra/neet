@@ -31,7 +31,7 @@ export class LocalObjectStorage implements IObjectStorage {
 
     async uploadFile(file: UploadedFile, folder: string = "misc"): Promise<string> {
         const timestamp = Date.now();
-        const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const sanitizedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9.-]/g, "_");
 
         // For local storage, we keep it simple in the uploads folder
         const fileName = `${timestamp}-${sanitizedName}`;
@@ -49,7 +49,13 @@ export class LocalObjectStorage implements IObjectStorage {
 
     async deleteFile(key: string): Promise<boolean> {
         try {
-            const targetPath = path.join(this.uploadDir, key);
+            // Robust path traversal protection: resolve the full path and ensure it's within uploadDir
+            const targetPath = path.resolve(this.uploadDir, key);
+            if (!targetPath.startsWith(this.uploadDir)) {
+                console.warn(`[LocalStorage] Blocked potential path traversal attempt: ${key}`);
+                return false;
+            }
+
             if (fs.existsSync(targetPath)) {
                 await unlink(targetPath);
                 return true;

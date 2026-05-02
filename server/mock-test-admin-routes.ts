@@ -7,35 +7,13 @@ import {
   auditLogs,
 } from "@shared/schema";
 import { and, eq, inArray } from "drizzle-orm";
-import { requireAuthWithPasswordCheck, requireOwner, getCurrentUser } from "./auth";
+import { requireAuthWithPasswordCheck, requireAdmin, getCurrentUser } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 
 const router = Router();
 
 router.use(requireAuthWithPasswordCheck);
-router.use(requireOwner);
-
-async function recordAuditLog(req: any, details: {
-  action: string;
-  entityType: string;
-  entityId?: string | number | null;
-  oldValue?: any;
-  newValue?: any;
-}) {
-  try {
-    await db.insert(auditLogs).values({
-      userId: req.session?.userId || null,
-      action: details.action,
-      entityType: details.entityType,
-      entityId: details.entityId ? String(details.entityId) : null,
-      oldValue: details.oldValue ?? null,
-      newValue: details.newValue ?? null,
-      ipAddress: (req.ip || "").slice(0, 45),
-      userAgent: req.get?.("user-agent"),
-    });
-  } catch (error) {
-    console.error("Failed to record audit log:", error);
-  }
-}
+router.use(requireAdmin);
 
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
 
@@ -377,7 +355,7 @@ router.post("/questions/bulk", async (req, res) => {
       inserted.push({ question, options });
     }
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "mock_exam_question_bulk_import",
       entityType: "mock_exam_question",
       newValue: {
@@ -446,7 +424,7 @@ router.post("/questions", async (req, res) => {
       )
       .returning();
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "mock_exam_question_created",
       entityType: "mock_exam_question",
       entityId: question.id,
@@ -534,7 +512,7 @@ router.put("/questions/:id", async (req, res) => {
       .from(mockExamOptions)
       .where(eq(mockExamOptions.questionId, questionId));
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "mock_exam_question_updated",
       entityType: "mock_exam_question",
       entityId: questionId,
@@ -571,7 +549,7 @@ router.delete("/questions/:id", async (req, res) => {
       await tx.delete(mockExamQuestions).where(eq(mockExamQuestions.id, questionId));
     });
 
-    await recordAuditLog(req, {
+    recordAuditLog(req, {
       action: "mock_exam_question_deleted",
       entityType: "mock_exam_question",
       entityId: questionId,

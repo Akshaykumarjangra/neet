@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
@@ -10,21 +9,16 @@ import {
   mentorReviews,
   contentAssets,
   mentorPayouts,
+  chatThreads,
+  chatMessages,
 } from "@shared/schema";
 import { eq, and, desc, sql, inArray, gte, lte, sum } from "drizzle-orm";
-import { requireAuthWithPasswordCheck, requireOwner, requireActiveSubscription } from "./auth";
+import { requireAuthWithPasswordCheck, requireAdmin, requireActiveSubscription, requireAuth } from "./auth";
+import { recordAuditLog } from "./lib/audit";
 import { getCompletionDeltas, hasOverlappingBooking, isWithinAvailability, validateBookingWindow } from "./mentor-booking-utils";
+import { fire } from "./services/lifecycle";
 
 const router = Router();
-
-// ============ ROLE-BASED MIDDLEWARE ============
-
-function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  next();
-}
 
 const RECOMMENDATION_CACHE_TTL_MS = 5 * 60 * 1000;
 let mentorRecommendationCache: { expiresAt: number; payload: any } | null = null;
@@ -59,6 +53,20 @@ const logBookingNotification = (
   details: Record<string, any>
 ) => {
   console.log(`[Booking Notification] ${action.toUpperCase()} -> ${direction}`, details);
+  
+  // Fire-and-forget lifecycle notification
+  const recipientId = direction === "mentor" ? details.mentorUserId : details.studentId;
+  if (!recipientId) return;
+
+  const event = `booking.${action}` as any;
+  const startAt = details.startAt ? new Date(details.startAt) : new Date();
+  
+  fire(event, recipientId, {
+    student_name: details.studentName || "Student",
+    mentor_name: details.mentorName || "Mentor",
+    date: startAt.toLocaleDateString(),
+    time: startAt.toLocaleTimeString(),
+  }).catch(err => console.error("[Booking Notification] Fire error:", err));
 };
 
 function requireRole(...roles: Array<"student" | "mentor" | "admin">) {
@@ -480,10 +488,26 @@ router.post("/bookings/:id/cancel", requireAuth, async (req: Request, res: Respo
       .where(eq(mentorBookings.id, bookingId))
       .returning();
 
+    const [mentorUser] = await db
+      .select({ id: users.id, name: users.name })
+      .from(mentors)
+      .innerJoin(users, eq(mentors.userId, users.id))
+      .where(eq(mentors.id, booking.mentorId))
+      .limit(1);
+
+    const [studentUser] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, booking.studentId))
+      .limit(1);
+
     logBookingNotification("mentor", "cancelled", {
       bookingId,
       studentId: booking.studentId,
+      studentName: studentUser?.name,
       mentorId: booking.mentorId,
+      mentorUserId: mentorUser?.id,
+      mentorName: mentorUser?.name,
       startAt: booking.startAt,
     });
 
@@ -636,6 +660,13 @@ router.post("/mentors/register", requireAuth, async (req: Request, res: Response
 
     clearMentorRecommendationCache();
 
+    await recordAuditLog(req, {
+      action: "register_mentor",
+      entityType: "mentor",
+      entityId: newMentor.id,
+      newValue: newMentor,
+    });
+
     return res.status(201).json({ message: "Mentor registration submitted", mentor: newMentor });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -677,13 +708,9 @@ router.get("/mentors/status", requireAuth, async (req: Request, res: Response) =
     }
 
     if (mentor.verificationStatus === "approved") {
-      const availability = await db
-        .select()
-        .from(mentorAvailability)
-        .where(eq(mentorAvailability.mentorId, mentor.id));
-
-      const recentBookings = await db
-        .select({
+      const [availability, recentBookings, reviews] = await Promise.all([
+        db.select().from(mentorAvailability).where(eq(mentorAvailability.mentorId, mentor.id)),
+        db.select({
           id: mentorBookings.id,
           startAt: mentorBookings.startAt,
           endAt: mentorBookings.endAt,
@@ -695,7 +722,31 @@ router.get("/mentors/status", requireAuth, async (req: Request, res: Response) =
         .leftJoin(users, eq(mentorBookings.studentId, users.id))
         .where(eq(mentorBookings.mentorId, mentor.id))
         .orderBy(desc(mentorBookings.createdAt))
-        .limit(10);
+        .limit(10),
+        db.select({
+          id: mentorReviews.id,
+          rating: mentorReviews.rating,
+          comment: mentorReviews.comment,
+          isAnonymous: mentorReviews.isAnonymous,
+          createdAt: mentorReviews.createdAt,
+          studentName: users.name,
+          studentAvatar: users.avatarUrl,
+        })
+        .from(mentorReviews)
+        .leftJoin(users, eq(mentorReviews.studentId, users.id))
+        .where(eq(mentorReviews.mentorId, mentor.id))
+        .orderBy(desc(mentorReviews.createdAt))
+        .limit(20)
+      ]);
+
+      const sanitizedReviews = reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        createdAt: r.createdAt,
+        studentName: r.isAnonymous ? "Anonymous" : r.studentName,
+        studentAvatar: r.isAnonymous ? null : r.studentAvatar,
+      }));
 
       return res.json({
         status: "approved",
@@ -703,6 +754,7 @@ router.get("/mentors/status", requireAuth, async (req: Request, res: Response) =
           ...mentor,
           availability,
           recentBookings,
+          reviews: sanitizedReviews,
         },
       });
     }
@@ -796,6 +848,13 @@ router.put("/mentors/my-profile", requireAuth, requireRole("mentor"), async (req
 
     clearMentorRecommendationCache();
 
+    await recordAuditLog(req, {
+      action: "update_mentor_profile",
+      entityType: "mentor",
+      entityId: updatedMentor.id,
+      newValue: updateData,
+    });
+
     res.json(updatedMentor);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -832,6 +891,13 @@ router.post("/mentors/availability", requireAuth, requireRole("mentor"), async (
         specificDate: validatedData.specificDate ? new Date(validatedData.specificDate) : null,
       })
       .returning();
+
+    await recordAuditLog(req, {
+      action: "create_mentor_availability",
+      entityType: "mentor_availability",
+      entityId: newAvailability.id,
+      newValue: newAvailability,
+    });
 
     res.status(201).json(newAvailability);
   } catch (error: any) {
@@ -870,6 +936,15 @@ router.delete("/mentors/availability/:id", requireAuth, requireRole("mentor"), a
 
     if (!deleted) {
       return res.status(404).json({ error: "Availability slot not found" });
+    }
+
+    if (deleted) {
+      await recordAuditLog(req, {
+        action: "delete_mentor_availability",
+        entityType: "mentor_availability",
+        entityId: deleted.id,
+        oldValue: deleted,
+      });
     }
 
     res.json({ message: "Availability slot deleted successfully" });
@@ -976,11 +1051,19 @@ router.post("/bookings", requireAuth, requireActiveSubscription(), async (req: R
       .where(eq(mentors.id, validatedData.mentorId))
       .limit(1);
 
+    const [studentUser] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
     logBookingNotification("mentor", "requested", {
       bookingId: newBooking.id,
       mentorId: validatedData.mentorId,
-      mentorEmail: mentorUser?.email,
+      mentorUserId: mentorUser?.id,
+      mentorName: mentorUser?.name,
       studentId: userId,
+      studentName: studentUser?.name,
       startAt: validatedData.startAt,
     });
 
@@ -1140,10 +1223,26 @@ router.put("/bookings/:id/status", requireAuth, async (req: Request, res: Respon
       .where(eq(mentorBookings.id, bookingId))
       .returning();
 
+    const [mentorUser] = await db
+      .select({ id: users.id, name: users.name })
+      .from(mentors)
+      .innerJoin(users, eq(mentors.userId, users.id))
+      .where(eq(mentors.id, mentor.id))
+      .limit(1);
+
+    const [studentUser] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, booking.studentId))
+      .limit(1);
+
     logBookingNotification("student", validatedData.status, {
       bookingId,
       studentId: booking.studentId,
+      studentName: studentUser?.name,
       mentorId: mentor.id,
+      mentorUserId: mentorUser?.id,
+      mentorName: mentorUser?.name,
       startAt: booking.startAt,
       meetingLink: validatedData.meetingLink,
     });
@@ -1236,10 +1335,18 @@ router.put("/bookings/:id/complete", requireAuth, async (req: Request, res: Resp
       }
     });
 
+    const [mentorUser] = await db
+      .select({ name: users.name })
+      .from(mentors)
+      .innerJoin(users, eq(mentors.userId, users.id))
+      .where(eq(mentors.id, mentor.id))
+      .limit(1);
+
     logBookingNotification("student", "completed", {
       bookingId,
       studentId: booking.studentId,
       mentorId: mentor.id,
+      mentorName: mentorUser?.name,
       startAt: booking.startAt,
       paymentStatus: nextPaymentStatus,
     });
@@ -1280,6 +1387,10 @@ router.post("/bookings/:id/review", requireAuth, async (req: Request, res: Respo
 
     if (booking.status !== "completed" && booking.status !== "confirmed") {
       return res.status(400).json({ error: "Can only review completed or confirmed sessions" });
+    }
+
+    if (new Date(booking.endAt) > new Date()) {
+      return res.status(400).json({ error: "Cannot review a session that hasn't ended yet" });
     }
 
     const [existingReview] = await db
@@ -1333,7 +1444,7 @@ router.post("/bookings/:id/review", requireAuth, async (req: Request, res: Respo
 
 // ============ ADMIN ENDPOINTS ============
 
-router.get("/admin/mentors/pending", requireOwner, async (req: Request, res: Response) => {
+router.get("/admin/mentors/pending", requireAdmin, async (req: Request, res: Response) => {
   try {
     const pendingMentors = await db
       .select({
@@ -1364,7 +1475,7 @@ router.get("/admin/mentors/pending", requireOwner, async (req: Request, res: Res
   }
 });
 
-router.put("/admin/mentors/:id/verify", requireOwner, async (req: Request, res: Response) => {
+router.put("/admin/mentors/:id/verify", requireAdmin, async (req: Request, res: Response) => {
   try {
     const mentorId = parseInt(req.params.id);
     const validatedData = verifyMentorSchema.parse(req.body);
@@ -1401,6 +1512,14 @@ router.put("/admin/mentors/:id/verify", requireOwner, async (req: Request, res: 
 
     clearMentorRecommendationCache();
 
+    await recordAuditLog(req, {
+      action: "verify_mentor",
+      entityType: "mentor",
+      entityId: mentorId,
+      oldValue: { status: mentor.verificationStatus },
+      newValue: { status: validatedData.status, rejectionReason: validatedData.rejectionReason },
+    });
+
     res.json({
       message: `Mentor application ${validatedData.status}`,
       mentor: updatedMentor,
@@ -1410,6 +1529,102 @@ router.put("/admin/mentors/:id/verify", requireOwner, async (req: Request, res: 
       return res.status(400).json({ error: error.errors });
     }
     console.error("Verify mentor error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put("/admin/mentors/payouts/:id", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const payoutId = parseInt(req.params.id);
+    const { status, failureReason } = req.body;
+
+    if (!["paid", "failed"].includes(status)) {
+      return res.status(400).json({ error: "Status must be 'paid' or 'failed'" });
+    }
+
+    const [payout] = await db
+      .select()
+      .from(mentorPayouts)
+      .where(eq(mentorPayouts.id, payoutId))
+      .limit(1);
+
+    if (!payout) {
+      return res.status(404).json({ error: "Payout not found" });
+    }
+
+    if (payout.status !== "pending") {
+      return res.status(400).json({ error: `Cannot process a payout that is already ${payout.status}` });
+    }
+
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    if (status === "paid") {
+      updateData.paidAt = new Date();
+    } else if (status === "failed") {
+      updateData.failureReason = failureReason || "Failed by admin";
+    }
+
+    const [updatedPayout] = await db
+      .update(mentorPayouts)
+      .set(updateData)
+      .where(eq(mentorPayouts.id, payoutId))
+      .returning();
+
+    await recordAuditLog(req, {
+      action: "process_mentor_payout",
+      entityType: "mentor_payout",
+      entityId: payoutId,
+      oldValue: { status: payout.status },
+      newValue: { status: updatedPayout.status, failureReason: updatedPayout.failureReason },
+    });
+
+    res.json({ message: `Payout marked as ${status}`, payout: updatedPayout });
+  } catch (error: any) {
+    console.error("Process payout error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/mentors/my-profile/documents", requireAuth, requireRole("mentor"), async (req: Request, res: Response) => {
+  try {
+    const userId = req.session.userId!;
+    const { documentUrls } = req.body;
+
+    if (!Array.isArray(documentUrls) || documentUrls.length === 0) {
+      return res.status(400).json({ error: "documentUrls array is required" });
+    }
+
+    const [mentor] = await db
+      .select({ id: mentors.id, verificationDocuments: mentors.verificationDocuments })
+      .from(mentors)
+      .where(eq(mentors.userId, userId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor profile not found" });
+    }
+
+    const existingDocs = mentor.verificationDocuments || [];
+    const updatedDocs = [...new Set([...existingDocs, ...documentUrls])]; // Avoid duplicates
+
+    const [updatedMentor] = await db
+      .update(mentors)
+      .set({ 
+        verificationDocuments: updatedDocs,
+        updatedAt: new Date()
+      })
+      .where(eq(mentors.id, mentor.id))
+      .returning();
+
+    res.json({ 
+      message: "Documents uploaded successfully", 
+      verificationDocuments: updatedMentor.verificationDocuments 
+    });
+  } catch (error: any) {
+    console.error("Mentor documents update error:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1494,6 +1709,13 @@ router.post("/mentors/my-content", requireAuthWithPasswordCheck, requireRole("me
         chapterContentId: validatedData.chapterContentId || null,
       })
       .returning();
+
+    await recordAuditLog(req, {
+      action: "create_mentor_content",
+      entityType: "content_asset",
+      entityId: newContent.id,
+      newValue: newContent,
+    });
 
     res.status(201).json(newContent);
   } catch (error: any) {
@@ -1813,6 +2035,82 @@ router.post("/mentors/my-payouts/request", requireAuthWithPasswordCheck, require
       return res.status(400).json({ error: error.errors });
     }
     console.error("Request payout error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/mentors/:id/message - Send a message to a mentor
+router.post("/:id/message", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const studentId = req.session.userId!;
+    const mentorId = parseInt(req.params.id);
+    const { content, subject } = z.object({
+      content: z.string().min(1).max(2000),
+      subject: z.string().min(1).max(200).optional().default("General Inquiry"),
+    }).parse(req.body);
+
+    // 1. Check if mentor exists
+    const [mentor] = await db
+      .select()
+      .from(mentors)
+      .where(eq(mentors.id, mentorId))
+      .limit(1);
+
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor not found" });
+    }
+
+    // 2. Find or create thread
+    let [thread] = await db
+      .select()
+      .from(chatThreads)
+      .where(
+        and(
+          eq(chatThreads.studentId, studentId),
+          eq(chatThreads.mentorId, mentorId),
+          eq(chatThreads.isResolved, false)
+        )
+      )
+      .limit(1);
+
+    if (!thread) {
+      [thread] = await db
+        .insert(chatThreads)
+        .values({
+          studentId,
+          mentorId,
+          subject,
+          isResolved: false,
+        })
+        .returning();
+    }
+
+    // 3. Insert message
+    const [newMessage] = await db
+      .insert(chatMessages)
+      .values({
+        threadId: thread.id,
+        senderId: studentId,
+        content,
+      })
+      .returning();
+
+    // 4. Update thread lastMessageAt
+    await db
+      .update(chatThreads)
+      .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+      .where(eq(chatThreads.id, thread.id));
+
+    res.status(201).json({
+      message: "Message sent successfully",
+      chatMessage: newMessage,
+      threadId: thread.id,
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error("Mentor message error:", error);
     res.status(500).json({ error: error.message });
   }
 });
