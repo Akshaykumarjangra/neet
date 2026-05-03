@@ -140,10 +140,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV || 'development'
       });
+    } catch (error: any) {
+      res.status(503).json({
+        status: "unhealthy",
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
-  // Emergency DB Fix endpoint
+  // Emergency DB Fix endpoint — applies missing migrations
   app.get("/api/db-fix-emergency", async (req, res) => {
     try {
       await db.execute(sql`
@@ -151,11 +157,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ADD COLUMN IF NOT EXISTS "failed_login_attempts" integer NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS "locked_until" timestamp;
       `);
-      res.send("DB Fixed successfully");
+      res.json({ message: "DB schema fixed successfully" });
     } catch (err: any) {
-      res.status(500).send("Error fixing DB: " + err.message);
+      res.status(500).json({ error: "DB fix failed: " + err.message });
     }
-  });
   });
 
   // Authentication routes
