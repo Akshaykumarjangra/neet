@@ -171,7 +171,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
       `);
 
-      res.json({ message: "DB schema fixed successfully" });
+      const sessionExists = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'session'
+        );
+      `);
+      
+      const usersColumns = await db.execute(sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'users';
+      `);
+
+      res.json({ 
+        message: "DB schema fix attempted", 
+        sessionExists: sessionExists.rows[0],
+        usersColumns: usersColumns.rows 
+      });
     } catch (err: any) {
       res.status(500).json({ error: "DB fix failed: " + err.message });
     }
