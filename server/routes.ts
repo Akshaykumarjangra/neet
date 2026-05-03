@@ -157,6 +157,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ADD COLUMN IF NOT EXISTS "failed_login_attempts" integer NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS "locked_until" timestamp;
       `);
+      
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "session" (
+          "sid" varchar NOT NULL COLLATE "default",
+          "sess" json NOT NULL,
+          "expire" timestamp(6) NOT NULL,
+          CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+        ) WITH (OIDS=FALSE);
+      `);
+      
+      await db.execute(sql`
+        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+      `);
+
       res.json({ message: "DB schema fixed successfully" });
     } catch (err: any) {
       res.status(500).json({ error: "DB fix failed: " + err.message });
