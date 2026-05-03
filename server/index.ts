@@ -106,6 +106,12 @@ async function ensureOwnerAccount() {
     const server = await registerRoutes(app);
     console.log("[DEBUG] Routes registered");
 
+    if (process.env.NODE_ENV !== "production") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
     const port = parseInt(process.env.PORT || '5001', 10);
     server.listen(port, "0.0.0.0", () => {
       console.log(`[DEBUG] Full app listening on port ${port}`);
