@@ -248,8 +248,13 @@ router.post("/login", async (req: Request, res: Response) => {
     // Create session (regenerate to prevent fixation)
     req.session.regenerate(async (err) => {
       if (err) {
-        console.error("Session regeneration error:", err);
-        return res.status(500).json({ error: "Failed to create session" });
+        console.error("Session regeneration error details:", {
+          message: err.message,
+          stack: err.stack,
+          name: err.name,
+          ...err
+        });
+        return res.status(500).json({ error: "Failed to create session", details: err.message });
       }
 
       req.session.userId = user.id;
