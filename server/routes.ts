@@ -159,12 +159,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       
       await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS "session" (
-          "sid" varchar NOT NULL COLLATE "default",
-          "sess" json NOT NULL,
-          "expire" timestamp(6) NOT NULL,
-          CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
-        ) WITH (OIDS=FALSE);
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'session') THEN
+            CREATE TABLE "session" (
+              "sid" varchar NOT NULL COLLATE "default" PRIMARY KEY,
+              "sess" json NOT NULL,
+              "expire" timestamp(6) NOT NULL
+            );
+          END IF;
+        END
+        $$;
       `);
       
       await db.execute(sql`
