@@ -35,9 +35,6 @@ const poolConfig = {
 
   allowExitOnIdle: !isProduction,
 };
-
-console.log(`[Database] Initializing pool for host: ${dbHost}`);
-
 export const pool = new Pool(poolConfig);
 
 // Handle pool errors gracefully
