@@ -158,23 +158,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ADD COLUMN IF NOT EXISTS "locked_until" timestamp;
       `);
       
-      await db.execute(sql`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'session') THEN
-            CREATE TABLE "session" (
-              "sid" varchar NOT NULL COLLATE "default" PRIMARY KEY,
-              "sess" json NOT NULL,
-              "expire" timestamp(6) NOT NULL
-            );
-          END IF;
-        END
-        $$;
-      `);
+      // Session table — safe idempotent creation
+      try {
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "session" (
+            "sid" varchar NOT NULL COLLATE "default",
+            "sess" json NOT NULL,
+            "expire" timestamp(6) NOT NULL
+          )
+        `);
+      } catch (e: any) { /* already exists */ }
       
-      await db.execute(sql`
-        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
-      `);
+      try {
+        await db.execute(sql`ALTER TABLE "session" ADD PRIMARY KEY ("sid")`);
+      } catch (e: any) { /* PK already exists */ }
+      
+      try {
+        await db.execute(sql`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")`);
+      } catch (e: any) { /* already exists */ }
 
       const sessionExists = await db.execute(sql`
         SELECT EXISTS (

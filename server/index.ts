@@ -59,24 +59,27 @@ async function ensureOwnerAccount() {
   try {
     const app = express();
 
-    // Ensure session table exists — use DO block to avoid constraint-already-exists errors
+    // Ensure session table exists — two separate safe operations
     try {
       await pool.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'session') THEN
-            CREATE TABLE "session" (
-              "sid" varchar NOT NULL COLLATE "default" PRIMARY KEY,
-              "sess" json NOT NULL,
-              "expire" timestamp(6) NOT NULL
-            );
-          END IF;
-        END
-        $$;
-        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+        CREATE TABLE IF NOT EXISTS "session" (
+          "sid" varchar NOT NULL COLLATE "default",
+          "sess" json NOT NULL,
+          "expire" timestamp(6) NOT NULL
+        )
       `);
-    } catch (err) {
-      console.error("[Setup] Error ensuring session table:", err);
+    } catch (e: any) {
+      // Table already exists, ignore
+    }
+    try {
+      await pool.query(`ALTER TABLE "session" ADD PRIMARY KEY ("sid")`);
+    } catch (e: any) {
+      // PK already exists, ignore
+    }
+    try {
+      await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")`);
+    } catch (e: any) {
+      // Index already exists, ignore
     }
 
     const sessionStore = new (ConnectPgSimple(session))({
