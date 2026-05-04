@@ -71,6 +71,7 @@ export default function ChapterViewer() {
   const { toast } = useToast();
   // Access Control check — progressive disclosure allows previewing
   const { user, isLoading: authLoading } = useAuth();
+  const { subject, classLevel, chapterNumber } = params;
   const isPremiumChapter = chapterNumber && parseInt(chapterNumber) > 3;
 
   // We will let the API return the preview and we'll check if the chapter has `isPremiumLocked` set.
@@ -79,7 +80,6 @@ export default function ChapterViewer() {
   const sessionIdRef = useRef<number | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { subject, classLevel, chapterNumber } = params;
 
   const [activeTab, setActiveTab] = useState("read");
   const [isBookmarked, setIsBookmarked] = useState(false);
