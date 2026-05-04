@@ -12,6 +12,17 @@ interface State {
     error: Error | null;
 }
 
+function isChunkLoadError(error: Error): boolean {
+    const msg = error.message || "";
+    return (
+        msg.includes("is not defined") ||
+        msg.includes("Failed to fetch dynamically imported module") ||
+        msg.includes("Loading chunk") ||
+        msg.includes("Loading CSS chunk") ||
+        error.name === "ChunkLoadError"
+    );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
@@ -24,6 +35,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("Uncaught error:", error, errorInfo);
+        if (isChunkLoadError(error)) {
+            window.location.reload();
+            return;
+        }
+    }
+
+    public componentDidUpdate(prevProps: Props) {
+        if (this.state.hasError && prevProps.children !== this.props.children) {
+            this.setState({ hasError: false, error: null });
+        }
     }
 
     public render() {

@@ -232,9 +232,6 @@ function Router() {
               <Signup />
             </GuestRoute>
           </Route>
-          <Route path="/">
-            <Home />
-          </Route>
           <Route path="/simulations" component={Simulations} />
           <Route path="/videos" component={Videos} />
           <Route path="/offline" component={Offline} />
@@ -535,6 +532,9 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/help" component={Help} />
           <Route path="/parent/progress/:token" component={ParentPortal} />
+          <Route path="/">
+            <Home />
+          </Route>
           <Route component={NotFound} />
         </Switch >
         <Footer />
