@@ -1,6 +1,6 @@
 "use strict";
 
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Header } from "@/components/Header";
