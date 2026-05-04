@@ -231,7 +231,7 @@ export default function Library() {
         title="NEET Study Material & NCERT Chapters | ZERO AI NEET 2026"
         description="Access 98 comprehensive NCERT chapters for NEET preparation. Track your progress, bookmark important topics, and take notes on Biology, Physics, and Chemistry."
         keywords={["NEET library", "NCERT chapters", "NEET study material", "biology neet notes", "physics neet chapters"]}
-        url="https://neet.zeropage.in/library"
+        url="https://neet.zeroai.org.in/library"
       />
       <div className="container mx-auto p-6 space-y-6">
         {/* Header with gradient */}

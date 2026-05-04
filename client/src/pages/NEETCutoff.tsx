@@ -28,7 +28,7 @@ export default function NEETCutoff() {
         title="NEET 2026 Cutoff Analysis & Trends | ZERO AI NEET"
         description="Comprehensive analysis of NEET cutoff trends (2023-2025). Predict your chances for AIIMS and top medical colleges with our AI-powered rank predictor."
         keywords="NEET cutoff 2026, NEET 2024 cutoff, AIIMS Delhi cutoff, NEET qualifying marks, medical college ranks"
-        url="https://neet.zeropage.in/neet-cutoff"
+        url="https://neet.zeroai.org.in/neet-cutoff"
       />
       <Header />
       

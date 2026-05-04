@@ -7,10 +7,10 @@ export default function BlogArticle() {
   const articleSchema = getArticleSchema({
     title: "The End of Rote Learning: How AI is Rewiring NEET Preparation",
     description: "Discover how AI, predictive scoring, and hyper-personalized study pathways are transforming NEET preparation for medical aspirants.",
-    url: "https://neet.zeropage.in/blog/ai-rewiring-neet-prep",
+    url: "https://neet.zeroai.org.in/blog/ai-rewiring-neet-prep",
     datePublished: "2026-05-01",
     author: "ZERO AI Editorial",
-    image: "https://neet.zeropage.in/neet-zero-ai-header.png",
+    image: "https://neet.zeroai.org.in/neet-zero-ai-header.png",
   });
 
   return (

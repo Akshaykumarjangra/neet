@@ -51,7 +51,7 @@ async function sendPasswordChangeEmail(userEmail: string, userName: string) {
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"NEET Prep" <noreply@neetprep.com>',
+      from: process.env.SMTP_FROM || '"ZERO AI NEET" <noreply@zeroai.org.in>',
       to: userEmail,
       subject: "Security Alert: Password Changed",
       html: `

@@ -16,7 +16,7 @@ export default function About() {
         title="About ZeroPage | AI-Powered NEET Preparation Platform"
         description="Learn about ZeroPage's mission to revolutionize NEET preparation with AI tutoring, interactive simulations, and personalized learning paths."
         keywords={["about zeropage", "neet preparation platform", "ai neet coaching"]}
-        url="https://neet.zeropage.in/about"
+        url="https://neet.zeroai.org.in/about"
       />
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}

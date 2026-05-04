@@ -12,7 +12,7 @@ export default function NEETEligibilityCriteria() {
         title="NEET 2026 Eligibility Criteria | Age Limit & Qualification"
         description="Check the official NEET 2026 eligibility criteria, age limit, minimum marks required in 12th, and number of attempts allowed."
         keywords="NEET eligibility 2026, NEET age limit, NEET qualification, NTA NEET rules"
-        url="https://neet.zeropage.in/neet-eligibility-criteria"
+        url="https://neet.zeroai.org.in/neet-eligibility-criteria"
       />
       <Header />
       

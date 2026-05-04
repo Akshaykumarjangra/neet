@@ -12,7 +12,7 @@ export default function NEETCounselling() {
         title="NEET 2026 Counselling Process | MCC & State Quota"
         description="Understand the complete NEET counselling process. Learn about AIQ 15%, State Quota 85%, document verification, and seat allotment."
         keywords="NEET counselling, MCC counselling, NEET AIQ quota, NEET state quota counselling"
-        url="https://neet.zeropage.in/neet-counselling"
+        url="https://neet.zeroai.org.in/neet-counselling"
       />
       <Header />
       

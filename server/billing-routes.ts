@@ -43,7 +43,7 @@ let stripeClient: Stripe | null = null;
 const APP_BASE_URL =
   process.env.APP_BASE_URL ||
   process.env.CLIENT_BASE_URL ||
-  "http://localhost:5173";
+  "https://neet.zeroai.org.in";
 
 const normalizeValue = (value: any): string | undefined => {
   if (value === null || value === undefined) {

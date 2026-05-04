@@ -11,7 +11,7 @@ const router = Router();
 
 // GET /robots.txt — Dynamic robots.txt
 router.get('/robots.txt', (_req, res) => {
-  const baseUrl = process.env.BASE_URL || "https://neet.zeropage.in";
+  const baseUrl = process.env.BASE_URL || "https://neet.zeroai.org.in";
   res.type('text/plain').send(`User-agent: *
 Allow: /
 Allow: /practice/
@@ -32,7 +32,7 @@ Sitemap: ${baseUrl}/sitemap.xml
 
 // GET /llms.txt — AI crawler guidance (GEO)
 router.get('/llms.txt', (_req, res) => {
-  const baseUrl = process.env.BASE_URL || "https://neet.zeropage.in";
+  const baseUrl = process.env.BASE_URL || "https://neet.zeroai.org.in";
   const domain = baseUrl.replace(/^https?:\/\//, '');
 
   res.type('text/plain').send(`# ZERO AI NEET Prep — LLMs.txt
@@ -66,13 +66,13 @@ router.get('/llms.txt', (_req, res) => {
 
 ## Contact
 - Website: ${baseUrl}
-- Support: support@zeropage.in
+- Support: support@zeroai.org.in
 `);
 });
 
 // GET /ai.txt — AI agent instructions
 router.get('/ai.txt', (_req, res) => {
-  const baseUrl = process.env.BASE_URL || "https://neet.zeropage.in";
+  const baseUrl = process.env.BASE_URL || "https://neet.zeroai.org.in";
   res.type('text/plain').send(`# AI Agent Instructions for ${baseUrl}
 User-agent: *
 Allow: /
@@ -105,7 +105,7 @@ router.get('/api/seo/schema/:subject', async (req, res) => {
       provider: {
         '@type': 'Organization',
         name: 'ZERO AI',
-        url: 'https://neet.zeropage.in',
+        url: 'https://neet.zeroai.org.in',
       },
       educationalLevel: 'Undergraduate',
       inLanguage: ['en', 'hi'],

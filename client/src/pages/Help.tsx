@@ -37,7 +37,7 @@ export default function Help() {
         title="Help & Support | ZeroPage NEET Preparation"
         description="Find answers to common questions and get support for ZeroPage's NEET preparation platform. FAQs, guides, and contact options."
         keywords={["zeropage help", "neet prep support", "zeropage faq", "how to use zeropage"]}
-        url="https://neet.zeropage.in/help"
+        url="https://neet.zeroai.org.in/help"
       />
       <div className="min-h-screen bg-background py-16">
       <div className="container mx-auto px-6 max-w-5xl">

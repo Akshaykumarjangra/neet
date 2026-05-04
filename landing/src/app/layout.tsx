@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ZERO AI NEET | AI-Powered NEET Preparation Platform",
     description: "Experience personalized NEET preparation with adaptive AI and 3D visualizations. Join 50,000+ aspirants today.",
-    url: "https://neet.zeropage.in",
+    url: "https://neet.zeroai.org.in",
     siteName: "ZERO AI NEET",
     images: [
       {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     images: ["/twitter-image.jpg"],
   },
   alternates: {
-    canonical: "https://neet.zeropage.in",
+    canonical: "https://neet.zeroai.org.in",
   },
   robots: {
     index: true,

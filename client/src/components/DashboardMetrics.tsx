@@ -87,7 +87,7 @@ export function DashboardMetrics({
             size="sm" 
             className="w-full text-[10px] uppercase tracking-widest font-black italic hover:text-primary transition-colors"
             onClick={() => {
-              const text = `I just scored ${mockTestScore}/720 in a NEET Mock Test on ZERO AI! 🚀 Join me at https://neet.zeropage.in`;
+              const text = `I just scored ${mockTestScore}/720 in a NEET Mock Test on ZERO AI! 🚀 Join me at https://neet.zeroai.org.in`;
               window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
             }}
           >

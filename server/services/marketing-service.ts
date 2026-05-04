@@ -17,7 +17,7 @@ export async function triggerMarketingRun(campaignId?: number): Promise<Marketin
   const reportId = await createReportRecord(campaignId);
 
   try {
-    const websiteUrl = process.env.NEET_WEBSITE_URL || "https://nanoschool.in";
+    const websiteUrl = process.env.NEET_WEBSITE_URL || "https://neet.zeroai.org.in";
     const industry = "NEET Preparation / EdTech";
 
     const output = await runCrewAiMarketing(websiteUrl, industry);
@@ -139,7 +139,7 @@ export async function setCampaignSchedule(cronExpression: string, config?: any) 
     const [campaign] = await db.insert(marketingCampaigns).values({
       name: "Default Marketing Campaign",
       scheduleCron: cronExpression,
-      config: config || { websiteUrl: process.env.NEET_WEBSITE_URL || "https://nanoschool.in", industry: "NEET Preparation / EdTech" },
+      config: config || { websiteUrl: process.env.NEET_WEBSITE_URL || "https://neet.zeroai.org.in", industry: "NEET Preparation / EdTech" },
       isActive: true,
     }).returning();
     return campaign.id;

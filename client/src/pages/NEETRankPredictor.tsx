@@ -34,7 +34,7 @@ export default function NEETRankPredictor() {
         title="NEET 2026 Rank Predictor | AI-Powered Score Analysis"
         description="Predict your All India Rank (AIR) based on your mock test scores. Get a detailed analysis of college eligibility and category-wise chances."
         keywords="NEET rank predictor 2026, NEET AIR predictor, score to rank converter, medical college eligibility"
-        url="https://neet.zeropage.in/rank-predictor"
+        url="https://neet.zeroai.org.in/rank-predictor"
       />
       <Header />
       

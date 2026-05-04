@@ -13,7 +13,7 @@ export default function NEETExamPattern() {
         title="NEET 2026 Exam Pattern | Marks Distribution & Scheme"
         description="Complete guide on NEET exam pattern 2026. Understand the marking scheme, sections (A & B), total duration, and subject-wise weightage."
         keywords="NEET exam pattern, NEET marking scheme, NEET sections, NEET negative marking"
-        url="https://neet.zeropage.in/neet-exam-pattern"
+        url="https://neet.zeroai.org.in/neet-exam-pattern"
       />
       <Header />
       

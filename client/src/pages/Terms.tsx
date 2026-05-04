@@ -41,7 +41,7 @@ export default function Terms() {
         title="Terms of Service | ZeroPage NEET Preparation"
         description="Read ZeroPage's terms of service for our AI-powered NEET preparation platform. Understand your rights and responsibilities as a user."
         keywords={["zeropage terms", "neet prep terms of service", "zeropage conditions"]}
-        url="https://neet.zeropage.in/terms"
+        url="https://neet.zeroai.org.in/terms"
       />
       <div className="min-h-screen bg-background py-16">
       <div className="container mx-auto px-6 max-w-4xl">
@@ -71,8 +71,8 @@ export default function Terms() {
         <div className="mt-16 p-8 rounded-3xl bg-primary/5 text-center italic">
           <p className="text-sm text-muted-foreground">
             If you have any questions about these Terms, please contact us at{" "}
-            <a href="mailto:legal@zeropage.in" className="text-primary font-bold hover:underline">
-              legal@zeropage.in
+            <a href="mailto:legal@zeroai.org.in" className="text-primary font-bold hover:underline">
+              legal@zeroai.org.in
             </a>
           </p>
         </div>

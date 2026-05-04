@@ -753,7 +753,7 @@ export default function ChapterViewer() {
             getArticleSchema({
               title: chapter.chapterTitle,
               description: chapter.chapterContent ? chapter.chapterContent.slice(0, 160).replace(/[#*`_]/g, '') : `Master ${chapter.chapterTitle} with ZeroPage AI.`,
-              url: `https://neet.zeropage.in/chapter/${subjectPath}/${classLevel}/${chapter.chapterNumber}`,
+              url: `https://neet.zeroai.org.in/chapter/${subjectPath}/${classLevel}/${chapter.chapterNumber}`,
               dateModified: chapter.updatedAt ? new Date(chapter.updatedAt).toISOString().split('T')[0] : undefined,
               author: "ZeroPage AI"
             })

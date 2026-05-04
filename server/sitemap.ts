@@ -10,7 +10,7 @@ const router = Router();
 // Generate sitemap.xml
 router.get("/sitemap.xml", async (req, res) => {
     try {
-        const baseUrl = process.env.BASE_URL || "https://neet.zeropage.in";
+        const baseUrl = process.env.BASE_URL || "https://neet.zeroai.org.in";
 
         // Static pages
         const staticPages: SitemapEntry[] = [

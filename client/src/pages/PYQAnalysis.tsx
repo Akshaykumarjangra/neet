@@ -36,7 +36,7 @@ export default function PYQAnalysis() {
         title="NEET PYQ Analysis (2010-2024) | Chapter-wise Weightage"
         description="Deep dive into 15 years of NEET Previous Year Questions (PYQ). Discover high-yield topics, subject-wise weightage, and trend analysis for NEET 2026."
         keywords="NEET PYQ analysis, chapter-wise weightage NEET, biology weightage NEET, physics important topics, NEET chemistry trends"
-        url="https://neet.zeropage.in/pyq-analysis"
+        url="https://neet.zeroai.org.in/pyq-analysis"
       />
       <Header />
       

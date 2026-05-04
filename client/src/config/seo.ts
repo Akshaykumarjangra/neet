@@ -12,7 +12,7 @@ export interface SEOConfig {
 
 export const SITE_CONFIG = {
     name: "ZeroPage NEET",
-    url: "https://neet.zeropage.in", // Update with actual domain
+    url: "https://neet.zeroai.org.in", // Update with actual domain
     description: "India's leading NEET preparation platform with free mock tests, study materials, and expert mentorship",
     ogImage: "/og-image.jpg",
     twitterHandle: "@ZeroPageNEET",
@@ -295,18 +295,18 @@ export function getArticleSchema(article: {
     author: {
       "@type": "Organization",
       name: article.author || "ZeroPage",
-      url: "https://neet.zeropage.in",
+      url: "https://neet.zeroai.org.in",
     },
     publisher: {
       "@type": "Organization",
       name: "ZeroPage",
-      url: "https://neet.zeropage.in",
+      url: "https://neet.zeroai.org.in",
       logo: {
         "@type": "ImageObject",
-        url: "https://neet.zeropage.in/favicon.png",
+        url: "https://neet.zeroai.org.in/favicon.png",
       },
     },
-    image: article.image || "https://neet.zeropage.in/og-image.png",
+    image: article.image || "https://neet.zeroai.org.in/og-image.png",
     mainEntityOfPage: { "@type": "WebPage", "@id": article.url },
   };
 }

@@ -17,7 +17,7 @@ const dbHost = new URL(databaseUrl).hostname;
 
 const poolConfig = {
   connectionString: databaseUrl,
-  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 
   // Connection pool sizing (optimized for high concurrency)
   max: parseInt(process.env.DB_POOL_MAX || (isProduction ? '30' : '10')), 
@@ -25,9 +25,9 @@ const poolConfig = {
 
   // Timeout configurations (loosened for internal networking reliability)
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000, // 15s wait for internal network hops
-  query_timeout: 90000,           // 90s for complex analytical reads
-  statement_timeout: 90000,
+  connectionTimeoutMillis: 5000,
+  query_timeout: 30000,
+  statement_timeout: 30000,
 
   // Keep-alive for long-running connections (Prevents Docker from killing idle sockets)
   keepAlive: true,
@@ -90,8 +90,8 @@ const testConnection = async () => {
       console.log(`Retrying connection in ${delay}ms... (${retries} attempts remaining)`);
       setTimeout(testConnection, delay);
     } else {
-      console.error('FATAL: Database connection failed after all retries. Continuing anyway for debug.');
-      // process.exit(1);
+      console.error('FATAL: Database connection failed after all retries.');
+      process.exit(1);
     }
   }
 };

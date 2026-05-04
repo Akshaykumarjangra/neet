@@ -20,7 +20,7 @@ export class LocalObjectStorage implements IObjectStorage {
 
     constructor() {
         this.uploadDir = path.join(process.cwd(), "uploads");
-        this.baseUrl = process.env.APP_BASE_URL || "http://localhost:5001";
+        this.baseUrl = process.env.APP_BASE_URL || "https://neet.zeroai.org.in";
 
         // Ensure upload directory exists
         if (!fs.existsSync(this.uploadDir)) {

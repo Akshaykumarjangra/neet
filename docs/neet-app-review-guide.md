@@ -454,7 +454,7 @@ According to ZeroPage's 2025 data, **students who practiced 50+ questions daily 
 
 **My recommendation:** Try the free plan for a week to see if the learning style suits you. If you find yourself engaged and making progress, upgrade to Premium for the full experience.
 
-**Ready to start your NEET preparation journey?** Visit [neet.zeropage.in](https://neet.zeropage.in) and take the free diagnostic test today.
+**Ready to start your NEET preparation journey?** Visit [neet.zeroai.org.in](https://neet.zeroai.org.in) and take the free diagnostic test today.
 
 ---
 

@@ -141,7 +141,7 @@ export default function Simulations() {
         title="NEET Interactive 3D Simulations | Physics, Chemistry, Biology"
         description="Experience 50+ interactive simulations for NEET Physics, Chemistry, and Biology. Visualize complex concepts like projectile motion, molecular structures, and DNA helices in 3D."
         keywords={["NEET simulations", "interactive physics NEET", "3D molecular viewer", "biology simulations NEET", "PhET simulations NEET"]}
-        url="https://neet.zeropage.in/simulations"
+        url="https://neet.zeroai.org.in/simulations"
       />
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">

@@ -41,7 +41,7 @@ export default function Privacy() {
         title="Privacy Policy | ZeroPage NEET Preparation"
         description="Learn how ZeroPage collects, uses, and protects your personal data. Our commitment to student privacy and data security in NEET preparation."
         keywords={["zeropage privacy", "neet prep data security", "student data privacy"]}
-        url="https://neet.zeropage.in/privacy"
+        url="https://neet.zeroai.org.in/privacy"
       />
       <div className="min-h-screen bg-background py-16">
       <div className="container mx-auto px-6 max-w-4xl">
@@ -69,8 +69,8 @@ export default function Privacy() {
         <div className="mt-20 border-t pt-12 text-center text-sm text-muted-foreground italic">
           <p>
             For privacy-related inquiries, please contact our Data Protection Officer at{" "}
-            <a href="mailto:privacy@zeropage.in" className="text-primary font-bold hover:underline">
-              privacy@zeropage.in
+            <a href="mailto:privacy@zeroai.org.in" className="text-primary font-bold hover:underline">
+              privacy@zeroai.org.in
             </a>
           </p>
         </div>

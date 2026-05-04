@@ -12,7 +12,7 @@ export default function NEETApplicationForm() {
         title="NEET 2026 Application Form | Registration Dates & Fees"
         description="Step-by-step guide to filling the NEET 2026 Application form. Check registration dates, fees, required documents, and correction window details."
         keywords="NEET application form 2026, NEET registration dates, NEET fee, NEET documents required"
-        url="https://neet.zeropage.in/neet-application-form"
+        url="https://neet.zeroai.org.in/neet-application-form"
       />
       <Header />
       

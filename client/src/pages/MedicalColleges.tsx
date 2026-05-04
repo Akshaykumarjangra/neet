@@ -79,7 +79,7 @@ export default function MedicalColleges() {
         title="Top Medical Colleges in India 2026 | Ranks, Cutoffs & Seats"
         description="Explore the best medical colleges for MBBS in India. Get detailed info on AIIMS, MAMC, JIPMER, and more with expected NEET cutoffs and NIRF rankings."
         keywords="best medical colleges India, MBBS colleges cutoff, AIIMS Delhi admission, top government medical colleges, NEET college predictor"
-        url="https://neet.zeropage.in/medical-colleges"
+        url="https://neet.zeroai.org.in/medical-colleges"
       />
       <Header />
       

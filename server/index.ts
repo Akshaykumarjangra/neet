@@ -85,6 +85,31 @@ async function ensureOwnerAccount() {
       createTableIfMissing: false,
     });
 
+    // Security & performance middleware
+    app.use(helmet({
+      contentSecurityPolicy: false, // disable CSP for now since app uses inline styles/scripts
+      crossOriginEmbedderPolicy: false,
+    }));
+    app.use(compression());
+
+    // CORS configuration
+    const allowedOrigins = [
+      "https://neet.zeroai.org.in",
+      process.env.NODE_ENV !== "production" && "http://localhost:5173",
+      process.env.NODE_ENV !== "production" && "http://localhost:5001",
+    ].filter(Boolean) as string[];
+
+    app.use(cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.some(o => origin === o || origin.startsWith("http://localhost:"))) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true,
+    }));
+
     // Trust the reverse proxy (Coolify/Traefik) so secure cookies work
     if (process.env.NODE_ENV === "production") {
       app.set("trust proxy", 1);
@@ -92,7 +117,10 @@ async function ensureOwnerAccount() {
 
     const sessionMiddleware = session({
       store: sessionStore,
-      secret: process.env.SESSION_SECRET || "akg45272@gmail.com",
+      secret: process.env.SESSION_SECRET || (() => {
+        console.warn("WARNING: SESSION_SECRET not set, using insecure default");
+        return "insecure-default-change-in-production-" + Date.now();
+      })(),
       resave: false,
       saveUninitialized: false,
       proxy: process.env.NODE_ENV === "production",
@@ -124,9 +152,17 @@ async function ensureOwnerAccount() {
       serveStatic(app);
     }
 
+    // Global error handler (must be after all route registration)
+    app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      console.error("Unhandled error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
     const port = parseInt(process.env.PORT || '5001', 10);
     server.listen(port, "0.0.0.0", () => {
-      console.log(`[Server] Listening on port ${port}`);
+      console.log(`[Server] Listening on port ${port} (${process.env.NODE_ENV || "development"})`);
     });
 
   } catch (error) {

@@ -38,7 +38,7 @@ export default function Syllabus() {
         title="Official NEET 2026 Syllabus (NTA) | Subject-wise Breakdown"
         description="Get the latest, most accurate NEET 2026 syllabus as per NTA guidelines. Detailed breakdown of Biology, Physics, and Chemistry units with weightage analysis."
         keywords="NEET 2026 syllabus, NTA NEET syllabus pdf, biology syllabus NEET, physics syllabus NEET, chemistry chapters NEET"
-        url="https://neet.zeropage.in/syllabus"
+        url="https://neet.zeroai.org.in/syllabus"
       />
       <Header />
       

@@ -5,8 +5,8 @@ export function SchemaOrg() {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "ZERO AI NEET",
-        "url": "https://neet.zeropage.in",
-        "logo": "https://neet.zeropage.in/logo.png",
+        "url": "https://neet.zeroai.org.in",
+        "logo": "https://neet.zeroai.org.in/logo.png",
         "sameAs": [
             "https://twitter.com/zeropage_ai",
             "https://youtube.com/c/zeropage_ai"

@@ -12,7 +12,7 @@ export default function NEETAdmitCard() {
         title="NEET 2026 Admit Card | Download Link & Instructions"
         description="Get all details about NEET 2026 admit card release date, how to download from NTA website, and important exam day guidelines."
         keywords="NEET admit card, NEET hall ticket download, NTA NEET admit card 2026, NEET exam day instructions"
-        url="https://neet.zeropage.in/neet-admit-card"
+        url="https://neet.zeroai.org.in/neet-admit-card"
       />
       <Header />
       

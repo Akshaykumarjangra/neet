@@ -157,7 +157,7 @@ async function main() {
       const url = process.env.MARKETING_SWARM_URL || 'http://localhost:8001';
       try {
         const resp = await fetch(`${url}/run`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ website_url: 'https://nanoschool.in', industry: 'NEET Preparation / EdTech' }) });
+          body: JSON.stringify({ website_url: 'https://neet.zeroai.org.in', industry: 'NEET Preparation / EdTech' }) });
         console.log('🚀 Marketing run:', await resp.json());
       } catch (e: any) {
         console.error('❌ Marketing swarm error:', e.message);

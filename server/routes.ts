@@ -137,8 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({
         status: "healthy",
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
+        uptime: process.uptime()
       });
     } catch (error: any) {
       res.status(503).json({

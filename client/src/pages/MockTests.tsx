@@ -178,7 +178,7 @@ export default function MockTests() {
         title={SEO_PAGES.mockTests.title}
         description={SEO_PAGES.mockTests.description}
         keywords={SEO_PAGES.mockTests.keywords}
-        url="https://neet.zeropage.in/mock-tests"
+        url="https://neet.zeroai.org.in/mock-tests"
         structuredData={[
           getExamSchema(
             "NEET Mock Test Series 2026",

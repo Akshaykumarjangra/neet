@@ -63,7 +63,7 @@ export default function Videos() {
                 title="NEET Video Lectures & Curated Tutorials | ZERO AI NEET"
                 description="Watch curated educational videos for NEET Physics, Chemistry, Biology, and Math. Master complex concepts with expert tutorials and high-quality video content."
                 keywords={["NEET videos", "NEET lectures", "medical entrance video tutorials", "biology neet videos", "physics neet lectures"]}
-                url="https://neet.zeropage.in/videos"
+                url="https://neet.zeroai.org.in/videos"
             />
             <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
                 <div className="container mx-auto px-4 py-4">

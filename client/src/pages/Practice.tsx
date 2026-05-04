@@ -920,7 +920,7 @@ export default function Practice() {
         title={SEO_PAGES.practice.title}
         description={SEO_PAGES.practice.description}
         keywords={SEO_PAGES.practice.keywords}
-        url="https://neet.zeropage.in/practice"
+        url="https://neet.zeroai.org.in/practice"
         structuredData={[
           getFAQSchema([
             {

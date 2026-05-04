@@ -31,7 +31,7 @@ export default function Contact() {
         title="Contact Us | ZeroPage NEET Preparation"
         description="Get in touch with ZeroPage for questions about our AI-powered NEET preparation platform. We're here to help students and parents."
         keywords={["contact zeropage", "neet prep support", "zeropage help"]}
-        url="https://neet.zeropage.in/contact"
+        url="https://neet.zeroai.org.in/contact"
       />
       <div className="min-h-screen bg-background py-16">
       <div className="container mx-auto px-6 max-w-6xl">

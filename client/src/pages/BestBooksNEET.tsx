@@ -30,7 +30,7 @@ export default function BestBooksNEET() {
         title="Best Books for NEET 2026 Preparation | Subject-wise List"
         description="Discover the top recommended books for NEET Physics, Chemistry, and Biology. Expert-curated list to score 700+ in NEET 2026."
         keywords="best books for NEET, NEET physics books, NEET chemistry books, NCERT biology NEET"
-        url="https://neet.zeropage.in/best-books-neet"
+        url="https://neet.zeroai.org.in/best-books-neet"
       />
       <Header />
       

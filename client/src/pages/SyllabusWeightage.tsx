@@ -36,7 +36,7 @@ export default function SyllabusWeightage() {
         title="NEET 2026 Syllabus Weightage | Chapter-wise Analysis"
         description="Master the NEET syllabus with our detailed chapter-wise weightage analysis. Identify high-yield topics in Biology, Physics, and Chemistry for top scores."
         keywords="NEET syllabus weightage, important chapters for NEET, biology weightage NEET, physics high yield topics"
-        url="https://neet.zeropage.in/syllabus-weightage"
+        url="https://neet.zeroai.org.in/syllabus-weightage"
       />
       <Header />
       
