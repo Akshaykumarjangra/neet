@@ -13,13 +13,26 @@ window.fetch = (input, init = {}) => {
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Register PWA Service Worker (Phase 6.3 — Offline Mode)
+// Force unregister all Service Workers to clear stale caches causing routing errors
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((reg) => console.log('[PWA] SW registered:', reg.scope))
-      .catch((err) => console.warn('[PWA] SW registration failed:', err));
-  });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister()
+        .then(success => {
+          if (success) console.log('Successfully unregistered stale ServiceWorker.');
+        })
+        .catch(err => console.error('Failed to unregister ServiceWorker:', err));
+    }
+  }).catch(err => console.error('Error getting ServiceWorker registrations:', err));
+  
+  // Also clear caches to ensure fresh files are loaded
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      for (const name of names) {
+        caches.delete(name);
+      }
+    });
+  }
 }
 
 // Web Vitals reporting (Phase 0.4 — Observability)

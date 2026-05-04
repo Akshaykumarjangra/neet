@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { Header } from "@/components/Header";
+import { useAuth } from "@/hooks/useAuth";
 import {
   CreditCard,
   Settings,
