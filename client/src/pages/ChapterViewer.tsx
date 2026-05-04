@@ -741,7 +741,7 @@ export default function ChapterViewer() {
       <TooltipProvider>
         <Seo 
           title={`${chapter.chapterTitle} - Chapter ${chapter.chapterNumber} | ZERO AI`}
-          description={chapter.chapterContent ? chapter.chapterContent.slice(0, 150).replace(/[#*`_]/g, '') + '...' : `Master ${chapter.chapterTitle} with ZERO AI.`}
+          description={chapter.introduction ? chapter.introduction.slice(0, 150).replace(/[#*`_]/g, '') + '...' : `Master ${chapter.chapterTitle} with ZERO AI.`}
           url={`/library/${subject}/${classLevel}/${chapter.chapterNumber}`}
           keywords={[chapter.subject, chapter.chapterTitle, 'NEET Prep', 'Chapter Notes']}
           structuredData={[
@@ -753,7 +753,7 @@ export default function ChapterViewer() {
             ]),
             getArticleSchema({
               title: chapter.chapterTitle,
-              description: chapter.chapterContent ? chapter.chapterContent.slice(0, 160).replace(/[#*`_]/g, '') : `Master ${chapter.chapterTitle} with ZeroPage AI.`,
+              description: chapter.introduction ? chapter.introduction.slice(0, 160).replace(/[#*`_]/g, '') : `Master ${chapter.chapterTitle} with ZeroPage AI.`,
               url: `https://neet.zeroai.org.in/chapter/${subjectPath}/${classLevel}/${chapter.chapterNumber}`,
               dateModified: chapter.updatedAt ? new Date(chapter.updatedAt).toISOString().split('T')[0] : undefined,
               author: "ZeroPage AI"
@@ -1609,7 +1609,7 @@ export default function ChapterViewer() {
                                 </CardTitle>
                                 <div className="flex gap-2 shrink-0">
                                   <Badge variant="outline">
-                                    {['Easy', 'Medium', 'Hard', 'Expert'][question.difficultyLevel - 1] || 'Medium'}
+                                    {['Easy', 'Medium', 'Hard', 'Expert'][(question.difficultyLevel ?? 2) - 1] || 'Medium'}
                                   </Badge>
                                   {question.pyqYear && (
                                     <Badge className="bg-orange-500 text-white">
@@ -1621,7 +1621,7 @@ export default function ChapterViewer() {
                             </CardHeader>
                             <CardContent className="pt-4">
                               <div className="grid gap-3">
-                                {question.options.map((option) => (
+                                {question.options?.map((option) => (
                                   <Button
                                     key={option.id}
                                     variant={selectedAnswers[question.id] === option.id ? "default" : "outline"}
@@ -1718,7 +1718,7 @@ export default function ChapterViewer() {
                               </CardHeader>
                               <CardContent className="pt-4 space-y-4">
                                 <div className="grid gap-2">
-                                  {question.options.map((option) => {
+                                  {question.options?.map((option) => {
                                     const isSelected = selectedAnswers[question.id] === option.id;
                                     const isAnswer = question.correctAnswer === option.id;
                                     return (
