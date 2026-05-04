@@ -34,16 +34,10 @@ export function Seo({
       : `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`
     : undefined;
 
-  // Safely parse path segments for breadcrumbs
-  let pathSegments: string[] = [];
-  if (absoluteUrl) {
-    try {
-      pathSegments = new URL(absoluteUrl).pathname.split('/').filter(Boolean);
-    } catch {
-      // fallback: split the url prop directly
-      pathSegments = (url || '').replace(/^\//, '').split('/').filter(Boolean);
-    }
-  }
+  // Parse path segments for breadcrumbs from the url prop directly
+  const pathSegments: string[] = url
+    ? url.replace(/^https?:\/\/[^/]+/, '').replace(/^\//, '').split('/').filter(Boolean)
+    : [];
 
   return (
     <Helmet>
