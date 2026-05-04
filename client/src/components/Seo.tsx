@@ -1,5 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
+const SITE_URL = "https://neet.zeroai.org.in";
+
 interface SeoProps {
   title: string;
   description?: string;
@@ -25,6 +27,24 @@ export function Seo({
       : [structuredData]
     : [];
 
+  // Ensure url is always absolute
+  const absoluteUrl = url
+    ? url.startsWith("http")
+      ? url
+      : `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`
+    : undefined;
+
+  // Safely parse path segments for breadcrumbs
+  let pathSegments: string[] = [];
+  if (absoluteUrl) {
+    try {
+      pathSegments = new URL(absoluteUrl).pathname.split('/').filter(Boolean);
+    } catch {
+      // fallback: split the url prop directly
+      pathSegments = (url || '').replace(/^\//, '').split('/').filter(Boolean);
+    }
+  }
+
   return (
     <Helmet>
       <title>{title}</title>
@@ -46,44 +66,41 @@ export function Seo({
       <meta property="og:type" content="website" />
       <meta property="og:locale" content="en_IN" />
       {ogImage && <meta property="og:image" content={ogImage} />}
-      {url && <meta property="og:url" content={url} />}
+      {absoluteUrl && <meta property="og:url" content={absoluteUrl} />}
       
       <meta property="twitter:card" content="summary_large_image" />
       <meta property="twitter:title" content={title} />
       {description && <meta property="twitter:description" content={description} />}
       {ogImage && <meta property="twitter:image" content={ogImage} />}
-      {url && <meta property="twitter:url" content={url} />}
+      {absoluteUrl && <meta property="twitter:url" content={absoluteUrl} />}
       
       <meta name="geo.region" content="IN" />
       <meta name="geo.placename" content="India" />
       <meta name="language" content="English" />
       
-      {url && <link rel="canonical" href={url} />}
+      {absoluteUrl && <link rel="canonical" href={absoluteUrl} />}
 
       {/* Breadcrumb Schema */}
-      {url && (
+      {pathSegments.length > 0 && (
         <script type="application/ld+json">
-          {(() => {
-            const pathSegments = new URL(url).pathname.split('/').filter(Boolean);
-            return JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "BreadcrumbList",
-              "itemListElement": [
-                {
-                  "@type": "ListItem",
-                  "position": 1,
-                  "name": "Home",
-                  "item": "https://neet.zeropage.in"
-                },
-                ...pathSegments.map((part, index) => ({
-                  "@type": "ListItem",
-                  "position": index + 2,
-                  "name": part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' '),
-                  "item": `https://neet.zeropage.in/${pathSegments.slice(0, index + 1).join('/')}`
-                }))
-              ]
-            });
-          })()}
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": SITE_URL
+              },
+              ...pathSegments.map((part, index) => ({
+                "@type": "ListItem",
+                "position": index + 2,
+                "name": part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' '),
+                "item": `${SITE_URL}/${pathSegments.slice(0, index + 1).join('/')}`
+              }))
+            ]
+          })}
         </script>
       )}
 
