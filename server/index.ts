@@ -85,13 +85,20 @@ async function ensureOwnerAccount() {
       createTableIfMissing: false,
     });
 
+    // Trust the reverse proxy (Coolify/Traefik) so secure cookies work
+    if (process.env.NODE_ENV === "production") {
+      app.set("trust proxy", 1);
+    }
+
     const sessionMiddleware = session({
       store: sessionStore,
       secret: process.env.SESSION_SECRET || "akg45272@gmail.com",
       resave: false,
       saveUninitialized: false,
+      proxy: process.env.NODE_ENV === "production",
       cookie: {
         secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000,
       }
     });

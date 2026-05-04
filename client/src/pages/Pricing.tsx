@@ -662,11 +662,6 @@ export default function Pricing() {
         </motion.div>
       </main>
 
-      <footer className="border-t mt-16 py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2025 NEET Prep. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }
