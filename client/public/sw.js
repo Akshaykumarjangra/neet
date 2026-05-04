@@ -2,9 +2,9 @@
  * PWA Service Worker — Offline Mode
  * Phase 6.3 — Cache questions, flashcards, notes for offline use
  */
-const CACHE_NAME = 'neet-prep-v1';
-const STATIC_CACHE = 'neet-static-v1';
-const DATA_CACHE = 'neet-data-v1';
+const CACHE_NAME = 'neet-prep-v2';
+const STATIC_CACHE = 'neet-static-v2';
+const DATA_CACHE = 'neet-data-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -59,7 +59,17 @@ self.addEventListener('fetch', (event) => {
     }
   }
 
-  // Static assets: cache-first
+  // HTML navigation requests (SPA): network-first so client-side router works
+  // with browser back/forward buttons
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .catch(() => caches.match('/index.html') || caches.match('/offline'))
+    );
+    return;
+  }
+
+  // Other static assets: cache-first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
