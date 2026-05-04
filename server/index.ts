@@ -35,9 +35,7 @@ async function ensureOwnerAccount() {
       .where(eq(users.email, ownerEmail))
       .limit(1);
 
-    if (existingUser) {
-      // console.log(`[Owner Account] Verified owner status for ${ownerEmail}`);
-    } else {
+    if (!existingUser) {
       const passwordHash = await bcrypt.hash(ownerPassword, 10);
       await db.insert(users).values({
         email: ownerEmail,
@@ -59,7 +57,7 @@ async function ensureOwnerAccount() {
   try {
     const app = express();
 
-    // Ensure session table exists — two separate safe operations
+    // Ensure session table exists — separate try/catch blocks to handle all cases
     try {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS "session" (
@@ -102,7 +100,22 @@ async function ensureOwnerAccount() {
     app.use(express.urlencoded({ extended: false }));
     app.use(sessionMiddleware);
 
+    // CSRF token endpoint
+    app.get("/api/csrf-token", csrfTokenHandler);
+
+    // Telemetry endpoint (fire-and-forget, just acknowledge)
+    app.post("/api/telemetry/vitals", (_req, res) => {
+      res.status(204).end();
+    });
+
     const server = await registerRoutes(app);
+
+    // Serve static files in production, Vite dev server in development
+    if (process.env.NODE_ENV !== "production") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
     const port = parseInt(process.env.PORT || '5001', 10);
     server.listen(port, "0.0.0.0", () => {
