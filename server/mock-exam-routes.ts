@@ -18,7 +18,7 @@ import {
   organizationMembers,
   userSubscriptions,
 } from "@shared/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql, desc } from "drizzle-orm";
 import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from "./auth";
 import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { sanitizeResponses, scoreResponses } from "./mock-exam-scoring";
@@ -1622,7 +1622,7 @@ router.get("/attempts", async (req, res) => {
       .select()
       .from(mockExamAttempts)
       .where(eq(mockExamAttempts.userId, userId))
-      .orderBy(sql`COALESCE(${mockExamAttempts.submittedAt}, ${mockExamAttempts.startedAt}) DESC`);
+      .orderBy(desc(mockExamAttempts.startedAt));
 
     res.json({ data: attempts });
   } catch (error) {

@@ -501,7 +501,7 @@ export default function Home() {
         <section className="py-24">
           <div className="container mx-auto px-4">
             <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+              <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.5em] text-emerald-300">NEET Blast</p>

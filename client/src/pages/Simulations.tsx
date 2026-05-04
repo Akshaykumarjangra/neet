@@ -31,6 +31,7 @@ import MoleculeViewer from "@/components/simulations/MoleculeViewer";
 import SolarSystemViewer from "@/components/simulations/SolarSystemViewer";
 import DnaHelixViewer from "@/components/simulations/DnaHelixViewer";
 import { Paywall } from "@/components/Paywall";
+import { useAuth } from "@/hooks/useAuth";
 
 import { simulations, SimulationItem } from "@/data/simulations";
 
@@ -51,6 +52,8 @@ const subjectIcons: Record<string, React.ReactNode> = {
 };
 
 export default function Simulations() {
+  const { user } = useAuth();
+  const isPaidUser = user?.isPaidUser ?? false;
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSubject, setActiveSubject] = useState("all");
   const [selectedSimulation, setSelectedSimulation] = useState<SimulationItem | null>(null);
@@ -224,7 +227,7 @@ export default function Simulations() {
                         key={sim.id}
                         simulation={sim}
                         onSelect={() => setSelectedSimulation(sim)}
-                        isLocked={index >= 2}
+                        isLocked={!isPaidUser && index >= 2}
                       />
                     ))}
                   </div>
@@ -250,7 +253,7 @@ export default function Simulations() {
                         key={sim.id}
                         simulation={sim}
                         onSelect={() => setSelectedSimulation(sim)}
-                        isLocked={true} // PhET all premium in this logic
+                        isLocked={!isPaidUser}
                       />
                     ))}
                   </div>

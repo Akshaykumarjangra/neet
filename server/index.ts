@@ -80,6 +80,25 @@ async function ensureOwnerAccount() {
       // Index already exists, ignore
     }
 
+    // Ensure mock_exam_attempts has all required columns (from 20260504_mock_exam_attempts_missing_columns.sql)
+    try {
+      log("[Database] Checking for missing columns in mock_exam_attempts...");
+      await pool.query(`
+        ALTER TABLE "mock_exam_attempts"
+          ADD COLUMN IF NOT EXISTS "ends_at" timestamp,
+          ADD COLUMN IF NOT EXISTS "focus_loss_count" integer NOT NULL DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS "last_focus_loss_at" timestamp,
+          ADD COLUMN IF NOT EXISTS "last_active_at" timestamp,
+          ADD COLUMN IF NOT EXISTS "ip_address" varchar(45),
+          ADD COLUMN IF NOT EXISTS "user_agent" text,
+          ADD COLUMN IF NOT EXISTS "device_fingerprint" varchar(200);
+      `);
+      log("[Database] mock_exam_attempts table is up to date.");
+    } catch (e: any) {
+      console.error("[Database] Error updating mock_exam_attempts table:", e.message);
+      // Don't exit here, the columns might actually exist or there might be other issues
+    }
+
     const sessionStore = new (ConnectPgSimple(session))({
       pool,
       createTableIfMissing: false,
