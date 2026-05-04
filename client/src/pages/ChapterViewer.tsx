@@ -50,7 +50,7 @@ import {
   Crown,
   Sparkles,
   LogOut,
-  Home,
+  Home as HomeIcon,
 } from "lucide-react";
 import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema";
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
@@ -845,7 +845,7 @@ export default function ChapterViewer() {
             {/* Breadcrumb Navigation */}
             <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4 overflow-x-auto whitespace-nowrap scrollbar-hide" aria-label="Breadcrumb">
               <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
-                <Home className="h-3.5 w-3.5" />
+                <HomeIcon className="h-3.5 w-3.5" />
                 <span>Home</span>
               </Link>
               <ChevronRight className="h-3.5 w-3.5 opacity-40 shrink-0" />

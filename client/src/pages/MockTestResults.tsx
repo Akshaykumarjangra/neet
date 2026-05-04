@@ -22,7 +22,7 @@ import {
   MinusCircle,
   BarChart3,
   RefreshCw,
-  Home,
+  Home as HomeIcon,
   TrendingUp,
   Award,
   Zap,
@@ -845,7 +845,7 @@ export default function MockTestResults() {
                   className="gap-2"
                   data-testid="button-back-to-dashboard"
                 >
-                  <Home className="h-4 w-4" />
+                  <HomeIcon className="h-4 w-4" />
                   Back to Dashboard
                 </Button>
                 <Button

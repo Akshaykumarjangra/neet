@@ -3,7 +3,6 @@ import json
 
 BASE_URL = "http://82.25.104.62:8000/api/v1"
 TOKEN = "3|Zrv2NbvsSPNlmoIsXMdP9J5sAHwVzsgaLprJNMqY3ef99588"
-APP_UUID = "zo8c8sgcckg84cw8480888gw"
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
@@ -21,10 +20,7 @@ def make_request(endpoint):
         return None
 
 if __name__ == "__main__":
-    details = make_request(f"/applications/{APP_UUID}")
-    if details:
-        print(f"App Name: {details.get('name')}")
-        print(f"Status: {details.get('status')}")
-        print(f"Server Status: {details.get('server_status')}")
-    else:
-        print("Could not fetch app details.")
+    print("Fetching databases...")
+    databases = make_request("/databases")
+    if databases:
+        print(json.dumps(databases, indent=2))

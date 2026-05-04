@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Trophy, Flame, Home, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home as HomeIcon, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -16,7 +16,6 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { queryClient } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/usePushNotifications";

@@ -1,12 +1,12 @@
 import { Link } from "wouter";
-import { Home, BookOpen, Trophy, Target, Library, Star } from "lucide-react";
+import { Home as HomeIcon, BookOpen, Trophy, Target, Library, Star } from "lucide-react";
 
 interface QuickNavigationBarProps {
   currentPath: string;
 }
 
 const navItems = [
-  { path: "/", icon: Home, label: "Home" },
+  { path: "/", icon: HomeIcon, label: "Home" },
   { path: "/explore", icon: BookOpen, label: "Learn" },
   { path: "/practice", icon: Target, label: "Practice" },
   { path: "/mock-tests", icon: Star, label: "Tests" },

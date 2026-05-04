@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home as HomeIcon } from "lucide-react";
 
 export function Breadcrumbs() {
   const [location] = useLocation();
@@ -15,7 +15,7 @@ export function Breadcrumbs() {
       <nav className="container mx-auto px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground italic overflow-x-auto whitespace-nowrap scrollbar-hide">
         <Link href="/" className="hover:text-primary transition-all flex items-center gap-2 group">
           <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary group-hover:text-black transition-all">
-            <Home className="h-3.5 w-3.5" />
+            <HomeIcon className="h-3.5 w-3.5" />
           </div>
           <span className="font-bold tracking-tight">ZERO AI</span>
         </Link>

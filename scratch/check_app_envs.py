@@ -21,10 +21,15 @@ def make_request(endpoint):
         return None
 
 if __name__ == "__main__":
-    details = make_request(f"/applications/{APP_UUID}")
-    if details:
-        print(f"App Name: {details.get('name')}")
-        print(f"Status: {details.get('status')}")
-        print(f"Server Status: {details.get('server_status')}")
+    print(f"Checking environment variables for {APP_UUID}...")
+    # Try different endpoints for env vars
+    envs = make_request(f"/applications/{APP_UUID}/envs")
+    if envs:
+        print(json.dumps(envs, indent=2))
     else:
-        print("Could not fetch app details.")
+        print("Could not fetch envs from /envs endpoint. Checking main app details...")
+        details = make_request(f"/applications/{APP_UUID}")
+        if details and 'environment_variables' in details:
+            print(json.dumps(details['environment_variables'], indent=2))
+        else:
+            print("No environment variables found in details.")

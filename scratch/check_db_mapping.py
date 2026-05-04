@@ -21,10 +21,13 @@ def make_request(endpoint):
         return None
 
 if __name__ == "__main__":
-    details = make_request(f"/applications/{APP_UUID}")
-    if details:
-        print(f"App Name: {details.get('name')}")
-        print(f"Status: {details.get('status')}")
-        print(f"Server Status: {details.get('server_status')}")
+    envs = make_request(f"/applications/{APP_UUID}/envs")
+    if envs:
+        for env in envs:
+            if env['key'] == 'DATABASE_URL':
+                print(f"DATABASE_URL: {env['value']}")
+                print(f"Real Value: {env.get('real_value', 'N/A')}")
+            if env['key'] == 'NODE_ENV':
+                print(f"NODE_ENV: {env['value']}")
     else:
-        print("Could not fetch app details.")
+        print("Could not fetch envs.")

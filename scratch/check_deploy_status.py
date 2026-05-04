@@ -3,7 +3,7 @@ import json
 
 BASE_URL = "http://82.25.104.62:8000/api/v1"
 TOKEN = "3|Zrv2NbvsSPNlmoIsXMdP9J5sAHwVzsgaLprJNMqY3ef99588"
-DEPLOY_UUID = "rk84cw0gwoo048g8owosk0ks"
+DEPLOYMENT_UUID = "xggwo8ockggg4k40g88o8cwc"
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
@@ -12,11 +12,19 @@ headers = {
 
 def make_request(endpoint):
     url = f"{BASE_URL}{endpoint}"
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as response:
-        return json.load(response)
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            return json.load(response)
+    except Exception as e:
+        print(f"Error for {endpoint}: {e}")
+        return None
 
 if __name__ == "__main__":
-    res = make_request(f"/deployments/{DEPLOY_UUID}")
-    print(f"Status: {res.get('status')}")
-    # print(json.dumps(res, indent=2))
+    # In v4, try /deployments/{uuid}
+    print(f"Checking status for deployment {DEPLOYMENT_UUID}...")
+    details = make_request(f"/deployments/{DEPLOYMENT_UUID}")
+    if details:
+        print(json.dumps(details, indent=2))
+    else:
+        print("Could not fetch deployment details.")

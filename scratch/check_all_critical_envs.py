@@ -21,10 +21,13 @@ def make_request(endpoint):
         return None
 
 if __name__ == "__main__":
-    details = make_request(f"/applications/{APP_UUID}")
-    if details:
-        print(f"App Name: {details.get('name')}")
-        print(f"Status: {details.get('status')}")
-        print(f"Server Status: {details.get('server_status')}")
+    envs = make_request(f"/applications/{APP_UUID}/envs")
+    if envs:
+        keys_to_check = ['DATABASE_URL', 'SESSION_SECRET', 'FIREBASE_SERVICE_ACCOUNT', 'MSG91_AUTH_KEY', 'GEMINI_API_KEY']
+        for env in envs:
+            if env['key'] in keys_to_check:
+                print(f"{env['key']}: {'[SET]' if env['value'] else '[MISSING]'}")
+                if env['key'] == 'DATABASE_URL':
+                    print(f"  Value: {env['value']}")
     else:
-        print("Could not fetch app details.")
+        print("Could not fetch envs.")
