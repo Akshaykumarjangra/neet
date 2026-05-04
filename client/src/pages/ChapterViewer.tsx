@@ -50,6 +50,7 @@ import {
   Crown,
   Sparkles,
   LogOut,
+  Home,
 } from "lucide-react";
 import type { ChapterContent, Keypoint, Formula, Question } from "@shared/schema";
 import { VisualizationRenderer } from "@/components/visualizations/VisualizationRegistry";
