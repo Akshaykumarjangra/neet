@@ -110,11 +110,11 @@ export function Footer() {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground italic">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              hello@zeropage.in
+              akshaykumar003@outlook.com
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              +91 98765 43210
+              +91 97297 34752
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />

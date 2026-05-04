@@ -608,8 +608,8 @@ export default function Pricing() {
                   </Link>
                   <p className="text-sm text-muted-foreground mt-3">
                     Or email us at{" "}
-                    <a href="mailto:sales@neetprep.com" className="text-primary hover:underline">
-                      sales@neetprep.com
+                    <a href="mailto:akshaykumar003@outlook.com" className="text-primary hover:underline">
+                      akshaykumar003@outlook.com
                     </a>
                   </p>
                 </div>

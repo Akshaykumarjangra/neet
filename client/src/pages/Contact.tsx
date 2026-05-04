@@ -55,7 +55,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Email Us</h3>
-                    <p className="text-sm text-muted-foreground">support@zeropage.in</p>
+                    <p className="text-sm text-muted-foreground">akshaykumar003@outlook.com</p>
                   </div>
                 </div>
 
@@ -65,7 +65,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Call Us</h3>
-                    <p className="text-sm text-muted-foreground">1800-NEET-AI (Toll Free)</p>
+                    <p className="text-sm text-muted-foreground">+91 97297 34752</p>
                   </div>
                 </div>
 
