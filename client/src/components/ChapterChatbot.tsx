@@ -20,7 +20,14 @@ import {
   Bot,
   User,
   Zap,
-  Star
+  Star,
+  History,
+  MoreVertical,
+  MessageSquare,
+  BookOpen,
+  Atom,
+  FlaskConical,
+  Dna
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -327,6 +334,68 @@ export function ChapterChatbot({
     }).format(date);
   };
 
+  const renderSidebar = () => (
+    <div className="hidden md:flex flex-col w-64 shrink-0 border-r border-border/40 bg-slate-950/10 dark:bg-black/20 p-5 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5 text-foreground/80">
+          <History className="h-4.5 w-4.5 text-primary" />
+          <span className="text-sm font-bold tracking-tight">Chat History</span>
+        </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-foreground/5">
+          <MoreVertical className="h-4.5 w-4.5 text-muted-foreground" />
+        </Button>
+      </div>
+
+      {/* History List */}
+      <div className="flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left bg-primary/10 text-primary border border-primary/20 transition-all font-semibold text-xs">
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span className="truncate">Forces & Motion</span>
+        </button>
+        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span className="truncate">Thermodynamics</span>
+        </button>
+        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span className="truncate">Previous Chat</span>
+        </button>
+        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span className="truncate">Previous Chat</span>
+        </button>
+        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          <span className="truncate">Chat Utilities...</span>
+        </button>
+      </div>
+
+      {/* Subject Categories */}
+      <div className="space-y-3 pt-4 border-t border-border/40">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Subject Categories</p>
+        <div className="space-y-1">
+          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+            <BookOpen className="h-4 w-4" />
+            <span>All Subjects</span>
+          </button>
+          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left bg-primary/10 border border-primary/20 text-primary font-semibold text-xs">
+            <Atom className="h-4 w-4" />
+            <span>Physics</span>
+          </button>
+          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+            <FlaskConical className="h-4 w-4" />
+            <span>Chemistry</span>
+          </button>
+          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
+            <Dna className="h-4 w-4" />
+            <span>Biology</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderChatCard = (containerClass: string, cardClass: string) => (
     <div className={containerClass}>
       <motion.div
@@ -336,10 +405,13 @@ export function ChapterChatbot({
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className={cardClass}
       >
-        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[2rem] flex flex-col h-full min-h-0">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
-          <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
-            <div className="flex items-center justify-between">
+        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[2rem] flex flex-row h-full min-h-0">
+          {renderSidebar()}
+          
+          <div className="flex-1 flex flex-col h-full min-h-0 relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
+            <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
+              <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <motion.div 
                   whileHover={{ rotate: 15, scale: 1.1 }}
@@ -474,10 +546,10 @@ export function ChapterChatbot({
                               {message.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
                             </div>
                             <div className={cn('flex flex-col gap-2 max-w-[82%]', message.role === 'user' ? 'items-end' : 'items-start')}>
-                              <div className={cn('relative rounded-[1.5rem] px-5 py-4 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)] overflow-hidden', message.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-50 dark:bg-slate-900 border border-border/40 text-slate-900 dark:text-slate-100 rounded-tl-none')}>
-                                {message.role === 'user' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
+                              <div className={cn('relative rounded-[2rem] px-6 py-5 overflow-hidden', message.role === 'user' ? 'bg-slate-900/40 border border-slate-800/80 text-slate-100 rounded-tr-none shadow-md backdrop-blur-md' : 'bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-600 text-white rounded-tl-none shadow-[0_16px_48px_-8px_rgba(99,102,241,0.4)] border border-indigo-500/20')}>
+                                {message.role === 'assistant' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
                                 {message.role === 'assistant' ? (
-                                  <div className="text-[15px] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-slate-950/5 dark:[&_pre]:bg-slate-950/40 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-slate-100 dark:[&_code]:bg-slate-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-primary [&_strong]:text-primary">
+                                  <div className="text-[15px] leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-black/30 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-white [&_strong]:text-white">
                                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{message.content}</ReactMarkdown>
                                   </div>
                                 ) : (
@@ -549,6 +621,7 @@ export function ChapterChatbot({
               </div>
             </div>
           </CardContent>
+        </div>
         </Card>
       </motion.div>
     </div>

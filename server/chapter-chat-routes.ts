@@ -5,6 +5,7 @@ import { eq, desc, and } from 'drizzle-orm';
 import { requireAuth, getCurrentUser } from './auth';
 import OpenAI from 'openai';
 import { z } from 'zod';
+import { callGemini } from './workforce/gemini';
 
 const router = Router();
 
@@ -141,10 +142,6 @@ router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
       });
     }
 
-    if (!openai) {
-      return res.status(503).json({ error: 'AI service is not configured' });
-    }
-
     const [chapter] = await db
       .select()
       .from(chapterContent)
@@ -153,6 +150,13 @@ router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
 
     if (!chapter) {
       return res.status(404).json({ error: 'Chapter not found' });
+    }
+
+    const hasOpenAI = !!openai;
+    const hasGemini = !!process.env.GEMINI_API_KEY;
+
+    if (!hasOpenAI && !hasGemini) {
+      return res.status(503).json({ error: 'AI service is not configured' });
     }
 
     if (!chapter.isFree) {
@@ -188,6 +192,70 @@ router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
       ...recentHistory,
       { role: 'user', content: trimmedMessage },
     ];
+
+    if (hasGemini) {
+      const historyPrompt = recentHistory.map((m: any) => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`).join('\n');
+      const prompt = historyPrompt 
+        ? `Here is our conversation history:\n${historyPrompt}\n\nStudent's new message:\n${trimmedMessage}`
+        : trimmedMessage;
+
+      if (stream) {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        try {
+          const result = await callGemini({
+            model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+            system: systemPrompt,
+            prompt: prompt,
+            temperature: 0.7,
+          });
+
+          const answer = result.text || 'I apologize, but I could not generate a response.';
+          
+          const words = answer.split(' ');
+          for (const word of words) {
+            res.write(`data: ${JSON.stringify({ content: word + ' ' })}\n\n`);
+            await new Promise((resolve) => setTimeout(resolve, 30));
+          }
+
+          if (answer) {
+            await db.insert(userChats).values({
+              userId: req.session.userId!,
+              chapterId: chapterId,
+              role: 'assistant',
+              content: answer,
+            });
+          }
+
+          res.write('data: [DONE]\n\n');
+          return res.end();
+        } catch (geminiStreamError: any) {
+          console.error('Gemini streaming error:', geminiStreamError);
+          res.write(`data: ${JSON.stringify({ error: geminiStreamError.message })}\n\n`);
+          return res.end();
+        }
+      } else {
+        const result = await callGemini({
+          model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+          system: systemPrompt,
+          prompt: prompt,
+          temperature: 0.7,
+        });
+
+        const answer = result.text || 'I apologize, but I could not generate a response.';
+
+        await db.insert(userChats).values({
+          userId: req.session.userId!,
+          chapterId: chapterId,
+          role: 'assistant',
+          content: answer,
+        });
+
+        return res.json({ answer });
+      }
+    }
 
     if (stream) {
       res.setHeader('Content-Type', 'text/event-stream');
