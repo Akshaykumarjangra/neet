@@ -109,6 +109,9 @@ async function ensureOwnerAccount() {
     app.use(helmet({
       contentSecurityPolicy: false, // disable CSP for now since app uses inline styles/scripts
       crossOriginEmbedderPolicy: false,
+      crossOriginOpenerPolicy: false,
+      crossOriginResourcePolicy: false,
+      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     }));
     app.use(compression());
 
