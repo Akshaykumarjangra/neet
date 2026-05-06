@@ -436,7 +436,7 @@ export function ChapterChatbot({
                                 How can I accelerate your <span className="text-primary italic">NEET prep</span> today?
                               </h2>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-2">
+                            <div className="grid grid-cols-1 gap-3 px-2">
                               {getQuickPrompts(title).map((prompt, idx) => (
                                 <motion.button
                                   key={idx}
@@ -559,7 +559,7 @@ export function ChapterChatbot({
             {renderChatCard("w-full h-full p-4", "w-full h-full")}
           </SheetContent>
         </Sheet>
-        <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70]">
+        <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={onToggle}
