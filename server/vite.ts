@@ -83,7 +83,13 @@ export function serveStatic(app: Express) {
   }));
 
   // SPA fallback: serve index.html for all non-API, non-file routes
-  app.use("*", (_req, res) => {
+  app.use("*", (req, res) => {
+    const url = req.originalUrl;
+    // If request is for an asset, js, css, or other media file, return a clean 404 instead of SPA fallback
+    if (url.includes("/assets/") || url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|json|woff|woff2)$/i)) {
+      res.status(404).set("Content-Type", "text/plain").send("Asset not found");
+      return;
+    }
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
