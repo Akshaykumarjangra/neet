@@ -131,7 +131,10 @@ export function ChapterChatbot({
 
   useEffect(() => {
     if (isOpen && endRef.current) {
-      endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      const timer = setTimeout(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [messages, isOpen]);
 
@@ -333,7 +336,7 @@ export function ChapterChatbot({
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className={cardClass}
       >
-        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/60 dark:bg-slate-950/40 rounded-[2rem]">
+        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/60 dark:bg-slate-950/40 rounded-[2rem] flex flex-col h-full min-h-0">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
           <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
             <div className="flex items-center justify-between">

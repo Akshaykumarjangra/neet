@@ -889,7 +889,7 @@ export default function ChapterViewer() {
                             }
                           }}
                         >
-                          <div className="flex gap-2.5">
+                          <div className="flex gap-2.5 w-full text-left justify-start items-start">
                             <span className="text-xs font-semibold text-muted-foreground min-w-[20px] pt-0.5">
                               {c.chapterNumber}.
                             </span>
@@ -1306,7 +1306,7 @@ export default function ChapterViewer() {
                               <CardContent>
                                 <div className="flex flex-wrap gap-2">
                                   {chapter.importantTopics.map((topic, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-xs">
+                                    <Badge key={idx} variant="outline" className="text-xs whitespace-normal break-words h-auto text-left">
                                       {topic}
                                     </Badge>
                                   ))}
