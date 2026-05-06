@@ -10,6 +10,7 @@ import cors, { type CorsOptions } from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeWebSocketServer } from "./ws/index";
+import { attachBattleWS } from "./ws/battle";
 import { pool, db } from "./db";
 import { mentorAvailability, mentors, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -163,6 +164,8 @@ async function ensureOwnerAccount() {
     });
 
     const server = await registerRoutes(app);
+    initializeWebSocketServer(server, sessionMiddleware);
+    attachBattleWS(server, sessionMiddleware);
 
     // Serve static files in production, Vite dev server in development
     if (process.env.NODE_ENV !== "production") {

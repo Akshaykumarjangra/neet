@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import {
   MessageCircle,
   X,
@@ -631,7 +631,9 @@ export function ChapterChatbot({
     return (
       <>
         <Sheet open={isOpen} onOpenChange={(open) => !open && onToggle()}>
-          <SheetContent side="right" className="w-full sm:max-w-[640px] p-0 z-[80] border-l-0 bg-transparent shadow-none">
+          <SheetContent side="right" className="w-full sm:max-w-[960px] p-0 z-[80] border-l-0 bg-transparent shadow-none">
+            <SheetTitle className="sr-only">Chatbot Menu</SheetTitle>
+            <SheetDescription className="sr-only">AI assistant and chat interface</SheetDescription>
             {renderChatCard("w-full h-full p-0 sm:p-4", "w-full h-full")}
           </SheetContent>
         </Sheet>
@@ -655,7 +657,7 @@ export function ChapterChatbot({
 
   return (
     <AnimatePresence>
-      {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full max-w-[580px]") : (
+      {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full max-w-[960px]") : (
         <div className="fixed right-3 sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]">
           <motion.div initial={{ scale: 0.8, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button onClick={onToggle} className="group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white border-none transition-all overflow-hidden" size="lg">

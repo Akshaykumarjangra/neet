@@ -232,7 +232,7 @@ router.patch("/sessions/:id", requireAuthWithPasswordCheck, async (req, res) => 
     const [updatedSession] = await db
       .update(userChapterSessions)
       .set({
-        endedAt,
+        endedAt: endedAt ? new Date(endedAt) : new Date(),
         durationMinutes,
         sectionsViewed,
         interactionCount,

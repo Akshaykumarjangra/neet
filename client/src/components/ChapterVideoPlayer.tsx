@@ -15,7 +15,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Play, Film, Clock, ExternalLink, Sparkles, ChevronRight } from "lucide-react";
 
 interface VideoLink {
@@ -226,6 +226,10 @@ export function ChapterVideoPlayer({
         onOpenChange={(open) => !open && setActiveVideo(null)}
       >
         <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden bg-black text-white border-white/20">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Video Player</DialogTitle>
+            <DialogDescription>Watch the chapter video</DialogDescription>
+          </DialogHeader>
           {activeVideo && (
             <div className="flex flex-col max-w-full overflow-hidden">
               {/* Video container — 16:9 aspect ratio, overflow-hidden */}

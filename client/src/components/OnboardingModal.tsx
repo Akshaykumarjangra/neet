@@ -511,6 +511,10 @@ export function OnboardingModal({
         className="sm:max-w-[500px] p-0 gap-0 overflow-hidden"
         data-testid="onboarding-modal"
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Onboarding Preferences</DialogTitle>
+          <DialogDescription>Set your learning goals and preferences</DialogDescription>
+        </DialogHeader>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
