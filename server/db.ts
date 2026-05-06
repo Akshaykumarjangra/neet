@@ -80,6 +80,27 @@ const testConnection = async () => {
   try {
     const client = await pool.connect();
     await client.query('SELECT NOW()');
+    
+    // Auto-migrate user_chats table
+    console.log('🔄 Verifying user_chats table...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_chats (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR REFERENCES users(id) NOT NULL,
+        chapter_id INTEGER REFERENCES chapter_content(id) NOT NULL,
+        role VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_chats_user_id ON user_chats(user_id);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_chats_chapter_id ON user_chats(chapter_id);
+    `);
+    console.log('✓ user_chats table verified');
+
     client.release();
     console.log('✓ Connected to Coolify PostgreSQL database');
   } catch (err: any) {

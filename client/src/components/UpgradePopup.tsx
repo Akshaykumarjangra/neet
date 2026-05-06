@@ -70,6 +70,10 @@ export function UpgradePopup() {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent className="sm:max-w-[500px] border-none p-0 overflow-hidden bg-gradient-to-br from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{activePopup.title}</DialogTitle>
+                    <DialogDescription>{activePopup.content}</DialogDescription>
+                </DialogHeader>
                 {activePopup.imageUrl && (
                     <div className="w-full h-48 overflow-hidden relative">
                         <img
@@ -84,15 +88,15 @@ export function UpgradePopup() {
                 )}
                 <div className="p-6">
                     {!activePopup.imageUrl && (
-                        <DialogHeader className="mb-4">
-                            <DialogTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                        <div className="mb-4">
+                            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
                                 {activePopup.title}
-                            </DialogTitle>
-                        </DialogHeader>
+                            </h2>
+                        </div>
                     )}
-                    <DialogDescription className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+                    <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
                         {activePopup.content}
-                    </DialogDescription>
+                    </p>
                     <DialogFooter className="flex-col sm:flex-row gap-3">
                         <Button
                             variant="outline"
