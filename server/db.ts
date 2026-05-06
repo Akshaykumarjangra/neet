@@ -17,7 +17,7 @@ const dbHost = new URL(databaseUrl).hostname;
 
 const poolConfig = {
   connectionString: databaseUrl,
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_SSL === 'true' || (isProduction && process.env.DATABASE_SSL !== 'false') ? { rejectUnauthorized: false } : false,
 
   // Connection pool sizing (optimized for high concurrency)
   max: parseInt(process.env.DB_POOL_MAX || (isProduction ? '30' : '10')), 
