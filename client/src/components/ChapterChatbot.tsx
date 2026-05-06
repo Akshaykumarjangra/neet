@@ -336,7 +336,7 @@ export function ChapterChatbot({
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className={cardClass}
       >
-        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/60 dark:bg-slate-950/40 rounded-[2rem] flex flex-col h-full min-h-0">
+        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[2rem] flex flex-col h-full min-h-0">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
           <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
             <div className="flex items-center justify-between">
@@ -474,7 +474,7 @@ export function ChapterChatbot({
                               {message.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
                             </div>
                             <div className={cn('flex flex-col gap-2 max-w-[82%]', message.role === 'user' ? 'items-end' : 'items-start')}>
-                              <div className={cn('relative rounded-[1.5rem] px-5 py-4 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)] overflow-hidden', message.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-border/40 text-foreground rounded-tl-none')}>
+                              <div className={cn('relative rounded-[1.5rem] px-5 py-4 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)] overflow-hidden', message.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-50 dark:bg-slate-900 border border-border/40 text-slate-900 dark:text-slate-100 rounded-tl-none')}>
                                 {message.role === 'user' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
                                 {message.role === 'assistant' ? (
                                   <div className="text-[15px] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-slate-950/5 dark:[&_pre]:bg-slate-950/40 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-slate-100 dark:[&_code]:bg-slate-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-primary [&_strong]:text-primary">
@@ -524,7 +524,7 @@ export function ChapterChatbot({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                     placeholder={!isChatConfigured ? "Assistant currently offline..." : isAuthenticated ? "Message your expert AI mentor..." : "Sign in to begin mentorship..."}
-                    className="min-h-[56px] max-h-[160px] rounded-2xl border-border/40 bg-background/80 dark:bg-slate-900/80 px-5 py-4 text-[15px] shadow-inner focus-visible:ring-primary/20 focus-visible:border-primary/40 resize-none transition-all"
+                    className="min-h-[56px] max-h-[160px] rounded-2xl border-border/40 bg-background/80 dark:bg-slate-900/80 px-5 py-4 text-[15px] shadow-inner focus-visible:ring-primary/20 focus-visible:border-primary/40 resize-none transition-all scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     disabled={chatMutation.isPending || !isAuthenticated || !hasContext || !isChatConfigured}
                     maxLength={MAX_MESSAGE_LENGTH}
                   />
@@ -559,7 +559,7 @@ export function ChapterChatbot({
       <>
         <Sheet open={isOpen} onOpenChange={(open) => !open && onToggle()}>
           <SheetContent side="right" className="w-full sm:max-w-[640px] p-0 z-[80] border-l-0 bg-transparent shadow-none">
-            {renderChatCard("w-full h-full p-4", "w-full h-full")}
+            {renderChatCard("w-full h-full p-0 sm:p-4", "w-full h-full")}
           </SheetContent>
         </Sheet>
         <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
