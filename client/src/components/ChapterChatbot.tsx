@@ -27,7 +27,9 @@ import {
   BookOpen,
   Atom,
   FlaskConical,
-  Dna
+  Dna,
+  Plus,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -335,62 +337,76 @@ export function ChapterChatbot({
   };
 
   const renderSidebar = () => (
-    <div className="hidden md:flex flex-col w-64 shrink-0 border-r border-border/40 bg-slate-950/10 dark:bg-black/20 p-5 space-y-6">
+    <div className="hidden md:flex flex-col w-72 shrink-0 border-r border-border/40 bg-slate-950/20 dark:bg-black/40 p-6 space-y-8 backdrop-blur-xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5 text-foreground/80">
-          <History className="h-4.5 w-4.5 text-primary" />
-          <span className="text-sm font-bold tracking-tight">Chat History</span>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-3 text-foreground/90">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <History className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <span className="text-sm font-black tracking-tight uppercase">Chat History</span>
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-foreground/5 transition-colors">
+            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-foreground/5">
-          <MoreVertical className="h-4.5 w-4.5 text-muted-foreground" />
+
+        <Button
+          onClick={handleClearChat}
+          className="w-full justify-start gap-3 h-12 rounded-2xl bg-primary shadow-[0_12px_32px_-8px_rgba(59,130,246,0.5)] hover:shadow-[0_16px_40px_-8px_rgba(59,130,246,0.6)] transition-all border-none font-black text-[11px] uppercase tracking-wider"
+        >
+          <Plus className="h-4.5 w-4.5" />
+          New Chat
         </Button>
       </div>
 
       {/* History List */}
-      <div className="flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left bg-primary/10 text-primary border border-primary/20 transition-all font-semibold text-xs">
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">Forces & Motion</span>
-        </button>
-        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">Thermodynamics</span>
-        </button>
-        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">Previous Chat</span>
-        </button>
-        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">Previous Chat</span>
-        </button>
-        <button className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">Chat Utilities...</span>
-        </button>
+      <div className="flex-1 flex flex-col min-h-0 space-y-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 px-2">Recent</p>
+        <div className="flex-1 space-y-1.5 overflow-y-auto pr-2 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button className="w-full group flex items-center gap-3.5 p-4 rounded-2xl text-left bg-primary/10 text-primary border border-primary/20 transition-all font-black text-[11px] shadow-sm">
+            <MessageSquare className="h-4.5 w-4.5 shrink-0" />
+            <span className="truncate uppercase tracking-tight">Forces & Motion</span>
+          </button>
+          {[
+            { title: "Thermodynamics" },
+            { title: "Previous Chat" },
+            { title: "Previous Chat" },
+            { title: "Chat Utilities..." },
+          ].map((item, i) => (
+            <button key={i} className="w-full group flex items-center gap-3.5 p-4 rounded-2xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-[11px] font-black">
+              <MessageSquare className="h-4.5 w-4.5 shrink-0 opacity-20 group-hover:opacity-100 transition-opacity" />
+              <span className="truncate uppercase tracking-tight">{item.title}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Subject Categories */}
-      <div className="space-y-3 pt-4 border-t border-border/40">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Subject Categories</p>
-        <div className="space-y-1">
-          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-            <BookOpen className="h-4 w-4" />
-            <span>All Subjects</span>
-          </button>
-          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left bg-primary/10 border border-primary/20 text-primary font-semibold text-xs">
-            <Atom className="h-4 w-4" />
-            <span>Physics</span>
-          </button>
-          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-            <FlaskConical className="h-4 w-4" />
-            <span>Chemistry</span>
-          </button>
-          <button className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all text-xs font-semibold">
-            <Dna className="h-4 w-4" />
-            <span>Biology</span>
-          </button>
+      <div className="space-y-4 pt-6 border-t border-border/40">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 px-2">Subject Categories</p>
+        <div className="grid grid-cols-1 gap-1.5">
+          {[
+            { icon: BookOpen, label: "All Subjects", active: false },
+            { icon: Atom, label: "Physics", active: true },
+            { icon: FlaskConical, label: "Chemistry", active: false },
+            { icon: Dna, label: "Biology", active: false },
+          ].map((subj, i) => (
+            <button
+              key={i}
+              className={cn(
+                "w-full flex items-center gap-4 p-3.5 rounded-2xl text-left transition-all text-[11px] font-black uppercase tracking-tight group",
+                subj.active
+                  ? "bg-primary/10 border border-primary/20 text-primary shadow-sm"
+                  : "hover:bg-foreground/5 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <subj.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", subj.active ? "opacity-100" : "opacity-20 group-hover:opacity-100")} />
+              <span>{subj.label}</span>
+              {subj.active && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -405,62 +421,62 @@ export function ChapterChatbot({
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className={cardClass}
       >
-        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[2rem] flex flex-row h-full min-h-0">
+        <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[3rem] flex flex-row h-full min-h-0">
           {renderSidebar()}
           
           <div className="flex-1 flex flex-col h-full min-h-0 relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
-            <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-md pb-6 pt-7">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_50%)] pointer-events-none" />
+            <CardHeader className="relative border-b border-border/40 bg-background/20 backdrop-blur-xl pb-6 pt-7 px-8">
               <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <motion.div 
                   whileHover={{ rotate: 15, scale: 1.1 }}
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_8px_32px_-8px_rgba(59,130,246,0.5)]"
+                  className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_12px_40px_-8px_rgba(59,130,246,0.5)]"
                 >
-                  <Bot className="h-7 w-7" />
+                  <Bot className="h-8 w-8" />
                 </motion.div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary/80">NEET AI EXPERT</p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5">
+                    <p className="text-[10px] uppercase font-black tracking-[0.3em] text-primary">NEET AI EXPERT</p>
                     <div className="h-1 w-1 rounded-full bg-primary/40" />
-                    <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                      <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
+                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                      <Zap className="h-3 w-3 fill-amber-500" />
                       Pro
                     </span>
                   </div>
-                  <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
                     {title}
                   </CardTitle>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2.5">
                     {chapterSubject && (
-                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-primary/5 border-primary/20 text-primary px-2 py-0.5 rounded-md">
+                      <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.1em] bg-primary/5 border-primary/20 text-primary px-3 py-1 rounded-lg">
                         {chapterSubject}
                       </Badge>
                     )}
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded-md", 
+                      className={cn("text-[10px] font-black uppercase tracking-[0.1em] flex items-center gap-2 px-3 py-1 rounded-lg",
                         isChatConfigured ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/5 border-rose-500/20 text-rose-600"
                       )}
                     >
                       <motion.span 
-                        animate={isChatConfigured ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : {}}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className={cn("h-1.5 w-1.5 rounded-full", isChatConfigured ? "bg-emerald-500" : "bg-rose-500")} 
+                        animate={isChatConfigured ? { scale: [1, 1.3, 1], opacity: [1, 0.5, 1] } : {}}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className={cn("h-1.5 w-1.5 rounded-full", isChatConfigured ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-rose-500")}
                       />
-                      {isChatConfigured ? "Live" : "Offline"}
+                      {isChatConfigured ? "Live Status" : "Offline"}
                     </Badge>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
                 {messages.length > 0 && (
-                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear chat" className="rounded-full hover:bg-rose-500/10 hover:text-rose-500 transition-colors">
-                    <Trash2 className="h-4.5 w-4.5" />
+                  <Button variant="ghost" size="icon" onClick={handleClearChat} title="Clear chat" className="h-10 w-10 rounded-2xl hover:bg-rose-500/10 hover:text-rose-500 transition-all">
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" onClick={onToggle} title="Close assistant" className="rounded-full hover:bg-background/80 transition-colors">
-                  <X className="h-5 w-5" />
+                <Button variant="ghost" size="icon" onClick={onToggle} title="Close assistant" className="h-10 w-10 rounded-2xl hover:bg-foreground/5 transition-all">
+                  <X className="h-6 w-6" />
                 </Button>
               </div>
             </div>
@@ -533,35 +549,45 @@ export function ChapterChatbot({
                           </motion.div>
                         )}
                       </AnimatePresence>
-                      <div className="space-y-8">
+                      <div className="space-y-10">
                         {messages.map((message) => (
                           <motion.div
                             key={message.id}
-                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            initial={{ opacity: 0, y: 30, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                            className={cn('flex gap-4 group', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
+                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                            className={cn('flex gap-5 group', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
                           >
-                            <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-md mt-1 transition-transform group-hover:scale-110', message.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white')}>
-                              {message.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
+                            <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-xl mt-1 transition-transform group-hover:scale-105', message.role === 'user' ? 'bg-slate-800 text-white' : 'bg-gradient-to-br from-indigo-500 via-primary to-sky-500 text-white')}>
+                              {message.role === 'user' ? <User className="h-5.5 w-5.5" /> : <Bot className="h-5.5 w-5.5" />}
                             </div>
-                            <div className={cn('flex flex-col gap-2 max-w-[82%]', message.role === 'user' ? 'items-end' : 'items-start')}>
-                              <div className={cn('relative rounded-[2rem] px-6 py-5 overflow-hidden', message.role === 'user' ? 'bg-slate-900/40 border border-slate-800/80 text-slate-100 rounded-tr-none shadow-md backdrop-blur-md' : 'bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-600 text-white rounded-tl-none shadow-[0_16px_48px_-8px_rgba(99,102,241,0.4)] border border-indigo-500/20')}>
-                                {message.role === 'assistant' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
+                            <div className={cn('flex flex-col gap-3 max-w-[85%]', message.role === 'user' ? 'items-end' : 'items-start')}>
+                              <div className={cn(
+                                'relative rounded-[2.5rem] px-7 py-6 overflow-hidden transition-all duration-300',
+                                message.role === 'user'
+                                  ? 'bg-white/5 border border-white/10 text-slate-100 rounded-tr-none shadow-xl backdrop-blur-2xl hover:bg-white/10'
+                                  : 'bg-gradient-to-br from-indigo-600/90 via-violet-600/90 to-indigo-600/90 text-white rounded-tl-none shadow-[0_24px_64px_-12px_rgba(99,102,241,0.5)] border border-white/20'
+                              )}>
+                                {message.role === 'assistant' && (
+                                  <>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                                  </>
+                                )}
                                 {message.role === 'assistant' ? (
-                                  <div className="text-[15px] leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-black/30 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-white [&_strong]:text-white">
+                                  <div className="text-[15.5px] leading-[1.7] prose prose-sm prose-invert max-w-none break-words [&_p]:mb-5 last:[&_p]:mb-0 [&_ul]:mb-5 [&_ol]:mb-5 [&_pre]:my-5 [&_pre]:bg-black/40 [&_pre]:p-5 [&_pre]:rounded-2xl [&_pre]:border [&_pre]:border-white/10 [&_code]:bg-white/15 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-white [&_strong]:text-white [&_strong]:font-black">
                                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{message.content}</ReactMarkdown>
                                   </div>
                                 ) : (
-                                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words font-medium">{message.content}</p>
+                                  <p className="text-[15.5px] leading-relaxed whitespace-pre-wrap break-words font-semibold tracking-tight">{message.content}</p>
                                 )}
                               </div>
-                              <div className={cn('flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 opacity-0 group-hover:opacity-100 transition-opacity', message.role === 'user' ? 'justify-end' : 'justify-start')}>
-                                <span>{formatTime(message.timestamp)}</span>
-                                <div className="h-1 w-1 rounded-full bg-border" />
-                                <button className="hover:text-primary transition-colors flex items-center gap-1" onClick={() => handleCopy(message.id, message.content)}>
+                              <div className={cn('flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 px-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0', message.role === 'user' ? 'justify-end' : 'justify-start')}>
+                                  <span className="flex items-center gap-1.5">{formatTime(message.timestamp)}</span>
+                                <div className="h-1 w-1 rounded-full bg-border/40" />
+                                <button className="hover:text-primary transition-colors flex items-center gap-1.5" onClick={() => handleCopy(message.id, message.content)}>
                                   {copiedId === message.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                  {copiedId === message.id ? 'Copied' : 'Copy'}
+                                    {copiedId === message.id ? 'Copy' : 'Copy'}
                                 </button>
                               </div>
                             </div>
@@ -588,36 +614,55 @@ export function ChapterChatbot({
               </ScrollArea>
             </div>
 
-            <div className="p-6 pt-4 bg-background/40 backdrop-blur-md border-t border-border/40">
-              <div className="flex gap-3 items-end">
-                <div className="flex-1 relative">
+            <div className="p-8 pt-5 bg-background/60 backdrop-blur-2xl border-t border-border/40 shadow-[0_-12px_48px_-12px_rgba(0,0,0,0.1)] relative">
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="flex gap-4 items-end max-w-5xl mx-auto">
+                <div className="flex-1 relative group">
                   <Textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={!isChatConfigured ? "Assistant currently offline..." : isAuthenticated ? "Message your expert AI mentor..." : "Sign in to begin mentorship..."}
-                    className="min-h-[56px] max-h-[160px] rounded-2xl border-border/40 bg-background/80 dark:bg-slate-900/80 px-5 py-4 text-[15px] shadow-inner focus-visible:ring-primary/20 focus-visible:border-primary/40 resize-none transition-all scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    placeholder={!isChatConfigured ? "AI Engine Maintenance..." : isAuthenticated ? "Ask your AI mentor anything about this chapter..." : "Sign in to activate AI mentor..."}
+                    className="min-h-[64px] max-h-[200px] rounded-3xl border-border/40 bg-white/5 dark:bg-slate-900/50 px-6 py-5 text-[15.5px] shadow-2xl focus-visible:ring-primary/30 focus-visible:border-primary/50 resize-none transition-all scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-muted-foreground/30 font-medium"
                     disabled={chatMutation.isPending || !isAuthenticated || !hasContext || !isChatConfigured}
                     maxLength={MAX_MESSAGE_LENGTH}
                   />
                   {input.length > 0 && (
-                    <div className="absolute top-[-24px] right-2 text-[10px] font-bold text-muted-foreground/40 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{input.length} / {MAX_MESSAGE_LENGTH}</div>
+                    <div className="absolute -top-3 right-4 px-2 py-0.5 rounded-full bg-background/90 border border-border/40 text-[9px] font-black tracking-widest text-primary/60 shadow-sm backdrop-blur-md">
+                      {input.length} / {MAX_MESSAGE_LENGTH}
+                    </div>
                   )}
                 </div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     onClick={() => handleSend()}
                     disabled={!isAuthenticated || !hasContext || !isChatConfigured || !input.trim() || chatMutation.isPending || input.trim().length < 2}
                     size="icon"
-                    className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_8px_24px_-8px_rgba(59,130,246,0.5)] border-none shrink-0"
+                    className="h-16 w-16 rounded-3xl bg-gradient-to-br from-indigo-600 via-primary to-sky-500 text-white shadow-[0_12px_32px_-4px_rgba(59,130,246,0.6)] hover:shadow-[0_16px_48px_-4px_rgba(59,130,246,0.7)] border-none shrink-0 transition-shadow duration-300"
                   >
-                    {chatMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    {chatMutation.isPending ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6 transform translate-x-0.5 -translate-y-0.5 rotate-[-15deg]" />}
                   </Button>
                 </motion.div>
               </div>
-              <div className="mt-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 px-1">
-                <div className="flex items-center gap-1.5"><Star className="h-3 w-3 fill-amber-500/20 text-amber-500" /><span>NEET-Tailored AI Engine</span></div>
-                {!hasContext && <span className="text-amber-500 animate-pulse">Syncing context...</span>}
+              <div className="mt-4 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.25em] text-muted-foreground/30 px-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-1">
+                    <Sparkles className="h-3 w-3 text-amber-500 fill-amber-500" />
+                    <Sparkles className="h-3 w-3 text-amber-500 fill-amber-500 scale-75 opacity-50" />
+                  </div>
+                  <span>Neural NEET-Expert Engine v2.4</span>
+                </div>
+                {!hasContext ? (
+                  <span className="text-amber-500/60 animate-pulse flex items-center gap-1.5">
+                    <RotateCcw className="h-2.5 w-2.5 animate-spin" />
+                    Syncing Chapter Context...
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-500/50">
+                    <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    Context Fully Synchronized
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
