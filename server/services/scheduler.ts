@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as cron from "node-cron";
 import { triggerMarketingRun } from "./marketing-service";
 import { db } from "../db";

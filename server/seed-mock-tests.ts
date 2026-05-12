@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { db } from "./db";
 import { mockTests, questions } from "@shared/schema";

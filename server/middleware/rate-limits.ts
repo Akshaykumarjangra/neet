@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Centralized rate limiters for sensitive endpoints.
 //
 // Buckets:

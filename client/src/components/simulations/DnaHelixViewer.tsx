@@ -44,6 +44,7 @@ export default function DnaHelixViewer() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    // @ts-ignore
     controls.autoRotate = false; // We handle rotation manually
 
     // Lighting

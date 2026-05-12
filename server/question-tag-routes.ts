@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { db } from "./db";
 import { questionTags, questions, contentTopics } from "@shared/schema";

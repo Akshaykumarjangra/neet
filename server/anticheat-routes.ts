@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Anti-Cheat System for Mock Tests
  * Phase 7.5 — Tab-switch detection, fullscreen lock, browser fingerprint

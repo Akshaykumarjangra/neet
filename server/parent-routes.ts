@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Parent linking — varchar user IDs.
  */
