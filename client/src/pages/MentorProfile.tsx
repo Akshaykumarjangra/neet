@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";

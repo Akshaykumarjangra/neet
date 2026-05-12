@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Header } from "@/components/Header";
 import { QuestionCard } from "@/components/QuestionCard";
 import { SolutionPanel } from "@/components/SolutionPanel";

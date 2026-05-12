@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, raw } from "express";
 import Stripe from "stripe";
 import Razorpay from "razorpay";

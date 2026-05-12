@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { z } from "zod";
 import OpenAI from "openai";

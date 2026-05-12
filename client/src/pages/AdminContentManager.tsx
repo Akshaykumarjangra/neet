@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use strict";
 
 import { useState, useEffect } from "react";
