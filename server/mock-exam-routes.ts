@@ -157,8 +157,7 @@ router.get("/papers", async (req, res) => {
       : [];
     const assignmentsByPaper: Record<number, any[]> = {};
     for (const assignment of assignments) {
-      assignmentsByPaper[assignment.paperId] = assignmentsByPaper[assignment.paperId] || [];
-      assignmentsByPaper[assignment.paperId].push(assignment);
+      (assignmentsByPaper[assignment.paperId] ??= []).push(assignment);
     }
 
     const userId = getCurrentUser(req);
@@ -172,8 +171,7 @@ router.get("/papers", async (req, res) => {
       : [];
     const sectionsByPaper: Record<number, any[]> = {};
     for (const section of sections) {
-      sectionsByPaper[section.paperId] = sectionsByPaper[section.paperId] || [];
-      sectionsByPaper[section.paperId].push(section);
+      (sectionsByPaper[section.paperId] ??= []).push(section);
     }
 
     const total = accessFiltered.length;
@@ -417,8 +415,7 @@ router.post("/papers/:paperId/start", startLimiter, async (req, res) => {
 
       const optionsByQuestion: Record<number, any[]> = {};
       for (const opt of options) {
-        optionsByQuestion[opt.questionId] = optionsByQuestion[opt.questionId] || [];
-        optionsByQuestion[opt.questionId].push(opt);
+        (optionsByQuestion[opt.questionId] ??= []).push(opt);
       }
 
       const sectionOrder = sections.map((s) => s.id);
@@ -1088,8 +1085,7 @@ router.get("/attempts/:attemptId/review", async (req, res) => {
 
       const optionsByQuestion: Record<number, any[]> = {};
       for (const opt of options) {
-        optionsByQuestion[opt.questionId] = optionsByQuestion[opt.questionId] || [];
-        optionsByQuestion[opt.questionId].push(opt);
+        (optionsByQuestion[opt.questionId] ??= []).push(opt);
       }
 
       reviewItems = questions.map((q) => {
@@ -1761,8 +1757,7 @@ router.get("/attempts/:attemptId/report", async (req, res) => {
 
       const optionsByQuestion: Record<number, any[]> = {};
       for (const opt of options) {
-        optionsByQuestion[opt.questionId] = optionsByQuestion[opt.questionId] || [];
-        optionsByQuestion[opt.questionId].push(opt);
+        (optionsByQuestion[opt.questionId] ??= []).push(opt);
       }
 
       const sectionByQuestion = new Map<number, any>();
