@@ -148,7 +148,7 @@ export const queryClient = new QueryClient({
         toast({
           variant: "destructive",
           title: "Error",
-          description: error instanceof Error ? error.message : "Action failed",
+          description: error?.message || "Action failed",
         });
       }
     },
