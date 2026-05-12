@@ -66,6 +66,8 @@ import remarkGfm from "remark-gfm";
 import { Seo } from "@/components/Seo";
 import { getBreadcrumbSchema, getArticleSchema } from "@/config/seo";
 
+const markdownRemarkPlugins = [remarkGfm];
+
 export default function ChapterViewer() {
   const params = useParams<{ subject: string; classLevel: string; chapterNumber: string }>();
   const [, navigate] = useLocation();
@@ -1123,7 +1125,7 @@ export default function ChapterViewer() {
                               className="prose dark:prose-invert max-w-full overflow-x-hidden prose-headings:font-serif prose-p:leading-relaxed break-words"
                               style={{ fontSize: `${fontSize}px`, fontFamily: 'Georgia, serif', lineHeight: '1.8' }}
                             >
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              <ReactMarkdown remarkPlugins={markdownRemarkPlugins}>
                                 {sanitizedNotes}
                               </ReactMarkdown>
                             </div>

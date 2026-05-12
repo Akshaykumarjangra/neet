@@ -40,6 +40,9 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
+const markdownRemarkPlugins = [remarkGfm, remarkMath];
+const markdownRehypePlugins = [rehypeKatex];
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -550,7 +553,7 @@ export function ChapterChatbot({
                                 {message.role === 'assistant' && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />}
                                 {message.role === 'assistant' ? (
                                   <div className="text-[15px] leading-relaxed prose prose-sm prose-invert max-w-none break-words [&_p]:mb-4 last:[&_p]:mb-0 [&_ul]:mb-4 [&_ol]:mb-4 [&_pre]:my-4 [&_pre]:bg-black/30 [&_pre]:p-4 [&_pre]:rounded-xl [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-white [&_strong]:text-white">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{message.content}</ReactMarkdown>
+                                    <ReactMarkdown remarkPlugins={markdownRemarkPlugins} rehypePlugins={markdownRehypePlugins}>{message.content}</ReactMarkdown>
                                   </div>
                                 ) : (
                                   <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words font-medium">{message.content}</p>
