@@ -299,14 +299,21 @@ export function ChapterChatbot({
   const handleRetry = () => {
     if (failedMessage) {
       setFailedMessage(null);
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant' && last.content.includes('error')) {
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
-      chatMutation.mutate({ message: failedMessage, history: messages });
+
+      let updatedMessages = [...messages];
+      const last = updatedMessages[updatedMessages.length - 1];
+      if (last?.role === 'assistant' && last.content.includes('error')) {
+        updatedMessages = updatedMessages.slice(0, -1);
+      }
+
+      let historyForMutate = updatedMessages;
+      const lastUserMsg = updatedMessages[updatedMessages.length - 1];
+      if (lastUserMsg?.role === 'user' && lastUserMsg.content === failedMessage) {
+        historyForMutate = updatedMessages.slice(0, -1);
+      }
+
+      setMessages(updatedMessages);
+      chatMutation.mutate({ message: failedMessage, history: historyForMutate });
     }
   };
 
@@ -406,7 +413,7 @@ export function ChapterChatbot({
         className={cardClass}
       >
         <Card className="overflow-hidden border-border/40 shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] backdrop-blur-3xl bg-background/95 dark:bg-slate-950/95 rounded-none sm:rounded-[2rem] flex flex-row h-full min-h-0">
-          {renderSidebar()}
+          {isSheetLayout && renderSidebar()}
           
           <div className="flex-1 flex flex-col h-full min-h-0 relative">
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-sky-500/5 pointer-events-none" />
@@ -604,6 +611,19 @@ export function ChapterChatbot({
                     <div className="absolute top-[-24px] right-2 text-[10px] font-bold text-muted-foreground/40 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{input.length} / {MAX_MESSAGE_LENGTH}</div>
                   )}
                 </div>
+                {failedMessage && (
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleRetry}
+                      size="icon"
+                      variant="outline"
+                      className="h-14 w-14 rounded-2xl border-rose-500/50 text-rose-500 hover:bg-rose-500/10 shrink-0"
+                      title="Retry last message"
+                    >
+                      <RotateCcw className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                )}
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     onClick={() => handleSend()}
@@ -637,27 +657,29 @@ export function ChapterChatbot({
             {renderChatCard("w-full h-full p-0 sm:p-4", "w-full h-full")}
           </SheetContent>
         </Sheet>
-        <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={onToggle}
-              className={cn("group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] transition-all overflow-hidden border-none", isOpen ? "bg-slate-950 text-white" : "bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white")}
-              size="lg"
-            >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner">{isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}</span>
-              <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">NEET Expert</span><span className="text-base font-bold tracking-tight">{isOpen ? "Close Assistant" : "Ask AI Mentor"}</span></div>
-              {!isOpen && <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />}
-            </Button>
-          </motion.div>
-        </div>
+        {!isOpen && (
+          <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={onToggle}
+                className={cn("group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] transition-all overflow-hidden border-none bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white")}
+                size="lg"
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner"><MessageCircle className="h-6 w-6" /></span>
+                <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">NEET Expert</span><span className="text-base font-bold tracking-tight">Ask AI Mentor</span></div>
+                <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />
+              </Button>
+            </motion.div>
+          </div>
+        )}
       </>
     );
   }
 
   return (
     <AnimatePresence>
-      {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full max-w-[960px]") : (
+      {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full sm:w-[400px]") : (
         <div className="fixed right-3 sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]">
           <motion.div initial={{ scale: 0.8, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button onClick={onToggle} className="group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white border-none transition-all overflow-hidden" size="lg">
