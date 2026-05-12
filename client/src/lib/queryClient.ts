@@ -80,12 +80,12 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export async function apiRequest<T = unknown>(
   method: string,
   url: string,
   data?: unknown | undefined,
   options?: { timeoutMs?: number },
-): Promise<any> {
+): Promise<T | Response> {
   const res = await fetchWithTimeout(
     url,
     {
@@ -124,10 +124,10 @@ export const getQueryFn: <T>(options: {
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error: any, query) => {
+    onError: (error: unknown, query) => {
       // Only show toast if we haven't suppressed it in meta
       if (query?.meta?.errorMessage !== false) {
-        const message = error?.message || "Something went wrong";
+        const message = error instanceof Error ? error.message : "Something went wrong";
         if (message.startsWith("401") || message.startsWith("403")) return; // Handle auth errors silently or via redirect
 
         // Avoid spamming toasts for background refetches
@@ -142,13 +142,13 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error: any, _variables, _context, mutation) => {
+    onError: (error: unknown, _variables, _context, mutation) => {
       // Only show toast if we haven't suppressed it in meta
       if (mutation?.meta?.errorMessage !== false) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error?.message || "Action failed",
+          description: error instanceof Error ? error.message : "Action failed",
         });
       }
     },
@@ -160,8 +160,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000,
       gcTime: 10 * 60 * 1000,
-      retry: (failureCount, error: any) => {
-        const message = typeof error?.message === "string" ? error.message : "";
+      retry: (failureCount, error: unknown) => {
+        const message = error instanceof Error ? error.message : "";
         const isClientError = message.startsWith("4");
         return failureCount < 2 && !isClientError;
       },
