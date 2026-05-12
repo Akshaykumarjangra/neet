@@ -26,6 +26,7 @@ interface User extends ServerUser {
   username: string;
   displayName: string;
   initials: string;
+  isAdminOrMentor: boolean;
   mustChangePassword?: boolean;
 }
 
@@ -65,6 +66,7 @@ const normalizeUser = (user: ServerUser): User => {
     username,
     displayName: cleanName || fallbackFromEmail,
     initials,
+    isAdminOrMentor: user.role === "admin" || user.isAdmin || user.role === "mentor",
     avatarUrl: user.avatarUrl ?? null,
     headline: user.headline ?? null,
   };
