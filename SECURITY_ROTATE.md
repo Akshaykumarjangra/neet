@@ -8,7 +8,7 @@ The file `.env` was previously committed to this repository (tracked by git) wit
 
 ## 1. Gemini API Key (HIGH PRIORITY)
 
-- **Exposed value:** `AIzaSyCVSm38p5mSx_Jrk4T1ZwPjq-dpksEAMCI`
+- **Exposed value:** `<REDACTED>`
 - **Why it matters:** Anyone with this key can call Gemini on your billing account.
 - **Rotate steps:**
   1. Go to https://aistudio.google.com/app/apikey
@@ -19,8 +19,8 @@ The file `.env` was previously committed to this repository (tracked by git) wit
 
 ## 2. Database Password (HIGH PRIORITY)
 
-- **Exposed connection:** `postgresql://postgres:iAoFPHbWmD0NRYph0SV25TcNYJz3IVPMrF7CHMiXgmOZ2E3DBrrfa3GpY1P4c6dc@82.25.104.62:8001/postgres`
-- **Exposed password:** `iAoFPHbWmD0NRYph0SV25TcNYJz3IVPMrF7CHMiXgmOZ2E3DBrrfa3GpY1P4c6dc`
+- **Exposed connection:** `postgresql://postgres:<REDACTED>@82.25.104.62:8001/postgres`
+- **Exposed password:** `<REDACTED>`
 - **Why it matters:** The host (82.25.104.62:8001) is reachable on the public internet. Treat the database as compromised.
 - **Rotate steps:**
   1. SSH to your Coolify VPS (82.25.104.62).
@@ -35,8 +35,8 @@ The file `.env` was previously committed to this repository (tracked by git) wit
 
 ## 3. Owner Account Password (HIGH PRIORITY)
 
-- **Exposed email:** `akg45272@gmail.com`
-- **Exposed password:** `ZeroAI@Neet2026!Secure`
+- **Exposed email:** `<REDACTED>`
+- **Exposed password:** `<REDACTED>`
 - **Why it matters:** This is the application's owner/admin login. If reused anywhere else, rotate there too.
 - **Rotate steps:**
   1. Pick a new strong password (password manager generated, 20+ chars).
@@ -47,7 +47,7 @@ The file `.env` was previously committed to this repository (tracked by git) wit
 
 ## 4. Session Secret (MEDIUM PRIORITY)
 
-- **Exposed value:** `neet-zero-ai-session-k3y-2026-xR7mQ9`
+- **Exposed value:** `<REDACTED>`
 - **Why it matters:** Anyone with this can forge session cookies and impersonate users.
 - **Rotate steps:**
   1. Generate a new 64-char random value:
