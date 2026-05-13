@@ -160,7 +160,7 @@ export default function AdminContentManager() {
     setLocation(`/admin/content?tab=${value}`, { replace: true });
   };
 
-  if (!user || !user.isAdminOrMentor) {
+  if (!user || (!user.isAdmin && user.role !== 'mentor')) {
     setLocation("/");
     return null;
   }

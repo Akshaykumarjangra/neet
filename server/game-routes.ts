@@ -494,8 +494,9 @@ router.get("/achievements", requireAuthWithPasswordCheck, async (req, res) => {
       .from(userAchievements)
       .where(eq(userAchievements.userId, user));
 
+    const userUnlockedMap = new Map(userUnlocked.map(ua => [ua.achievementId, ua]));
     const achievementsWithStatus = allAchievements.map(achievement => {
-      const userAchievement = userUnlocked.find(ua => ua.achievementId === achievement.id);
+      const userAchievement = userUnlockedMap.get(achievement.id);
       return {
         ...achievement,
         unlocked: !!userAchievement,
