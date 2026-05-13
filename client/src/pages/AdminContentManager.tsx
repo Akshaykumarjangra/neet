@@ -137,7 +137,7 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 export default function AdminContentManager() {
-  const { user } = useAuth();
+  const { user, isAdminOrMentor } = useAuth();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const { toast } = useToast();
@@ -160,7 +160,7 @@ export default function AdminContentManager() {
     setLocation(`/admin/content?tab=${value}`, { replace: true });
   };
 
-  if (!user || !user.isAdminOrMentor) {
+  if (!user || !isAdminOrMentor) {
     setLocation("/");
     return null;
   }

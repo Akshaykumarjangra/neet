@@ -132,11 +132,12 @@ export default function AdminDashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { isAdminOrMentor } = useAuth();
   useEffect(() => {
-    if (user && !user.isAdminOrMentor) {
+    if (user && !isAdminOrMentor) {
       setLocation("/");
     }
-  }, [user, setLocation]);
+  }, [user, isAdminOrMentor, setLocation]);
 
   const handleRecomputePerformance = async () => {
     try {
@@ -158,7 +159,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user || !user.isAdminOrMentor) {
+  if (!user || !isAdminOrMentor) {
     return null;
   }
 
