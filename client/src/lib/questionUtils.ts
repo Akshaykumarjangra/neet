@@ -114,5 +114,8 @@ export function getDifficultyLabel(level?: number) {
 }
 
 export function getPrimaryTopicLabel(question: Pick<Question, "relatedTopics">) {
-  return question.relatedTopics?.[0] ?? "Mixed Practice"
+  if (Array.isArray(question.relatedTopics) && question.relatedTopics.length > 0) {
+    return question.relatedTopics[0];
+  }
+  return "Mixed Practice";
 }
