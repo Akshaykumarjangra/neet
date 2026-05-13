@@ -44,7 +44,7 @@ import { ArrowLeft, Calendar, Plus, Trash2, Edit, FileText, Layers } from "lucid
 import { format } from "date-fns";
 
 export default function AdminTestSeries() {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [, setLocation] = useLocation();
     const { toast } = useToast();
     const [isSeriesDialogOpen, setIsSeriesDialogOpen] = useState(false);
@@ -120,7 +120,7 @@ export default function AdminTestSeries() {
         }
     });
 
-    if (!user?.isAdmin) {
+    if (!isAdmin) {
         setLocation("/");
         return null;
     }
