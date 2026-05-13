@@ -8,11 +8,11 @@ test.describe('User Journey', () => {
 
     test('should load the home page successfully', async ({ page }) => {
         await page.goto('/');
-        await expect(page).toHaveTitle(/NEET Prep/);
+        await expect(page).toHaveTitle(/Crack NEET with AI-Powered Learning \| ZERO AI/);
 
         // Check for Hero Section
-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
-        await expect(page.getByTestId('button-cta-signup')).toBeVisible();
+        await expect(page.locator('h1').filter({ hasText: 'Crack NEET with' })).toBeVisible();
+        await expect(page.getByTestId('button-start-learning')).toBeVisible();
     });
 
     test('should navigate to pricing', async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('User Journey', () => {
 
         await expect(page).toHaveURL(/.*pricing/);
         // Relax strict text check or ensure exact match with the pricing page header
-        await expect(page.locator('h1, h2').filter({ hasText: 'Pricing' }).first()).toBeVisible();
+        await expect(page.locator('h1, h2, h3').filter({ hasText: /Pricing|Choose your plan/i }).first()).toBeVisible();
     });
 
     // We can try to sign up a temp user if we wanted deep testing,

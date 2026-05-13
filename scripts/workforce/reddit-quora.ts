@@ -4,7 +4,11 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { complete } from "../../server/workforce";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const SYSTEM = `Draft a helpful, non-promotional answer for a NEET aspirant.
 ONLY mention NEETPrep when genuinely useful. Cite NCERT chapter where relevant.
@@ -37,8 +41,51 @@ async function fetchRedditNeet(): Promise<any[]> {
       id: c.data.id, subreddit: "NEET", title: c.data.title, body: c.data.selftext, url: `https://reddit.com${c.data.permalink}`,
     }));
   }
-  // TODO: OAuth flow with cid/secret
-  return [];
+  try {
+    const auth = Buffer.from(`${cid}:${secret}`).toString("base64");
+    const tokenRes = await fetch("https://www.reddit.com/api/v1/access_token", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "user-agent": "neetprep-bot/1.0"
+      },
+      body: "grant_type=client_credentials"
+    });
+
+    if (!tokenRes.ok) {
+      console.warn(`[reddit-quora] Token fetch failed with status ${tokenRes.status}`);
+      return [];
+    }
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+
+    if (!accessToken) {
+      console.warn("[reddit-quora] No access_token in response");
+      return [];
+    }
+
+    const r = await fetch("https://oauth.reddit.com/r/NEET/new.json?limit=10", {
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "user-agent": "neetprep-bot/1.0"
+      }
+    });
+
+    if (!r.ok) {
+      console.warn(`[reddit-quora] Data fetch failed with status ${r.status}`);
+      return [];
+    }
+
+    const j = await r.json();
+    return (j?.data?.children ?? []).map((c: any) => ({
+      id: c.data.id, subreddit: "NEET", title: c.data.title, body: c.data.selftext, url: `https://reddit.com${c.data.permalink}`,
+    }));
+  } catch (error) {
+    console.error("[reddit-quora] OAuth flow error:", error);
+    return [];
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

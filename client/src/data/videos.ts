@@ -9,6 +9,7 @@ export interface VideoItem {
     channel: string;
     topics: string[];
     difficulty: "Beginner" | "Intermediate" | "Advanced";
+    type?: string;
 }
 
 export const videos: VideoItem[] = [
