@@ -43,16 +43,65 @@ describe("mock-exam scoring", () => {
     assert.equal(result.responseRows.length, 3);
   });
 
-  it("sanitizes responses with invalid option ids", () => {
-    const responseMap = sanitizeResponses(
-      [{ questionId: 1, selectedOptionId: 999 }],
-      new Set([1]),
-      { 1: new Set([101, 102]) }
-    );
+  describe("sanitizeResponses", () => {
+    it("handles null/undefined/empty responsesInput array", () => {
+      assert.equal(sanitizeResponses(null as any, new Set(), {}).size, 0);
+      assert.equal(sanitizeResponses(undefined as any, new Set(), {}).size, 0);
+      assert.equal(sanitizeResponses([], new Set(), {}).size, 0);
+    });
 
-    const response = responseMap.get(1);
-    assert.ok(response);
-    assert.equal(response.selectedOptionId, null);
+    it("ignores null/undefined/invalid items in responsesInput", () => {
+      const result = sanitizeResponses(
+        [null as any, undefined as any, { questionId: "not a number" as any }, {} as any],
+        new Set([1]),
+        {}
+      );
+      assert.equal(result.size, 0);
+    });
+
+    it("ignores responses where questionId is not in allowedQuestionIds", () => {
+      const result = sanitizeResponses(
+        [{ questionId: 1, selectedOptionId: 101 }, { questionId: 2, selectedOptionId: 201 }],
+        new Set([1]),
+        { 1: new Set([101]) }
+      );
+      assert.equal(result.size, 1);
+      assert.ok(result.has(1));
+      assert.equal(result.has(2), false);
+    });
+
+    it("handles null or undefined selectedOptionId", () => {
+      const result = sanitizeResponses(
+        [{ questionId: 1, selectedOptionId: null }, { questionId: 2, selectedOptionId: undefined }],
+        new Set([1, 2]),
+        { 1: new Set([101]), 2: new Set([201]) }
+      );
+      assert.equal(result.size, 2);
+      assert.equal(result.get(1)?.selectedOptionId, null);
+      assert.equal(result.get(2)?.selectedOptionId, null);
+    });
+
+    it("parses string selectedOptionId to number", () => {
+      const result = sanitizeResponses(
+        [{ questionId: 1, selectedOptionId: "101" as any }],
+        new Set([1]),
+        { 1: new Set([101]) }
+      );
+      assert.equal(result.size, 1);
+      assert.equal(result.get(1)?.selectedOptionId, 101);
+    });
+
+    it("sanitizes responses with invalid option ids", () => {
+      const responseMap = sanitizeResponses(
+        [{ questionId: 1, selectedOptionId: 999 }],
+        new Set([1]),
+        { 1: new Set([101, 102]) }
+      );
+
+      const response = responseMap.get(1);
+      assert.ok(response);
+      assert.equal(response.selectedOptionId, null);
+    });
   });
 
   it("aggregates section time totals", () => {
