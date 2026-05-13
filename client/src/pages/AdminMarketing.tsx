@@ -149,7 +149,7 @@ export default function AdminMarketing() {
     });
   };
 
-  if (!user?.isAdmin && !user?.isSuperAdmin) {
+  if (!user?.isAdmin && !user?.isOwner) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
