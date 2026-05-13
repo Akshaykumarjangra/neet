@@ -87,4 +87,54 @@ describe("mock-exam scoring", () => {
     assert.equal(result.sectionTime[10], 40);
     assert.equal(result.sectionTime[11], 55);
   });
+
+  it("handles completely missing responses in responseMap", () => {
+    const questionItems = [{ questionId: 1, sectionId: 10 }];
+    const sectionMarks = { 10: { correct: 4, incorrect: -1, unanswered: 0 } };
+    const correctOptionByQuestion = { 1: new Set([101]) };
+    const responseMap = new Map();
+
+    const result = scoreResponses(1, questionItems, responseMap, sectionMarks, correctOptionByQuestion);
+
+    assert.equal(result.unansweredCount, 1);
+    assert.equal(result.correctCount, 0);
+    assert.equal(result.wrongCount, 0);
+    assert.equal(result.score, 0);
+    assert.equal(result.responseRows.length, 1);
+    assert.equal(result.responseRows[0].timeSpentSeconds, 0);
+    assert.equal(result.responseRows[0].flagged, false);
+    assert.equal(result.responseRows[0].selectedOptionId, null);
+    assert.equal(result.responseRows[0].isCorrect, null);
+  });
+
+  it("handles missing section marks configuration", () => {
+    const questionItems = [{ questionId: 1, sectionId: 10 }];
+    const sectionMarks = {};
+    const correctOptionByQuestion = { 1: new Set([101]) };
+
+    const responseMap = new Map();
+    responseMap.set(1, { questionId: 1, selectedOptionId: 101, timeSpentSeconds: 10 });
+
+    const result = scoreResponses(1, questionItems, responseMap, sectionMarks, correctOptionByQuestion);
+
+    assert.equal(result.correctCount, 1);
+    assert.equal(result.score, 0); // Default marks are 0
+    assert.equal(result.totalTimeSeconds, 10);
+  });
+
+  it("handles missing correct option configuration for a question", () => {
+    const questionItems = [{ questionId: 1, sectionId: 10 }];
+    const sectionMarks = { 10: { correct: 4, incorrect: -1, unanswered: 0 } };
+    const correctOptionByQuestion = {}; // Missing correct option
+
+    const responseMap = new Map();
+    responseMap.set(1, { questionId: 1, selectedOptionId: 101, timeSpentSeconds: 10 });
+
+    const result = scoreResponses(1, questionItems, responseMap, sectionMarks, correctOptionByQuestion);
+
+    assert.equal(result.wrongCount, 1);
+    assert.equal(result.correctCount, 0);
+    assert.equal(result.score, -1);
+    assert.equal(result.responseRows[0].isCorrect, false);
+  });
 });
