@@ -9,8 +9,10 @@ import { requireAuth } from "./auth";
 
 const router = Router();
 
-import { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, ParentLinkPayload, generateParentLinkToken, getParentLinkSecret } from "./parent-routes-utils";
-export { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, ParentLinkPayload, generateParentLinkToken };
+import { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, generateParentLinkToken, getParentLinkSecret } from "./parent-routes-utils";
+import type { ParentLinkPayload } from "./parent-routes-utils";
+export type { ParentLinkPayload };
+export { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, generateParentLinkToken };
 
 import { sendOTP, verifyOTP } from "./lib/msg91";
 

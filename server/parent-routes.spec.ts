@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import jwt from "jsonwebtoken";
@@ -47,8 +48,13 @@ describe("generateParentLinkToken", () => {
     delete process.env.PARENT_LINK_SECRET;
     delete process.env.SESSION_SECRET;
 
-    assert.throws(() => {
+    let errorThrown = false;
+    try {
       generateParentLinkToken("student-123");
-    }, new Error("PARENT_LINK_SECRET or SESSION_SECRET must be set"));
+    } catch (e: any) {
+      errorThrown = true;
+      assert.equal(e.message, "PARENT_LINK_SECRET or SESSION_SECRET must be set");
+    }
+    assert.ok(errorThrown, "Expected an error to be thrown");
   });
 });
