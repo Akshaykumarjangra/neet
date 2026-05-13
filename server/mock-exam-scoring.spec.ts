@@ -81,7 +81,7 @@ describe("mock-exam scoring", () => {
       assert.equal(result.get(2)?.selectedOptionId, null);
     });
 
-    it("parses string selectedOptionId to number", () => {
+    it("parses string selectedOptionId to number and verifies it against allowed options", () => {
       const result = sanitizeResponses(
         [{ questionId: 1, selectedOptionId: "101" as any }],
         new Set([1]),
@@ -89,6 +89,16 @@ describe("mock-exam scoring", () => {
       );
       assert.equal(result.size, 1);
       assert.equal(result.get(1)?.selectedOptionId, 101);
+    });
+
+    it("parses string selectedOptionId to number but sanitizes it to null if invalid", () => {
+      const result = sanitizeResponses(
+        [{ questionId: 1, selectedOptionId: "999" as any }],
+        new Set([1]),
+        { 1: new Set([101]) }
+      );
+      assert.equal(result.size, 1);
+      assert.equal(result.get(1)?.selectedOptionId, null);
     });
 
     it("sanitizes responses with invalid option ids", () => {
