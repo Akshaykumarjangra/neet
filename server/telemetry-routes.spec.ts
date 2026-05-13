@@ -2,6 +2,25 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+
+// Mock DB to avoid connection errors in tests
+jest.mock('./db', () => ({
+  db: {
+    select: jest.fn().mockReturnThis(),
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockResolvedValue([{ mustChangePassword: false }]),
+    insert: jest.fn().mockReturnThis(),
+    values: jest.fn().mockResolvedValue({})
+  },
+  pool: {
+    connect: jest.fn().mockResolvedValue({
+      query: jest.fn().mockResolvedValue({}),
+      release: jest.fn()
+    })
+  }
+}));
+
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
