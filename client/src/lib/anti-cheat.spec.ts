@@ -4,7 +4,8 @@ import { AntiCheat } from "./anti-cheat";
 
 class MockEvent {
   defaultPrevented = false;
-  constructor(public type: string) {}
+  type: string;
+  constructor(type: string) { this.type = type; }
   preventDefault() {
     this.defaultPrevented = true;
   }
@@ -41,7 +42,7 @@ describe("AntiCheat", () => {
         documentElement: {},
         addEventListener: mockAddEventListener,
         removeEventListener: mockRemoveEventListener,
-        fullscreenElement: null,
+        get fullscreenElement() { return null; },
         exitFullscreen: async () => {},
       },
       configurable: true,
@@ -59,9 +60,6 @@ describe("AntiCheat", () => {
       configurable: true,
       writable: true,
     });
-
-    // Polyfill for crypto.subtle in Node 18/20 if necessary, though v22 should have it globally.
-    // If we want to be safe, we can mock crypto if it doesn't exist, but it works on Node 22 natively.
   });
 
   afterEach(() => {
@@ -86,7 +84,7 @@ describe("AntiCheat", () => {
     const snap = ac.snapshot();
     assert.equal(snap.blurCount, 0);
     assert.equal(typeof snap.fingerprint, "string");
-    assert(snap.fingerprint.length > 0);
+    assert((snap.fingerprint as string).length > 0);
 
     ac.stop();
   });
@@ -138,12 +136,12 @@ describe("AntiCheat", () => {
     assert(listeners['fullscreenchange'] && listeners['fullscreenchange'].length === 1);
 
     // Trigger fullscreenchange while still in fullscreen
-    globalThis.document.fullscreenElement = {} as any;
+    Object.defineProperty(globalThis.document, 'fullscreenElement', { get: () => ({}), configurable: true });
     listeners['fullscreenchange'][0](new MockEvent('fullscreenchange') as any);
     assert.equal(exitFullscreenTriggered, false, "Should not trigger if still in fullscreen");
 
     // Trigger fullscreenchange when not in fullscreen
-    globalThis.document.fullscreenElement = null;
+    Object.defineProperty(globalThis.document, 'fullscreenElement', { get: () => null, configurable: true });
     listeners['fullscreenchange'][0](new MockEvent('fullscreenchange') as any);
     assert.equal(exitFullscreenTriggered, true, "Should trigger when no fullscreen element");
 
@@ -185,7 +183,7 @@ describe("AntiCheat", () => {
     const ac = new AntiCheat();
     let exitFullscreenCalled = false;
     globalThis.document.exitFullscreen = async () => { exitFullscreenCalled = true; };
-    globalThis.document.fullscreenElement = {} as any; // Mock being in fullscreen
+    Object.defineProperty(globalThis.document, 'fullscreenElement', { get: () => ({}), configurable: true }); // Mock being in fullscreen
 
     await ac.start({ requestFullscreen: async () => {} } as any);
 
