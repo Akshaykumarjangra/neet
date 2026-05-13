@@ -55,7 +55,7 @@ pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
 });
 
-export const db = drizzle(pool, { schema });
+export const db = process.env.NODE_ENV === 'test' ? null as any : drizzle(pool, { schema });
 
 // Helper for retrying queries
 export async function queryWithRetry<T>(queryFn: () => Promise<T>, maxRetries = 3): Promise<T> {
@@ -117,4 +117,6 @@ const testConnection = async () => {
   }
 };
 
-testConnection();
+if (process.env.NODE_ENV !== 'test') {
+  testConnection();
+}
