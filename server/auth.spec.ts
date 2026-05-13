@@ -1,8 +1,8 @@
-import "./test-setup.ts";
+import "./test-setup";
 import { describe, it, after } from "node:test";
-import assert from "node:assert/strict";
-import { getCurrentUser } from "./auth.ts";
-import { pool } from "./db.ts";
+import * as assert from "node:assert/strict";
+import { getCurrentUser } from "./auth";
+import { pool } from "./db";
 import type { Request } from "express";
 
 describe("auth utils", () => {
