@@ -33,7 +33,7 @@
     "types": [
       "node",
       "vite/client",
-      "jest"
+
     ],
     "paths": {
       "@/*": [
