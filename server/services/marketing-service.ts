@@ -77,7 +77,7 @@ function runCrewAiMarketing(websiteUrl: string, industry: string): Promise<strin
     const proc = spawn("crewai", ["run"], {
       cwd: MARKETING_SWARM_PATH,
       env,
-      shell: true,
+      shell: false,
     });
 
     let stdout = "";
