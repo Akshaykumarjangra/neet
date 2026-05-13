@@ -95,7 +95,7 @@ interface ContentStats {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, isAdminOrMentor } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (user && !user.isAdminOrMentor) {
+    if (!isAdminOrMentor) {
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user || !user.isAdminOrMentor) {
+  if (!isAdminOrMentor) {
     return null;
   }
 

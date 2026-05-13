@@ -99,7 +99,7 @@ interface ConfirmDialogState {
 }
 
 export default function AdminUsers() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -210,7 +210,7 @@ export default function AdminUsers() {
     },
   });
 
-  if (!user?.isAdmin) {
+  if (!isAdmin) {
     setLocation("/");
     return null;
   }

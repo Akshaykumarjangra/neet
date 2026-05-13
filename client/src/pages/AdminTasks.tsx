@@ -40,7 +40,7 @@ const STATUS_STYLES: Record<
 };
 
 export default function AdminTasks() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -87,7 +87,7 @@ export default function AdminTasks() {
     [jobs]
   );
 
-  if (user && !user.isOwner && !user.isAdmin) {
+  if (user && !user.isOwner && !isAdmin) {
     setLocation("/dashboard");
     return null;
   }
