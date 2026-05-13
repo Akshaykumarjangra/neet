@@ -210,6 +210,103 @@ export class GamificationService {
     // Get all achievements
     const allAchievements = await db.select().from(achievements);
 
+    // Check if there are any achievements left to unlock before pre-fetching stats
+    const hasPendingAchievements = allAchievements.some(a => !unlockedIds.has(a.id));
+
+    // Initialize stats variables
+    let bookmarksCount = 0;
+    let notesCount = 0;
+    let chaptersWithNotesCount = 0;
+    let chaptersViewedCount = 0;
+    let totalStudyTimeMinutes = 0;
+    let questionsSolvedCount = 0;
+    const testScoreBySubjectMap = new Map<string, number>();
+    let overallMaxScore = 0;
+
+    if (hasPendingAchievements) {
+      // Pre-calculate user statistics concurrently to avoid N+1 queries in the loop below
+      const [
+        [bookmarksResult],
+        [notesResult],
+        [chaptersWithNotesResult],
+        [chaptersViewedResult],
+        [studyTimeResult],
+        [questionsSolvedResult],
+        testScoresBySubjectResult
+      ] = await Promise.all([
+        // 1. Bookmarks Count
+        db.select({ count: count() })
+          .from(userChapterBookmarks)
+          .where(eq(userChapterBookmarks.userId, userId)),
+
+        // 2. Notes Count
+        db.select({ count: count() })
+          .from(userChapterNotes)
+          .where(eq(userChapterNotes.userId, userId)),
+
+        // 3. Chapters with Notes Count
+        db.select({ count: countDistinct(userChapterNotes.chapterContentId) })
+          .from(userChapterNotes)
+          .where(eq(userChapterNotes.userId, userId)),
+
+        // 4. Chapters Viewed Count
+        db.select({ count: countDistinct(userChapterSessions.chapterContentId) })
+          .from(userChapterSessions)
+          .where(eq(userChapterSessions.userId, userId)),
+
+        // 5. Total Study Time (Minutes)
+        db.select({
+          totalMinutes: sql<number>`
+            COALESCE(
+              SUM(
+                CASE
+                  WHEN ${userChapterSessions.durationMinutes} IS NOT NULL
+                    THEN ${userChapterSessions.durationMinutes}
+                  ELSE LEAST(
+                    EXTRACT(EPOCH FROM (COALESCE(${userChapterSessions.endedAt}, NOW()) - ${userChapterSessions.startedAt})) / 60,
+                    1440
+                  )
+                END
+              ),
+              0
+            )
+          `
+        })
+        .from(userChapterSessions)
+        .where(eq(userChapterSessions.userId, userId)),
+
+        // 6. Questions Solved Count
+        db.select({ count: count() })
+          .from(userPerformance)
+          .where(eq(userPerformance.userId, userId)),
+
+        // 7. Max test scores by subject
+        db.select({
+            subject: testSessions.subject,
+            maxScore: sql<number>`COALESCE(MAX(${testSessions.score}), 0)`,
+          })
+          .from(testSessions)
+          .where(eq(testSessions.userId, userId))
+          .groupBy(testSessions.subject)
+      ]);
+
+      bookmarksCount = bookmarksResult?.count || 0;
+      notesCount = notesResult?.count || 0;
+      chaptersWithNotesCount = chaptersWithNotesResult?.count || 0;
+      chaptersViewedCount = chaptersViewedResult?.count || 0;
+      totalStudyTimeMinutes = studyTimeResult?.totalMinutes || 0;
+      questionsSolvedCount = questionsSolvedResult?.count || 0;
+
+      for (const record of testScoresBySubjectResult) {
+        if (record.subject) {
+          testScoreBySubjectMap.set(record.subject, record.maxScore || 0);
+        }
+        if ((record.maxScore || 0) > overallMaxScore) {
+          overallMaxScore = record.maxScore || 0;
+        }
+      }
+    }
+
     // Check each achievement's unlock condition
     for (const achievement of allAchievements) {
       if (unlockedIds.has(achievement.id)) continue;
@@ -234,88 +331,45 @@ export class GamificationService {
         
         // Study/LMS achievements
         case 'bookmarks_created': {
-          const [result] = await db
-            .select({ count: count() })
-            .from(userChapterBookmarks)
-            .where(eq(userChapterBookmarks.userId, userId));
-          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          shouldUnlock = bookmarksCount >= (condition.target || 0);
           break;
         }
         
         case 'notes_created': {
-          const [result] = await db
-            .select({ count: count() })
-            .from(userChapterNotes)
-            .where(eq(userChapterNotes.userId, userId));
-          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          shouldUnlock = notesCount >= (condition.target || 0);
           break;
         }
         
         case 'chapters_with_notes': {
-          const [result] = await db
-            .select({ count: countDistinct(userChapterNotes.chapterContentId) })
-            .from(userChapterNotes)
-            .where(eq(userChapterNotes.userId, userId));
-          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          shouldUnlock = chaptersWithNotesCount >= (condition.target || 0);
           break;
         }
         
         case 'chapters_viewed': {
-          const [result] = await db
-            .select({ count: countDistinct(userChapterSessions.chapterContentId) })
-            .from(userChapterSessions)
-            .where(eq(userChapterSessions.userId, userId));
-          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          shouldUnlock = chaptersViewedCount >= (condition.target || 0);
           break;
         }
         
         case 'total_study_time': {
-          const [result] = await db
-            .select({ 
-              totalMinutes: sql<number>`
-                COALESCE(
-                  SUM(
-                    CASE 
-                      WHEN ${userChapterSessions.durationMinutes} IS NOT NULL 
-                        THEN ${userChapterSessions.durationMinutes}
-                      ELSE LEAST(
-                        EXTRACT(EPOCH FROM (COALESCE(${userChapterSessions.endedAt}, NOW()) - ${userChapterSessions.startedAt})) / 60,
-                        1440
-                      )
-                    END
-                  ),
-                  0
-                )
-              ` 
-            })
-            .from(userChapterSessions)
-            .where(eq(userChapterSessions.userId, userId));
-              const totalMinutes = result?.totalMinutes || 0;
-              shouldUnlock = totalMinutes >= (condition.target || 0);
-              break;
-            }
+          shouldUnlock = totalStudyTimeMinutes >= (condition.target || 0);
+          break;
+        }
         
         // Practice achievements (questions solved)
         case 'questions_solved': {
-          const [result] = await db
-            .select({ count: count() })
-            .from(userPerformance)
-            .where(eq(userPerformance.userId, userId));
-          shouldUnlock = (result?.count || 0) >= (condition.target || 0);
+          shouldUnlock = questionsSolvedCount >= (condition.target || 0);
           break;
         }
         
         // Test score achievements
         case 'test_score': {
-          const subjectFilter = condition.subject ? sql`${testSessions.subject} = ${condition.subject}` : sql`true`;
-          const [result] = await db
-            .select({
-              maxScore: sql<number>`COALESCE(MAX(${testSessions.score}), 0)`,
-            })
-            .from(testSessions)
-            .where(and(eq(testSessions.userId, userId), subjectFilter, gte(testSessions.score, condition.target || 0)))
-            .limit(1);
-          shouldUnlock = (result?.maxScore || 0) >= (condition.target || 0);
+          let currentMaxScore = 0;
+          if (condition.subject) {
+            currentMaxScore = testScoreBySubjectMap.get(condition.subject) || 0;
+          } else {
+            currentMaxScore = overallMaxScore;
+          }
+          shouldUnlock = currentMaxScore >= (condition.target || 0);
           break;
         }
       }
