@@ -24,7 +24,17 @@ A full-stack learning management system tailored for NEET preparation, featuring
     ```bash
     npm install
     ```
-3.  Set up environment variables in `.env` (copy from `.env.local.example` if needed).
+3.  Set up environment variables in `.env` (copy from `.env.example`).
+
+### Environment Variables
+
+The application relies on several environment variables for full functionality, particularly for the lifecycle services (email, SMS, WhatsApp, Push). Ensure the following keys are provided in your `.env` file if you intend to use those features:
+
+*   **Email:** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `RESEND_KEY`
+*   **SMS/WhatsApp:** `MSG91_AUTH_KEY`, `MSG91_SMS_TEMPLATE_ID`, `MSG91_WHATSAPP_NUMBER`, `GUPSHUP_KEY`
+*   **Push Notifications:** `FCM_KEY`, `FIREBASE_SERVICE_ACCOUNT`
+
+Refer to `.env.example` for a complete list of all supported environment variables.
 
 ### Running Locally
 

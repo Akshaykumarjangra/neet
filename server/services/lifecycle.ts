@@ -2,7 +2,6 @@
  * Lifecycle drip orchestrator (Phase 5/07).
  *
  * Channels: email (nodemailer), whatsapp (MSG91/Gupshup), push (FCM).
- * TODO: provide MSG91_AUTH_KEY, GUPSHUP_KEY, FCM_KEY, RESEND_KEY in env.
  */
 import nodemailer from "nodemailer";
 import { db } from "../db";
