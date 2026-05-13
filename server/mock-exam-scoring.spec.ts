@@ -55,6 +55,45 @@ describe("mock-exam scoring", () => {
     assert.equal(response.selectedOptionId, null);
   });
 
+  it("processes missing selected option logic correctly", () => {
+    const questionItems = [
+      { questionId: 1, sectionId: 10 },
+    ];
+
+    const sectionMarks = {
+      10: { correct: 4, incorrect: -1, unanswered: 0 },
+    };
+
+    const correctOptionByQuestion = {
+      1: new Set([101]),
+    };
+
+    const optionIdsByQuestion = {
+      1: new Set([101, 102]),
+    };
+
+    const responsesInput = [
+      { questionId: 1, selectedOptionId: null, timeSpentSeconds: 30, flagged: true },
+    ];
+
+    const responseMap = sanitizeResponses(responsesInput, new Set([1]), optionIdsByQuestion);
+    const result = scoreResponses(101, questionItems, responseMap, sectionMarks, correctOptionByQuestion);
+
+    assert.equal(result.unansweredCount, 1);
+    assert.equal(result.correctCount, 0);
+    assert.equal(result.wrongCount, 0);
+    assert.equal(result.score, 0);
+    assert.equal(result.totalTimeSeconds, 30);
+    assert.equal(result.sectionTime[10], 30);
+    assert.equal(result.responseRows.length, 1);
+
+    const row = result.responseRows[0];
+    assert.equal(row.selectedOptionId, null);
+    assert.equal(row.isCorrect, null);
+    assert.equal(row.timeSpentSeconds, 30);
+    assert.equal(row.flagged, true);
+  });
+
   it("aggregates section time totals", () => {
     const questionItems = [
       { questionId: 1, sectionId: 10 },
