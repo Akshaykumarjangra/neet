@@ -8,4 +8,12 @@ export default {
   transform: {
     ...tsJestTransformCfg,
   },
+  moduleNameMapper: {
+    "^@shared/(.*)$": "<rootDir>/shared/$1",
+    "^@/(.*)$": "<rootDir>/client/src/$1"
+  },
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/tests/e2e/"
+  ]
 };
