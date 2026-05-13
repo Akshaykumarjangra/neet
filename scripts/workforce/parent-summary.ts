@@ -35,7 +35,43 @@ async function main() {
       maxTokens: 250,
     }).catch(() => ({ text: `${row.name} studied ${s.minutes ?? 0} minutes this week. View full report: ${link}` } as any));
     console.log(`[parent] ${row.parent_phone}: ${msg.text.trim()}`);
-    // TODO: post to MSG91 WhatsApp template here
+    const key = process.env.MSG91_AUTH_KEY;
+    const whatsappNumber = process.env.MSG91_WHATSAPP_NUMBER;
+    if (key && whatsappNumber) {
+      await fetch("https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/", {
+        method: "POST",
+        headers: { authkey: key, "content-type": "application/json" },
+        body: JSON.stringify({
+          integrated_number: whatsappNumber,
+          content_type: "template",
+          payload: {
+            messaging_product: "whatsapp",
+            type: "template",
+            template: {
+              name: process.env.MSG91_PARENT_TEMPLATE_NAME || "parent_weekly_summary",
+              language: {
+                code: "en",
+                policy: "deterministic"
+              },
+              namespace: process.env.MSG91_TEMPLATE_NAMESPACE || "",
+              to_and_components: [
+                {
+                  to: [row.parent_phone],
+                  components: {
+                    body_1: {
+                      type: "text",
+                      value: msg.text.trim()
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }),
+      }).catch(err => console.error(`[parent] Failed to post to MSG91:`, err));
+    } else {
+      console.warn("[parent] MSG91_AUTH_KEY or MSG91_WHATSAPP_NUMBER missing, skipping WhatsApp template message.");
+    }
   }
 }
 main().catch(e => { console.error(e); process.exit(1); });
