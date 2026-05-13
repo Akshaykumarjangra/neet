@@ -74,6 +74,7 @@ interface ChapterData {
   isBookmarked: boolean;
   lastAccessed: string | null;
   keyConcepts?: string[];
+  isFree?: boolean;
 }
 
 interface BiologyProps {
@@ -443,7 +444,7 @@ export default function Biology({ initialSection }: BiologyProps = {}) {
   const [sortBy, setSortBy] = useState<"number" | "difficulty" | "time">("number");
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const { user } = useAuth();
-  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+  const isPremium = Boolean(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
 
   const { data: allChapters, isLoading, error, refetch } = useQuery<ChapterData[]>({
     queryKey: ["/api/lms/library"],

@@ -29,28 +29,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Atom,
+  Dna,
   Search,
   Clock,
   Star,
   ChevronDown,
-  ChevronRight,
   Play,
   Shuffle,
   Zap,
   BookOpen,
   Trophy,
-  Target,
-  Flame,
   RefreshCw,
   AlertCircle,
   CheckCircle2,
   Circle,
   Filter,
   ArrowUpDown,
-  FlaskConical,
-  TestTubes,
-  Sparkles,
   Lock,
   ClipboardList,
 } from "lucide-react";
@@ -59,6 +53,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Seo } from "@/components/Seo";
 import { getCourseSchema } from "@/config/seo";
+import {
+  biologySections,
+  categorizeBiologyChapter,
+  BiologySection as SharedBiologySection,
+  BiologySectionName,
+} from "@/lib/biologySections";
 
 interface ChapterData {
   id: number;
@@ -77,54 +77,9 @@ interface ChapterData {
   isFree?: boolean;
 }
 
-interface Unit {
-  name: string;
-  icon: React.ReactNode;
-  chapters: number[];
-  color: string;
+interface BiologyProps {
+  initialSection?: BiologySectionName;
 }
-
-const class11Units: Unit[] = [
-  {
-    name: "Physical Chemistry",
-    icon: <FlaskConical className="h-5 w-5" />,
-    chapters: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-    color: "from-purple-500 to-indigo-500",
-  },
-  {
-    name: "Inorganic Chemistry",
-    icon: <Atom className="h-5 w-5" />,
-    chapters: [10, 11, 12, 13, 14, 15, 16],
-    color: "from-blue-500 to-cyan-500",
-  },
-  {
-    name: "Organic Chemistry",
-    icon: <Sparkles className="h-5 w-5" />,
-    chapters: [17, 18, 19, 20, 21],
-    color: "from-pink-500 to-rose-500",
-  },
-];
-
-const class12Units: Unit[] = [
-  {
-    name: "Advanced Physical Chemistry",
-    icon: <Target className="h-5 w-5" />,
-    chapters: [22, 23, 24, 25, 26],
-    color: "from-yellow-500 to-orange-500",
-  },
-  {
-    name: "Inorganic & Coordination Chemistry",
-    icon: <TestTubes className="h-5 w-5" />,
-    chapters: [27, 28, 29, 30, 31, 32, 33],
-    color: "from-emerald-500 to-teal-500",
-  },
-  {
-    name: "Organic Reaction Mechanisms",
-    icon: <Sparkles className="h-5 w-5" />,
-    chapters: [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44],
-    color: "from-purple-500 to-pink-500",
-  },
-];
 
 function ProgressRing({ progress, size = 48 }: { progress: number; size?: number }) {
   const strokeWidth = 4;
@@ -214,7 +169,7 @@ function ChapterCard({
             : "hover:shadow-lg hover:border-primary/50"
         )}
         onClick={onClick}
-        data-testid={`card-chapter-chemistry-${classLevel}-${chapter.chapterNumber}`}
+        data-testid={`card-chapter-biology-${classLevel}-${chapter.chapterNumber}`}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
@@ -291,15 +246,15 @@ function ChapterCard({
   );
 }
 
-function UnitSection({
-  unit,
+function BiologySectionComponent({
+  section,
   chapters,
   classLevel,
   onChapterClick,
   prefersReducedMotion,
   isPremium,
 }: {
-  unit: Unit;
+  section: SharedBiologySection;
   chapters: ChapterData[];
   classLevel: string;
   onChapterClick: (chapter: ChapterData) => void;
@@ -308,18 +263,21 @@ function UnitSection({
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const unitChapters = chapters.filter((c) =>
-    unit.chapters.includes(c.chapterNumber)
-  );
+  const sectionChapters = chapters.filter((c) => {
+    if (c.subject !== "Biology") return false;
+    return (
+      categorizeBiologyChapter(c.chapterTitle, c.chapterNumber, classLevel) === section.name
+    );
+  });
 
-  const completedCount = unitChapters.filter((c) => c.progress === 100).length;
-  const unitProgress = unitChapters.length > 0
+  const completedCount = sectionChapters.filter((c) => c.progress === 100).length;
+  const sectionProgress = sectionChapters.length > 0
     ? Math.round(
-      unitChapters.reduce((sum, c) => sum + c.progress, 0) / unitChapters.length
+      sectionChapters.reduce((sum, c) => sum + c.progress, 0) / sectionChapters.length
     )
     : 0;
 
-  if (unitChapters.length === 0) return null;
+  if (sectionChapters.length === 0) return null;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
@@ -329,29 +287,29 @@ function UnitSection({
           className={cn(
             "w-full p-4 rounded-xl cursor-pointer transition-all",
             "bg-gradient-to-r",
-            unit.color,
+            section.color,
             "text-white shadow-lg hover:shadow-xl"
           )}
-          data-testid={`unit-trigger-${unit.name.toLowerCase().replace(" ", "-")}`}
+          data-testid={`section-trigger-${section.name.toLowerCase()}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
-                {unit.icon}
+                {section.icon}
               </div>
               <div className="text-left">
-                <h3 className="font-bold text-lg">{unit.name}</h3>
+                <h3 className="font-bold text-lg">{section.name}</h3>
                 <p className="text-sm text-white/80">
-                  {completedCount}/{unitChapters.length} chapters completed
+                  {completedCount}/{sectionChapters.length} chapters completed
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-2xl font-bold">{unitProgress}%</p>
+                <p className="text-2xl font-bold">{sectionProgress}%</p>
                 <Progress
-                  value={unitProgress}
+                  value={sectionProgress}
                   className="w-24 h-2 bg-white/20"
                 />
               </div>
@@ -374,7 +332,7 @@ function UnitSection({
             exit={prefersReducedMotion ? {} : { opacity: 0, height: 0 }}
             className="grid grid-cols-1 gap-2 sm:gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {unitChapters.map((chapter) => (
+            {sectionChapters.map((chapter) => (
               <ChapterCard
                 key={chapter.id}
                 chapter={chapter}
@@ -424,7 +382,7 @@ function TopicSelectionModal({
               variant="outline"
               className="w-full justify-start text-left h-auto py-3"
               onClick={() => {
-                setLocation(`/chapter/chemistry/${classLevel}/${chapter.chapterNumber}`);
+                setLocation(`/chapter/biology/${classLevel}/${chapter.chapterNumber}`);
                 onOpenChange(false);
               }}
               data-testid={`modal-chapter-${chapter.id}`}
@@ -462,7 +420,7 @@ function LoadingSkeleton() {
           <Skeleton className="h-10 flex-1" />
           <Skeleton className="h-10 w-full sm:w-32" />
         </div>
-        {[1, 2, 3].map((i) => (
+        {[1, 2].map((i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="h-20 w-full rounded-xl" />
             <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -477,7 +435,7 @@ function LoadingSkeleton() {
   );
 }
 
-export default function Chemistry() {
+export default function Biology({ initialSection }: BiologyProps = {}) {
   const [, setLocation] = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const [selectedClass, setSelectedClass] = useState<"11" | "12">("11");
@@ -486,21 +444,21 @@ export default function Chemistry() {
   const [sortBy, setSortBy] = useState<"number" | "difficulty" | "time">("number");
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const { user } = useAuth();
-  const isPremium = Boolean(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
 
   const { data: allChapters, isLoading, error, refetch } = useQuery<ChapterData[]>({
     queryKey: ["/api/lms/library"],
   });
 
-  const chemistryChapters = useMemo(() => {
+  const biologyChapters = useMemo(() => {
     if (!allChapters) return [];
     return allChapters.filter(
-      (c) => c.subject === "Chemistry" && c.classLevel === selectedClass
+      (c) => c.subject === "Biology" && c.classLevel === selectedClass
     );
   }, [allChapters, selectedClass]);
 
   const filteredChapters = useMemo(() => {
-    let filtered = [...chemistryChapters];
+    let filtered = [...biologyChapters];
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -528,19 +486,19 @@ export default function Chemistry() {
     });
 
     return filtered;
-  }, [chemistryChapters, searchQuery, statusFilter, sortBy]);
+  }, [biologyChapters, searchQuery, statusFilter, sortBy]);
 
   const overallProgress = useMemo(() => {
-    if (chemistryChapters.length === 0) return { completed: 0, total: 0, percentage: 0 };
-    const completed = chemistryChapters.filter((c) => c.progress === 100).length;
+    if (biologyChapters.length === 0) return { completed: 0, total: 0, percentage: 0 };
+    const completed = biologyChapters.filter((c) => c.progress === 100).length;
     return {
       completed,
-      total: chemistryChapters.length,
+      total: biologyChapters.length,
       percentage: Math.round(
-        chemistryChapters.reduce((sum, c) => sum + c.progress, 0) / chemistryChapters.length
+        biologyChapters.reduce((sum, c) => sum + c.progress, 0) / biologyChapters.length
       ),
     };
-  }, [chemistryChapters]);
+  }, [biologyChapters]);
 
   const handleChapterClick = (chapter: ChapterData) => {
     const isLocked = chapter.chapterNumber > 3 && !isPremium;
@@ -548,21 +506,40 @@ export default function Chemistry() {
       setLocation("/pricing");
       return;
     }
-    setLocation(`/chapter/chemistry/${selectedClass}/${chapter.chapterNumber}`);
+    setLocation(`/chapter/biology/${selectedClass}/${chapter.chapterNumber}`);
   };
 
   const handleRandomChapter = () => {
-    const incompleteChapters = chemistryChapters.filter((c) => c.progress < 100);
+    const incompleteChapters = biologyChapters.filter((c) => c.progress < 100);
     if (incompleteChapters.length > 0) {
       const random = incompleteChapters[Math.floor(Math.random() * incompleteChapters.length)];
       handleChapterClick(random);
     }
   };
 
-  const units = selectedClass === "11" ? class11Units : class12Units;
+  const sectionsToRender = initialSection
+    ? biologySections.filter((section) => section.name === initialSection)
+    : biologySections;
 
-  const heroGradient = "from-purple-600 via-fuchsia-600 to-pink-500";
-  const quickPracticeGradient = "from-purple-600 to-pink-500";
+  const heroTitle = initialSection ?? "Biology";
+  const heroSubtitle =
+    initialSection === "Botany"
+      ? "NEET Botany Mastery for Class 11 & 12"
+      : initialSection === "Zoology"
+        ? "NEET Zoology Mastery for Class 11 & 12"
+        : "NEET 2025 Complete Syllabus";
+  const heroGradient =
+    initialSection === "Botany"
+      ? "from-emerald-600 via-lime-600 to-emerald-500"
+      : initialSection === "Zoology"
+        ? "from-orange-500 via-amber-500 to-yellow-500"
+        : "from-green-600 via-emerald-600 to-teal-700";
+  const quickPracticeGradient =
+    initialSection === "Botany"
+      ? "from-emerald-600 to-lime-500"
+      : initialSection === "Zoology"
+        ? "from-orange-500 to-amber-500"
+        : "from-green-600 to-emerald-600";
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -578,7 +555,7 @@ export default function Chemistry() {
               <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
                 <AlertCircle className="h-12 w-12 text-destructive" />
               </div>
-              <h3 className="text-xl font-semibold">Unable to Load Chemistry Chapters</h3>
+              <h3 className="text-xl font-semibold">Unable to Load Biology Chapters</h3>
               <p className="text-muted-foreground">
                 Something went wrong while loading. Please try again.
               </p>
@@ -595,12 +572,12 @@ export default function Chemistry() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Seo 
-        title={`NEET Chemistry Class ${selectedClass} - Organic, Inorganic & Physical | ZERO AI`}
-        description={`Master Class ${selectedClass} Chemistry for NEET. Complete coverage of Organic, Inorganic, and Physical Chemistry with 10,000+ solved examples.`}
-        url={`/chemistry`}
-        keywords={['NEET Chemistry', `Class ${selectedClass} Chemistry`, 'Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry']}
-        structuredData={getCourseSchema("Chemistry")}
+      <Seo
+        title={`NEET ${heroTitle} Class ${selectedClass} - Concept & Questions | ZERO AI`}
+        description={`Prepare for NEET ${heroTitle} Class ${selectedClass} with our comprehensive library of 20,000+ biology diagrams, charts, and practice MCQs.`}
+        url={initialSection ? `/${initialSection.toLowerCase()}` : `/biology`}
+        keywords={['NEET Biology', 'Botany', 'Zoology', `Class ${selectedClass} Biology`, 'NEET Prep']}
+        structuredData={getCourseSchema(heroTitle)}
       />
       <Header />
 
@@ -627,18 +604,18 @@ export default function Chemistry() {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <motion.div
-                    animate={prefersReducedMotion ? {} : { rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    animate={prefersReducedMotion ? {} : { rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     className="p-2 sm:p-3 rounded-xl bg-white/20 backdrop-blur-sm"
                   >
-                    <TestTubes className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+                    <Dna className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10" />
                   </motion.div>
                   <div>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-chemistry-title">
-                      Chemistry
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" data-testid="text-biology-title">
+                      {heroTitle}
                     </h1>
                     <div className="flex items-center gap-2">
-                      <p className="text-white/80 text-sm sm:text-base">NEET 2025 Chemistry Syllabus</p>
+                      <p className="text-white/80 text-sm sm:text-base">{heroSubtitle}</p>
                       <Link href="/progress/analytics">
                         <Button variant="link" className="text-white p-0 h-auto text-xs font-normal underline decoration-white/30 hover:decoration-white transition-all">
                           <ClipboardList className="h-3 w-3 mr-1" />
@@ -675,7 +652,7 @@ export default function Chemistry() {
                   variant={selectedClass === "11" ? "secondary" : "ghost"}
                   className={cn(
                     "relative px-3 sm:px-6 text-sm sm:text-base transition-all",
-                    selectedClass === "11" ? "bg-white text-indigo-700 shadow-lg" : "text-white hover:bg-white/10"
+                    selectedClass === "11" ? "bg-white text-emerald-700 shadow-lg" : "text-white hover:bg-white/10"
                   )}
                   onClick={() => setSelectedClass("11")}
                   data-testid="button-class-11"
@@ -687,7 +664,7 @@ export default function Chemistry() {
                   variant={selectedClass === "12" ? "secondary" : "ghost"}
                   className={cn(
                     "relative px-3 sm:px-6 text-sm sm:text-base transition-all",
-                    selectedClass === "12" ? "bg-white text-indigo-700 shadow-lg" : "text-white hover:bg-white/10"
+                    selectedClass === "12" ? "bg-white text-emerald-700 shadow-lg" : "text-white hover:bg-white/10"
                   )}
                   onClick={() => setSelectedClass("12")}
                   data-testid="button-class-12"
@@ -753,10 +730,10 @@ export default function Chemistry() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
               className="space-y-6"
             >
-              {units.map((unit) => (
-                <UnitSection
-                  key={unit.name}
-                  unit={unit}
+              {sectionsToRender.map((section) => (
+                <BiologySectionComponent
+                  key={section.name}
+                  section={section}
                   chapters={filteredChapters}
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
@@ -819,7 +796,7 @@ export default function Chemistry() {
         >
           <Button
             size="lg"
-            className={`rounded-full w-14 h-14 p-0 shadow-lg bg-gradient-to-r ${quickPracticeGradient} hover:from-purple-700 hover:to-pink-600`}
+            className={`rounded-full w-14 h-14 p-0 shadow-lg bg-gradient-to-r ${quickPracticeGradient} hover:from-green-700 hover:to-emerald-700`}
             onClick={() => setPracticeModalOpen(true)}
             title="Quick Practice"
             data-testid="button-quick-practice"
@@ -832,7 +809,7 @@ export default function Chemistry() {
       <TopicSelectionModal
         open={practiceModalOpen}
         onOpenChange={setPracticeModalOpen}
-        chapters={chemistryChapters}
+        chapters={biologyChapters}
         classLevel={selectedClass}
       />
     </div>

@@ -1,0 +1,11 @@
+--- client/src/pages/BattleLobby.tsx
++++ client/src/pages/BattleLobby.tsx
+@@ -177,7 +177,7 @@
+                       }}
+                     >
+                       <Progress
+-                        value={(timeLeft / 30) * 100}
++                        value={Number((timeLeft / 30) * 100)}
+                         className="h-2"
+                         indicatorColor={timeLeft < 10 ? 'bg-destructive' : 'bg-primary'}
+                       />

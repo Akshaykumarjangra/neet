@@ -1,0 +1,11 @@
+--- client/src/pages/Chemistry.tsx
++++ client/src/pages/Chemistry.tsx
+@@ -486,7 +486,7 @@
+   const [searchQuery, setSearchQuery] = useState("");
+   const [, setLocation] = useLocation();
+
+-  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
++  const isPremium = Boolean(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+
+   const { data: chapters = [], isLoading } = useQuery<ChapterData[]>({
+     queryKey: ["/api/content/chapters", "Chemistry", selectedClass],

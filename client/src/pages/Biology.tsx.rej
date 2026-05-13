@@ -1,0 +1,11 @@
+--- client/src/pages/Biology.tsx
++++ client/src/pages/Biology.tsx
+@@ -444,7 +444,7 @@
+   const [searchQuery, setSearchQuery] = useState("");
+   const [, setLocation] = useLocation();
+
+-  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
++  const isPremium = Boolean(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
+
+   // Use standard chapters endpoint
+   const { data: chapters = [], isLoading } = useQuery<ChapterData[]>({
