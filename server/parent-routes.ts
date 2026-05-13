@@ -9,31 +9,10 @@ import { requireAuth } from "./auth";
 
 const router = Router();
 
-export const PARENT_LINK_TYPE = "parent-link" as const;
-export const PARENT_LINK_EXPIRY = "90d";
-
-function getParentLinkSecret(): string {
-  const secret = process.env.PARENT_LINK_SECRET || process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("PARENT_LINK_SECRET or SESSION_SECRET must be set");
-  }
-  return secret;
-}
-
-export interface ParentLinkPayload {
-  studentId: string;
-  type: typeof PARENT_LINK_TYPE;
-}
-
-export function generateParentLinkToken(studentId: string): string {
-  const payload: ParentLinkPayload = {
-    studentId,
-    type: PARENT_LINK_TYPE,
-  };
-  return jwt.sign(payload, getParentLinkSecret(), {
-    expiresIn: PARENT_LINK_EXPIRY,
-  });
-}
+import { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, generateParentLinkToken, getParentLinkSecret } from "./parent-routes-utils";
+import type { ParentLinkPayload } from "./parent-routes-utils";
+export type { ParentLinkPayload };
+export { PARENT_LINK_TYPE, PARENT_LINK_EXPIRY, generateParentLinkToken };
 
 import { sendOTP, verifyOTP } from "./lib/msg91";
 
