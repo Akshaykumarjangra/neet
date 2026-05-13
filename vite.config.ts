@@ -50,13 +50,22 @@ export default defineConfig({
     // Code splitting optimization
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks for better caching
-          'react-vendor': ['react', 'react-dom', 'react-hook-form'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          'animation-vendor': ['framer-motion', 'gsap', 'animejs'],
-          'chart-vendor': ['recharts', 'd3'],
-          'three-vendor': ['three', 'matter-js'],
+        manualChunks: function(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-hook-form')) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'ui-vendor';
+          }
+          if (id.includes('node_modules/framer-motion') || id.includes('node_modules/gsap') || id.includes('node_modules/animejs')) {
+            return 'animation-vendor';
+          }
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3')) {
+            return 'chart-vendor';
+          }
+          if (id.includes('node_modules/three') || id.includes('node_modules/matter-js')) {
+            return 'three-vendor';
+          }
         },
       },
     },
