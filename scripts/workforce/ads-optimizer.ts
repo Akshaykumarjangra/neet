@@ -27,8 +27,36 @@ async function setStatus(adId: string, status: string) {
 }
 
 async function scaleBudget(adId: string, mult: number) {
-  // TODO: read current daily_budget then multiply
-  console.log(`  ${adId}: scale ${mult}x (stub)`);
+  const r1 = await fetch(`https://graph.facebook.com/v19.0/${adId}?fields=adset_id&access_token=${META}`);
+  const j1 = await r1.json() as any;
+  const adsetId = j1?.adset_id;
+  if (!adsetId) {
+    console.warn(`  ${adId}: failed to fetch adset_id`);
+    return;
+  }
+
+  const r2 = await fetch(`https://graph.facebook.com/v19.0/${adsetId}?fields=daily_budget&access_token=${META}`);
+  const j2 = await r2.json() as any;
+  const currentBudget = Number(j2?.daily_budget);
+  if (!currentBudget || isNaN(currentBudget)) {
+    console.warn(`  ${adId} (adset ${adsetId}): failed to fetch daily_budget`);
+    return;
+  }
+
+  const newBudget = Math.round(currentBudget * mult);
+
+  const r3 = await fetch(`https://graph.facebook.com/v19.0/${adsetId}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ daily_budget: newBudget, access_token: META }),
+  });
+
+  if (r3.ok) {
+    console.log(`  ${adId} (adset ${adsetId}): scaled budget ${mult}x (${currentBudget} -> ${newBudget})`);
+  } else {
+    const error = await r3.text();
+    console.error(`  ${adId} (adset ${adsetId}): failed to scale budget`, error);
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
