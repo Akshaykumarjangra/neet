@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target, TrendingUp, Calendar, Award } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface MetricCardProps {
   title: string;
