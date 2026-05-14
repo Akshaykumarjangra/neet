@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
 import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
 import { BookOpen, Dna, FlaskConical, Calendar, Trophy, Target, Loader2, Layers, TrendingUp, Zap, ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useGamification } from "@/hooks/useGamification";
@@ -287,7 +287,7 @@ export default function Dashboard() {
     }
   }, [challengesError, toast]);
 
-  const subjects = [
+  const subjects = useMemo(() => [
     {
       name: "Physics",
       icon: physicsIcon,
@@ -328,7 +328,7 @@ export default function Dashboard() {
       total: subjectStat?.total || 0,
       progress: subjectStat?.accuracy || 0,
     };
-  });
+  }), [userStats?.subjectStats]);
 
   const isDashboardLoading = statsLoading || achievementsLoading || challengesLoading || bookingsLoading;
 
