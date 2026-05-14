@@ -2,9 +2,13 @@
  * Meta + Google ad creative generator (Phase 5/08). Creates paused campaigns with variant copy.
  * TODO: provide META_ACCESS_TOKEN + META_AD_ACCOUNT_ID, GOOGLE_ADS_DEVELOPER_TOKEN/refresh token.
  */
-import { complete } from "../../server/workforce";
+import { complete } from "../../server/workforce/index";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const SYSTEM = `Generate 5 ad creative variants for an Indian NEET prep app.
 Each: { headline (≤30c), primary (≤90c), description (≤30c), cta }.
