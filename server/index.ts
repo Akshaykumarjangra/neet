@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import createMemoryStore from "memorystore";
@@ -141,8 +142,8 @@ async function ensureOwnerAccount() {
     const sessionMiddleware = session({
       store: sessionStore,
       secret: process.env.SESSION_SECRET || (() => {
-        console.warn("WARNING: SESSION_SECRET not set, using insecure default");
-        return "insecure-default-change-in-production-" + Date.now();
+        console.warn("WARNING: SESSION_SECRET not set, using a randomly generated secret");
+        return crypto.randomBytes(32).toString("hex");
       })(),
       resave: false,
       saveUninitialized: false,
