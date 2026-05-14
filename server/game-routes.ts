@@ -47,8 +47,9 @@ router.get("/challenges/daily", requireAuthWithPasswordCheck, async (req, res) =
       .where(eq(userDailyChallenges.userId, user));
 
     // Merge challenges with progress
+    const progressMap = new Map(progress.map(p => [p.challengeId, p]));
     const challengesWithProgress = challenges.map(challenge => {
-      const userProgress = progress.find(p => p.challengeId === challenge.id);
+      const userProgress = progressMap.get(challenge.id);
       return {
         id: challenge.id,
         title: challenge.title,
