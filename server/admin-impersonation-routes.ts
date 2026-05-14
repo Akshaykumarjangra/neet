@@ -5,10 +5,10 @@ import { eq } from "drizzle-orm";
 import { requireOwner } from "./auth";
 import { recordAuditLog } from "./lib/audit";
 
-const router = Router();
+import { MAX_IMPERSONATION_MS, enforceImpersonationTimeLimit } from "./admin-impersonation-logic";
+export { enforceImpersonationTimeLimit };
 
-const MAX_IMPERSONATION_MS = 60 * 60 * 1000; // 1 hour
-// MAX_IMPERSONATION_MS is used to enforce a 1-hour cap on any impersonation session.
+const router = Router();
 
 // Middleware: stop endpoint is only accessible while an impersonation
 // session is currently active. Without this any unauthenticated client
@@ -19,22 +19,6 @@ function requireActiveImpersonation(req: Request, res: Response, next: NextFunct
     }
     if (!req.session.originalAdminId) {
         return res.status(401).json({ error: "No active impersonation session" });
-    }
-    next();
-}
-
-// Middleware: enforce 1-hour cap on any impersonation session. Mounted
-// globally so any request made under impersonation is rejected once the
-// cap is exceeded; the client is then forced to call /impersonate/stop.
-export function enforceImpersonationTimeLimit(req: Request, res: Response, next: NextFunction) {
-    if (req.session?.originalAdminId && req.session.impersonationStartedAt) {
-        const elapsed = Date.now() - req.session.impersonationStartedAt;
-        if (elapsed > MAX_IMPERSONATION_MS) {
-            return res.status(440).json({
-                error: "Impersonation session expired (1 hour max). Please call /impersonate/stop.",
-                code: "IMPERSONATION_EXPIRED",
-            });
-        }
     }
     next();
 }
