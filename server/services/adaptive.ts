@@ -55,8 +55,11 @@ export function updateBKT(pKnown: number, correct: boolean): number {
 export async function recordAttempt(a: AttemptInput): Promise<AttemptUpdate> {
   const { theta: newTheta, b: newB } = updateIRT(a.currentTheta, a.currentB, a.correct);
 
-  // Update users.adaptive_profile.masteryScores[subject]
-  await db.execute(sql`
+  const conceptUpdates: { conceptId: number; pKnown: number }[] = [];
+  const promises: Promise<any>[] = [];
+
+  // 1. Update users.adaptive_profile.masteryScores[subject]
+  promises.push(db.execute(sql`
     UPDATE users
     SET adaptive_profile = jsonb_set(
       coalesce(adaptive_profile, '{}'::jsonb),
@@ -66,24 +69,43 @@ export async function recordAttempt(a: AttemptInput): Promise<AttemptUpdate> {
       true
     )
     WHERE id = ${a.userId}
-  `);
-  await db.execute(sql`UPDATE questions SET irt_b = ${newB} WHERE id = ${a.questionId}`);
+  `));
 
-  const conceptUpdates: { conceptId: number; pKnown: number }[] = [];
-  for (const cid of a.conceptIds) {
+  // 2. Update questions difficulty
+  promises.push(db.execute(sql`UPDATE questions SET irt_b = ${newB} WHERE id = ${a.questionId}`));
+
+  // 3. Batch process concept mastery
+  if (a.conceptIds.length > 0) {
+    // Read previous states in one query
     const r = await db.execute(sql`
-      SELECT p_known FROM user_concept_mastery
-      WHERE user_id = ${a.userId} AND concept_id = ${cid} LIMIT 1
+      SELECT concept_id, p_known FROM user_concept_mastery
+      WHERE user_id = ${a.userId} AND concept_id IN (${sql.join(a.conceptIds.map(id => sql`${id}`), sql`, `)})
     `);
-    const prev = (r as any).rows?.[0]?.p_known ?? BKT.p_init;
-    const next = updateBKT(prev, a.correct);
-    await db.execute(sql`
+
+    const knownMap = new Map();
+    for (const row of (r as any).rows || []) {
+      knownMap.set(row.concept_id, row.p_known);
+    }
+
+    const updateValues = [];
+    for (const cid of a.conceptIds) {
+      const prev = knownMap.get(cid) ?? BKT.p_init;
+      const next = updateBKT(prev, a.correct);
+      updateValues.push(sql`(${a.userId}, ${cid}, ${next}, now())`);
+      conceptUpdates.push({ conceptId: cid, pKnown: next });
+    }
+
+    // Batch insert/update
+    const valuesList = sql.join(updateValues, sql`, `);
+    promises.push(db.execute(sql`
       INSERT INTO user_concept_mastery (user_id, concept_id, p_known, updated_at)
-      VALUES (${a.userId}, ${cid}, ${next}, now())
-      ON CONFLICT (user_id, concept_id) DO UPDATE SET p_known = ${next}, updated_at = now()
-    `);
-    conceptUpdates.push({ conceptId: cid, pKnown: next });
+      VALUES ${valuesList}
+      ON CONFLICT (user_id, concept_id) DO UPDATE SET p_known = excluded.p_known, updated_at = now()
+    `));
   }
+
+  await Promise.all(promises);
+
   return { newTheta, newB, conceptUpdates };
 }
 
