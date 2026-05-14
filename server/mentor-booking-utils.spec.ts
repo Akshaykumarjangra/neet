@@ -87,5 +87,63 @@ describe("mentor booking utils", () => {
       priceCents: 2500,
     });
     assert.deepEqual(paymentOnly, { sessionIncrement: 0, earningsIncrement: 2500 });
+
+    // Edge cases for priceCents
+    const negativePrice = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "paid",
+      priceCents: -5000,
+    });
+    assert.deepEqual(negativePrice, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    const nanPrice = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "paid",
+      priceCents: NaN,
+    });
+    assert.deepEqual(nanPrice, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    const infinityPrice = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "paid",
+      priceCents: Infinity,
+    });
+    assert.deepEqual(infinityPrice, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    const negativeInfinityPrice = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "paid",
+      priceCents: -Infinity,
+    });
+    assert.deepEqual(negativeInfinityPrice, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    // Status combinations
+    const statusRequestedPaidPaid = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "paid",
+      nextPaymentStatus: "paid",
+      priceCents: 5000,
+    });
+    assert.deepEqual(statusRequestedPaidPaid, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    const statusRequestedPendingPending = getCompletionDeltas({
+      currentStatus: "requested",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "pending",
+      priceCents: 5000,
+    });
+    assert.deepEqual(statusRequestedPendingPending, { sessionIncrement: 1, earningsIncrement: 0 });
+
+    const statusCompletedPendingFailed = getCompletionDeltas({
+      currentStatus: "completed",
+      currentPaymentStatus: "pending",
+      nextPaymentStatus: "failed",
+      priceCents: 5000,
+    });
+    assert.deepEqual(statusCompletedPendingFailed, { sessionIncrement: 0, earningsIncrement: 0 });
   });
 });
