@@ -4,27 +4,64 @@ import assert from "node:assert/strict";
 import { getCompletionDeltas, hasOverlappingBooking, isWithinAvailability, validateBookingWindow } from "./mentor-booking-utils";
 
 describe("mentor booking utils", () => {
-  it("validates booking windows", () => {
+  describe("validateBookingWindow", () => {
     const now = new Date("2025-01-01T08:00:00Z");
 
-    const startAt = new Date("2025-01-01T10:00:00Z");
-    const endAt = new Date("2025-01-01T11:00:00Z");
-    const okResult = validateBookingWindow(startAt, endAt, now);
-    assert.equal(okResult.ok, true);
-    assert.equal(okResult.durationMs, 60 * 60 * 1000);
+    it("returns ok for a valid booking window", () => {
+      const startAt = new Date("2025-01-01T10:00:00Z");
+      const endAt = new Date("2025-01-01T11:00:00Z");
+      const result = validateBookingWindow(startAt, endAt, now);
+      assert.equal(result.ok, true);
+      assert.equal(result.durationMs, 60 * 60 * 1000);
+    });
 
-    const invalidOrder = validateBookingWindow(endAt, startAt, now);
-    assert.equal(invalidOrder.ok, false);
+    it("returns error if end time is before start time", () => {
+      const startAt = new Date("2025-01-01T11:00:00Z");
+      const endAt = new Date("2025-01-01T10:00:00Z");
+      const result = validateBookingWindow(startAt, endAt, now);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, "End time must be after start time");
+    });
 
-    const pastStart = validateBookingWindow(new Date("2025-01-01T07:00:00Z"), new Date("2025-01-01T08:30:00Z"), now);
-    assert.equal(pastStart.ok, false);
+    it("returns error if start and end time are identical (zero duration)", () => {
+      const time = new Date("2025-01-01T10:00:00Z");
+      const result = validateBookingWindow(time, time, now);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, "End time must be after start time");
+    });
 
-    const crossDay = validateBookingWindow(
-      new Date("2025-01-01T23:30:00Z"),
-      new Date("2025-01-02T00:30:00Z"),
-      new Date("2025-01-01T00:00:00Z")
-    );
-    assert.equal(crossDay.ok, false);
+    it("returns error for invalid Date objects", () => {
+      const invalidStart = new Date("invalid");
+      const endAt = new Date("2025-01-01T11:00:00Z");
+      const result = validateBookingWindow(invalidStart, endAt, now);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, "End time must be after start time");
+    });
+
+    it("returns error if start time is in the past", () => {
+      const startAt = new Date("2025-01-01T07:00:00Z"); // Before "now" at 08:00:00Z
+      const endAt = new Date("2025-01-01T08:30:00Z");
+      const result = validateBookingWindow(startAt, endAt, now);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, "Cannot book a past time slot");
+    });
+
+    it("allows booking if start time is exactly now", () => {
+      const startAt = new Date("2025-01-01T08:00:00Z"); // Exactly "now"
+      const endAt = new Date("2025-01-01T09:00:00Z");
+      const result = validateBookingWindow(startAt, endAt, now);
+      assert.equal(result.ok, true);
+    });
+
+    it("returns error if booking crosses to the next day", () => {
+      const startAt = new Date("2025-01-01T23:30:00Z");
+      const endAt = new Date("2025-01-02T00:30:00Z");
+      // Use an earlier 'now' to bypass the past check
+      const pastNow = new Date("2025-01-01T00:00:00Z");
+      const result = validateBookingWindow(startAt, endAt, pastNow);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, "Booking must be within a single day");
+    });
   });
 
   it("checks availability and overlaps", () => {
