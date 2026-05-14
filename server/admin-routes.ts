@@ -365,7 +365,7 @@ router.post("/bulk-import", requireAdmin, async (req, res) => {
 
       try {
         // Generate name from email
-        const name = trimmedEmail.split('@')[0] + '_' + Math.random().toString(36).slice(-4);
+        const name = trimmedEmail.split('@')[0] + '_' + randomBytes(2).toString('hex');
 
         // Generate cryptographically secure random password
         const randomPassword = generateSecurePassword(16);
