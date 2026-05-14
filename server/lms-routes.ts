@@ -174,7 +174,7 @@ router.get("/progress", requireAuthWithPasswordCheck, async (req, res) => {
 router.post("/sessions", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
-    const { chapterContentId, sectionsViewed, interactionCount } = req.body;
+    const { chapterContentId, sectionsViewed, interactionCount } = req.body as any;
 
     const [session] = await db
       .insert(userChapterSessions)
@@ -227,7 +227,7 @@ router.patch("/sessions/:id", requireAuthWithPasswordCheck, async (req, res) => 
   try {
     const userId = req.session.userId!;
     const sessionId = parseInt(req.params.id);
-    const { endedAt, durationMinutes, sectionsViewed, interactionCount } = req.body;
+    const { endedAt, durationMinutes, sectionsViewed, interactionCount } = req.body as any;
 
     const [updatedSession] = await db
       .update(userChapterSessions)
@@ -327,7 +327,7 @@ router.get("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
 router.post("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
-    const { chapterContentId } = req.body;
+    const { chapterContentId } = req.body as any;
 
     // Check if chapter is premium
     const [chapter] = await db
@@ -348,13 +348,13 @@ router.post("/bookmarks", requireAuthWithPasswordCheck, async (req, res) => {
     }
 
     const validatedData = insertUserChapterBookmarkSchema.parse({
-      ...req.body,
+      ...req.body as any,
       userId,
     });
 
     const [bookmark] = await db
       .insert(userChapterBookmarks)
-      .values(validatedData)
+      .values(validatedData as any)
       .returning();
 
     // Check for achievements (bookmarks_created)
@@ -418,7 +418,7 @@ router.get("/notes", requireAuthWithPasswordCheck, async (req, res) => {
 router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
-    const { chapterContentId } = req.body;
+    const { chapterContentId } = req.body as any;
 
     // Check if chapter is premium
     const [chapter] = await db
@@ -438,13 +438,13 @@ router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
     }
 
     const validatedData = insertUserChapterNoteSchema.parse({
-      ...req.body,
+      ...req.body as any,
       userId,
     });
 
     const [note] = await db
       .insert(userChapterNotes)
-      .values(validatedData)
+      .values(validatedData as any)
       .returning();
 
     // Award XP for first note on this chapter (anti-farming: check xpTransactions)
@@ -455,7 +455,7 @@ router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
         and(
           eq(xpTransactions.userId, userId),
           eq(xpTransactions.source, 'note'),
-          eq(xpTransactions.sourceId, validatedData.chapterContentId.toString())
+          eq(xpTransactions.sourceId, (validatedData as any).chapterContentId.toString())
         )
       )
       .limit(1);
@@ -465,12 +465,12 @@ router.post("/notes", requireAuthWithPasswordCheck, async (req, res) => {
       const [chapter] = await db
         .select({ title: chapterContent.chapterTitle })
         .from(chapterContent)
-        .where(eq(chapterContent.id, validatedData.chapterContentId))
+        .where(eq(chapterContent.id, (validatedData as any).chapterContentId))
         .limit(1);
 
       await GamificationService.awardXp(userId, 30, {
         type: 'note',
-        sourceId: validatedData.chapterContentId.toString(),
+        sourceId: (validatedData as any).chapterContentId.toString(),
         description: `First note on ${chapter?.title || 'chapter'}`,
       });
     }
@@ -488,7 +488,7 @@ router.patch("/notes/:id", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
     const noteId = parseInt(req.params.id);
-    const { noteText, highlightText, color } = req.body;
+    const { noteText, highlightText, color } = req.body as any;
 
     const [updatedNote] = await db
       .update(userChapterNotes)
@@ -712,7 +712,7 @@ router.get("/mastery/:chapterId", requireAuthWithPasswordCheck, requireActiveSub
 router.post("/progress", requireAuthWithPasswordCheck, async (req, res) => {
   try {
     const userId = req.session.userId!;
-    const { chapterId, completionPercentage } = req.body;
+    const { chapterId, completionPercentage } = req.body as any;
 
     if (!chapterId) {
       return res.status(400).json({ error: "chapterId is required" });
