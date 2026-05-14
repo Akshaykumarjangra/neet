@@ -37,8 +37,33 @@ async function fetchRedditNeet(): Promise<any[]> {
       id: c.data.id, subreddit: "NEET", title: c.data.title, body: c.data.selftext, url: `https://reddit.com${c.data.permalink}`,
     }));
   }
-  // TODO: OAuth flow with cid/secret
-  return [];
+
+  const tokenRes = await fetch("https://www.reddit.com/api/v1/access_token", {
+    method: "POST",
+    headers: {
+      "Authorization": `Basic ${Buffer.from(`${cid}:${secret}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": "neetprep-bot/1.0",
+    },
+    body: new URLSearchParams({ grant_type: "client_credentials" }),
+  });
+
+  const tokenData = await tokenRes.json();
+  if (!tokenRes.ok || !tokenData.access_token) {
+    console.error("[reddit-quora] failed to get access token", tokenData);
+    return [];
+  }
+
+  const r = await fetch("https://oauth.reddit.com/r/NEET/new.json?limit=10", {
+    headers: {
+      "Authorization": `Bearer ${tokenData.access_token}`,
+      "User-Agent": "neetprep-bot/1.0",
+    },
+  });
+  const j = await r.json();
+  return (j?.data?.children ?? []).map((c: any) => ({
+    id: c.data.id, subreddit: "NEET", title: c.data.title, body: c.data.selftext, url: `https://reddit.com${c.data.permalink}`,
+  }));
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
