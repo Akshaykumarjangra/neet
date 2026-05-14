@@ -59,9 +59,6 @@ describe('AntiCheat', () => {
     delete (globalThis as any).window;
     delete (globalThis as any).document;
     delete (globalThis as any).screen;
-    // restore navigator property if necessary, but deleting it usually throws, so we redefine or leave it.
-    // actually, in node 22, globalThis.navigator is read-only.
-    // By doing Object.defineProperty with configurable: true, we override it.
   });
 
   it('should initialize and attach event listeners on start()', async () => {
