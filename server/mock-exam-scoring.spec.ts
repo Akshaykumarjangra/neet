@@ -55,6 +55,29 @@ describe("mock-exam scoring", () => {
     assert.equal(response.selectedOptionId, null);
   });
 
+  it("handles empty response map correctly", () => {
+    const questionItems = [
+      { questionId: 1, sectionId: 10 },
+      { questionId: 2, sectionId: 10 },
+    ];
+
+    const result = scoreResponses(
+      1,
+      questionItems,
+      new Map(),
+      {},
+      {}
+    );
+
+    assert.equal(result.correctCount, 0);
+    assert.equal(result.wrongCount, 0);
+    assert.equal(result.unansweredCount, 2);
+    assert.equal(result.score, 0);
+    assert.equal(result.totalTimeSeconds, 0);
+    assert.equal(result.responseRows.length, 2);
+    assert.deepEqual(result.sectionTime, {});
+  });
+
   it("aggregates section time totals", () => {
     const questionItems = [
       { questionId: 1, sectionId: 10 },
