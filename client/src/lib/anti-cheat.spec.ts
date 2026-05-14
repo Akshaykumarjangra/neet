@@ -199,6 +199,6 @@ describe('AntiCheat', () => {
 
     snap = ac.snapshot();
     assert.equal(typeof snap.fingerprint, 'string');
-    assert.equal(snap.fingerprint.length, 64); // SHA-256 hash length in hex
+    assert.equal(snap.fingerprint?.length, 64); // SHA-256 hash length in hex
   });
 });
