@@ -323,18 +323,25 @@ router.post("/gamification/config", requireAdmin, async (req, res) => {
       ["gamification_badge_xp", gamification_badge_xp],
     ].filter(([, value]) => value !== undefined);
 
-    for (const [key, value] of entries) {
-      const [existing] = await db.select().from(adminSettings).where(eq(adminSettings.key, key)).limit(1);
-      if (existing) {
-        await db
-          .update(adminSettings)
-          .set({ value, updatedBy: req.session?.userId, updatedAt: new Date() })
-          .where(eq(adminSettings.key, key));
-      } else {
-        await db
-          .insert(adminSettings)
-          .values({ key, value, updatedBy: req.session?.userId });
-      }
+    if (entries.length > 0) {
+      await db
+        .insert(adminSettings)
+        .values(
+          entries.map(([key, value]) => ({
+            key,
+            value,
+            updatedBy: req.session?.userId,
+            updatedAt: new Date(),
+          }))
+        )
+        .onConflictDoUpdate({
+          target: adminSettings.key,
+          set: {
+            value: sql`excluded.value`,
+            updatedBy: sql`excluded.updated_by`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        });
     }
 
     await recordAuditLog(req, {
