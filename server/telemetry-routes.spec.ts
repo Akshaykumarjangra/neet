@@ -2,23 +2,31 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
-import telemetryRoutes from './telemetry-routes';
+import { describe, it, mock } from 'node:test';
 
-// Dummy auth middleware to satisfy requireAuthWithPasswordCheck
-function dummyAuth(req: Request, res: Response, next: NextFunction) {
-    // Simulate an authenticated user
-    (req as any).session = { userId: 'test-user-id' };
-    next();
-}
+import telemetryRoutes from './telemetry-routes';
 
 // Create an app that uses the dummy auth before the telemetry routes
 function createApp() {
     const app = express();
     app.use(express.json());
-    // Replace the real auth middleware with dummy for testing
-    // The telemetryRoutes file imports requireAuthWithPasswordCheck internally,
-    // but we can mount the router after applying dummy auth globally.
-    app.use(dummyAuth);
+
+    // We overwrite the middleware on the router locally for tests
+    // so we don't hit the DB or throw Auth required errors
+    telemetryRoutes.stack.forEach((layer) => {
+        if (layer.route && layer.route.path === '/telemetry') {
+            // Find and replace the auth middleware directly
+            const authIndex = layer.route.stack.findIndex((m: any) => m.name === 'requireAuthWithPasswordCheck');
+            if (authIndex !== -1) {
+                layer.route.stack[authIndex].handle = (req: Request, res: Response, next: NextFunction) => {
+                    (req as any).session = { userId: 'test-user-id' };
+                    (req as any).user = { id: 'test-user-id' };
+                    next();
+                };
+            }
+        }
+    });
+
     app.use('/api', telemetryRoutes);
     // Error handler to avoid unhandled errors in tests
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
