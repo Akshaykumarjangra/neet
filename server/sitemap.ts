@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "./db";
 import { contentTopics, chapterContent } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
+import { logger } from "./lib/logger";
 
 type SitemapEntry = { url: string; priority: string; changefreq: string; lastmod?: string };
 
@@ -67,7 +68,7 @@ router.get("/sitemap.xml", async (req, res) => {
                 lastmod: row.updatedAt ? new Date(row.updatedAt).toISOString().split('T')[0] : undefined
             }));
         } catch (e) {
-            console.error("Sitemap: Failed to fetch chapters", e);
+            logger.error("Sitemap: Failed to fetch chapters", { error: e });
         }
 
         // 2. Fetch Topics from DB (as practice landing pages)
@@ -87,7 +88,7 @@ router.get("/sitemap.xml", async (req, res) => {
                 changefreq: "monthly"
             }));
         } catch (e) {
-            console.error("Sitemap: Failed to fetch topics", e);
+            logger.error("Sitemap: Failed to fetch topics", { error: e });
         }
 
         // 3. Add static articles (from client/public/articles)
@@ -132,7 +133,7 @@ router.get("/sitemap.xml", async (req, res) => {
         res.header("Content-Type", "application/xml");
         res.send(xml);
     } catch (error) {
-        console.error("Error generating sitemap:", error);
+        logger.error("Error generating sitemap", { error });
         res.status(500).send("Error generating sitemap");
     }
 });
