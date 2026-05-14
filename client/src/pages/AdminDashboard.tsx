@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (user && !user.isAdminOrMentor) {
+    if (user && !user.isAdmin || user.role === 'mentor') {
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user || !user.isAdminOrMentor) {
+  if (!user || !user.isAdmin || user.role === 'mentor') {
     return null;
   }
 
