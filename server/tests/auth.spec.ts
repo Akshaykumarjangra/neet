@@ -9,7 +9,7 @@ mock.method(Pool.prototype, 'connect', async () => {
     release: () => {},
   };
 });
-mock.method(global, 'setTimeout', (cb) => { if (typeof cb === 'function') cb(); });
+mock.method(global, 'setTimeout', (cb: any) => { if (typeof cb === 'function') cb(); });
 
 const { authenticateUser } = await import('../auth.ts');
 const { db } = await import('../db.ts');
