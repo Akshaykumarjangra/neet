@@ -80,12 +80,12 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export async function apiRequest<T = unknown>(
   method: string,
   url: string,
   data?: unknown | undefined,
   options?: { timeoutMs?: number },
-): Promise<any> {
+): Promise<T | Response> {
   const res = await fetchWithTimeout(
     url,
     {
