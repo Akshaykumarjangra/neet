@@ -124,10 +124,10 @@ async function ensureOwnerAccount() {
 
     app.use(cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.some(o => origin === o || origin.startsWith("http://localhost:"))) {
+        if (!origin || allowedOrigins.some(o => origin === o || origin.startsWith("http://localhost:")) || origin.endsWith(".zeroai.org.in")) {
           callback(null, true);
         } else {
-          callback(new Error("Not allowed by CORS"));
+          callback(null, false);
         }
       },
       credentials: true,
