@@ -11,7 +11,7 @@ Hand this to Antigravity to finish UI plumbing for the new pages/components.
 - WS `/ws/battle` (registered in `server/index.ts`)
 - Cron schedules registered if `NODE_ENV=production` or `ENABLE_CRON=1`
 
-## Frontend routes — add to `client/src/App.tsx`
+## Frontend routes — add to `client/src/App.tsx` ✅
 
 ```tsx
 import DoubtSolver from "@/pages/DoubtSolver";
@@ -26,7 +26,7 @@ import ExamDay from "@/pages/ExamDay";
 <Route path="/exam-day" component={ExamDay} />
 ```
 
-## Dashboard widgets
+## Dashboard widgets ✅
 
 ```tsx
 import { DailyPlanCard } from "@/components/DailyPlanCard";
@@ -37,21 +37,21 @@ import { RankCard } from "@/components/RankCard";
 <RankCard name={user.name} rank={user.rank} streak={user.streak} accuracy={user.accuracy} code={user.referralCode} />
 ```
 
-## Header nav
+## Header nav ✅
 
 Add links to Battle, Concepts, Doubt Solver, Exam Day under appropriate role gates.
 
-## Database migration
+## Database migration ✅
 
 ```bash
 psql $DATABASE_URL -f migrations/0099_phases_1_to_7.sql
 ```
 
-## Cron in production
+## Cron in production ✅
 
 Set `ENABLE_CRON=1` in env on the worker dyno (or just one app instance) to avoid duplicate fires.
 
-## Required env keys (see `.env.example`)
+## Required env keys (see `.env.example`) ✅
 
 Critical for full functionality:
 - `GEMINI_API_KEY` (working — uses gemini-1.5-flash/pro)
