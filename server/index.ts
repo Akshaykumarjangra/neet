@@ -7,6 +7,8 @@ import helmet from "helmet";
 import compression from "compression";
 import { rateLimit } from "express-rate-limit";
 import cors, { type CorsOptions } from "cors";
+import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeWebSocketServer } from "./ws/index";
@@ -171,10 +173,22 @@ async function ensureOwnerAccount() {
     attachBattleWS(server, sessionMiddleware);
 
     // Serve static files in production, Vite dev server in development
-    if (process.env.NODE_ENV !== "production") {
-      await setupVite(app, server);
-    } else {
+    // Prioritize built assets if they exist, otherwise use Vite dev server
+    const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
+    const assetsExist = fs.existsSync(distPath) && fs.existsSync(path.resolve(distPath, "assets"));
+    
+    if (assetsExist) {
+      // Built assets exist, serve them (production mode)
       serveStatic(app);
+      log("Using built static assets from dist/public");
+    } else if (process.env.NODE_ENV === "development") {
+      // Explicitly in development mode with no built assets, use Vite dev server
+      await setupVite(app, server);
+      log("Using Vite dev server");
+    } else {
+      // No built assets and not explicitly development - serve static anyway (will 404 missing files)
+      serveStatic(app);
+      log("Serving static files (assets not found - ensure build completed)");
     }
 
     // Global error handler (must be after all route registration)
