@@ -1,0 +1,3 @@
+## 2024-05-18 - Avoid N+1 Queries with Promise.all and count
+**Learning:** In the `server/admin-content-routes.ts` and `server/routes.ts` files, there are N+1 query patterns where an array of topics or decks is fetched, and then `Promise.all` is used to iterate over each item and execute a separate database query to get the `count` of questions or flashcards. This causes N+1 queries.
+**Action:** Replace `Promise.all` with a single grouped left join query that computes the counts directly using SQL, which is O(1) database queries instead of O(N). When migrating to the LEFT JOIN grouped approach, ensure all necessary columns are preserved by using `...getTableColumns(table)` instead of explicitly passing every column one by one.
