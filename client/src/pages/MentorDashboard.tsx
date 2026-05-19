@@ -419,51 +419,8 @@ export default function MentorDashboard() {
     setTopics(topics.filter((t) => t !== topic));
   };
 
-  if (authLoading || statusLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (statusError) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto p-6">
-          <Card className="max-w-lg mx-auto mt-12 border-destructive/40">
-            <CardContent className="pt-6 text-center space-y-4">
-              <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
-                <AlertCircle className="h-10 w-10 text-destructive" />
-              </div>
-              <h3 className="text-xl font-semibold">Unable to load mentor dashboard</h3>
-              <p className="text-muted-foreground">
-                {statusErrorData instanceof Error ? statusErrorData.message : "Please try again."}
-              </p>
-              <Button onClick={() => refetchStatus()} className="gap-2" data-testid="button-retry-mentor-status">
-                <Loader2 className="h-4 w-4" />
-                Retry
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    setLocation("/login");
-    return null;
-  }
-
+  // ALL hooks MUST be called before any conditional returns (React rules of hooks)
   const mentor = mentorStatus?.mentor;
-  const isMentor = mentorStatus?.hasMentor && mentor?.verificationStatus === "approved";
-  const isPending = mentorStatus?.hasMentor && mentor?.verificationStatus === "pending";
-  const isRejected = mentorStatus?.hasMentor && mentor?.verificationStatus === "rejected";
-
-  const upcomingBookings = bookings.filter((b) => b.status === "requested" || b.status === "confirmed");
-  const pastBookings = bookings.filter((b) => b.status === "completed" || b.status === "cancelled");
 
   // Calculate analytics
   const thisMonthEarnings = useMemo(() => {
@@ -497,10 +454,33 @@ export default function MentorDashboard() {
 
   const popularSubjects = useMemo(() => {
     if (!mentor) return [];
-    // For now, return mentor's subjects. In future, could track which subjects get most bookings
     return mentor.subjects;
   }, [mentor]);
 
+  // Calculate chart data (last 7 days or months)
+  const chartData = useMemo(() => {
+    const data: Record<string, number> = {};
+    const now = new Date();
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      data[d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })] = 0;
+    }
+
+    bookings.forEach(b => {
+      if (b.status === 'completed') {
+        const date = new Date(b.startAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (data[date] !== undefined) {
+          data[date] += (b.priceCents || 0);
+        }
+      }
+    });
+
+    return Object.entries(data).map(([date, amount]) => ({ date, amount }));
+  }, [bookings]);
+
+  // --- Early returns (AFTER all hooks) ---
   if (authLoading || statusLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -538,28 +518,17 @@ export default function MentorDashboard() {
     );
   }
 
-  // Calculate chart data (last 7 days or months)
-  const chartData = useMemo(() => {
-    const data: Record<string, number> = {};
-    const now = new Date();
-    // Initialize last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      data[d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })] = 0;
-    }
+  if (!user) {
+    setLocation("/login");
+    return null;
+  }
 
-    bookings.forEach(b => {
-      if (b.status === 'completed') {
-        const date = new Date(b.startAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        if (data[date] !== undefined) {
-          data[date] += (b.priceCents || 0);
-        }
-      }
-    });
+  const isMentor = mentorStatus?.hasMentor && mentor?.verificationStatus === "approved";
+  const isPending = mentorStatus?.hasMentor && mentor?.verificationStatus === "pending";
+  const isRejected = mentorStatus?.hasMentor && mentor?.verificationStatus === "rejected";
 
-    return Object.entries(data).map(([date, amount]) => ({ date, amount }));
-  }, [bookings]);
+  const upcomingBookings = bookings.filter((b) => b.status === "requested" || b.status === "confirmed");
+  const pastBookings = bookings.filter((b) => b.status === "completed" || b.status === "cancelled");
 
   return (
     <div className="min-h-screen bg-background">

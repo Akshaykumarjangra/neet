@@ -187,7 +187,7 @@ export default function Dashboard() {
   const { data: leaderboardData } = useQuery({
     queryKey: ['/api/game/leaderboard', 'india'],
     queryFn: async () => {
-      const response = await fetch('/api/game/leaderboard?scope=india');
+      const response = await fetch('/api/game/leaderboard?scope=india', { credentials: 'include' });
       if (!response.ok) return [];
       return response.json();
     },
@@ -217,8 +217,8 @@ export default function Dashboard() {
   }>({
     queryKey: ['/api/mentors/recommendations'],
     queryFn: async () => {
-      const response = await fetch('/api/mentors/recommendations');
-      if (!response.ok) throw new Error('Failed to load mentor recommendations');
+      const response = await fetch('/api/mentors/recommendations', { credentials: 'include' });
+      if (!response.ok) return { topRated: [], trending: [], trendingSubjects: [] };
       return response.json();
     },
     staleTime: 5 * 60 * 1000,

@@ -119,6 +119,13 @@ export const getQueryFn: <T>(options: {
       }
 
       await throwIfResNotOk(res);
+
+      // Guard against SPA catch-all returning HTML for unknown API routes
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Expected JSON but received ${contentType || "unknown content type"}`);
+      }
+
       return await res.json();
     };
 
