@@ -70,7 +70,7 @@ router.get("/library", async (req, res) => {
       .offset(offset);
 
     // If user logged in and wants progress, fetch it separately (faster)
-    let enrichedChapters = chapters;
+    let enrichedChapters: any[] = chapters;
     if (userId && includeProgress) {
       const progressMap = new Map();
       const bookmarkedMap = new Map();
@@ -109,9 +109,17 @@ router.get("/library", async (req, res) => {
 
       enrichedChapters = chapters.map((ch) => ({
         ...ch,
-        progress: progressMap.get(`${ch.subject}-${ch.classLevel}-${ch.chapterNumber}`) || 0,
+        progress: progressMap.get(`${ch.subject}-${ch.classLevel}-${ch.chapterNumber}`) ?? 0,
         isBookmarked: bookmarkedMap.has(ch.id) || false,
         lastAccessed: lastAccessedMap.get(ch.id) || null,
+      }));
+    } else {
+      // Always include safe defaults so client never gets undefined
+      enrichedChapters = chapters.map((ch) => ({
+        ...ch,
+        progress: 0,
+        isBookmarked: false,
+        lastAccessed: null,
       }));
     }
 

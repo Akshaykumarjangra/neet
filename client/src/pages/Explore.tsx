@@ -314,7 +314,7 @@ export default function Explore() {
                               {chapter.progress > 0 && (
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                   <TrendingUp className="h-3.5 w-3.5" />
-                                  {chapter.progress}% complete
+                                  {chapter.progress ?? 0}% complete
                                 </div>
                               )}
                             </div>

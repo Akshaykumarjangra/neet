@@ -26,6 +26,16 @@ export function serveStatic(app: Express) {
         res.setHeader("Content-Type", "font/woff2");
       } else if (filePath.endsWith('.woff')) {
         res.setHeader("Content-Type", "font/woff");
+      } else if (filePath.endsWith('.mp4')) {
+        res.setHeader("Content-Type", "video/mp4");
+      } else if (filePath.endsWith('.webm')) {
+        res.setHeader("Content-Type", "video/webm");
+      } else if (filePath.endsWith('.ogg')) {
+        res.setHeader("Content-Type", "video/ogg");
+      } else if (filePath.endsWith('.mp3')) {
+        res.setHeader("Content-Type", "audio/mpeg");
+      } else if (filePath.endsWith('.wav')) {
+        res.setHeader("Content-Type", "audio/wav");
       }
       // Cache control
       if (filePath.includes('/assets/')) {

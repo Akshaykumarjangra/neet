@@ -309,10 +309,10 @@ function UnitSection({
     unit.chapters.includes(c.chapterNumber)
   );
 
-  const completedCount = unitChapters.filter((c) => c.progress === 100).length;
+  const completedCount = unitChapters.filter((c) => (c.progress ?? 0) === 100).length;
   const unitProgress = unitChapters.length > 0
     ? Math.round(
-      unitChapters.reduce((sum, c) => sum + c.progress, 0) / unitChapters.length
+      unitChapters.reduce((sum, c) => sum + (c.progress ?? 0), 0) / unitChapters.length
     )
     : 0;
 
@@ -438,7 +438,7 @@ function TopicSelectionModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">Ch {chapter.chapterNumber}: {chapter.chapterTitle}</p>
-                  <p className="text-xs text-muted-foreground">{chapter.progress}% complete</p>
+                  <p className="text-xs text-muted-foreground">{chapter.progress ?? 0}% complete</p>
                 </div>
               </div>
             </Button>

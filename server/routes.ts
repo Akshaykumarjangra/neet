@@ -1698,7 +1698,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     fileFilter: (_req: any, file: any, cb: any) => {
       const allowedMimes = [
         "image/jpeg", "image/png", "image/gif", "image/webp", 
-        "application/pdf"
+        "application/pdf",
+        "video/mp4", "video/webm", "video/ogg", "video/quicktime"
       ];
       if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);

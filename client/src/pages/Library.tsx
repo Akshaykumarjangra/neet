@@ -396,7 +396,7 @@ export default function Library() {
                           <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground font-medium">Progress</span>
-                              <span className="font-bold text-primary">{chapter.progress}%</span>
+                              <span className="font-bold text-primary">{chapter.progress ?? 0}%</span>
                             </div>
                             <div className="relative">
                               <Progress value={chapter.progress} className="h-2" data-testid={`progress-${chapter.id}`} />

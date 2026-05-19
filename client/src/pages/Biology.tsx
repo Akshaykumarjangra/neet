@@ -84,7 +84,8 @@ function ProgressRing({ progress, size = 48 }: { progress: number; size?: number
   const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
+  const validProgress = (typeof progress === 'number' && !Number.isNaN(progress)) ? progress : 0;
+  const offset = circumference - (validProgress / 100) * circumference;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -112,7 +113,7 @@ function ProgressRing({ progress, size = 48 }: { progress: number; size?: number
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold">{progress}%</span>
+        <span className="text-xs font-bold">{Math.round(validProgress)}%</span>
       </div>
     </div>
   );
@@ -269,10 +270,10 @@ function BiologySectionComponent({
     );
   });
 
-  const completedCount = sectionChapters.filter((c) => c.progress === 100).length;
+  const completedCount = sectionChapters.filter((c) => (c.progress ?? 0) === 100).length;
   const sectionProgress = sectionChapters.length > 0
     ? Math.round(
-      sectionChapters.reduce((sum, c) => sum + c.progress, 0) / sectionChapters.length
+      sectionChapters.reduce((sum, c) => sum + (c.progress ?? 0), 0) / sectionChapters.length
     )
     : 0;
 
@@ -398,7 +399,7 @@ function TopicSelectionModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">Ch {chapter.chapterNumber}: {chapter.chapterTitle}</p>
-                  <p className="text-xs text-muted-foreground">{chapter.progress}% complete</p>
+                  <p className="text-xs text-muted-foreground">{chapter.progress ?? 0}% complete</p>
                 </div>
               </div>
             </Button>
