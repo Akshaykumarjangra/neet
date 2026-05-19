@@ -158,9 +158,8 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user || !user.isAdminOrMentor) {
-    return null;
-  }
+  // ALL hooks MUST be above early returns (React rules of hooks)
+  const isAuthorized = !!user?.isAdminOrMentor;
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
@@ -175,10 +174,12 @@ export default function AdminDashboard() {
       return [];
     },
     staleTime: 60_000,
+    enabled: isAuthorized,
   });
 
   const { data: pendingMentors = [], isLoading: isLoadingMentors } = useQuery<PendingMentor[]>({
     queryKey: ["/api/admin/mentors/pending"],
+    enabled: isAuthorized,
   });
 
   const { data: contentStats } = useQuery<ContentStats>({
@@ -207,11 +208,13 @@ export default function AdminDashboard() {
         return { totalQuestions: 0, totalTopics: 0, totalTests: 0, totalFlashcards: 0 };
       }
     },
+    enabled: isAuthorized,
   });
 
   const { data: generationStatus, refetch: refetchStatus } = useQuery<GenerationStatus>({
     queryKey: ['/api/questions/generation-status'],
     refetchInterval: isGenerating ? 5000 : false,
+    enabled: isAuthorized,
   });
 
   const grantAccessMutation = useMutation({
@@ -276,6 +279,7 @@ export default function AdminDashboard() {
   // Topics for dropdown
   const { data: topics = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/topics"],
+    enabled: isAuthorized,
   });
 
   // AI Question Generation Mutation
@@ -372,6 +376,11 @@ export default function AdminDashboard() {
       toast({ title: "Failed to start generation", variant: "destructive" });
     },
   });
+
+  // --- Early returns (AFTER all hooks) ---
+  if (!user || !isAuthorized) {
+    return null;
+  }
 
   const handleBulkImport = () => {
     const emails = bulkEmails

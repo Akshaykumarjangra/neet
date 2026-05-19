@@ -874,15 +874,15 @@ export default function Profile() {
                   <div className="space-y-2">
                     <Label htmlFor="profile-state">State</Label>
                     <Select
-                      value={profileState}
-                      onValueChange={setProfileState}
+                      value={profileState || "__none__"}
+                      onValueChange={(val) => setProfileState(val === "__none__" ? "" : val)}
                       disabled={profileLoading || updateProfileMutation.isPending}
                     >
                       <SelectTrigger id="profile-state" data-testid="select-profile-state">
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="__none__">None</SelectItem>
                         {INDIAN_STATES.map((state) => (
                           <SelectItem key={state} value={state}>
                             {state}
