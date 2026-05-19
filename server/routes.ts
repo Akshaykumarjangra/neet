@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/scholarship", scholarshipRoutes);
   app.use("/api/notifications", notificationRoutes);
 
-  app.use("/api/growth", growthRoutes);
+
 
   app.use("/api/billing", billingRoutes);
 
@@ -300,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/profile", profileRoutes);
   app.use("/api/explain", requireActiveSubscription(), explainRoutes);
-  app.use("/api/growth", growthRoutes);
+
 
   // ============ PUBLIC SUBSCRIPTION PLANS ============
 

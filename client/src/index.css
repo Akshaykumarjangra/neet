@@ -225,7 +225,7 @@ body {
 
   --sidebar-border: 210 5% 19%;
 
-  --sidebar-primary: 211 92% 52%;
+  --sidebar-primary: 211 92% 46%;
 
   --sidebar-primary-foreground: 210 5% 98%;
 
@@ -233,7 +233,7 @@ body {
 
   --sidebar-accent-foreground: 210 5% 92%;
 
-  --sidebar-ring: 211 92% 52%;
+  --sidebar-ring: 211 92% 46%;
 
   --popover: 210 5% 14%;
 
@@ -241,7 +241,7 @@ body {
 
   --popover-border: 210 5% 21%;
 
-  --primary: 211 92% 52%;
+  --primary: 211 92% 46%;
 
   --primary-foreground: 210 5% 98%;
 
@@ -262,7 +262,7 @@ body {
   --destructive-foreground: 0 5% 98%;
 
   --input: 210 8% 32%;
-  --ring: 211 92% 52%;
+  --ring: 211 92% 46%;
   --chart-1: 211 92% 65%;
   --chart-2: 282 85% 68%;
   --chart-3: 173 78% 62%;

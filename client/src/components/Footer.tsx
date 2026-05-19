@@ -1,33 +1,46 @@
 import { Link } from "wouter";
 import { GraduationCap, Facebook, Twitter, Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { user } = useAuth();
+  const homeLink = user ? "/dashboard" : "/";
 
   const footerLinks = {
-    platform: [
-      { name: "Dashboard", href: "/dashboard" },
-      { name: "Practice", href: "/practice" },
-      { name: "Mock Tests", href: "/mock-tests" },
-      { name: "Mentors", href: "/mentors" },
-      { name: "NEET Cutoff", href: "/neet-cutoff" },
-      { name: "PYQ Analysis", href: "/pyq-analysis" },
-      { name: "NEET Syllabus", href: "/syllabus" },
-    ],
+    platform: user
+      ? [
+          { name: "Dashboard", href: "/dashboard" },
+          { name: "Practice", href: "/practice" },
+          { name: "Mock Tests", href: "/mock-tests" },
+          { name: "Mentors", href: "/mentors" },
+          { name: "Simulations", href: "/simulations" },
+          { name: "Videos", href: "/videos" },
+          { name: "Flashcards", href: "/flashcards" },
+        ]
+      : [
+          { name: "Pricing", href: "/pricing" },
+          { name: "Mock Tests", href: "/mock-tests" },
+          { name: "Mentors", href: "/mentors" },
+          { name: "NEET Cutoff", href: "/neet-cutoff" },
+          { name: "PYQ Analysis", href: "/pyq-analysis" },
+          { name: "NEET Syllabus", href: "/syllabus" },
+          { name: "Medical Colleges", href: "/medical-colleges" },
+        ],
     company: [
       { name: "About Us", href: "/about" },
       { name: "Contact", href: "/contact" },
-      { name: "Blog", href: "/blog/welcome-to-zero-ai" },
+      { name: "NEET FAQ", href: "/neet-faq" },
     ],
     legal: [
       { name: "Terms of Service", href: "/terms" },
       { name: "Privacy Policy", href: "/privacy" },
-      { name: "Refund Policy", href: "/terms" }, // Pointing to terms for now
+      { name: "Refund Policy", href: "/terms" },
     ],
     support: [
       { name: "Help Center", href: "/help" },
-      { name: "NEET FAQ", href: "/neet-faq" },
       { name: "App Guide", href: "/guide" },
+      { name: "Best Books", href: "/best-books-neet" },
     ],
   };
 
@@ -37,7 +50,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-6">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={homeLink} className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-primary">
                 <GraduationCap className="h-6 w-6 text-primary-foreground" />
               </div>

@@ -6,7 +6,7 @@ interface SeoProps {
   title: string;
   description?: string;
   url?: string;
-  keywords?: string[];
+  keywords?: string | string[];
   ogImage?: string;
   structuredData?: any | any[];
   noindex?: boolean;
@@ -21,6 +21,13 @@ export function Seo({
   structuredData,
   noindex = false,
 }: SeoProps) {
+  // Normalize keywords: accept both "a, b, c" string and ["a", "b", "c"] array
+  const keywordsList: string[] = Array.isArray(keywords)
+    ? keywords
+    : typeof keywords === "string"
+      ? keywords.split(",").map(k => k.trim()).filter(Boolean)
+      : [];
+
   const dataArray = structuredData
     ? Array.isArray(structuredData)
       ? structuredData
@@ -44,7 +51,7 @@ export function Seo({
       <title>{title}</title>
       
       {description && <meta name="description" content={description} />}
-      {keywords.length > 0 && <meta name="keywords" content={keywords.join(", ")} />}
+      {keywordsList.length > 0 && <meta name="keywords" content={keywordsList.join(", ")} />}
       
       <meta 
         name="robots" 

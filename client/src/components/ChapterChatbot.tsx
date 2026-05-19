@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -637,25 +638,28 @@ export function ChapterChatbot({
             {renderChatCard("w-full h-full p-0 sm:p-4", "w-full h-full")}
           </SheetContent>
         </Sheet>
-        <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={onToggle}
-              className={cn("group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] transition-all overflow-hidden border-none", isOpen ? "bg-slate-950 text-white" : "bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white")}
-              size="lg"
-            >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner">{isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}</span>
-              <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">NEET Expert</span><span className="text-base font-bold tracking-tight">{isOpen ? "Close Assistant" : "Ask AI Mentor"}</span></div>
-              {!isOpen && <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />}
-            </Button>
-          </motion.div>
-        </div>
+        {createPortal(
+          <div className="fixed left-3 sm:left-6 bottom-[calc(env(safe-area-inset-bottom,0)+16px)] z-[70] lg:hidden">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={onToggle}
+                className={cn("group relative flex items-center gap-4 rounded-3xl px-6 h-16 shadow-[0_32px_64px_-16px_rgba(59,130,246,0.6)] transition-all overflow-hidden border-none", isOpen ? "bg-slate-950 text-white" : "bg-gradient-to-r from-indigo-600 via-primary to-sky-500 text-white")}
+                size="lg"
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner">{isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}</span>
+                <div className="flex flex-col text-left leading-tight pr-2"><span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/70">NEET Expert</span><span className="text-base font-bold tracking-tight">{isOpen ? "Close Assistant" : "Ask AI Mentor"}</span></div>
+                {!isOpen && <Sparkles className="h-5 w-5 opacity-80 animate-pulse" />}
+              </Button>
+            </motion.div>
+          </div>,
+          document.body
+        )}
       </>
     );
   }
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen ? renderChatCard("fixed inset-x-3 sm:inset-auto sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]", "relative mx-auto sm:mx-0 w-full max-w-[960px]") : (
         <div className="fixed right-3 sm:right-8 bottom-[calc(env(safe-area-inset-bottom,0)+24px)] z-[70]">
@@ -669,6 +673,7 @@ export function ChapterChatbot({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

@@ -63,6 +63,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
+  Trash2,
 } from "lucide-react";
  
 interface SubjectProgress {
@@ -116,6 +117,44 @@ export default function Profile() {
   const { permission, requestPermission } = usePushNotifications();
   
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showCacheDialog, setShowCacheDialog] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+
+  const handleClearCache = async () => {
+    setIsClearingCache(true);
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      toast({
+        title: "Cache Cleared",
+        description: "All offline data, local storage, and session caches have been cleared. Reloading page...",
+      });
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Error clearing cache",
+        description: error.message || "Something went wrong.",
+        variant: "destructive"
+      });
+      setIsClearingCache(false);
+    }
+  };
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1310,6 +1349,26 @@ export default function Profile() {
                   <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                     <Button
                       variant="outline"
+                      className="w-full justify-start h-14 text-left"
+                      data-testid="button-clear-cache"
+                      onClick={() => setShowCacheDialog(true)}
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 mr-3">
+                        <Trash2 className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Clear Cache & Storage</p>
+                        <p className="text-xs text-muted-foreground">
+                          Reset offline assets, local storage, and session cache
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                      variant="outline"
                       className="w-full justify-start h-14 text-left text-destructive hover:text-destructive"
                       data-testid="button-logout"
                       onClick={handleLogout}
@@ -1472,6 +1531,58 @@ export default function Profile() {
                   </>
                 ) : (
                   "Change Password"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Cache Clearing Confirmation Dialog */}
+        <Dialog open={showCacheDialog} onOpenChange={setShowCacheDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Clear Cache & Storage?
+              </DialogTitle>
+              <DialogDescription>
+                This action will delete all local site data. You will be signed out and all cached offline learning materials will be cleared.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-3">
+              <div className="text-sm space-y-2 bg-muted/50 p-3 rounded-lg border">
+                <p className="font-semibold text-foreground">What will be removed:</p>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground text-xs">
+                  <li>Offline stored chapters, questions, and flashcards</li>
+                  <li>Local configurations (theme settings, preferences)</li>
+                  <li>Active session data (requires logging in again)</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setShowCacheDialog(false)}
+                disabled={isClearingCache}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleClearCache}
+                disabled={isClearingCache}
+                className="gap-2"
+              >
+                {isClearingCache ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Confirm Clear
+                  </>
                 )}
               </Button>
             </DialogFooter>

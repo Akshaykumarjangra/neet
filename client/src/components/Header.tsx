@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Trophy, Flame, Home as HomeIcon, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home as HomeIcon, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -62,7 +62,9 @@ export function Header({
     { label: "Users", href: "/admin/users", icon: Users },
     { label: "Content", href: "/admin/content", icon: Layers },
     { label: "Approvals", href: "/admin/approvals", icon: Check },
+    { label: "Mentor Approvals", href: "/admin/mentor-approvals", icon: GraduationCap },
     { label: "LMS Studio", href: "/admin/lms-studio", icon: GraduationCap },
+    { label: "Marketing", href: "/admin/marketing", icon: TrendingUp },
   ];
 
   const isAdminView = location.startsWith('/admin');
@@ -87,7 +89,11 @@ export function Header({
 
   const handleHomeClick = () => {
     console.log('Home clicked');
-    setLocation('/');
+    if (user) {
+      setLocation('/dashboard');
+    } else {
+      setLocation('/');
+    }
   };
 
   const handleLogout = async () => {

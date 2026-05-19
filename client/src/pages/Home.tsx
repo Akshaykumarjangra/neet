@@ -243,14 +243,25 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Seo 
-        title="Crack NEET with AI-Powered Learning | ZERO AI"
-        description="Experience personalized learning with adaptive AI, expert mentors, gamified progress tracking, and 50,000+ practice questions. Join 10,000+ aspirants achieving their medical dreams."
+        title="NEET 2026 Preparation — AI-Powered Learning Platform | ZERO AI"
+        description="India's #1 NEET UG 2026 prep platform by NTA toppers. 50,000+ questions, mock tests, AI doubt solver, and expert mentors. Start your NEET preparation free."
+        keywords={[
+          "neet", "neet 2026", "neet ug", "nta neet", "neet preparation",
+          "neet result", "neet registration", "neet exam", "neet mock test",
+          "neet questions", "neet syllabus", "neet cutoff", "neet pg",
+          "neet admit card", "neet application form", "neet full form",
+          "neet 2026 registration", "neet preparation app", "neet practice",
+          "neet online test", "neet study material", "best app for neet preparation"
+        ]}
+        url="https://neet.zeroai.org.in/"
         structuredData={[
           getOrganizationSchema(),
           getFAQSchema([
             { question: "Is ZERO AI NEET free to use?", answer: "Yes, we offer a generous free tier that includes 3 chapters per subject, daily practice questions, and access to the community." },
             { question: "How does the AI personalization work?", answer: "Our AI engine analyzes your response patterns and micro-hesitations to identify conceptual gaps and recommends topics to study next." },
-            { question: "Can I use it on mobile?", answer: "Absolutely! ZERO AI is a Progressive Web App (PWA) that works perfectly on all mobile browsers and can be installed as an app." }
+            { question: "Can I use it on mobile?", answer: "Absolutely! ZERO AI is a Progressive Web App (PWA) that works perfectly on all mobile browsers and can be installed as an app." },
+            { question: "What is the full form of NEET?", answer: "NEET stands for National Eligibility cum Entrance Test. It is conducted by NTA (National Testing Agency) for admission to MBBS, BDS, and AYUSH courses in India." },
+            { question: "When is NEET 2026 exam date?", answer: "NEET 2026 is expected to be conducted in May 2026. Check the NTA official website (nta.ac.in) for the latest updates on NEET 2026 registration and exam dates." }
           ])
         ]}
       />
@@ -772,6 +783,74 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* SEO Content Section — Keyword-Rich for Google Indexing */}
+        <section className="py-16 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="max-w-4xl mx-auto"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
+                Everything You Need to Know About{" "}
+                <span className="text-primary">NEET 2026</span>
+              </h2>
+              
+              <div className="space-y-6 text-muted-foreground leading-relaxed">
+                <p>
+                  The <strong className="text-foreground">National Eligibility cum Entrance Test (NEET)</strong> is India's single largest medical entrance examination, 
+                  conducted by the <strong className="text-foreground">National Testing Agency (NTA)</strong>. Over 24 lakh aspirants register for <strong className="text-foreground">NEET UG</strong> every year 
+                  to secure admission in MBBS, BDS, and AYUSH courses across government and private medical colleges. 
+                  The <strong className="text-foreground">NEET 2026 registration</strong> process is expected to begin early 2026 on the official NTA portal at nta.ac.in.
+                </p>
+                <p>
+                  ZERO AI is built specifically for <strong className="text-foreground">NEET preparation</strong>. Our platform combines adaptive AI technology with expert-curated content 
+                  to provide a comprehensive preparation experience. Whether you're studying for <strong className="text-foreground">NEET UG</strong> or preparing for <strong className="text-foreground">NEET PG</strong>, 
+                  our 50,000+ question bank covers the entire <strong className="text-foreground">NEET syllabus</strong> as per NTA guidelines — including Physics, Chemistry, Botany, and Zoology.
+                </p>
+                <p>
+                  Stay updated with the latest <strong className="text-foreground">NEET 2026 exam date</strong>, <strong className="text-foreground">NEET admit card</strong> download instructions, 
+                  <strong className="text-foreground"> NEET application form</strong> guidelines, and <strong className="text-foreground">NEET result</strong> analysis right here. Our AI engine analyzes 
+                  15 years of <strong className="text-foreground">NEET previous year questions (PYQs)</strong> to predict high-yield topics and personalize your study plan.
+                </p>
+              </div>
+              
+              {/* Quick Links Grid — Internal Link Graph for Crawlers */}
+              <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: "NEET Cutoff 2026", href: "/neet-cutoff" },
+                  { label: "NEET Syllabus", href: "/syllabus" },
+                  { label: "PYQ Analysis", href: "/pyq-analysis" },
+                  { label: "Rank Predictor", href: "/rank-predictor" },
+                  { label: "Medical Colleges", href: "/medical-colleges" },
+                  { label: "Syllabus Weightage", href: "/syllabus-weightage" },
+                  { label: "NEET Exam Pattern", href: "/neet-exam-pattern" },
+                  { label: "Best Books for NEET", href: "/best-books-neet" },
+                  { label: "NEET Eligibility", href: "/neet-eligibility-criteria" },
+                  { label: "NEET Application Form", href: "/neet-application-form" },
+                  { label: "NEET Counselling", href: "/neet-counselling" },
+                  { label: "NEET Admit Card", href: "/neet-admit-card" },
+                  { label: "MBBS Roadmap", href: "/mbbs-roadmap" },
+                  { label: "NEET FAQ", href: "/neet-faq" },
+                  { label: "Mock Tests", href: "/mock-tests" },
+                  { label: "Find Mentors", href: "/mentors" },
+                ].map((link) => (
+                  <Link 
+                    key={link.href} 
+                    href={link.href}
+                    className="flex items-center gap-2 p-3 rounded-xl bg-card/60 border border-border/40 text-sm font-medium text-foreground hover:text-primary hover:border-primary/30 transition-all group"
+                  >
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </motion.div>
           </div>
         </section>

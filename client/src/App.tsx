@@ -105,6 +105,9 @@ const NEETExamPattern = lazy(() => import("@/pages/NEETExamPattern"));
 const NEETApplicationForm = lazy(() => import("@/pages/NEETApplicationForm"));
 const NEETCounselling = lazy(() => import("@/pages/NEETCounselling"));
 const NEETAdmitCard = lazy(() => import("@/pages/NEETAdmitCard"));
+const AdminMentorApprovals = lazy(() => import("@/pages/AdminMentorApprovals"));
+const AdminOrganizations = lazy(() => import("@/pages/AdminOrganizations"));
+const AdminTasks = lazy(() => import("@/pages/AdminTasks"));
 
 import { Footer } from "@/components/Footer";
 
@@ -232,8 +235,6 @@ function Router() {
               <Signup />
             </GuestRoute>
           </Route>
-          <Route path="/simulations" component={Simulations} />
-          <Route path="/videos" component={Videos} />
           <Route path="/offline" component={Offline} />
           <Route path="/compare/:competitor" component={Compare} />
           <Route path="/guide/doctor-roadmap" component={DoctorRoadmap} />
@@ -245,12 +246,10 @@ function Router() {
           <Route path="/interactive-simulations" component={Simulations} />
           <Route path="/video-library" component={Videos} />
           <Route path="/neet-cutoff" component={NEETCutoff} />
-          <Route path="/medical-colleges" component={MedicalColleges} />
           <Route path="/rank-predictor" component={NEETRankPredictor} />
           <Route path="/syllabus-weightage" component={SyllabusWeightage} />
           <Route path="/pyq-analysis" component={PYQAnalysis} />
           <Route path="/syllabus" component={Syllabus} />
-          <Route path="/mock-tests" component={MockTests} />
           <Route path="/mbbs-roadmap" component={DoctorRoadmap} />
           <Route path="/pricing">
             <Pricing />
@@ -446,6 +445,21 @@ function Router() {
               <AdminMarketing />
             </OwnerRoute>
           </Route>
+          <Route path="/admin/mentor-approvals">
+            <OwnerRoute>
+              <AdminMentorApprovals />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/organizations">
+            <OwnerRoute>
+              <AdminOrganizations />
+            </OwnerRoute>
+          </Route>
+          <Route path="/admin/tasks">
+            <OwnerRoute>
+              <AdminTasks />
+            </OwnerRoute>
+          </Route>
           <Route path="/test-series">
             <ProtectedRoute>
               <StudentTestSeries />
@@ -464,19 +478,11 @@ function Router() {
               <Chat />
             </ProtectedRoute>
           </Route>
-          <Route path="/simulations">
-            <ProtectedRoute>
-              <Simulations />
-            </ProtectedRoute>
-          </Route>
+          <Route path="/simulations" component={Simulations} />
           <Route path="/preview/simulations">
             <SimulationsPreview />
           </Route>
-          <Route path="/videos">
-            <ProtectedRoute>
-              <Videos />
-            </ProtectedRoute>
-          </Route>
+          <Route path="/videos" component={Videos} />
           <Route path="/search">
             <ProtectedRoute>
               <Search />
