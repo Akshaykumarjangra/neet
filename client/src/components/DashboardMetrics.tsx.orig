@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target, TrendingUp, Calendar, Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface MetricCardProps {
   title: string;
@@ -83,9 +82,9 @@ export function DashboardMetrics({
           subtitle="67% percentile"
         />
         <div className="mt-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="w-full text-[10px] uppercase tracking-widest font-black italic hover:text-primary transition-colors"
             onClick={() => {
               const text = `I just scored ${mockTestScore}/720 in a NEET Mock Test on ZERO AI! 🚀 Join me at https://neet.zeroai.org.in`;
