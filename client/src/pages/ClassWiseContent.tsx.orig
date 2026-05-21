@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, Leaf, Bug, ArrowRight, ClipboardList } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { categorizeBiologyChapter } from "@/lib/biologySections";
@@ -100,8 +100,8 @@ export default function ClassWiseContent() {
       }
       return ch.subject === selectedSubject;
     })
-    ?.filter(ch => 
-      searchQuery === "" || 
+    ?.filter(ch =>
+      searchQuery === "" ||
       ch.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ch.introduction.toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -117,7 +117,7 @@ export default function ClassWiseContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Page Header */}
         <motion.div

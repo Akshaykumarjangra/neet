@@ -196,7 +196,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = !(chapter as any).isFree && !isPremium;
+  const isLocked = !chapter.isFree && !isPremium;
 
   return (
     <motion.div
@@ -486,7 +486,7 @@ export default function Chemistry() {
   const [sortBy, setSortBy] = useState<"number" | "difficulty" | "time">("number");
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const { user } = useAuth();
-  const isPremium = !!(user?.isPaidUser || user?.role === "admin" || (user as any)?.isOwner);
+  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
 
   const { data: allChapters, isLoading, error, refetch } = useQuery<ChapterData[]>({
     queryKey: ["/api/lms/library"],
@@ -595,7 +595,7 @@ export default function Chemistry() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Seo 
+      <Seo
         title={`NEET Chemistry Class ${selectedClass} - Organic, Inorganic & Physical | ZERO AI`}
         description={`Master Class ${selectedClass} Chemistry for NEET. Complete coverage of Organic, Inorganic, and Physical Chemistry with 10,000+ solved examples.`}
         url={`/chemistry`}
