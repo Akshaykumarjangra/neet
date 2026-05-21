@@ -2,20 +2,20 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Seo } from "@/components/Seo";
-import { CheckCircle2, UserCheck, Calendar, AlertTriangle, BookOpen, Target } from "lucide-react";
+import { CheckCircle2, UserCheck, Calendar, AlertTriangle, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NEETEligibilityCriteria() {
   return (
     <div className="min-h-screen bg-background">
-      <Seo 
+      <Seo
         title="NEET 2026 Eligibility Criteria | Age Limit & Qualification"
         description="Check the official NEET 2026 eligibility criteria, age limit, minimum marks required in 12th, and number of attempts allowed."
         keywords="NEET eligibility 2026, NEET age limit, NEET qualification, NTA NEET rules"
         url="https://neet.zeroai.org.in/neet-eligibility-criteria"
       />
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 space-y-12">
         <section className="relative overflow-hidden rounded-3xl bg-primary/5 border border-primary/10 p-8 md:p-12">
           <div className="max-w-3xl space-y-6">

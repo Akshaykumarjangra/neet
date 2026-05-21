@@ -1,0 +1,30 @@
+--- client/src/pages/GameLobbyDashboard.tsx
++++ client/src/pages/GameLobbyDashboard.tsx
+@@ -328,13 +328,13 @@
+     Botany:
+       biologyLibraryChapters.filter(
+         (ch) =>
+-          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Botany"
++          categorizeBiologyChapter(ch.chapterTitle ?? "", ch.chapterNumber, ch.classLevel ?? "") === "Botany"
+       ).length ?? 19,
+     Zoology:
+       biologyLibraryChapters.filter(
+         (ch) =>
+-          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Zoology"
++          categorizeBiologyChapter(ch.chapterTitle ?? "", ch.chapterNumber, ch.classLevel ?? "") === "Zoology"
+       ).length ?? 19,
+   };
+
+--- a/client/src/pages/MentorLmsAutomation.tsx
++++ b/client/src/pages/MentorLmsAutomation.tsx
+@@ -181,8 +181,8 @@
+                     <p className="text-sm text-muted-foreground">{step.label}</p>
+                     <p className="text-xs text-muted-foreground">
+                       Last updated{" "}
+-                      {state
+-                        ? formatDistanceToNow(new Date(state.updatedAt), { addSuffix: true })
++                      {state && state.updatedAt
++                        ? formatDistanceToNow(new Date(state.updatedAt as string | number | Date), { addSuffix: true })
+                         : "not yet"}
+                     </p>
+                   </div>
