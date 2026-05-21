@@ -177,7 +177,7 @@ export default function BattleLobby() {
             <span className="text-muted-foreground flex items-center gap-1"><Clock className="w-4 h-4" /> Time Remaining</span>
             <span className={timeLeft <= 10 ? "text-red-500 font-bold" : "text-primary"}>{timeLeft}s</span>
           </div>
-          <Progress value={(timeLeft / 30) * 100} className="h-3 shadow-inner" />
+          <Progress value={(timeLeft / 30) * 100} className="h-3 shadow-inner" indicatorColor={timeLeft <= 10 ? "bg-red-500" : "bg-primary"} />
         </div>
 
         {/* Question Area */}
@@ -185,15 +185,15 @@ export default function BattleLobby() {
           <Card className="border-2 shadow-xl bg-card/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-6 md:p-8 space-y-8">
               <h3 className="text-2xl font-medium leading-relaxed">{currentQ.questionText}</h3>
-              
+
               <div className="grid gap-3">
                 {currentQ.options?.map((opt: string, idx: number) => {
                   let isSelected = answerSelected === opt;
                   let isCorrect = answerResult?.correctAnswer === opt;
                   let isWrong = isSelected && answerResult && !answerResult.isCorrect;
-                  
+
                   let variantClasses = "border-2 hover:bg-muted/50 bg-background text-left transition-all justify-start h-auto p-4 text-base rounded-xl";
-                  
+
                   if (isCorrect) variantClasses = "border-2 border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 justify-start h-auto p-4 text-base rounded-xl";
                   else if (isWrong) variantClasses = "border-2 border-red-500 bg-red-500/10 text-red-700 dark:text-red-400 justify-start h-auto p-4 text-base rounded-xl";
                   else if (isSelected) variantClasses = "border-2 border-primary bg-primary/10 text-primary justify-start h-auto p-4 text-base rounded-xl";
@@ -212,7 +212,7 @@ export default function BattleLobby() {
                   );
                 })}
               </div>
-              
+
               {answerSelected && !answerResult && (
                 <div className="text-center text-muted-foreground animate-pulse flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Waiting for opponent...
@@ -234,12 +234,12 @@ export default function BattleLobby() {
         {/* Animated background elements */}
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-primary/20 rounded-full blur-3xl opacity-50" />
         <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-red-500/20 rounded-full blur-3xl opacity-50" />
-        
+
         <CardContent className="p-8 md:p-12 text-center space-y-8 relative z-10">
           <div className="inline-flex items-center justify-center p-4 bg-background border shadow-sm rounded-2xl mb-2">
             <Swords className="h-12 w-12 text-primary" />
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-4xl font-extrabold tracking-tight">Battle Arena</h1>
             <p className="text-lg text-muted-foreground">Test your NEET knowledge against real players in fast-paced 1v1 duels.</p>
@@ -259,8 +259,8 @@ export default function BattleLobby() {
           </div>
 
           {!inQueue ? (
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="w-full h-14 text-lg rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-xl shadow-primary/25 transition-all hover:scale-[1.02]"
               onClick={() => joinMutation.mutate()}
               disabled={joinMutation.isPending}
@@ -281,8 +281,8 @@ export default function BattleLobby() {
                 </div>
                 <p className="text-sm text-muted-foreground">Rating range: 1150 - 1250</p>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10"
                 onClick={() => leaveMutation.mutate()}
                 disabled={leaveMutation.isPending}

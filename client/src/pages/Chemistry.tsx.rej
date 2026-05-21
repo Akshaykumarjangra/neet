@@ -1,0 +1,11 @@
+--- client/src/pages/Chemistry.tsx
++++ client/src/pages/Chemistry.tsx
+@@ -761,7 +761,7 @@
+           >
+             <ChapterCard
+               chapter={chapter}
+-              isPremium={user?.isPremium}
++              isPremium={!!user?.isPremium}
+               prefersReducedMotion={prefersReducedMotion}
+               onClick={() => {
+                 if (isLocked) {

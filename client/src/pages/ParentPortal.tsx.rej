@@ -1,0 +1,13 @@
+--- client/src/pages/ParentPortal.tsx
++++ client/src/pages/ParentPortal.tsx
+@@ -10,7 +10,9 @@
+   User,
+   Zap,
+   BookOpen,
+-  Activity
++  Activity,
++  Star
+ } from "lucide-react";
+ import { Header } from "@/components/Header";
+ import { ThemeProvider } from "@/components/ThemeProvider";
++import { Button } from "@/components/ui/button";

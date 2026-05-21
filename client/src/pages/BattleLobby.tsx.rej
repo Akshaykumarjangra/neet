@@ -1,0 +1,10 @@
+--- client/src/pages/BattleLobby.tsx
++++ client/src/pages/BattleLobby.tsx
+@@ -176,6 +176,7 @@
+                 />
+                 <Progress
+                   value={Math.max(0, (timeLeft / 30) * 100)}
+                   className="h-2"
++                  indicatorColor={timeLeft <= 10 ? "bg-red-500" : "bg-primary"}
+                 />
+                 <div className="flex justify-between items-center text-sm font-medium">

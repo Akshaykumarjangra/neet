@@ -181,8 +181,8 @@ export default function MentorLmsAutomation() {
                     <p className="text-sm text-muted-foreground">{step.label}</p>
                     <p className="text-xs text-muted-foreground">
                       Last updated{" "}
-                      {state
-                        ? formatDistanceToNow(new Date(state.updatedAt), { addSuffix: true })
+                      {state && state.updatedAt
+                        ? formatDistanceToNow(new Date(state.updatedAt as string | number | Date), { addSuffix: true })
                         : "not yet"}
                     </p>
                   </div>

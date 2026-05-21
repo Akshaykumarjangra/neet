@@ -1,0 +1,11 @@
+--- client/src/pages/Biology.tsx
++++ client/src/pages/Biology.tsx
+@@ -738,7 +738,7 @@
+           >
+             <ChapterCard
+               chapter={chapter}
+-              isPremium={user?.isPremium}
++              isPremium={!!user?.isPremium}
+               prefersReducedMotion={prefersReducedMotion}
+               onClick={() => {
+                 if (isLocked) {

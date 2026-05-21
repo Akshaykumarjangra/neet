@@ -328,12 +328,12 @@ export default function GameLobbyDashboard() {
     Botany:
       biologyLibraryChapters.filter(
         (ch) =>
-          categorizeBiologyChapter(ch.chapterTitle ?? "", ch.chapterNumber, ch.classLevel ?? "") === "Botany"
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Botany"
       ).length ?? 19,
     Zoology:
       biologyLibraryChapters.filter(
         (ch) =>
-          categorizeBiologyChapter(ch.chapterTitle ?? "", ch.chapterNumber, ch.classLevel ?? "") === "Zoology"
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Zoology"
       ).length ?? 19,
   };
 
@@ -360,10 +360,10 @@ export default function GameLobbyDashboard() {
     // Actually, getting accurate "Percentage of ALL chapters" requires knowing total chapters.
     // We have `chapterCounts`.
 
-    // We'll organize progress by subject if possible. 
+    // We'll organize progress by subject if possible.
     // The current `learnProgress` contains topicId. matching to subject requires looking up topic/chapter.
-    // simpler approach: We will default to 0 for now to "remove dummy data", 
-    // and if we can map it, we will. 
+    // simpler approach: We will default to 0 for now to "remove dummy data",
+    // and if we can map it, we will.
     // But importantly, we MUST remove the hardcoded 42, 35, 32, 28.
 
     // 2. Recent Activity - Get top 5 sorted by lastAccessedAt
