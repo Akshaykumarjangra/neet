@@ -169,8 +169,11 @@ router.get('/:id', requireAuthWithPasswordCheck, async (req, res) => {
       console.warn(`Test ${testId}: Expected ${questionIds.length} questions, found ${testQuestions.length}`);
     }
 
+    // ⚡ Bolt: Replaced O(n^2) map/find with O(n) Map lookup to improve performance
+    // on tests with a large number of questions (reduces redundant array iterations).
+    const questionMap = new Map(testQuestions.map(q => [q.id, q]));
     const orderedQuestions = questionIds
-      .map(id => testQuestions.find(q => q.id === id))
+      .map(id => questionMap.get(id))
       .filter((q): q is typeof testQuestions[0] => q !== undefined);
 
     // Add cache headers for better performance
