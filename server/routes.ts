@@ -6,7 +6,7 @@ import { db, queryWithRetry } from "./db";
 import { questions, contentTopics, chapterContent, subscriptionPlans, users, questionPreviewLimits, questionTags, userPerformance, dailyChallenges, userDailyChallenges } from "@shared/schema";
 import { GamificationService } from "./gamification";
 import { nanoid } from "nanoid";
-import { sql, eq, inArray, and } from "drizzle-orm";
+import { sql, eq, inArray, and, getTableColumns } from "drizzle-orm";
 import {
   insertQuestionSchema,
   insertContentTopicSchema,
@@ -401,17 +401,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get topics with question counts
   app.get("/api/topics/with-counts", async (req, res) => {
     try {
-      const topics = await storage.getAllTopics();
-      const topicsWithCounts = await Promise.all(
-        topics.map(async (topic) => {
-          const questions = await storage.getQuestionsByTopic(topic.id);
-          return {
-            ...topic,
-            questionCount: questions.length,
-            totalQuestions: questions.length
-          };
+      // ⚡ Bolt Performance Optimization:
+      // Replaced N+1 query loop with a single aggregate query.
+      // Previously, this route fetched topics then did a separate question count query for EACH topic.
+      // Now uses a LEFT JOIN and GROUP BY to fetch all topics and their counts in one database trip.
+      const topicsWithCounts = await db
+        .select({
+          ...getTableColumns(contentTopics),
+          questionCount: sql<number>`cast(count(${questions.id}) as integer)`,
+          totalQuestions: sql<number>`cast(count(${questions.id}) as integer)`,
         })
-      );
+        .from(contentTopics)
+        .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+        .groupBy(contentTopics.id);
+
       res.json(topicsWithCounts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

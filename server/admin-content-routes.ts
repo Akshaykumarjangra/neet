@@ -22,7 +22,7 @@ import {
   chapterContentVersions,
   chapterContent,
 } from "@shared/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, getTableColumns } from "drizzle-orm";
 import { recordAuditLog } from "./lib/audit";
 import { z } from "zod";
 
@@ -196,20 +196,18 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
 
 router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
-    const allTopics = await db.select().from(contentTopics).orderBy(contentTopics.subject, contentTopics.topicName);
-
-    const topicsWithCounts = await Promise.all(
-      allTopics.map(async (topic) => {
-        const countResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(questions)
-          .where(eq(questions.topicId, topic.id));
-        return {
-          ...topic,
-          questionCount: Number(countResult[0].count),
-        };
+    // ⚡ Bolt Performance Optimization:
+    // Replaced N+1 queries with a single query using LEFT JOIN + GROUP BY.
+    // Fetches all topics and their exact question counts efficiently.
+    const topicsWithCounts = await db
+      .select({
+        ...getTableColumns(contentTopics),
+        questionCount: sql<number>`cast(count(${questions.id}) as integer)`,
       })
-    );
+      .from(contentTopics)
+      .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+      .groupBy(contentTopics.id)
+      .orderBy(contentTopics.subject, contentTopics.topicName);
 
     res.json(topicsWithCounts);
   } catch (error) {
@@ -436,32 +434,20 @@ router.put("/mock-tests/:id/publish", requireAdmin, async (req, res) => {
 
 router.get("/flashcard-decks", requireAdmin, async (req, res) => {
   try {
-    const allDecks = await db
+    // ⚡ Bolt Performance Optimization:
+    // Replaced N+1 queries by joining flashcardDecks, contentTopics, and flashcards directly.
+    // Grouping by deck id calculates cardCount in a single SQL operation.
+    const decksWithCounts = await db
       .select({
-        deck: flashcardDecks,
-        topic: contentTopics,
+        ...getTableColumns(flashcardDecks),
+        topicName: contentTopics.topicName,
+        cardCount: sql<number>`cast(count(${flashcards.id}) as integer)`,
       })
       .from(flashcardDecks)
       .leftJoin(contentTopics, eq(flashcardDecks.topicId, contentTopics.id))
+      .leftJoin(flashcards, eq(flashcards.topicId, flashcardDecks.topicId))
+      .groupBy(flashcardDecks.id, contentTopics.topicName)
       .orderBy(desc(flashcardDecks.createdAt));
-
-    const decksWithCounts = await Promise.all(
-      allDecks.map(async (item) => {
-        let cardCount = 0;
-        if (item.deck.topicId) {
-          const countResult = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(flashcards)
-            .where(eq(flashcards.topicId, item.deck.topicId));
-          cardCount = Number(countResult[0].count);
-        }
-        return {
-          ...item.deck,
-          topicName: item.topic?.topicName,
-          cardCount,
-        };
-      })
-    );
 
     res.json(decksWithCounts);
   } catch (error) {
