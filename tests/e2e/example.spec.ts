@@ -8,10 +8,10 @@ test.describe('User Journey', () => {
 
     test('should load the home page successfully', async ({ page }) => {
         await page.goto('/');
-        await expect(page).toHaveTitle(/NEET Prep/);
+        await expect(page).toHaveTitle(/NEET Preparation/i);
 
         // Check for Hero Section
-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
+        await expect(page.getByTestId("text-hero-headline")).toBeVisible();
         await expect(page.getByTestId('button-cta-signup')).toBeVisible();
     });
 
