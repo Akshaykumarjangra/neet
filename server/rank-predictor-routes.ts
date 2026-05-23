@@ -147,8 +147,10 @@ router.get('/analyze/:attemptId', requireAuth, async (req, res) => {
 
     // Subject breakdown
     const subjectBreakdown: Record<string, any> = {};
+    // ⚡ Bolt: Optimize O(N²) array find in loop with O(1) Map lookup
+    const questionMap = new Map(questionData.map(q => [q.id, q]));
     for (const resp of responses) {
-      const q = questionData.find(qq => qq.id === resp.questionId);
+      const q = questionMap.get(resp.questionId);
       const subject = q?.subject || 'Unknown';
       if (!subjectBreakdown[subject]) {
         subjectBreakdown[subject] = { correct: 0, wrong: 0, unanswered: 0, score: 0, totalTime: 0, count: 0 };
