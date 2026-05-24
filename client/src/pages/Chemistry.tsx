@@ -196,7 +196,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = !chapter.isFree && !isPremium;
+  const isLocked = !(chapter as any).isFree && !isPremium;
 
   return (
     <motion.div
@@ -761,7 +761,7 @@ export default function Chemistry() {
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
                   prefersReducedMotion={prefersReducedMotion}
-                  isPremium={isPremium}
+                  isPremium={!!isPremium}
                 />
               ))}
             </motion.div>
