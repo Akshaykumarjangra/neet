@@ -25,7 +25,7 @@ export default function BattleLobby() {
   const [answerResult, setAnswerResult] = useState<{ isCorrect: boolean, correctAnswer?: string } | null>(null);
   const { toast } = useToast();
 
-  const { data: queueStatus, refetch: refetchQueue } = useQuery({
+  const { data: queueStatus } = useQuery<{ inBattle?: string; inQueue?: boolean }>({
     queryKey: ["/api/battle/queue/status"],
     refetchInterval: inQueue && !battleId ? 2000 : false,
   });
@@ -177,7 +177,7 @@ export default function BattleLobby() {
             <span className="text-muted-foreground flex items-center gap-1"><Clock className="w-4 h-4" /> Time Remaining</span>
             <span className={timeLeft <= 10 ? "text-red-500 font-bold" : "text-primary"}>{timeLeft}s</span>
           </div>
-          <Progress value={(timeLeft / 30) * 100} className="h-3 shadow-inner" indicatorColor={timeLeft <= 10 ? "bg-red-500" : "bg-primary"} />
+          <Progress value={(timeLeft / 30) * 100} className={`h-3 shadow-inner ${timeLeft <= 10 ? "[&>div]:bg-red-500" : ""}`} />
         </div>
 
         {/* Question Area */}

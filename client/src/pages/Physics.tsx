@@ -70,6 +70,7 @@ interface ChapterData {
   progress: number;
   isBookmarked: boolean;
   lastAccessed: string | null;
+  isFree?: boolean;
   keyConcepts?: string[];
 }
 
@@ -193,7 +194,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = !chapter.isFree && !isPremium;
+  const isLocked = chapter.isFree !== true && !isPremium;
 
   return (
     <motion.div
