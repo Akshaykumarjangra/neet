@@ -328,12 +328,12 @@ export default function GameLobbyDashboard() {
     Botany:
       biologyLibraryChapters.filter(
         (ch) =>
-          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Botany"
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel || "11") === "Botany"
       ).length ?? 19,
     Zoology:
       biologyLibraryChapters.filter(
         (ch) =>
-          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel) === "Zoology"
+          categorizeBiologyChapter(ch.chapterTitle, ch.chapterNumber, ch.classLevel || "11") === "Zoology"
       ).length ?? 19,
   };
 

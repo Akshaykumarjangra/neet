@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (user && !user.isAdminOrMentor) {
+    if (user && user.role !== 'admin' && user.role !== 'mentor' && !user.isAdmin) {
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
   };
 
   // ALL hooks MUST be above early returns (React rules of hooks)
-  const isAuthorized = !!user?.isAdminOrMentor;
+  const isAuthorized = user ? (user.role === 'admin' || user.role === 'mentor' || user.isAdmin) : false;
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
