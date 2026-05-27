@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { testSessions, testSessionEvents, sessionParticipants, questions } from "../../shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import type { TestSessionState } from "../../shared/ws-types";
 
 type TestSessionRow = typeof testSessions.$inferSelect;
@@ -120,33 +120,31 @@ export class TestSessionManager {
 
     // Calculate score
     const questionIds = session.questionsList;
-    const questionDetails = await db
-      .select()
-      .from(questions)
-      .where(
-        eq(
-          questions.id,
-          questionIds[0] // This is a simplified version; you'd use IN clause in production
-        )
-      );
 
     let correctAnswers = 0;
     const totalQuestions = questionIds.length;
 
-    // Check each answer
-    for (const qId of questionIds) {
-      const [question] = await db
+    // Performance improvement: Fetch all questions in a single query
+    // instead of N+1 queries inside a loop
+    if (questionIds.length > 0) {
+      const fetchedQuestions = await db
         .select()
         .from(questions)
-        .where(eq(questions.id, qId))
-        .limit(1);
+        .where(inArray(questions.id, questionIds));
 
-      if (question && session.answers[qId] === question.correctAnswer) {
-        correctAnswers++;
+      // O(1) lookup map
+      const questionsMap = new Map(fetchedQuestions.map(q => [q.id, q]));
+
+      // Check each answer
+      for (const qId of questionIds) {
+        const question = questionsMap.get(qId);
+        if (question && session.answers[qId] === question.correctAnswer) {
+          correctAnswers++;
+        }
       }
     }
 
-    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
 
     // Update session status and score
     session.status = "completed";
