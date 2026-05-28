@@ -103,7 +103,7 @@ export default function MentorLmsAutomation() {
   });
 
   const schedulerDecision = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) => {
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
       return apiRequest("POST", `/api/automation/mentor/scheduler/${id}/decision`, { status });
     },
     onSuccess: () => {
