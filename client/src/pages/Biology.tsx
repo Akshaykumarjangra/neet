@@ -74,6 +74,7 @@ interface ChapterData {
   isBookmarked: boolean;
   lastAccessed: string | null;
   keyConcepts?: string[];
+  isFree?: boolean;
 }
 
 interface BiologyProps {
@@ -734,7 +735,7 @@ export default function Biology({ initialSection }: BiologyProps = {}) {
                 <BiologySectionComponent
                   key={section.name}
                   section={section}
-                  chapters={filteredChapters}
+                  chapters={filteredChapters as any}
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
                   prefersReducedMotion={prefersReducedMotion}
