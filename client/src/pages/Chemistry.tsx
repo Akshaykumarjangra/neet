@@ -762,7 +762,7 @@ export default function Chemistry() {
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
                   prefersReducedMotion={prefersReducedMotion}
-                  isPremium={isPremium}
+                  isPremium={!!isPremium}
                 />
               ))}
             </motion.div>

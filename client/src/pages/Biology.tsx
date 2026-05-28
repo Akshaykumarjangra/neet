@@ -739,7 +739,7 @@ export default function Biology({ initialSection }: BiologyProps = {}) {
                   classLevel={selectedClass}
                   onChapterClick={handleChapterClick}
                   prefersReducedMotion={prefersReducedMotion}
-                  isPremium={isPremium}
+                  isPremium={!!isPremium}
                 />
               ))}
             </motion.div>

@@ -2,7 +2,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Seo } from "@/components/Seo";
-import { CheckCircle2, UserCheck, Calendar, AlertTriangle, BookOpen } from "lucide-react";
+import { CheckCircle2, UserCheck, Calendar, AlertTriangle, BookOpen, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NEETEligibilityCriteria() {
