@@ -220,11 +220,13 @@ export default function MockTestResults() {
       const isCorrect = item.response?.isCorrect === true;
       const isAttempted = selectedOptionId != null;
       const subject = item.question.subject || "Unknown";
+      // ⚡ Bolt: Use Map for O(1) lookups instead of O(N^2) Array.find
+      const optionMap = new Map(item.question.options.map(opt => [opt.id, opt]));
       const selectedLabel = selectedOptionId
-        ? item.question.options.find((opt) => opt.id === selectedOptionId)?.label ?? String(selectedOptionId)
+        ? optionMap.get(selectedOptionId)?.label ?? String(selectedOptionId)
         : "";
       const correctLabels = item.question.correctOptionIds
-        .map((id) => item.question.options.find((opt) => opt.id === id)?.label ?? String(id))
+        .map((id) => optionMap.get(id)?.label ?? String(id))
         .join(", ");
 
       return {
