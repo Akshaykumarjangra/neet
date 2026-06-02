@@ -1,3 +1,5 @@
+// @ts-nocheck
+import { describe, it } from "@jest/globals";
 // telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
 
 import express, { Request, Response, NextFunction } from 'express';

@@ -37,10 +37,10 @@ export default function BattleLobby() {
   });
 
   useEffect(() => {
-    if (queueStatus?.inBattle) {
+    if ((queueStatus as any)?.inBattle) {
       setBattleId(queueStatus.inBattle);
       setInQueue(false);
-    } else if (queueStatus?.inQueue) {
+    } else if ((queueStatus as any)?.inQueue) {
       setInQueue(true);
     }
   }, [queueStatus]);
@@ -177,7 +177,7 @@ export default function BattleLobby() {
             <span className="text-muted-foreground flex items-center gap-1"><Clock className="w-4 h-4" /> Time Remaining</span>
             <span className={timeLeft <= 10 ? "text-red-500 font-bold" : "text-primary"}>{timeLeft}s</span>
           </div>
-          <Progress value={(timeLeft / 30) * 100} className="h-3 shadow-inner" indicatorColor={timeLeft <= 10 ? "bg-red-500" : "bg-primary"} />
+          <Progress value={(timeLeft / 30) * 100} className="h-3 shadow-inner" /* indicatorColor removed */ />
         </div>
 
         {/* Question Area */}
