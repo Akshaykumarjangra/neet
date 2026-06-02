@@ -1,0 +1,3 @@
+## 2024-05-18 - Nested Loop Array.find O(N^2) Anti-Pattern
+**Learning:** In the `server/mock-test-routes.ts` file, the route sorted a test's `questions` by taking `questionIds.map(id => testQuestions.find(q => q.id === id))`. In mock tests with up to 200 questions, this triggered an O(N^2) evaluation loop (~40,000 iterations for 200 questions), creating an unnecessary backend processing bottleneck.
+**Action:** When merging database results with arrays of IDs or performing ordering, always pre-compute a `Map` (e.g. `new Map(data.map(item => [item.id, item]))`) for O(1) lookups inside the `.map()` loop to achieve O(N) performance.
