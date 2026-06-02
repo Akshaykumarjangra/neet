@@ -185,7 +185,7 @@ export function ChapterQuiz({ topicId, subject, chapterTitle }: ChapterQuizProps
                                 { id: "C", text: currentQuestion.optionC || "" },
                                 { id: "D", text: currentQuestion.optionD || "" },
                             ]}
-                            selectedAnswer={userAnswers[currentQuestion.id]}
+                            selectedAnswer={userAnswers[currentQuestion.id] ?? undefined}
                             onSubmit={(answer) => handleAnswerSubmit(currentQuestion.id, answer)}
                             onSkip={() => setCurrentQuestionIndex(prev => Math.min(prev + 1, questions.length - 1))}
                             onPrevious={() => setCurrentQuestionIndex(prev => Math.max(prev - 1, 0))}
