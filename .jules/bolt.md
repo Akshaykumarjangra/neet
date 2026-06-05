@@ -1,0 +1,3 @@
+## 2024-05-24 - [Replaced O(N^2) Array.find() inside loops with O(1) Map lookups]
+**Learning:** Found several instances where `.find()` was being called within `.map()` or `for..of` loops (e.g., merging DB relations in `game-routes.ts`, `mock-test-routes.ts`, and `rank-predictor-routes.ts`), resulting in $O(N \times M)$ time complexity. This is a common pattern when working with joined Drizzle ORM array results.
+**Action:** Always pre-compute a `Map` (e.g., `new Map(data.map(item => [item.id, item]))`) for O(1) lookups before looping, reducing complexity to $O(N + M)$ and preventing significant CPU bottlenecks.
