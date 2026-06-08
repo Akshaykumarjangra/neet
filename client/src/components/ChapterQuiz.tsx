@@ -175,7 +175,7 @@ export function ChapterQuiz({ topicId, subject, chapterTitle }: ChapterQuizProps
                     <>
                         <QuestionCard
                             questionNumber={currentQuestionIndex + 1}
-                            difficulty={getDifficultyLabel(currentQuestion.difficultyLevel) as "Easy" | "Medium" | "Hard"}
+                            difficulty={getDifficultyLabel(currentQuestion.difficultyLevel || undefined) as "Easy" | "Medium" | "Hard"}
                             subject={subject || ""}
                             topic={chapterTitle || ""}
                             question={currentQuestion.questionText}

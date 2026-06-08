@@ -452,7 +452,7 @@ export default function Dashboard() {
                 rank={userPosition?.rank || 0}
                 streak={streak}
                 accuracy={userStats?.accuracy || 0}
-                code={user?.referralCode || "NEET100"}
+                code={(user as any)?.referralCode || "NEET100"}
               />
             </div>
           </section>
