@@ -37,10 +37,10 @@ export default function BattleLobby() {
   });
 
   useEffect(() => {
-    if (queueStatus?.inBattle) {
-      setBattleId(queueStatus.inBattle);
+    if ((queueStatus as any)?.inBattle) {
+      setBattleId((queueStatus as any).inBattle);
       setInQueue(false);
-    } else if (queueStatus?.inQueue) {
+    } else if ((queueStatus as any)?.inQueue) {
       setInQueue(true);
     }
   }, [queueStatus]);
