@@ -1,0 +1,3 @@
+## 2026-06-09 - Pre-compute Maps to avoid O(N²) Array.find lookups
+**Learning:** In backend API routes (`game-routes.ts`, `mock-test-routes.ts`), nested iterations like using `Array.find()` inside `Array.map()` frequently process arrays of Drizzle ORM results, inadvertently creating O(N²) time complexity bottlenecks which slows down response times, particularly as user data scales.
+**Action:** Pre-compute a `Map` prior to iterating (e.g., `new Map(data.map(item => [item.id, item]))`) to achieve O(1) lookups and O(N) overall complexity. Ensure duplicate keys are not a concern (e.g., when keys are unique database IDs) when applying this optimization.
