@@ -3,6 +3,7 @@ import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { 
   Heart, 
@@ -14,7 +15,8 @@ import {
   User,
   Zap,
   BookOpen,
-  Activity
+  Activity,
+  Star
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
