@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Search, GraduationCap, Atom, TestTubes, Dna, Leaf, Bug, ArrowRight, ClipboardList } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { categorizeBiologyChapter } from "@/lib/biologySections";

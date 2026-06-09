@@ -151,7 +151,7 @@ function ChapterCard({
   isPremium: boolean;
 }) {
   const hasPYQ = chapter.chapterNumber <= 10;
-  const isLocked = !chapter.isFree && !isPremium;
+  const isLocked = !(chapter as any).isFree && !isPremium;
 
   return (
     <motion.div
