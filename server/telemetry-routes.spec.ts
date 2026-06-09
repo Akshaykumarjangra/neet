@@ -28,6 +28,8 @@ function createApp() {
     return app;
 }
 
+import { describe, it } from 'node:test';
+
 describe('Telemetry Route', () => {
     it('should accept a valid telemetry event', async () => {
         const app = createApp();
