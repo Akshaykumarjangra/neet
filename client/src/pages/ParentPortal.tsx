@@ -14,10 +14,12 @@ import {
   User,
   Zap,
   BookOpen,
-  Activity
+  Activity,
+  Star
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Button } from "@/components/ui/button";
 
 export default function ParentPortal() {
   const { token } = useParams<{ token: string }>();

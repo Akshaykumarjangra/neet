@@ -73,6 +73,7 @@ interface ChapterData {
   progress: number;
   isBookmarked: boolean;
   lastAccessed: string | null;
+  isFree?: boolean;
   keyConcepts?: string[];
 }
 
@@ -486,7 +487,7 @@ export default function Chemistry() {
   const [sortBy, setSortBy] = useState<"number" | "difficulty" | "time">("number");
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const { user } = useAuth();
-  const isPremium = user?.isPaidUser || user?.role === "admin" || user?.isOwner;
+  const isPremium = !!(user?.isPaidUser || user?.role === "admin" || user?.isOwner);
 
   const { data: allChapters, isLoading, error, refetch } = useQuery<ChapterData[]>({
     queryKey: ["/api/lms/library"],
