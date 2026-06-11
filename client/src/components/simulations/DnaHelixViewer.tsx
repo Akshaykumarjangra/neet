@@ -44,7 +44,7 @@ export default function DnaHelixViewer() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.autoRotate = false; // We handle rotation manually
+    (controls as any).autoRotate = false; // We handle rotation manually
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);

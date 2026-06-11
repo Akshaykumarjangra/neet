@@ -45,7 +45,7 @@ interface SchedulerStatus {
 }
 
 export default function AdminMarketing() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [cronExpression, setCronExpression] = useState("0 2 * * 0"); // Default: Sunday 2 AM
 
@@ -149,7 +149,7 @@ export default function AdminMarketing() {
     });
   };
 
-  if (!user?.isAdmin && !user?.isSuperAdmin) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
