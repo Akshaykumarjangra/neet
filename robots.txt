@@ -1,0 +1,55 @@
+# robots.txt for ZeroPage NEET Preparation Platform
+# Generated for search engine crawling guidance
+
+# Allow all bots by default
+User-agent: *
+Allow: /
+
+# Disallow private/admin areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /.env*
+Disallow: /dist/
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /scripts/
+
+# Disallow user-specific or sensitive paths
+Disallow: /account/
+Disallow: /dashboard/profile/
+Disallow: /settings/
+Disallow: /billing/
+Disallow: /mentor/bookings/
+Disallow: /mentor/payouts/
+
+# Disallow temporary/build paths
+Disallow: /.next/
+Disallow: /.vercel/
+Disallow: /tmp/
+Disallow: /*.map$
+
+# Allow crawling of public content
+Allow: /
+Allow: /chapters/
+Allow: /questions/
+Allow: /mock-tests/
+Allow: /mentors/
+Allow: /*.js
+Allow: /*.css
+
+# Sitemap location (if available)
+# Sitemap: https://zeropage.com/sitemap.xml
+
+# Crawl delay settings (optional - adjust based on server capacity)
+# Crawl-delay: 1
+
+# Specific bot rules
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
