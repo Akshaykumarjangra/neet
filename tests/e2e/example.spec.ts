@@ -22,7 +22,7 @@ test.describe('User Journey', () => {
 
         await expect(page).toHaveURL(/.*pricing/);
         // Relax strict text check or ensure exact match with the pricing page header
-        await expect(page.locator('h1, h2').filter({ hasText: /Pricing/i }).first()).toBeVisible();
+        await expect(page.locator('h1, h2').filter({ hasText: /Choose Your Plan/i }).first()).toBeVisible();
     });
 
     // We can try to sign up a temp user if we wanted deep testing,
