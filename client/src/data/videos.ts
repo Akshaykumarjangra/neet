@@ -73,7 +73,7 @@ export const videos: VideoItem[] = [
         title: "Work, Energy, and Power",
         description: "Definitions of work, kinetic energy, potential energy, and power.",
         subject: "Physics",
-        type: "video",
+        tags: "video",
         youtubeId: "w4QFJb9a8vo", // CrashCourse Physics #9
         duration: "9:55",
         channel: "CrashCourse",
@@ -831,7 +831,7 @@ export const videos: VideoItem[] = [
         description: "Tangent lines, rates of change, and optimization.",
         subject: "Math",
         youtubeId: "4_w_p6q2O_8", // Khan Academy (Placeholder - reusing straight lines ID as placeholder for app of derivatives if specific one unavailable, using organic chem tutor for real one)
-        type: "video",
+        tags: "video",
         duration: "35:20",
         channel: "The Organic Chemistry Tutor",
         topics: ["Calculus", "Optimization", "Rates"],
