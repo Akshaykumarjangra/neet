@@ -95,7 +95,7 @@ interface ContentStats {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, isAdminOrMentor } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (user && !user.isAdminOrMentor) {
+    if (user && !isAdminOrMentor) {
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
   };
 
   // ALL hooks MUST be above early returns (React rules of hooks)
-  const isAuthorized = !!user?.isAdminOrMentor;
+  const isAuthorized = isAdminOrMentor;
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],

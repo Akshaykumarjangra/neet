@@ -37,7 +37,7 @@ async function seedMockTests() {
     // Organize by difficulty
     const easyQuestions = allQuestions.filter(q => q.difficultyLevel === 1).map(q => q.id);
     const mediumQuestions = allQuestions.filter(q => q.difficultyLevel === 2).map(q => q.id);
-    const hardQuestions = allQuestions.filter(q => q.difficultyLevel >= 3).map(q => q.id);
+    const hardQuestions = allQuestions.filter(q => (q.difficultyLevel ?? 0) >= 3).map(q => q.id);
 
     const mockTestsData = [
       // ========== FULL LENGTH TESTS (10 tests) ==========
@@ -894,7 +894,7 @@ async function seedMockTests() {
         testType: "Difficulty Practice",
         title: "Physics - Hard Level",
         questionsList: allQuestions.filter(q => 
-          q.relatedTopics?.some((t: string) => t.includes('Physics')) && q.difficultyLevel >= 3
+          q.relatedTopics?.some((t: string) => t.includes('Physics')) && (q.difficultyLevel ?? 0) >= 3
         ).slice(0, 30).map(q => q.id),
         durationMinutes: 45,
         subject: "Physics",
@@ -912,7 +912,7 @@ async function seedMockTests() {
         testType: "Difficulty Practice",
         title: "Chemistry - Hard Level",
         questionsList: allQuestions.filter(q => 
-          q.relatedTopics?.some((t: string) => t.includes('Chemistry')) && q.difficultyLevel >= 3
+          q.relatedTopics?.some((t: string) => t.includes('Chemistry')) && (q.difficultyLevel ?? 0) >= 3
         ).slice(0, 30).map(q => q.id),
         durationMinutes: 45,
         subject: "Chemistry",
@@ -930,7 +930,7 @@ async function seedMockTests() {
         testType: "Difficulty Practice",
         title: "Botany - Hard Level",
         questionsList: allQuestions.filter(q => 
-          q.relatedTopics?.some((t: string) => t.includes('Botany')) && q.difficultyLevel >= 3
+          q.relatedTopics?.some((t: string) => t.includes('Botany')) && (q.difficultyLevel ?? 0) >= 3
         ).slice(0, 30).map(q => q.id),
         durationMinutes: 45,
         subject: "Botany",
@@ -948,7 +948,7 @@ async function seedMockTests() {
         testType: "Difficulty Practice",
         title: "Zoology - Hard Level",
         questionsList: allQuestions.filter(q => 
-          q.relatedTopics?.some((t: string) => t.includes('Zoology')) && q.difficultyLevel >= 3
+          q.relatedTopics?.some((t: string) => t.includes('Zoology')) && (q.difficultyLevel ?? 0) >= 3
         ).slice(0, 30).map(q => q.id),
         durationMinutes: 45,
         subject: "Zoology",

@@ -10,6 +10,7 @@ import {
   xpTransactions,
   achievements,
   userAchievements,
+  questions,
 } from "@shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { requireAuth, requireAuthWithPasswordCheck, getCurrentUser } from "./auth";
@@ -530,8 +531,18 @@ router.post("/achievements/check", requireAuthWithPasswordCheck, async (req, res
     const userStats = userData[0];
 
     const userAttempts = await db
-      .select()
+      .select({
+        id: userPerformance.id,
+        userId: userPerformance.userId,
+        questionId: userPerformance.questionId,
+        userAnswer: userPerformance.userAnswer,
+        isCorrect: userPerformance.isCorrect,
+        timeTakenSec: userPerformance.timeTakenSec,
+        attemptDate: userPerformance.attemptDate,
+        subject: sql<string>`(SELECT subject FROM content_topics WHERE id = ${questions.topicId})`,
+      })
       .from(userPerformance)
+      .innerJoin(questions, eq(userPerformance.questionId, questions.id))
       .where(eq(userPerformance.userId, user));
 
     const allAchievements = await db

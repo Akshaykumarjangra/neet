@@ -476,10 +476,10 @@ router.post("/invitations", requireOwner, async (req, res) => {
       .values({
         organizationId: Number(organizationId),
         email: String(email).trim().toLowerCase(),
-        role,
+        role: role as any,
         token: nanoid(32),
         status: "pending",
-        invitedBy: req.session?.userId || null,
+        invitedBy: req.session.userId!,
         expiresAt,
       })
       .returning();
@@ -811,7 +811,7 @@ router.post("/organizations/:id/invitations/bulk", requireOwner, async (req, res
             email: normalizedEmail,
             role,
             token: nanoid(32),
-            invitedBy: req.session?.userId || null,
+            invitedBy: req.session.userId!,
             organizationId,
             expiresAt,
           })
@@ -871,7 +871,7 @@ function extractInvitationEntries(body: any): Array<{ email: string; role?: stri
   if (typeof body?.csv === "string") {
     const rows = body.csv.split(/\r?\n/);
     for (const row of rows) {
-      const [emailRaw, roleRaw] = row.split(/[,;]/).map((val) => val?.trim());
+      const [emailRaw, roleRaw] = row.split(/[,;]/).map((val: string) => val?.trim());
       if (!emailRaw) continue;
       entries.push({
         email: emailRaw,

@@ -494,7 +494,7 @@ export default function QuestionBank() {
 
   const renderPaginationItems = () => {
     if (!questionsData) return null;
-    const { totalPages } = questionsData;
+    const totalPages = questionsData?.totalPages ?? 1;
     const items = [];
     const maxVisible = 5;
 
@@ -865,8 +865,8 @@ export default function QuestionBank() {
                     {renderPaginationItems()}
                     <PaginationItem>
                       <PaginationNext
-                        onClick={() => setCurrentPage((p) => Math.min(questionsData.totalPages, p + 1))}
-                        className={currentPage === questionsData.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        onClick={() => setCurrentPage((p) => Math.min(questionsData?.totalPages ?? 1, p + 1))}
+                        className={currentPage === (questionsData?.totalPages ?? 1) ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         data-testid="pagination-next"
                       />
                     </PaginationItem>

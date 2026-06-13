@@ -15,7 +15,7 @@ const router = Router();
 // POST /api/anticheat/focus-loss — Report tab switch / focus loss
 router.post('/focus-loss', requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUser(req);
+    const userId = getCurrentUser(req) as string;
     const { attemptId, eventType, timestamp } = req.body;
 
     const [attempt] = await db.select().from(mockExamAttempts)
@@ -57,7 +57,7 @@ router.post('/focus-loss', requireAuth, async (req, res) => {
 // POST /api/anticheat/fingerprint — Store browser fingerprint
 router.post('/fingerprint', requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUser(req);
+    const userId = getCurrentUser(req) as string;
     const { attemptId, fingerprint, userAgent } = req.body;
 
     await db.update(mockExamAttempts).set({
@@ -75,7 +75,7 @@ router.post('/fingerprint', requireAuth, async (req, res) => {
 // POST /api/anticheat/heartbeat — Keep-alive during exam
 router.post('/heartbeat', requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUser(req);
+    const userId = getCurrentUser(req) as string;
     const { attemptId } = req.body;
 
     await db.update(mockExamAttempts).set({

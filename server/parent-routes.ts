@@ -61,7 +61,7 @@ router.post("/verify", requireAuth, async (req: any, res) => {
   if (!parentPhone || !otp) return res.status(400).json({ error: "phone and otp required" });
 
   try {
-    const result = await verifyOTP(parentPhone, otp);
+    const result = await verifyOTP(parentPhone, otp) as { type: string };
     
     if (result.type === "success") {
       await db.execute(sql`

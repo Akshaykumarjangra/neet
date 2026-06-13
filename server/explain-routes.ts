@@ -30,7 +30,10 @@ class SimpleLRUCache<K, V> {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     } else if (this.cache.size >= this.max) {
-      this.cache.delete(this.cache.keys().next().value);
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
     }
     this.cache.set(key, value);
   }

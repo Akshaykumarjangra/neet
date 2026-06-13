@@ -7,9 +7,18 @@ type SitemapEntry = { url: string; priority: string; changefreq: string; lastmod
 
 const router = Router();
 
+let sitemapCache: { xml: string; expiresAt: number } | null = null;
+const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
 // Generate sitemap.xml
 router.get("/sitemap.xml", async (req, res) => {
     try {
+        const now = Date.now();
+        if (sitemapCache && sitemapCache.expiresAt > now) {
+            res.header("Content-Type", "application/xml");
+            return res.send(sitemapCache.xml);
+        }
+
         const baseUrl = process.env.BASE_URL || "https://neet.zeroai.org.in";
 
         const today = new Date().toISOString().split('T')[0];
@@ -98,8 +107,7 @@ router.get("/sitemap.xml", async (req, res) => {
             "analyze-mock-tests", "animal-kingdom-tricks", "best-books-neet-biology", 
             "best-books-neet-chemistry", "best-books-neet-physics", "biology-chapter-weightage",
             "chemical-bonding-vsepr", "chemical-equilibrium-shortcuts", "chemistry-chapter-weightage",
-            "class-11-neet-strategy", "class-12-neet-strategy", "coordination-compounds-naming",
-            "dropper-strategy-neet", "electrostatics-revision", "genetics-simplified",
+            "coordination-compounds-isomerism", "digestion-absorption-flowchart", "electrostatics-revision", "genetics-simplified",
             "how-to-score-650-plus-neet", "human-physiology-diagrams", "importance-of-mock-tests",
             "last-month-revision-neet", "mistake-notebook-strategy", "morphology-plants-mnemonics",
             "neet-2026-roadmap", "neet-motivation-guide", "neet-vs-jee-physics",
@@ -131,6 +139,11 @@ router.get("/sitemap.xml", async (req, res) => {
         }
 
         xml += "</urlset>";
+
+        sitemapCache = {
+            xml,
+            expiresAt: Date.now() + CACHE_DURATION_MS
+        };
 
         res.header("Content-Type", "application/xml");
         res.send(xml);

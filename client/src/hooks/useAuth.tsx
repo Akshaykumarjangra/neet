@@ -20,6 +20,8 @@ interface ServerUser {
   mustChangePassword?: boolean;
   avatarUrl?: string | null;
   headline?: string | null;
+  isSuperAdmin?: boolean;
+  referralCode?: string | null;
 }
 
 interface User extends ServerUser {

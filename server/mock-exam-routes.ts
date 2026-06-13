@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { and, eq, inArray, sql, desc } from "drizzle-orm";
 import { requireAuthWithPasswordCheck, getCurrentUser, requireActiveSubscription } from "./auth";
-import { ipKeyGenerator, rateLimit } from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 import { sanitizeResponses, scoreResponses } from "./mock-exam-scoring";
 import { isFeatureEnabled } from "./feature-flags";
 
@@ -30,7 +30,7 @@ const startLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>
-    req.session?.userId ? `user:${req.session.userId}` : ipKeyGenerator(req, res),
+    req.session?.userId ? `user:${req.session.userId}` : (req.ip ?? "unknown"),
 });
 
 const submitLimiter = rateLimit({
@@ -39,7 +39,7 @@ const submitLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>
-    req.session?.userId ? `user:${req.session.userId}` : ipKeyGenerator(req, res),
+    req.session?.userId ? `user:${req.session.userId}` : (req.ip ?? "unknown"),
 });
 
 function shuffleArray<T>(items: T[]) {
@@ -487,7 +487,7 @@ router.post("/papers/:paperId/start", startLimiter, async (req, res) => {
       }
     } else {
       assembledQuestions = attemptQuestions.map((aq) => {
-        const snapshot = aq.snapshot || {};
+        const snapshot = (aq.snapshot as any) || {};
         return {
           id: snapshot.id || aq.questionId,
           sectionId: aq.sectionId,
@@ -614,7 +614,7 @@ router.post("/attempts/:attemptId/save", submitLimiter, async (req, res) => {
     const optionIdsByQuestion: Record<number, Set<number>> = {};
     if (attemptQuestions.length) {
       for (const aq of attemptQuestions) {
-        const snapshotOptions = aq.snapshot?.options || [];
+        const snapshotOptions = (aq.snapshot as any)?.options || [];
         for (const opt of snapshotOptions) {
           optionIdsByQuestion[aq.questionId] = optionIdsByQuestion[aq.questionId] || new Set();
           optionIdsByQuestion[aq.questionId].add(Number(opt.id));
@@ -870,7 +870,7 @@ router.post("/attempts/:attemptId/submit", submitLimiter, async (req, res) => {
 
       for (const aq of attemptQuestions) {
         sectionByQuestion[aq.questionId] = aq.sectionId;
-        const snapshotOptions = aq.snapshot?.options || [];
+        const snapshotOptions = (aq.snapshot as any)?.options || [];
         for (const opt of snapshotOptions) {
           if (opt.isCorrect) {
             correctOptionByQuestion[aq.questionId] = correctOptionByQuestion[aq.questionId] || new Set();

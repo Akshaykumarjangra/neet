@@ -1027,7 +1027,7 @@ router.post("/bookings", requireAuth, requireActiveSubscription(), async (req: R
     if (hasOverlappingBooking(startAt, endAt, existingBookings)) {
       return res.status(400).json({ error: "Time slot is already booked" });
     }
-    const durationHours = windowCheck.durationMs / (1000 * 60 * 60);
+    const durationHours = (windowCheck.durationMs ?? 0) / (1000 * 60 * 60);
     const priceCents = Math.round((mentor.hourlyRate || 0) * durationHours);
 
     const [newBooking] = await db
@@ -1045,7 +1045,7 @@ router.post("/bookings", requireAuth, requireActiveSubscription(), async (req: R
       .returning();
 
     const [mentorUser] = await db
-      .select({ email: users.email, name: users.name })
+      .select({ id: users.id, email: users.email, name: users.name })
       .from(mentors)
       .innerJoin(users, eq(mentors.userId, users.id))
       .where(eq(mentors.id, validatedData.mentorId))

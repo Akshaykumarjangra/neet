@@ -574,7 +574,7 @@ export default function Practice() {
       else if (percentTimeRemaining > 0.25) timeBonus = 2;
     }
 
-    const pointsEarned = isCorrect ? (basePoints * difficultyMultiplier) + timeBonus : 0;
+    const pointsEarned = isCorrect ? (basePoints * (difficultyMultiplier ?? 1)) + timeBonus : 0;
 
     const prevCombo = currentCombo;
     const prevMax = maxCombo;
@@ -784,7 +784,7 @@ export default function Practice() {
           e.preventDefault();
           if (!showSolution && currentQuestion) {
             const optionIndex = parseInt(e.key) - 1;
-            if (currentQuestion.options[optionIndex]) {
+            if (currentQuestion.options && currentQuestion.options[optionIndex]) {
               handleSubmit(currentQuestion.options[optionIndex].id);
             }
           }
@@ -978,7 +978,7 @@ export default function Practice() {
             question={currentQuestion.questionText}
             userAnswer={submittedAnswer || ""}
             correctAnswer={currentQuestion.correctAnswer}
-            explanation={currentQuestion.solutionDetail}
+            explanation={currentQuestion.solutionDetail || ""}
             solutionSteps={currentQuestion.solutionSteps || []}
             onClose={() => setShowKillCam(false)}
             onNextQuestion={handleNext}
@@ -1526,11 +1526,11 @@ export default function Practice() {
 
                 <QuestionCard
                   questionNumber={currentQuestionIndex + 1}
-                  difficulty={getDifficultyLabel(currentQuestion.difficultyLevel)}
+                  difficulty={getDifficultyLabel(currentQuestion.difficultyLevel ?? 0)}
                   subject={currentQuestion.topicId.toString()}
                   topic={currentTopicName || "NEET Prep"}
                   question={currentQuestion.questionText}
-                  options={currentQuestion.options}
+                  options={currentQuestion.options || []}
                   isBookmarked={isBookmarked}
                   pyqYear={(currentQuestion as any).pyqYear}
                   onToggleBookmark={() => setIsBookmarked(!isBookmarked)}

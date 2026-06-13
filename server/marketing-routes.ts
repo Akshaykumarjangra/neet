@@ -46,18 +46,19 @@ router.post("/run", requireAdmin, async (req, res) => {
     if (result.success) {
       await recordAuditLog(req, {
         action: "trigger_marketing_run",
-        resourceType: "marketing",
-        resourceId: result.reportId?.toString(),
-        status: "success",
-        details: { campaignId: campaign?.id }
+        entityType: "marketing",
+        entityId: result.reportId?.toString(),
+        oldValue: undefined,
+        newValue: { campaignId: campaign?.id },
       });
       res.json({ success: true, reportId: result.reportId, message: "Marketing run triggered successfully" });
     } else {
       await recordAuditLog(req, {
         action: "trigger_marketing_run",
-        resourceType: "marketing",
-        status: "failure",
-        details: { campaignId: campaign?.id, error: result.error }
+        entityType: "marketing",
+        entityId: undefined,
+        oldValue: undefined,
+        newValue: { campaignId: campaign?.id, error: result.error },
       });
       res.status(500).json({ success: false, reportId: result.reportId, error: result.error });
     }
@@ -98,10 +99,10 @@ router.post("/schedule", requireAdmin, async (req, res) => {
 
     await recordAuditLog(req, {
       action: "update_marketing_schedule",
-      resourceType: "marketing",
-      resourceId: campaignId?.toString(),
-      status: "success",
-      details: { cronExpression, config }
+      entityType: "marketing",
+      entityId: campaignId?.toString(),
+      oldValue: undefined,
+      newValue: { cronExpression, config },
     });
 
     res.json({ success: true, campaignId, message: "Schedule updated successfully" });

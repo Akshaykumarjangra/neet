@@ -43,7 +43,6 @@ export function scheduleMarketingRun(cronExpression: string) {
       isRunning = false;
     }
   }, {
-    scheduled: true,
     timezone: "Asia/Kolkata"
   });
 

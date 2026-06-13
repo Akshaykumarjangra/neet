@@ -122,8 +122,8 @@ router.get("/by-chapter/:subject/:classLevel/:chapterNumber", async (req: Reques
       if (!isPremium) {
         // Implement progressive disclosure: return preview content
         chapter.detailedNotes = "Preview mode: This is a premium chapter. " + (chapter.introduction || "").substring(0, 300) + "...";
-        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : null;
-        chapter.formulas = chapter.formulas ? (chapter.formulas as string[]).slice(0, 1) : null;
+        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : [];
+        chapter.formulas = chapter.formulas ? (chapter.formulas as any[]).slice(0, 1) : [];
         (chapter as any).isPremiumLocked = true;
       }
     }
@@ -168,8 +168,8 @@ router.get("/:id", async (req: Request, res: Response) => {
       if (!isPremium) {
         // Implement progressive disclosure: return preview content
         chapter.detailedNotes = "Preview mode: This is a premium chapter. " + (chapter.introduction || "").substring(0, 300) + "...";
-        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : null;
-        chapter.formulas = chapter.formulas ? (chapter.formulas as string[]).slice(0, 1) : null;
+        chapter.keyConcepts = chapter.keyConcepts ? (chapter.keyConcepts as any[]).slice(0, 1) : [];
+        chapter.formulas = chapter.formulas ? (chapter.formulas as any[]).slice(0, 1) : [];
         (chapter as any).isPremiumLocked = true;
       }
     }
@@ -279,7 +279,10 @@ router.get("/:id/assets", async (req: Request, res: Response) => {
 
     // Verify chapter existence and check premium status
     const [chapter] = await db
-      .select({ chapterNumber: chapterContent.chapterNumber })
+      .select({
+        chapterNumber: chapterContent.chapterNumber,
+        isFree: chapterContent.isFree
+      })
       .from(chapterContent)
       .where(eq(chapterContent.id, chapterId))
       .limit(1);

@@ -4,8 +4,10 @@ import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import createMemoryStore from "memorystore";
 import helmet from "helmet";
+// @ts-ignore
 import compression from "compression";
 import { rateLimit } from "express-rate-limit";
+// @ts-ignore
 import cors, { type CorsOptions } from "cors";
 import path from "path";
 import fs from "fs";
@@ -125,7 +127,7 @@ async function ensureOwnerAccount() {
     ].filter(Boolean) as string[];
 
     app.use(cors({
-      origin: (origin, callback) => {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin || allowedOrigins.some(o => origin === o || origin.startsWith("http://localhost:"))) {
           callback(null, true);
         } else {
@@ -171,6 +173,16 @@ async function ensureOwnerAccount() {
     const server = await registerRoutes(app);
     initializeWebSocketServer(server, sessionMiddleware);
     attachBattleWS(server, sessionMiddleware);
+
+    // Serve uploaded assets (videos, handwritten notes, etc.)
+    app.use("/uploads", express.static(path.resolve(import.meta.dirname, "..", "uploads"), {
+      maxAge: '7d',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.mp4')) res.setHeader('Content-Type', 'video/mp4');
+        else if (filePath.endsWith('.webm')) res.setHeader('Content-Type', 'video/webm');
+        else if (filePath.endsWith('.ogg')) res.setHeader('Content-Type', 'video/ogg');
+      }
+    }));
 
     // Serve static files in production, Vite dev server in development
     // Prioritize built assets if they exist, otherwise use Vite dev server

@@ -25,7 +25,7 @@ export default function BattleLobby() {
   const [answerResult, setAnswerResult] = useState<{ isCorrect: boolean, correctAnswer?: string } | null>(null);
   const { toast } = useToast();
 
-  const { data: queueStatus, refetch: refetchQueue } = useQuery({
+  const { data: queueStatus, refetch: refetchQueue } = useQuery<{ inBattle: string | null; inQueue: boolean }>({
     queryKey: ["/api/battle/queue/status"],
     refetchInterval: inQueue && !battleId ? 2000 : false,
   });

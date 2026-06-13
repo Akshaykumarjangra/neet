@@ -1,5 +1,5 @@
 import "express-session";
-import { users } from "@shared/schema";
+import { User as DBUser } from "@shared/schema";
 
 declare module "express-session" {
   interface SessionData {
@@ -12,11 +12,9 @@ declare module "express-session" {
 
 declare global {
   namespace Express {
+    interface User extends DBUser {}
     interface Request {
-      user?: {
-        id: string;
-        isAdmin: boolean;
-      };
+      isOwner?: boolean;
     }
   }
 }

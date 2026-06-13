@@ -78,8 +78,8 @@ router.post("/assign", requireAdmin, async (req, res) => {
       entries.push(
         ...normalizedTags.map((tag) => ({
           questionId,
-          tag: tag.tag,
-          category: tag.category,
+          tag: tag!.tag,
+          category: tag!.category,
         }))
       );
     }
@@ -121,8 +121,8 @@ router.put("/question/:id", requireAdmin, async (req, res) => {
     if (normalizedTags.length > 0) {
       const entries = normalizedTags.map((tag) => ({
         questionId,
-        tag: tag.tag,
-        category: tag.category,
+        tag: tag!.tag,
+        category: tag!.category,
       }));
       await db.insert(questionTags).values(entries).onConflictDoNothing();
     }

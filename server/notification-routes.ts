@@ -28,21 +28,17 @@ router.post("/register-device", async (req, res) => {
         userId: req.user!.id,
         fcmToken,
         deviceType: deviceType || "web",
-        lastSeen: new Date(),
       });
 
-      await recordAuditLog(
-        req.user!.id,
-        "REGISTER_DEVICE",
-        "user_devices",
-        null,
-        { deviceType, tokenPreview: fcmToken.substring(0, 10) + "..." },
-        req
-      );
+      await recordAuditLog(req, {
+        action: "REGISTER_DEVICE",
+        entityType: "user_devices",
+        newValue: { deviceType, tokenPreview: fcmToken.substring(0, 10) + "..." },
+      });
     } else {
         // Update last seen
         await db.update(userDevices)
-            .set({ lastSeen: new Date() })
+            .set({ fcmToken: existing[0].fcmToken })
             .where(eq(userDevices.id, existing[0].id));
     }
 

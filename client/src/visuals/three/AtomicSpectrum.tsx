@@ -178,7 +178,7 @@ export default function AtomicSpectrum() {
       }
 
       controls.update();
-      renderer.render(scene, camera);
+      if (renderer) renderer.render(scene, camera);
       animationRef.current = requestAnimationFrame(animate);
     };
     animate();

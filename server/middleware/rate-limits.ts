@@ -28,10 +28,10 @@ function getSessionUserId(req: Request): string | undefined {
  * Key by authenticated user id when available, else fall back to IP.
  * `ipKeyGenerator` is required for IPv6-safe behavior with v7+.
  */
-function userOrIpKey(req: Request, res: Response): string {
+function userOrIpKey(req: Request): string {
   const userId = getSessionUserId(req);
   if (userId) return `user:${userId}`;
-  return `ip:${ipKeyGenerator(req, res)}`;
+  return `ip:${ipKeyGenerator(req.ip!)}`;
 }
 
 function jsonHandler(message: string) {
@@ -55,7 +55,7 @@ export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
   // Auth endpoints are pre-login, so always key by IP.
-  keyGenerator: (req, res) => `ip:${ipKeyGenerator(req, res)}`,
+  keyGenerator: (req) => `ip:${ipKeyGenerator(req.ip!)}`,
   handler: jsonHandler(
     "Too many authentication attempts from this IP. Please wait 15 minutes and try again."
   ),
@@ -66,7 +66,7 @@ export const passwordResetLimiter = rateLimit({
   ...baseOpts,
   windowMs: 60 * 60 * 1000,
   limit: 3,
-  keyGenerator: (req, res) => `ip:${ipKeyGenerator(req, res)}`,
+  keyGenerator: (req) => `ip:${ipKeyGenerator(req.ip!)}`,
   handler: jsonHandler(
     "Too many password reset requests. Please wait an hour before trying again."
   ),
@@ -99,7 +99,7 @@ export const apiLimiter = rateLimit({
   ...baseOpts,
   windowMs: 60 * 1000,
   limit: 100,
-  keyGenerator: (req, res) => `ip:${ipKeyGenerator(req, res)}`,
+  keyGenerator: (req) => `ip:${ipKeyGenerator(req.ip!)}`,
   handler: jsonHandler(
     "Too many requests from this IP. Please slow down and try again shortly."
   ),

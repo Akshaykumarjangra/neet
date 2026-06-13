@@ -122,6 +122,7 @@ async function markSubscriptionActive(
     razorpayOrderId?: string | null;
   }
 ) {
+  let userId = "";
   try {
     await db.transaction(async (tx) => {
       const [existing] = await tx
@@ -136,6 +137,8 @@ async function markSubscriptionActive(
       if (!existing) {
         throw new Error(`Subscription ${subscriptionId} not found`);
       }
+
+      userId = existing.userId;
 
       const periodEnd = calculatePeriodEnd(
         existing.billingInterval || "monthly",
@@ -187,7 +190,7 @@ async function markSubscriptionActive(
       action: "activate_subscription",
       entityType: "subscription",
       entityId: subscriptionId,
-      userId: existing.userId,
+      userId: userId,
       newValue: { status: "active", transactionId }
     });
     console.log(`[Billing] Successfully activated subscription ${subscriptionId}`);
@@ -288,7 +291,7 @@ router.post("/checkout", requireAuthWithPasswordCheck, paymentLimiter, async (re
         and(eq(userSubscriptions.userId, userId), eq(userSubscriptions.status, "pending"))
       );
 
-    if (cleared.rowCount > 0) {
+    if (cleared.rowCount !== null && cleared.rowCount > 0) {
       console.log(`[Checkout] Cleared ${cleared.rowCount} stale pending subscriptions for user ${userId}`);
     }
 

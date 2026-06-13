@@ -263,7 +263,7 @@ router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
       res.setHeader('Connection', 'keep-alive');
 
       try {
-        const streamResponse = await openai.chat.completions.create({
+        const streamResponse = await openai!.chat.completions.create({
           model: miniModel,
           messages: messages as any[],
           max_tokens: MAX_TOKENS,
@@ -300,7 +300,7 @@ router.post('/:id/chat', requireAuth, async (req: Request, res: Response) => {
     }
 
     // Non-streaming fallback
-    const completion = await openai.chat.completions.create({
+    const completion = await openai!.chat.completions.create({
       model: miniModel,
       messages: messages as any[],
       max_tokens: MAX_TOKENS,
