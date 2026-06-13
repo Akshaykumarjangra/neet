@@ -1,0 +1,3 @@
+## 2026-06-13 - Array find inside map leads to O(n²) performance bottlenecks
+**Learning:** In a typical Express application, performing an `Array.prototype.find()` over a large database result set inside an `Array.prototype.map()` loop produces an O(n²) computational bottleneck. This can severely degrade request response times when merging large datasets, such as mapping user progress to a list of challenges or achievements.
+**Action:** When merging database arrays with nested loops in data transformations, always convert the array being searched into a `Map` object first (e.g. `new Map(data.map(item => [item.id, item]))`) to enable O(1) lookups, changing the overall time complexity from O(n²) to O(n).
