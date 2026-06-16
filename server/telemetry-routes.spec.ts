@@ -3,7 +3,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
 import telemetryRoutes from './telemetry-routes';
-import { describe, it } from 'node:test';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
 function dummyAuth(req: Request, res: Response, next: NextFunction) {
