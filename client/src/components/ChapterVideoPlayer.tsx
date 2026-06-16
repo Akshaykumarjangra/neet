@@ -234,9 +234,9 @@ export function ChapterVideoPlayer({
             <div className="flex flex-col max-w-full overflow-hidden">
               {/* Video container — 16:9 aspect ratio, overflow-hidden */}
               <div className="relative w-full pt-[56.25%] bg-black overflow-hidden">
-                {activeVideo.isYouTube ? (
+                {activeVideo.isYouTube || activeVideo.url.endsWith(".html") || activeVideo.url.startsWith("/uploads") ? (
                   <iframe
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 w-full h-full border-0"
                     src={activeVideo.url}
                     title={activeVideo.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

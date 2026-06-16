@@ -17,11 +17,11 @@ router.post("/submit", requireAuth, async (req: any, res) => {
   const couponPct = pct >= 90 ? 50 : pct >= 70 ? 20 : 10;
   const code = couponCode();
   await db.execute(sql`
-    INSERT INTO scholarship_attempts (user_id, score, percentile, coupon_code) VALUES (${req.user.id}, ${score}, ${pct}, ${code})
+    INSERT INTO scholarship_attempts (user_id, score, percentile, coupon_code) VALUES (${req.session.userId}, ${score}, ${pct}, ${code})
   `);
   await db.execute(sql`
     INSERT INTO coupons (code, discount_pct, valid_until, user_id, source)
-    VALUES (${code}, ${couponPct}, now() + interval '14 days', ${req.user.id}, 'scholarship')
+    VALUES (${code}, ${couponPct}, now() + interval '14 days', ${req.session.userId}, 'scholarship')
     ON CONFLICT (code) DO NOTHING
   `).catch(() => {});
   res.json({ percentile: pct, couponCode: code, discountPct: couponPct });

@@ -46,7 +46,7 @@ router.post("/link", requireAuth, async (req: any, res) => {
     
     await db.execute(sql`
       INSERT INTO parent_links (parent_phone, student_user_id, status)
-      VALUES (${parentPhone}, ${req.user.id}, 'pending')
+      VALUES (${parentPhone}, ${req.session.userId}, 'pending')
       ON CONFLICT (parent_phone, student_user_id) DO UPDATE SET status = 'pending'
     `);
     
@@ -67,10 +67,10 @@ router.post("/verify", requireAuth, async (req: any, res) => {
       await db.execute(sql`
         UPDATE parent_links 
         SET status = 'verified', verified_at = now()
-        WHERE parent_phone = ${parentPhone} AND student_user_id = ${req.user.id}
+        WHERE parent_phone = ${parentPhone} AND student_user_id = ${req.session.userId}
       `);
       
-      const token = generateParentLinkToken(req.user.id);
+      const token = generateParentLinkToken(req.session.userId);
       res.json({ ok: true, token });
     } else {
       res.status(400).json({ error: "Invalid OTP" });
@@ -86,7 +86,7 @@ router.post("/verify", requireAuth, async (req: any, res) => {
  */
 router.post("/link/token", requireAuth, async (req: any, res) => {
   try {
-    const token = generateParentLinkToken(req.user.id);
+    const token = generateParentLinkToken(req.session.userId);
     res.json({ token });
   } catch (err) {
     res.status(500).json({ error: "failed to issue token" });

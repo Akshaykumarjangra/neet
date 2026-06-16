@@ -19,7 +19,7 @@ router.post("/", requireAuth, async (req: any, res) => {
     INSERT INTO squads (name, code, weekly_goal_minutes) VALUES (${name}, ${c}, ${weeklyGoalMinutes}) RETURNING id
   `);
   const id = (r as any).rows?.[0]?.id;
-  await db.execute(sql`INSERT INTO squad_members (squad_id, user_id) VALUES (${id}, ${req.user.id})`);
+  await db.execute(sql`INSERT INTO squad_members (squad_id, user_id) VALUES (${id}, ${req.session.userId})`);
   
   recordAuditLog(req, {
     action: "create_squad",
@@ -39,7 +39,7 @@ router.post("/join", requireAuth, async (req: any, res) => {
   const cnt = await db.execute(sql`SELECT count(*)::int AS c FROM squad_members WHERE squad_id = ${id}`);
   if (((cnt as any).rows?.[0]?.c ?? 0) >= 4) return res.status(400).json({ error: "squad full" });
   await db.execute(sql`
-    INSERT INTO squad_members (squad_id, user_id) VALUES (${id}, ${req.user.id}) ON CONFLICT DO NOTHING
+    INSERT INTO squad_members (squad_id, user_id) VALUES (${id}, ${req.session.userId}) ON CONFLICT DO NOTHING
   `);
 
   recordAuditLog(req, {

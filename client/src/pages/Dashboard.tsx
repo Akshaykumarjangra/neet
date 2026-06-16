@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import BookingModal, { type MentorForBooking } from "@/components/mentors/BookingModal";
 import { MentorCard, type MentorCardData } from "@/components/mentors/MentorCard";
-import { BookOpen, Dna, FlaskConical, Calendar, Trophy, Target, Loader2, Layers, TrendingUp, Zap, ChevronRight } from "lucide-react";
+import { BookOpen, Dna, FlaskConical, Calendar, Trophy, Target, Loader2, Layers, TrendingUp, Zap, ChevronRight, Film, Play } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -535,11 +535,20 @@ export default function Dashboard() {
                   <Target className="h-4 w-4 shrink-0" />
                   <span className="truncate">Take Mock Test</span>
                 </Button>
-                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-weak-areas">
+                <Button
+                  className="w-full justify-start gap-2 truncate"
+                  variant="outline"
+                  data-testid="button-videos"
+                  onClick={() => setLocation('/videos')}
+                >
+                  <Film className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Watch Videos</span>
+                </Button>
+                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-weak-areas" onClick={() => setLocation('/practice')}>
                   <TrendingUp className="h-4 w-4 shrink-0" />
                   <span className="truncate">Review Weak Areas</span>
                 </Button>
-                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-study-plan">
+                <Button className="w-full justify-start gap-2 truncate" variant="outline" data-testid="button-study-plan" onClick={() => setLocation('/learning-path')}>
                   <Calendar className="h-4 w-4 shrink-0" />
                   <span className="truncate">View Study Plan</span>
                 </Button>

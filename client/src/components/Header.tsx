@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Trophy, Flame, Home as HomeIcon, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck, TrendingUp } from "lucide-react";
+import { Moon, Sun, Trophy, Flame, Home as HomeIcon, Menu, LogOut, User, GraduationCap, Users, Play, Shield, Search, ChartBar, MessageSquare, Bell, Layers, Check, Calendar, Crown, Swords, HelpCircle, Map, ClipboardCheck, TrendingUp, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "./ThemeProvider";
@@ -52,6 +52,7 @@ export function Header({
     { label: "Chapters", href: "/preview/chapter" },
     { label: "Mock Tests", href: "/preview/mock-test" },
     { label: "Simulations", href: "/preview/simulations" },
+    { label: "Videos", href: "/videos" },
     { label: "Pricing", href: "/pricing" },
     { label: "Mentors", href: "/mentors" },
     { label: "Community", href: "/community" },
@@ -207,6 +208,10 @@ export function Header({
                       <Play className="h-4 w-4" />
                       Simulations
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation('/videos')} className="gap-2">
+                      <Film className="h-4 w-4" />
+                      Video Library
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLocation('/chat')} className="gap-2">
                       <MessageSquare className="h-4 w-4" />
                       Chat
@@ -304,6 +309,14 @@ export function Header({
                   >
                     <Play className="h-4 w-4 mr-2" />
                     Simulations
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setLocation('/videos')}
+                    className={location === '/videos' ? "bg-accent" : ""}
+                    data-testid="menu-mobile-videos"
+                  >
+                    <Film className="h-4 w-4 mr-2" />
+                    Video Library
                   </DropdownMenuItem>
                   {canAccessAdmin && (
                     <DropdownMenuItem

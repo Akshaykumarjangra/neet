@@ -174,6 +174,18 @@ async function ensureOwnerAccount() {
     initializeWebSocketServer(server, sessionMiddleware);
     attachBattleWS(server, sessionMiddleware);
 
+    // Intercept missing chapter videos and fallback to interactive HTML explainer
+    app.get("/uploads/chapter-videos/:filename", (req, res, next) => {
+      const filePath = path.resolve(import.meta.dirname, "..", "uploads", "chapter-videos", req.params.filename);
+      if (!fs.existsSync(filePath)) {
+        const fallbackPath = path.resolve(import.meta.dirname, "..", "uploads", "chapter-videos", "explainer-preview.html");
+        if (fs.existsSync(fallbackPath)) {
+          return res.sendFile(fallbackPath);
+        }
+      }
+      next();
+    });
+
     // Serve uploaded assets (videos, handwritten notes, etc.)
     app.use("/uploads", express.static(path.resolve(import.meta.dirname, "..", "uploads"), {
       maxAge: '7d',

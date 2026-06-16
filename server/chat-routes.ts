@@ -112,7 +112,7 @@ router.get("/threads", requireAuth, async (req, res) => {
         ...thread,
         latestMessage: latest ? {
           content: latest.content,
-          createdAt: latest.createdAt.toISOString(),
+          createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
           isFlagged: latest.isFlagged,
           senderId: latest.senderId
         } : null

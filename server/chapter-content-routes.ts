@@ -354,8 +354,6 @@ router.get("/:id/assets", async (req: Request, res: Response) => {
   }
 });
 
-export default router;
-
 // Submit a new version of chapter content (Mentor/Admin)
 router.post("/:chapterId/versions", requireAdminOrMentor, async (req: Request, res: Response) => {
   const user = (req as any).user;
@@ -429,3 +427,5 @@ router.post("/:chapterId/versions", requireAdminOrMentor, async (req: Request, r
     res.status(500).json({ error: "Failed to submit version" });
   }
 });
+
+export default router;

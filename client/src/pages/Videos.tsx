@@ -194,6 +194,7 @@ export default function Videos() {
 
 function VideoCard({ video, onSelect }: { video: VideoItem; onSelect: () => void }) {
     const colors = subjectColors[video.subject] || subjectColors.Physics;
+    const [hasError, setHasError] = useState(false);
 
     return (
         <motion.div
@@ -208,11 +209,23 @@ function VideoCard({ video, onSelect }: { video: VideoItem; onSelect: () => void
                 onClick={onSelect}
             >
                 <div className="relative aspect-video bg-muted overflow-hidden">
-                    <img
-                        src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-                        alt={video.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+                    {hasError ? (
+                        <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                                <PlayCircle className="h-5 w-5 text-primary" />
+                            </div>
+                            <span className="text-xs text-muted-foreground font-medium truncate max-w-[200px]">
+                                {video.title}
+                            </span>
+                        </div>
+                    ) : (
+                        <img
+                            src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+                            alt={video.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            onError={() => setHasError(true)}
+                        />
+                    )}
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                             <Play className="h-6 w-6 text-white" fill="currentColor" />

@@ -3,11 +3,11 @@ import { db } from "./db";
 import { userDevices } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { recordAuditLog } from "./lib/audit";
+import { requireAuth } from "./auth";
 
 const router = Router();
 
-router.post("/register-device", async (req, res) => {
-  if (!req.isAuthenticated()) return res.sendStatus(401);
+router.post("/register-device", requireAuth, async (req: any, res) => {
 
   const { fcmToken, deviceType } = req.body;
   if (!fcmToken) return res.status(400).send("FCM Token is required");
@@ -18,14 +18,14 @@ router.post("/register-device", async (req, res) => {
       .from(userDevices)
       .where(
         and(
-          eq(userDevices.userId, req.user!.id),
+          eq(userDevices.userId, req.session.userId!),
           eq(userDevices.fcmToken, fcmToken)
         )
       );
 
     if (existing.length === 0) {
       await db.insert(userDevices).values({
-        userId: req.user!.id,
+        userId: req.session.userId!,
         fcmToken,
         deviceType: deviceType || "web",
       });

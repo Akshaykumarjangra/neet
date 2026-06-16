@@ -101,6 +101,88 @@ const testConnection = async () => {
     `);
     console.log('✓ user_chats table verified');
 
+    // Auto-migrate chapter_content_versions, chat_threads, chat_messages
+    console.log('🔄 Verifying chat and version tables...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chapter_content_versions (
+        id SERIAL PRIMARY KEY,
+        chapter_content_id INTEGER REFERENCES chapter_content(id) ON DELETE CASCADE,
+        mentor_id INTEGER REFERENCES mentors(id) ON DELETE CASCADE,
+        detailed_notes TEXT,
+        key_concepts JSONB,
+        formulas JSONB,
+        status VARCHAR(20) DEFAULT 'pending' NOT NULL,
+        review_notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        reviewed_at TIMESTAMP
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chat_threads (
+        id SERIAL PRIMARY KEY,
+        subject VARCHAR(200) NOT NULL,
+        student_id VARCHAR REFERENCES users(id) ON DELETE CASCADE,
+        mentor_id INTEGER REFERENCES mentors(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        is_resolved BOOLEAN DEFAULT FALSE NOT NULL,
+        last_message_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        thread_id INTEGER REFERENCES chat_threads(id) ON DELETE CASCADE,
+        sender_id VARCHAR REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        is_flagged BOOLEAN DEFAULT FALSE NOT NULL
+      );
+    `);
+    console.log('✓ chat and version tables verified');
+
+    // Auto-migrate additional tables used in raw SQL
+    console.log('🔄 Verifying additional raw SQL tables...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS squads (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        code VARCHAR(20) UNIQUE NOT NULL,
+        weekly_goal_minutes INTEGER DEFAULT 600,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS squad_members (
+        squad_id INTEGER REFERENCES squads(id) ON DELETE CASCADE,
+        user_id VARCHAR REFERENCES users(id) ON DELETE CASCADE,
+        joined_at TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY(squad_id, user_id)
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS scholarship_attempts (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR REFERENCES users(id) ON DELETE CASCADE,
+        score INTEGER NOT NULL,
+        percentile FLOAT NOT NULL,
+        coupon_code VARCHAR(50),
+        attempted_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount_pct INTEGER NOT NULL,
+        valid_until TIMESTAMP,
+        user_id VARCHAR REFERENCES users(id) ON DELETE SET NULL,
+        source VARCHAR(50),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✓ additional tables verified');
+
     client.release();
     console.log('✓ Connected to Coolify PostgreSQL database');
   } catch (err: any) {

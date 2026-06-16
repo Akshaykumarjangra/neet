@@ -26,7 +26,7 @@ import { isFeatureEnabled } from "./feature-flags";
 
 const startLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 5,
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>
@@ -35,7 +35,7 @@ const startLimiter = rateLimit({
 
 const submitLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) =>

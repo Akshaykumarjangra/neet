@@ -921,15 +921,14 @@ export default function MockTestPage() {
                         rowCount={Math.ceil(questions.length / 5)}
                         rowHeight={50}
                         width={280}
-                        itemData={{
+                        cellProps={{
                           questions,
                           currentQuestionIndex,
                           flaggedQuestions,
                           setCurrentQuestionIndex,
                           getQuestionButtonClasses
                         }}
-                      >
-                        {(({ columnIndex, rowIndex, style, data }: any) => {
+                        cellComponent={({ columnIndex, rowIndex, style, ...data }: any) => {
                           const index = rowIndex * 5 + columnIndex;
                           if (index >= data.questions.length) return null;
                           const question = data.questions[index];
@@ -949,8 +948,8 @@ export default function MockTestPage() {
                               </button>
                             </div>
                           );
-                        }) as any}
-                      </FixedSizeGridAny>
+                        }}
+                      />
                     )}
                   </div>
 

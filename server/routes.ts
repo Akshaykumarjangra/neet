@@ -238,6 +238,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin Content Management routes
   app.use("/api/admin", adminContentRoutes);
+  
+  // LMS Automation routes (missing mount point)
+  app.use("/api/automation", lmsAutomationRoutes);
 
   // Chapter Content routes
   app.use("/api/chapters", chapterContentRoutes);
