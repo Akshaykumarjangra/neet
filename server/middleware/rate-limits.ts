@@ -47,6 +47,7 @@ function jsonHandler(message: string) {
 const baseOpts: Partial<Options> = {
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
 };
 
 // 5 requests / 15 min / IP — credential endpoints
