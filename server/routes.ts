@@ -405,22 +405,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // ⚡ Bolt Performance Optimization:
       // Replaced N+1 getQuestionsByTopic calls (which fetched full rows just for .length)
-      // with a single grouped count query and an O(1) Map lookup.
+      // with a single grouped count query and an O(1) Map lookup via storage interface.
       const topicIds = topics.map((t) => t.id);
-      let countsMap = new Map<number, number>();
-
-      if (topicIds.length > 0) {
-        const countsResult = await db
-          .select({
-            topicId: questions.topicId,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(questions)
-          .where(inArray(questions.topicId, topicIds))
-          .groupBy(questions.topicId);
-
-        countsMap = new Map(countsResult.map(row => [row.topicId, Number(row.count)]));
-      }
+      const countsMap = await storage.getTopicQuestionCounts(topicIds);
 
       const topicsWithCounts = topics.map((topic) => {
         const count = countsMap.get(topic.id) || 0;
