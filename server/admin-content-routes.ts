@@ -22,7 +22,7 @@ import {
   chapterContentVersions,
   chapterContent,
 } from "@shared/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, inArray } from "drizzle-orm";
 import { recordAuditLog } from "./lib/audit";
 import { z } from "zod";
 
@@ -198,18 +198,31 @@ router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
     const allTopics = await db.select().from(contentTopics).orderBy(contentTopics.subject, contentTopics.topicName);
 
-    const topicsWithCounts = await Promise.all(
-      allTopics.map(async (topic) => {
-        const countResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(questions)
-          .where(eq(questions.topicId, topic.id));
-        return {
-          ...topic,
-          questionCount: Number(countResult[0].count),
-        };
-      })
-    );
+    // ⚡ Bolt Performance Optimization:
+    // Replaced N+1 topic count queries with a single grouped count query
+    // and an O(1) Map lookup.
+    const topicIds = allTopics.map((t) => t.id);
+    let countsMap = new Map<number, number>();
+
+    if (topicIds.length > 0) {
+      const countsResult = await db
+        .select({
+          topicId: questions.topicId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(questions)
+        .where(inArray(questions.topicId, topicIds))
+        .groupBy(questions.topicId);
+
+      countsMap = new Map(countsResult.map(row => [row.topicId, Number(row.count)]));
+    }
+
+    const topicsWithCounts = allTopics.map((topic) => {
+      return {
+        ...topic,
+        questionCount: countsMap.get(topic.id) || 0,
+      };
+    });
 
     res.json(topicsWithCounts);
   } catch (error) {
@@ -445,23 +458,32 @@ router.get("/flashcard-decks", requireAdmin, async (req, res) => {
       .leftJoin(contentTopics, eq(flashcardDecks.topicId, contentTopics.id))
       .orderBy(desc(flashcardDecks.createdAt));
 
-    const decksWithCounts = await Promise.all(
-      allDecks.map(async (item) => {
-        let cardCount = 0;
-        if (item.deck.topicId) {
-          const countResult = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(flashcards)
-            .where(eq(flashcards.topicId, item.deck.topicId));
-          cardCount = Number(countResult[0].count);
-        }
-        return {
-          ...item.deck,
-          topicName: item.topic?.topicName,
-          cardCount,
-        };
-      })
-    );
+    // ⚡ Bolt Performance Optimization:
+    // Replaced N+1 flashcard count queries with a single grouped count query
+    // and an O(1) Map lookup.
+    const topicIds = allDecks.map(d => d.deck.topicId).filter(id => id !== null && id !== undefined) as number[];
+    let countsMap = new Map<number, number>();
+
+    if (topicIds.length > 0) {
+      const countsResult = await db
+        .select({
+          topicId: flashcards.topicId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(flashcards)
+        .where(inArray(flashcards.topicId, topicIds))
+        .groupBy(flashcards.topicId);
+
+      countsMap = new Map(countsResult.map(row => [row.topicId as number, Number(row.count)]));
+    }
+
+    const decksWithCounts = allDecks.map((item) => {
+      return {
+        ...item.deck,
+        topicName: item.topic?.topicName,
+        cardCount: item.deck.topicId ? (countsMap.get(item.deck.topicId) || 0) : 0,
+      };
+    });
 
     res.json(decksWithCounts);
   } catch (error) {
