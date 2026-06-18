@@ -65,8 +65,8 @@ jobs:
         run: npx drizzle-kit push
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
-      - name: Run Jest tests
-        run: npx jest --passWithNoTests --ci --coverage
+      - name: Run Node tests
+        run: npx tsx --test $(find ./server ./client -name "*.spec.ts")
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           SESSION_SECRET: test-secret-ci
