@@ -1,0 +1,3 @@
+## 2024-05-27 - O(N^2) Array.find() inside loops and Map
+**Learning:** Found multiple instances of O(N^2) performance bottlenecks where `Array.prototype.find()` was being used inside a `.map()` or a `for` loop to cross-reference data (e.g. matching `questionId` to a question object). While seemingly innocuous for small lists, this pattern degrades exponentially for large lists (like test questions).
+**Action:** Replace `Array.find()` lookups inside iterations with pre-computed `Map` lookups (e.g., `new Map(data.map(item => [item.id, item]))`). This changes the time complexity from O(N^2) to O(N).
