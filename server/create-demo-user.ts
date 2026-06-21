@@ -2,6 +2,7 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 async function createDemoUser() {
   try {
@@ -15,7 +16,15 @@ async function createDemoUser() {
       process.exit(0);
     }
 
-    const passwordHash = await bcrypt.hash("demo-password", 10);
+    let password = process.env.DEMO_PASSWORD;
+    let isGenerated = false;
+
+    if (!password) {
+      password = crypto.randomBytes(16).toString("hex");
+      isGenerated = true;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await db.insert(users).values({
       email: "demo@neet.com",
@@ -24,6 +33,10 @@ async function createDemoUser() {
     }).returning();
 
     console.log("✅ Demo user created:", result);
+    if (isGenerated) {
+      console.log(`🔑 Generated Password: ${password}`);
+      console.log("Please save this password, as it will not be shown again.");
+    }
     process.exit(0);
   } catch (error) {
     console.error("❌ Error creating demo user:", error);
