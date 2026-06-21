@@ -10,7 +10,7 @@ import { sql } from "drizzle-orm";
 
 function run(label: string, cmd: string, args: string[]) {
   console.log(`[cron] ${label} starting`);
-  const p = spawn(cmd, args, { stdio: "inherit", shell: true });
+  const p = spawn(cmd, args, { stdio: "inherit", shell: false });
   p.on("exit", c => console.log(`[cron] ${label} exit=${c}`));
 }
 
