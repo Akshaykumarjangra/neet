@@ -21,8 +21,10 @@ router.get("/achievements", requireAuth, async (req, res) => {
       .where(eq(userAchievements.userId, user));
 
     // Merge data
+    // Performance optimization: O(1) map lookup instead of O(N^2) array find
+    const unlockedMap = new Map(userUnlocked.map(ua => [ua.achievementId, ua]));
     const achievementsWithStatus = allAchievements.map(achievement => {
-      const userAchievement = userUnlocked.find(ua => ua.achievementId === achievement.id);
+      const userAchievement = unlockedMap.get(achievement.id);
       return {
         ...achievement,
         unlocked: !!userAchievement,
