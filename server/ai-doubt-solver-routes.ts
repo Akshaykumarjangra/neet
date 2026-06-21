@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { requireAuth } from './auth';
 import { db } from './db';
 import { chapterContent } from '@shared/schema';
-import { ilike } from 'drizzle-orm';
+import { ilike, or } from 'drizzle-orm';
 import { logger } from './lib/logger';
 import multer from 'multer';
 
@@ -72,9 +72,17 @@ async function solveOllama(q: string, retries = 2) {
 
 async function enrichLinks(sol: any) {
   try {
-    for (const link of (sol.conceptLinks || [])) {
-      const [ch] = await db.select({ id: chapterContent.id, title: chapterContent.chapterTitle })
-        .from(chapterContent).where(ilike(chapterContent.chapterTitle, `%${link.concept}%`)).limit(1);
+    const links = sol.conceptLinks || [];
+    if (links.length === 0) return sol;
+
+    const conditions = links.map((link: any) => ilike(chapterContent.chapterTitle, `%${link.concept}%`));
+
+    const matches = await db.select({ id: chapterContent.id, title: chapterContent.chapterTitle })
+      .from(chapterContent)
+      .where(or(...conditions));
+
+    for (const link of links) {
+      const ch = matches.find((m: any) => m.title.toLowerCase().includes(link.concept.toLowerCase()));
       if (ch) { link.chapterId = ch.id; link.chapterTitle = ch.title; }
     }
   } catch {}
