@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Emergency DB Fix endpoint — applies missing migrations
-  app.get("/api/db-fix-emergency", async (req, res) => {
+  app.get("/api/db-fix-emergency", requireAdmin, async (req, res) => {
     try {
       await db.execute(sql`
         ALTER TABLE "users" 
