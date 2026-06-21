@@ -1,0 +1,3 @@
+## $(date +%Y-%m-%d) - Array find vs Map lookup bottleneck in Drizzle list merge
+**Learning:** In Drizzle queries where an `IN` clause retrieves a list of items (`testQuestions`), combining those items back into the original ordered IDs list (`questionIds`) using nested loops (`questionIds.map(id => testQuestions.find(q => q.id === id))`) introduces an O(N^2) bottleneck. This codebase frequently merges lists this way after database queries.
+**Action:** Always pre-compute a `Map` (e.g., `new Map(data.map(item => [item.id, item]))`) for O(1) lookups rather than using nested `Array.find()` when doing this specific post-Drizzle data merging to avoid O(N^2) performance hits on larger data sets.
