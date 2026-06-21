@@ -6,29 +6,22 @@ import path from "path";
 
 const MARKETING_SWARM_PATH = path.join(process.cwd(), "..", "marketing_swarm");
 
-export interface MarketingRunResult {
-  success: boolean;
-  reportId: number;
-  output?: string;
-  error?: string;
-}
+import { triggerMarketingRunLogic, type MarketingRunResult } from "./marketing-service-logic";
+
+export type { MarketingRunResult };
 
 export async function triggerMarketingRun(campaignId?: number): Promise<MarketingRunResult> {
-  const reportId = await createReportRecord(campaignId);
+  const websiteUrl = process.env.NEET_WEBSITE_URL || "https://neet.zeroai.org.in";
+  const industry = "NEET Preparation / EdTech";
 
-  try {
-    const websiteUrl = process.env.NEET_WEBSITE_URL || "https://neet.zeroai.org.in";
-    const industry = "NEET Preparation / EdTech";
-
-    const output = await runCrewAiMarketing(websiteUrl, industry);
-
-    await updateReportSuccess(reportId, output);
-
-    return { success: true, reportId, output };
-  } catch (error: any) {
-    await updateReportFailure(reportId, error.message);
-    return { success: false, reportId, error: error.message };
-  }
+  return triggerMarketingRunLogic(campaignId, {
+    createReportRecord,
+    runCrewAiMarketing,
+    updateReportSuccess,
+    updateReportFailure,
+    websiteUrl,
+    industry,
+  });
 }
 
 async function createReportRecord(campaignId?: number): Promise<number> {
