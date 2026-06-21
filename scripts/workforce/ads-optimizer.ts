@@ -27,8 +27,29 @@ async function setStatus(adId: string, status: string) {
 }
 
 async function scaleBudget(adId: string, mult: number) {
-  // TODO: read current daily_budget then multiply
-  console.log(`  ${adId}: scale ${mult}x (stub)`);
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${adId}?fields=adset{id,daily_budget}&access_token=${META}`);
+    const data = await res.json() as any;
+
+    if (!data.adset || !data.adset.id || !data.adset.daily_budget) {
+      console.warn(`  ${adId}: missing adset or daily_budget info`);
+      return;
+    }
+
+    const adsetId = data.adset.id;
+    const currentBudget = Number(data.adset.daily_budget);
+    const newBudget = Math.round(currentBudget * mult);
+
+    await fetch(`https://graph.facebook.com/v19.0/${adsetId}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ daily_budget: newBudget, access_token: META }),
+    });
+
+    console.log(`  ${adId}: scaled adset ${adsetId} budget ${mult}x (from ${currentBudget} to ${newBudget})`);
+  } catch (e) {
+    console.error(`  ${adId}: failed to scale budget`, e);
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
