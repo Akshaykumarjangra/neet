@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npx tsc --noEmit
 
   lint-and-audit:
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npm audit --production --audit-level=high || true
       - name: Check for known vulnerabilities
         run: npx better-npm-audit audit --level high || true
@@ -60,7 +60,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - name: Run migrations
         run: npx drizzle-kit push
         env:
@@ -94,7 +94,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Run migrations
@@ -140,7 +140,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - name: Verify migrations apply cleanly
         run: npx drizzle-kit push --force
         env:
@@ -156,7 +156,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npm run build
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
