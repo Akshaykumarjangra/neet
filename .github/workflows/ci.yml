@@ -66,7 +66,7 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
       - name: Run Jest tests
-        run: npm i -g typescript tsx && npx tsx --test $(find . -name "*.spec.ts" | grep -v "telemetry-routes" | grep -v "bookingUtils" | grep -v "mentor-booking-utils" | grep -v "mock-exam-scoring" | grep -v "mock-exam-flow" | grep -v "example")
+        run: npx jest --passWithNoTests --ci --coverage
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           SESSION_SECRET: test-secret-ci
