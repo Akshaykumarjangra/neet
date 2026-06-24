@@ -1,0 +1,4 @@
+## 2024-06-25 - Prevent SQL DistinctOn Dialect Issues
+
+**Learning:** When trying to optimize N+1 queries by fetching unique latest rows using `db.selectDistinctOn()` in Drizzle ORM, be cautious of dialect support. If the PostgreSQL version or Drizzle version/setup doesn't perfectly align, or if you need to fetch complex related counts, it can be problematic or fail type checking. Additionally, `Promise.all` combined with N distinct `count(*)` queries is a common anti-pattern here.
+**Action:** Prefer solving N+1 count queries by gathering IDs into an array, executing a single batched `.where(inArray(...))` query grouped by the foreign key, and processing the result into a JavaScript `Map` for O(1) lookup. When joining data, verify if `LEFT JOIN` + `GROUP BY` with `...getTableColumns(tableName)` can fetch the data completely in one query before relying on JavaScript memory mapping.
