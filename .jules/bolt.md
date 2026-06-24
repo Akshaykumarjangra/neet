@@ -1,0 +1,3 @@
+## 2024-10-18 - Replacing O(N^2) Array.find bottlenecks with Maps in API loops
+**Learning:** In the backend, when merging or joining related lists sequentially (like mapping User Challenges -> Progress array or Test Questions -> IDs array) inside a `.map()` or `for` loop, using `Array.find()` introduces a severe O(N^2) performance bottleneck, as seen in `server/game-routes.ts`, `server/rank-predictor-routes.ts`, and `server/mock-test-routes.ts`. When list sizes scale, this causes significant CPU overhead for mapping data.
+**Action:** When merging Drizzle array results with other lists in loops, ALWAYS pre-compute a `Map` (e.g., `new Map(data.map(item => [item.id, item]))`) for O(1) lookups rather than using nested `Array.find()` to ensure O(N) performance overall.
