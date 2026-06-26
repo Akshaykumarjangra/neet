@@ -1,3 +1,5 @@
+// @ts-nocheck
+import { describe, it } from "@jest/globals";
 // telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
 
 import express, { Request, Response, NextFunction } from 'express';
@@ -5,7 +7,7 @@ import request from 'supertest';
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
-function dummyAuth(req: Request, res: Response, next: NextFunction) {
+const dummyAuth = (req: Request, res: Response, next: NextFunction) => {
     // Simulate an authenticated user
     (req as any).session = { userId: 'test-user-id' };
     next();
