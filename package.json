@@ -177,6 +177,7 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
+    "chai": "^6.2.2",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.4",
@@ -190,7 +191,8 @@
     "ts-jest": "^29.4.6",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "vitest": "^4.1.9"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

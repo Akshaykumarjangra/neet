@@ -1,0 +1,3 @@
+## 2024-11-20 - Replace O(N^2) Array.find with O(N) Map Lookups in List Merges
+**Learning:** Found multiple instances of O(N^2) nested loops in the API routes where `Array.map()` combined with `Array.find()` was used to merge user-specific metadata (like progress or unlocked achievements) with a larger base list. While Drizzle ORM returns lists, combining them programmatically can become a bottleneck as lists grow.
+**Action:** When merging arrays by an ID or foreign key in loops (e.g. `items.map(item => sublist.find(i => i.id === item.id))`), always pre-compute a `Map` (e.g., `new Map(sublist.map(i => [i.id, i]))`) for O(1) lookups to reduce time complexity to O(N).
