@@ -1,0 +1,3 @@
+## 2024-05-24 - O(N²) array find() inside iteration
+**Learning:** Found multiple instances where `Array.prototype.find()` was used inside array iterations (like `.map()` or `for` loops) over database results in backend route handlers. This creates silent O(N²) performance bottlenecks, especially detrimental when parsing mock exams with hundreds of questions or joining user progress against many daily challenges.
+**Action:** Always pre-compute a `Map` structure (e.g., `new Map(data.map(item => [item.id, item]))`) before iterating through large datasets to convert O(N²) nested lookups into O(N) map creations followed by O(1) lookups.
