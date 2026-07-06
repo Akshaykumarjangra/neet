@@ -47,9 +47,12 @@ router.get("/challenges/daily", requireAuthWithPasswordCheck, async (req, res) =
       .from(userDailyChallenges)
       .where(eq(userDailyChallenges.userId, user));
 
+    // ⚡ Bolt: Use Map for O(1) lookups to avoid O(N²) array searches inside map()
+    const progressMap = new Map(progress.map(p => [p.challengeId, p]));
+
     // Merge challenges with progress
     const challengesWithProgress = challenges.map(challenge => {
-      const userProgress = progress.find(p => p.challengeId === challenge.id);
+      const userProgress = progressMap.get(challenge.id);
       return {
         id: challenge.id,
         title: challenge.title,
@@ -495,8 +498,11 @@ router.get("/achievements", requireAuthWithPasswordCheck, async (req, res) => {
       .from(userAchievements)
       .where(eq(userAchievements.userId, user));
 
+    // ⚡ Bolt: Use Map for O(1) lookups to avoid O(N²) array searches inside map()
+    const unlockedMap = new Map(userUnlocked.map(ua => [ua.achievementId, ua]));
+
     const achievementsWithStatus = allAchievements.map(achievement => {
-      const userAchievement = userUnlocked.find(ua => ua.achievementId === achievement.id);
+      const userAchievement = unlockedMap.get(achievement.id);
       return {
         ...achievement,
         unlocked: !!userAchievement,
