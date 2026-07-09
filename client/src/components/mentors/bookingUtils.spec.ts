@@ -1,4 +1,5 @@
-import { describe, it } from "node:test";
+import { test } from "node:test";
+const { describe, it } = test;
 import assert from "node:assert/strict";
 import { atLocalDay, buildAvailableTimesForDate, deriveHourlyRate } from "./bookingUtils";
 
