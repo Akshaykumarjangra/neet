@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { describe, it } from "node:test";
+import { test } from "node:test";
+const { describe, it } = test;
 import assert from "node:assert/strict";
 import { getCompletionDeltas, hasOverlappingBooking, isWithinAvailability, validateBookingWindow } from "./mentor-booking-utils";
 
