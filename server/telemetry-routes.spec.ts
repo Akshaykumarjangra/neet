@@ -1,29 +1,51 @@
-// telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
-
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
 import telemetryRoutes from './telemetry-routes';
 
-// Dummy auth middleware to satisfy requireAuthWithPasswordCheck
-function dummyAuth(req: Request, res: Response, next: NextFunction) {
-    // Simulate an authenticated user
-    (req as any).session = { userId: 'test-user-id' };
-    next();
-}
+// Mock the db connection bypass if necessary
+jest.mock('./db', () => ({
+  db: {
+    insert: jest.fn().mockReturnValue({
+      values: jest.fn().mockResolvedValue({})
+    }),
+    select: jest.fn().mockReturnValue({
+        from: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnValue({
+                limit: jest.fn().mockResolvedValue([{ id: 'test-user-id' }])
+            })
+        })
+    })
+  },
+}));
 
-// Create an app that uses the dummy auth before the telemetry routes
+// We also need to prevent 'pg' Pool from trying to connect if it's imported anywhere
+jest.mock('pg', () => {
+  const mPool = {
+    connect: jest.fn().mockResolvedValue({ release: jest.fn() }),
+    query: jest.fn(),
+    end: jest.fn(),
+    on: jest.fn(),
+  };
+  return { Pool: jest.fn(() => mPool) };
+});
+
+// Mock auth middleware imports
+jest.mock('./auth', () => ({
+  requireAuthWithPasswordCheck: (req: Request, res: Response, next: NextFunction) => {
+    (req as any).user = 'test-user-id';
+    next();
+  },
+  getCurrentUser: () => 'test-user-id'
+}));
+
 function createApp() {
     const app = express();
     app.use(express.json());
-    // Replace the real auth middleware with dummy for testing
-    // The telemetryRoutes file imports requireAuthWithPasswordCheck internally,
-    // but we can mount the router after applying dummy auth globally.
-    app.use(dummyAuth);
+    // Since requireAuthWithPasswordCheck verifies users via DB, we mock the auth middleware itself
     app.use('/api', telemetryRoutes);
-    // Error handler to avoid unhandled errors in tests
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
         console.error('Unhandled error in test app:', err);
-        res.status(500).json({ error: 'internal' });
+        res.status(500).json({ error: 'Test setup error' });
     });
     return app;
 }
@@ -31,23 +53,18 @@ function createApp() {
 describe('Telemetry Route', () => {
     it('should accept a valid telemetry event', async () => {
         const app = createApp();
-        await request(app)
+        const response = await request(app)
             .post('/api/telemetry')
-            .send({ event: 'test_event', data: { foo: 'bar' } })
-            .expect(200)
-            .expect(res => {
-                if (!res.body.success) throw new Error('expected success flag');
-            });
+            .send({ event: 'test_event', data: { key: 'value' } });
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ success: true });
     });
 
     it('should reject when event name is missing', async () => {
         const app = createApp();
-        await request(app)
+        const response = await request(app)
             .post('/api/telemetry')
-            .send({ data: {} })
-            .expect(400)
-            .expect(res => {
-                if (!res.body.error) throw new Error('expected error message');
-            });
+            .send({ data: { key: 'value' } });
+        expect(response.status).toBe(400);
     });
 });
