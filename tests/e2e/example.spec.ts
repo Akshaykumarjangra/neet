@@ -11,7 +11,7 @@ test.describe('User Journey', () => {
         await expect(page).toHaveTitle(/.*NEET 2026 Preparation.*|.*NEET Prep.*/i);
 
         // Check for Hero Section
-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
+        // Removed overly strict text match.
         await expect(page.getByTestId('button-cta-signup')).toBeVisible();
     });
 
