@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, sql, getTableColumns } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -47,6 +47,7 @@ export interface IStorage {
   
   // Topic methods
   getAllTopics(): Promise<ContentTopicRow[]>;
+  getAllTopicsWithCounts(): Promise<(ContentTopicRow & { questionCount: number })[]>;
   getTopicsBySubject(subject: string): Promise<ContentTopicRow[]>;
   createTopic(topic: ContentTopicInsert): Promise<ContentTopicRow>;
   
@@ -140,6 +141,18 @@ export class DbStorage implements IStorage {
   // Topic methods
   async getAllTopics(): Promise<ContentTopicRow[]> {
     return await db.select().from(contentTopics);
+  }
+
+  async getAllTopicsWithCounts(): Promise<(ContentTopicRow & { questionCount: number })[]> {
+    return await db
+      .select({
+        ...getTableColumns(contentTopics),
+        questionCount: sql<number>`count(${questions.id})`.mapWith(Number)
+      })
+      .from(contentTopics)
+      .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+      .groupBy(contentTopics.id)
+      .orderBy(contentTopics.subject, contentTopics.topicName);
   }
 
   async getTopicsBySubject(subject: string): Promise<ContentTopicRow[]> {

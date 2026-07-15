@@ -22,7 +22,7 @@ import {
   chapterContentVersions,
   chapterContent,
 } from "@shared/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, getTableColumns } from "drizzle-orm";
 import { recordAuditLog } from "./lib/audit";
 import { z } from "zod";
 
@@ -196,22 +196,17 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
 
 router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
-    const allTopics = await db.select().from(contentTopics).orderBy(contentTopics.subject, contentTopics.topicName);
-
-    const topicsWithCounts = await Promise.all(
-      allTopics.map(async (topic) => {
-        const countResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(questions)
-          .where(eq(questions.topicId, topic.id));
-        return {
-          ...topic,
-          questionCount: Number(countResult[0].count),
-        };
+    const allTopicsWithCounts = await db
+      .select({
+        ...getTableColumns(contentTopics),
+        questionCount: sql<number>`count(${questions.id})`.mapWith(Number)
       })
-    );
+      .from(contentTopics)
+      .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+      .groupBy(contentTopics.id)
+      .orderBy(contentTopics.subject, contentTopics.topicName);
 
-    res.json(topicsWithCounts);
+    res.json(allTopicsWithCounts);
   } catch (error) {
     console.error("Error fetching topics:", error);
     res.status(500).json({ error: "Failed to fetch topics" });
