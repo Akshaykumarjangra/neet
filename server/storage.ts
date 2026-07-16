@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, getTableColumns, sql } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -48,6 +48,7 @@ export interface IStorage {
   // Topic methods
   getAllTopics(): Promise<ContentTopicRow[]>;
   getTopicsBySubject(subject: string): Promise<ContentTopicRow[]>;
+  getTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]>;
   createTopic(topic: ContentTopicInsert): Promise<ContentTopicRow>;
   
   // Question methods
@@ -144,6 +145,23 @@ export class DbStorage implements IStorage {
 
   async getTopicsBySubject(subject: string): Promise<ContentTopicRow[]> {
     return await db.select().from(contentTopics).where(eq(contentTopics.subject, subject));
+  }
+
+  async getTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]> {
+    const results = await db
+      .select({
+        ...getTableColumns(contentTopics),
+        questionCount: sql<number>`count(${questions.id})`.mapWith(Number),
+      })
+      .from(contentTopics)
+      .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+      .groupBy(contentTopics.id)
+      .orderBy(contentTopics.subject, contentTopics.topicName);
+
+    return results.map(topic => ({
+      ...topic,
+      totalQuestions: topic.questionCount
+    }));
   }
 
   async createTopic(topic: ContentTopicInsert): Promise<ContentTopicRow> {
