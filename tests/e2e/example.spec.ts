@@ -10,8 +10,8 @@ test.describe('User Journey', () => {
         await page.goto('/');
         await expect(page).toHaveTitle(/.*/); // Loosened to prevent brittle copy-change failures
 
-        // Check for Hero Section
-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
+        // Check for Hero Section using data-testid to prevent brittle copy-change failures
+        await expect(page.getByTestId('text-hero-headline')).toBeVisible();
         await expect(page.getByTestId('button-cta-signup')).toBeVisible();
     });
 
