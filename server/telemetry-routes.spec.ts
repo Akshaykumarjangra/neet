@@ -2,6 +2,21 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+
+// Mock DB connection before importing routes that initialize DB
+jest.mock('pg', () => {
+    const mPool = {
+        connect: jest.fn().mockResolvedValue({ release: jest.fn(), query: jest.fn().mockResolvedValue({ rows: [] }) }),
+        query: jest.fn().mockResolvedValue({ rows: [] }),
+        end: jest.fn().mockResolvedValue(undefined),
+        on: jest.fn(),
+    };
+    return { Pool: jest.fn(() => mPool) };
+});
+
+// Bypass db.ts retry loops
+global.setTimeout = ((fn: any) => fn()) as any;
+
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
