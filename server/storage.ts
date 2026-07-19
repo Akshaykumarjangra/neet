@@ -262,8 +262,17 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
+    // ⚡ Bolt: Fix N+1 query bottleneck by fetching attempts, questions, and topics in a single batched query
+    // 💡 What: Replaced an N+1 query loop with a single left join query.
+    // 🎯 Why: Previously, fetching user stats iterated through each attempt to query the question and topic individually.
+    // 📊 Impact: O(1) database queries instead of O(N) where N is the number of user attempts.
+    const attempts = await db.select({
+        isCorrect: userPerformance.isCorrect,
+        subject: contentTopics.subject,
+      })
       .from(userPerformance)
+      .leftJoin(questions, eq(userPerformance.questionId, questions.id))
+      .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id))
       .where(eq(userPerformance.userId, userId));
 
     const totalAttempts = attempts.length;
@@ -273,20 +282,12 @@ export class DbStorage implements IStorage {
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
     for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
+      if (attempt.subject) {
+        const subject = attempt.subject;
+        const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
+        stats.total++;
+        if (attempt.isCorrect) stats.correct++;
+        subjectStatsMap.set(subject, stats);
       }
     }
 
