@@ -538,40 +538,22 @@ router.get("/flashcard-progress/stats", async (req: Request, res: Response) => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const [dueResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(userFlashcardProgress)
-      .where(and(
-        eq(userFlashcardProgress.userId, userId),
-        lte(userFlashcardProgress.nextReview, now)
-      ));
-
-    const [learnedResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(userFlashcardProgress)
-      .where(and(
-        eq(userFlashcardProgress.userId, userId),
-        sql`${userFlashcardProgress.interval} > 21`
-      ));
-
-    const [reviewedTodayResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(userFlashcardProgress)
-      .where(and(
-        eq(userFlashcardProgress.userId, userId),
-        sql`${userFlashcardProgress.lastReviewed} >= ${startOfToday}`
-      ));
-
-    const [totalResult] = await db
-      .select({ count: sql<number>`count(*)` })
+    // Optimization: Batched 4 independent count queries into a single query using conditional aggregation to reduce database round-trips and latency.
+    const [statsResult] = await db
+      .select({
+        dueToday: sql<number>`SUM(CASE WHEN ${userFlashcardProgress.nextReview} <= ${now} THEN 1 ELSE 0 END)`.mapWith(Number),
+        learned: sql<number>`SUM(CASE WHEN ${userFlashcardProgress.interval} > 21 THEN 1 ELSE 0 END)`.mapWith(Number),
+        reviewedToday: sql<number>`SUM(CASE WHEN ${userFlashcardProgress.lastReviewed} >= ${startOfToday} THEN 1 ELSE 0 END)`.mapWith(Number),
+        total: sql<number>`COUNT(*)`.mapWith(Number)
+      })
       .from(userFlashcardProgress)
       .where(eq(userFlashcardProgress.userId, userId));
 
     res.json({
-      dueToday: Number(dueResult.count),
-      learned: Number(learnedResult.count),
-      reviewedToday: Number(reviewedTodayResult.count),
-      total: Number(totalResult.count),
+      dueToday: statsResult?.dueToday || 0,
+      learned: statsResult?.learned || 0,
+      reviewedToday: statsResult?.reviewedToday || 0,
+      total: statsResult?.total || 0,
     });
   } catch (error) {
     console.error("Error fetching flashcard stats:", error);
