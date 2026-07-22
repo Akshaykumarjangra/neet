@@ -1,7 +1,19 @@
-// telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
-
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+import { jest } from '@jest/globals';
+
+jest.mock('./db', () => ({
+  db: {
+    select: jest.fn().mockReturnThis(),
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    limit: jest.fn(() => Promise.resolve([{ id: 'test-user-id', isAdmin: false, name: 'Test' }])),
+    insert: jest.fn().mockReturnThis(),
+    values: jest.fn(() => Promise.resolve({})),
+  },
+  pool: { connect: jest.fn() },
+}));
+
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
