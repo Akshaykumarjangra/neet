@@ -434,9 +434,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Question stats endpoint for Question Bank page
   app.get("/api/questions/stats", requireAuthWithPasswordCheck, async (req, res) => {
     try {
-      // Get total count
-      const totalResult = await db.select({ count: sql<number>`count(*)` }).from(questions);
-      const total = Number(totalResult[0].count);
+      // ⚡ Bolt: Performance optimization
+      // 💡 What: Batched multiple independent count queries into a single query
+      // 🎯 Why: Reduces database round-trips from 3 to 1
+      // 📊 Impact: Significant reduction in query latency for the stats endpoint
+      // Batch independent counts (total, difficulty, pyq)
+      const [statsResult] = await db.select({
+        total: sql<number>`count(*)`.mapWith(Number),
+        easyCount: sql<number>`SUM(CASE WHEN ${questions.difficultyLevel} = 1 THEN 1 ELSE 0 END)`.mapWith(Number),
+        mediumCount: sql<number>`SUM(CASE WHEN ${questions.difficultyLevel} = 2 THEN 1 ELSE 0 END)`.mapWith(Number),
+        hardCount: sql<number>`SUM(CASE WHEN ${questions.difficultyLevel} = 3 THEN 1 ELSE 0 END)`.mapWith(Number),
+        pyqCount: sql<number>`SUM(CASE WHEN ${questions.pyqYear} IS NOT NULL THEN 1 ELSE 0 END)`.mapWith(Number),
+      }).from(questions);
+
+      const total = statsResult.total || 0;
+      const pyqCount = statsResult.pyqCount || 0;
+
+      const byDifficulty: Record<string, number> = {
+        easy: statsResult.easyCount || 0,
+        medium: statsResult.mediumCount || 0,
+        hard: statsResult.hardCount || 0
+      };
 
       // Get counts by subject (joining with contentTopics)
       const subjectCountsResult = await db.select({
@@ -451,26 +469,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const row of subjectCountsResult) {
         bySubject[row.subject] = Number(row.count);
       }
-
-      // Get counts by difficulty
-      const difficultyCountsResult = await db.select({
-        difficulty: questions.difficultyLevel,
-        count: sql<number>`count(*)`
-      })
-        .from(questions)
-        .groupBy(questions.difficultyLevel);
-
-      const byDifficulty: Record<string, number> = {};
-      for (const row of difficultyCountsResult) {
-        const label = row.difficulty === 1 ? 'easy' : row.difficulty === 2 ? 'medium' : 'hard';
-        byDifficulty[label] = Number(row.count);
-      }
-
-      // Get PYQ count
-      const pyqResult = await db.select({ count: sql<number>`count(*)` })
-        .from(questions)
-        .where(sql`${questions.pyqYear} IS NOT NULL`);
-      const pyqCount = Number(pyqResult[0].count);
 
       // Get PYQ years distribution
       const pyqYearsResult = await db.select({
