@@ -1,0 +1,3 @@
+## 2025-02-24 - Resolve N+1 Query in Lifecycle Triggers
+**Learning:** The behavior triggers cron job in `server/lifecycle-routes.ts` executes a loop for users with high mock scores, performing an individual `db.select().from(users).where(eq(users.id, userId)).limit(1)` for each result (up to 20). This classic N+1 query pattern causes unnecessary latency and DB connection overhead.
+**Action:** Replace the nested query with a single `innerJoin(users, eq(users.id, mockExamAttempts.userId))` in the initial `recentHighScores` query to fetch user emails upfront, eliminating up to 20 database queries and significantly improving backend execution performance.

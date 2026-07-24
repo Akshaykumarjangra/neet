@@ -149,8 +149,9 @@ router.post('/run-triggers', requireAdmin, async (req, res) => {
     }
 
     // Find users with high mock scores for NPS
-    const recentHighScores = await db.select({ userId: mockExamAttempts.userId })
+    const recentHighScores = await db.select({ userId: mockExamAttempts.userId, email: users.email })
       .from(mockExamAttempts)
+      .innerJoin(users, eq(users.id, mockExamAttempts.userId))
       .where(and(
         eq(mockExamAttempts.status, 'submitted'),
         sql`${mockExamAttempts.score} >= 540`, // 75%+
@@ -158,13 +159,10 @@ router.post('/run-triggers', requireAdmin, async (req, res) => {
       .orderBy(desc(mockExamAttempts.submittedAt))
       .limit(20);
 
-    for (const { userId } of recentHighScores) {
-      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-      if (user) {
-        results.processed++;
-        const sent = await sendEmail(user.email, DRIP_TEMPLATES.high_score_nps);
-        if (sent) results.emailsSent++;
-      }
+    for (const { email } of recentHighScores) {
+      results.processed++;
+      const sent = await sendEmail(email, DRIP_TEMPLATES.high_score_nps);
+      if (sent) results.emailsSent++;
     }
 
     await recordAuditLog(req, {
