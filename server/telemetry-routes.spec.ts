@@ -2,6 +2,17 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+
+// Mock dependencies BEFORE importing the route
+jest.mock('./auth', () => ({
+    requireAuthWithPasswordCheck: (req: any, res: any, next: any) => next(),
+    getCurrentUser: () => 1
+}));
+
+jest.mock('./db', () => ({
+    db: {}
+}));
+
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
