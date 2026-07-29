@@ -9,7 +9,7 @@ import {
   insertChatMessageSchema,
   type InsertChatThread,
 } from "@shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "./auth";
 
@@ -100,24 +100,34 @@ router.get("/threads", requireAuth, async (req, res) => {
       .orderBy(desc(chatThreads.lastMessageAt));
 
     // Enrich with latest message preview
-    const threadsWithPreview = await Promise.all(threads.map(async (thread) => {
-      const [latest] = await db
-        .select()
-        .from(chatMessages)
-        .where(eq(chatMessages.threadId, thread.id))
-        .orderBy(desc(chatMessages.createdAt))
-        .limit(1);
+    // ⚡ Bolt: Resolving N+1 query problem by batching queries.
+    // Replaced multiple DB calls inside Promise.all with a single selectDistinctOn query.
+    let threadsWithPreview = threads.map(thread => ({ ...thread, latestMessage: null as any }));
 
-      return {
-        ...thread,
-        latestMessage: latest ? {
-          content: latest.content,
-          createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
-          isFlagged: latest.isFlagged,
-          senderId: latest.senderId
-        } : null
-      };
-    }));
+    if (threads.length > 0) {
+      const threadIds = threads.map(t => t.id);
+
+      const latestMessages = await db
+        .selectDistinctOn([chatMessages.threadId])
+        .from(chatMessages)
+        .where(inArray(chatMessages.threadId, threadIds))
+        .orderBy(chatMessages.threadId, desc(chatMessages.createdAt));
+
+      const messageMap = new Map(latestMessages.map(msg => [msg.threadId, msg]));
+
+      threadsWithPreview = threads.map(thread => {
+        const latest = messageMap.get(thread.id);
+        return {
+          ...thread,
+          latestMessage: latest ? {
+            content: latest.content,
+            createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
+            isFlagged: latest.isFlagged,
+            senderId: latest.senderId
+          } : null
+        };
+      });
+    }
 
     res.json({ threads: threadsWithPreview });
   } catch (error) {
