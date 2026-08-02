@@ -262,31 +262,29 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
+    // ⚡ Bolt: Fixed N+1 query bottleneck by fetching all user performance with questions and topics in one batched query
+    const results = await db.select({
+      isCorrect: userPerformance.isCorrect,
+      subject: contentTopics.subject,
+    })
       .from(userPerformance)
+      .leftJoin(questions, eq(userPerformance.questionId, questions.id))
+      .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id))
       .where(eq(userPerformance.userId, userId));
 
-    const totalAttempts = attempts.length;
-    const correctAnswers = attempts.filter((a) => a.isCorrect).length;
+    const totalAttempts = results.length;
+    const correctAnswers = results.filter((r) => r.isCorrect).length;
     const accuracy = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
+    for (const row of results) {
+      if (row.subject) {
+        const subject = row.subject;
+        const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
+        stats.total++;
+        if (row.isCorrect) stats.correct++;
+        subjectStatsMap.set(subject, stats);
       }
     }
 
