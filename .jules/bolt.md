@@ -1,0 +1,4 @@
+
+## 2024-05-18 - [Optimizing Multiple Independent Aggregate Queries]
+**Learning:** In Drizzle ORM/PostgreSQL, when you need multiple distinct counts from the same table (e.g., flashcards due today, flashcards learned, flashcards reviewed today, total flashcards) based on different conditions, executing separate `.select({ count: sql<number>\`count(*)\` })` queries sequentially introduces significant N+1-style latency overhead and database round-trips.
+**Action:** Always batch these independent queries into a single query utilizing SQL conditional aggregation (e.g., `SUM(CASE WHEN condition THEN 1 ELSE 0 END)`) mapping to Number to dramatically reduce database execution time and network overhead, and anticipate standard `SUM()` returning `NULL` for empty tables by adding a logical OR fallback `|| 0` in JS.
