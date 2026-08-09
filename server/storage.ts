@@ -144,6 +144,9 @@ export class DbStorage implements IStorage {
   }
 
   async getAllTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]> {
+    // ⚡ Bolt Optimization: Resolved N+1 query problem by using a single database query
+    // with a LEFT JOIN and a COUNT aggregation. This eliminates the need to iterate
+    // through topics and fetch question counts individually, reducing DB load and latency.
     const results = await db.select({
       ...getTableColumns(contentTopics),
       questionCount: sql<number>`COUNT(${questions.id})`.mapWith(Number),
