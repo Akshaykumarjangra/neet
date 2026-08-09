@@ -9,7 +9,7 @@ import {
   insertChatMessageSchema,
   type InsertChatThread,
 } from "@shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "./auth";
 
@@ -99,24 +99,32 @@ router.get("/threads", requireAuth, async (req, res) => {
       .where(conditions)
       .orderBy(desc(chatThreads.lastMessageAt));
 
-    // Enrich with latest message preview
-    const threadsWithPreview = await Promise.all(threads.map(async (thread) => {
-      const [latest] = await db
-        .select()
-        .from(chatMessages)
-        .where(eq(chatMessages.threadId, thread.id))
-        .orderBy(desc(chatMessages.createdAt))
-        .limit(1);
+    // Enrich with latest message preview by batching queries to fix N+1 performance bottleneck
+    const threadIds = [...new Set(threads.map(t => t.id))];
 
-      return {
-        ...thread,
-        latestMessage: latest ? {
-          content: latest.content,
-          createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
-          isFlagged: latest.isFlagged,
-          senderId: latest.senderId
-        } : null
-      };
+    let latestMessagesByThread: Record<number, any> = {};
+    if (threadIds.length > 0) {
+      const latestMessages = await db
+        .selectDistinctOn([chatMessages.threadId])
+        .from(chatMessages)
+        .where(inArray(chatMessages.threadId, threadIds))
+        .orderBy(chatMessages.threadId, desc(chatMessages.createdAt));
+
+      for (const msg of latestMessages) {
+        if (msg.threadId) {
+          latestMessagesByThread[msg.threadId] = {
+            content: msg.content,
+            createdAt: msg.createdAt ? new Date(msg.createdAt).toISOString() : new Date().toISOString(),
+            isFlagged: msg.isFlagged,
+            senderId: msg.senderId
+          };
+        }
+      }
+    }
+
+    const threadsWithPreview = threads.map((thread) => ({
+      ...thread,
+      latestMessage: latestMessagesByThread[thread.id] || null
     }));
 
     res.json({ threads: threadsWithPreview });
