@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, sql, getTableColumns } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -47,6 +47,7 @@ export interface IStorage {
   
   // Topic methods
   getAllTopics(): Promise<ContentTopicRow[]>;
+  getAllTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]>;
   getTopicsBySubject(subject: string): Promise<ContentTopicRow[]>;
   createTopic(topic: ContentTopicInsert): Promise<ContentTopicRow>;
   
@@ -140,6 +141,24 @@ export class DbStorage implements IStorage {
   // Topic methods
   async getAllTopics(): Promise<ContentTopicRow[]> {
     return await db.select().from(contentTopics);
+  }
+
+  async getAllTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]> {
+    // ⚡ Bolt Optimization: Resolved N+1 query problem by using a single database query
+    // with a LEFT JOIN and a COUNT aggregation. This eliminates the need to iterate
+    // through topics and fetch question counts individually, reducing DB load and latency.
+    const results = await db.select({
+      ...getTableColumns(contentTopics),
+      questionCount: sql<number>`COUNT(${questions.id})`.mapWith(Number),
+    })
+    .from(contentTopics)
+    .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+    .groupBy(contentTopics.id);
+
+    return results.map(row => ({
+      ...row,
+      totalQuestions: row.questionCount
+    }));
   }
 
   async getTopicsBySubject(subject: string): Promise<ContentTopicRow[]> {
