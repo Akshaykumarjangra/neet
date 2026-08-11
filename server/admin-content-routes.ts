@@ -196,6 +196,10 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
 
 router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
+    // ⚡ Bolt: Fixed N+1 query issue by replacing the loop over `allTopics` and
+    // issuing separate `count(*)` queries per topic with a single batched query
+    // using `LEFT JOIN` and `GROUP BY`.
+    // Impact: Reduces database round-trips from O(N) to O(1).
     const topicsWithCounts = await db
       .select({
         ...getTableColumns(contentTopics),
