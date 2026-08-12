@@ -434,31 +434,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Question stats endpoint for Question Bank page
   app.get("/api/questions/stats", requireAuthWithPasswordCheck, async (req, res) => {
     try {
-      // Get total count
-      const totalResult = await db.select({ count: sql<number>`count(*)` }).from(questions);
-      const total = Number(totalResult[0].count);
+      // ⚡ Bolt: Execute independent dashboard queries concurrently to reduce endpoint latency
+      const [
+        totalResult,
+        subjectCountsResult,
+        difficultyCountsResult,
+        pyqResult,
+        pyqYearsResult
+      ] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(questions),
+        db.select({
+          subject: contentTopics.subject,
+          count: sql<number>`count(*)`
+        })
+          .from(questions)
+          .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+          .groupBy(contentTopics.subject),
+        db.select({
+          difficulty: questions.difficultyLevel,
+          count: sql<number>`count(*)`
+        })
+          .from(questions)
+          .groupBy(questions.difficultyLevel),
+        db.select({ count: sql<number>`count(*)` })
+          .from(questions)
+          .where(sql`${questions.pyqYear} IS NOT NULL`),
+        db.select({
+          year: questions.pyqYear,
+          count: sql<number>`count(*)`
+        })
+          .from(questions)
+          .where(sql`${questions.pyqYear} IS NOT NULL`)
+          .groupBy(questions.pyqYear)
+          .orderBy(sql`${questions.pyqYear} DESC`)
+      ]);
 
-      // Get counts by subject (joining with contentTopics)
-      const subjectCountsResult = await db.select({
-        subject: contentTopics.subject,
-        count: sql<number>`count(*)`
-      })
-        .from(questions)
-        .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
-        .groupBy(contentTopics.subject);
+      const total = Number(totalResult[0].count);
 
       const bySubject: Record<string, number> = {};
       for (const row of subjectCountsResult) {
         bySubject[row.subject] = Number(row.count);
       }
-
-      // Get counts by difficulty
-      const difficultyCountsResult = await db.select({
-        difficulty: questions.difficultyLevel,
-        count: sql<number>`count(*)`
-      })
-        .from(questions)
-        .groupBy(questions.difficultyLevel);
 
       const byDifficulty: Record<string, number> = {};
       for (const row of difficultyCountsResult) {
@@ -466,21 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         byDifficulty[label] = Number(row.count);
       }
 
-      // Get PYQ count
-      const pyqResult = await db.select({ count: sql<number>`count(*)` })
-        .from(questions)
-        .where(sql`${questions.pyqYear} IS NOT NULL`);
       const pyqCount = Number(pyqResult[0].count);
-
-      // Get PYQ years distribution
-      const pyqYearsResult = await db.select({
-        year: questions.pyqYear,
-        count: sql<number>`count(*)`
-      })
-        .from(questions)
-        .where(sql`${questions.pyqYear} IS NOT NULL`)
-        .groupBy(questions.pyqYear)
-        .orderBy(sql`${questions.pyqYear} DESC`);
 
       const pyqByYear: Record<string, number> = {};
       for (const row of pyqYearsResult) {
