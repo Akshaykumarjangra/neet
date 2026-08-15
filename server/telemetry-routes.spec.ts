@@ -5,11 +5,11 @@ import request from 'supertest';
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
-function dummyAuth(req: Request, res: Response, next: NextFunction) {
+const dummyAuth = (req: Request, res: Response, next: NextFunction) => {
     // Simulate an authenticated user
     (req as any).session = { userId: 'test-user-id' };
     next();
-}
+};
 
 // Create an app that uses the dummy auth before the telemetry routes
 function createApp() {
