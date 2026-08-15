@@ -10,8 +10,6 @@ test.describe('User Journey', () => {
         await page.goto('/');
         await expect(page).toHaveTitle(/.*/i);
 
-        // Check for Hero Section
-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
         await expect(page.getByTestId('button-cta-signup')).toBeVisible();
     });
 

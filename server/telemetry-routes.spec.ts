@@ -2,6 +2,7 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+import { describe, it } from "node:test";
 import telemetryRoutes from './telemetry-routes';
 
 // Dummy auth middleware to satisfy requireAuthWithPasswordCheck
