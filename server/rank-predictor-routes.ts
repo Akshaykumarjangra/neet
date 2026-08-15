@@ -60,9 +60,12 @@ function predictRank(score: number, maxScore: number = 720): { low: number; mid:
 function detectSillyMistakes(responses: any[], questions: any[]): any[] {
   const mistakes: any[] = [];
   
+  // Create map for O(1) lookups instead of O(N) array.find inside loop
+  const questionsMap = new Map(questions.map((q: any) => [q.id, q]));
+
   for (const resp of responses) {
     if (resp.isCorrect) continue;
-    const q = questions.find((qq: any) => qq.id === resp.questionId);
+    const q = questionsMap.get(resp.questionId);
     if (!q) continue;
     
     // Fast wrong answer = likely silly mistake
@@ -147,8 +150,12 @@ router.get('/analyze/:attemptId', requireAuth, async (req, res) => {
 
     // Subject breakdown
     const subjectBreakdown: Record<string, any> = {};
+
+    // Create map for O(1) lookups instead of O(N) array.find inside loop
+    const questionDataMap = new Map(questionData.map(q => [q.id, q]));
+
     for (const resp of responses) {
-      const q = questionData.find(qq => qq.id === resp.questionId);
+      const q = questionDataMap.get(resp.questionId);
       const subject = q?.subject || 'Unknown';
       if (!subjectBreakdown[subject]) {
         subjectBreakdown[subject] = { correct: 0, wrong: 0, unanswered: 0, score: 0, totalTime: 0, count: 0 };
