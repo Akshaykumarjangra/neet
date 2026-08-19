@@ -1,0 +1,3 @@
+## 2025-03-01 - [Optimize N+1 query for latest chat messages]
+**Learning:** Using `db.select()` inside a `Promise.all` loop causes an N+1 query problem that severely hurts performance as the number of records increases. Drizzle's `selectDistinctOn` can be paired with `inArray` to fetch the latest associated records for a batch of IDs efficiently in a single query.
+**Action:** Always batch related record queries. Specifically, when fetching the latest related item for a batch, use `selectDistinctOn([foreignKey]).from(table).where(inArray(foreignKey, ids)).orderBy(foreignKey, desc(createdAt))` and map the results in O(1) time using a JavaScript Map.
