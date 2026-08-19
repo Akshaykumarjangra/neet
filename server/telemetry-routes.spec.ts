@@ -1,7 +1,5 @@
 // telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
 
-import { describe, it } from "node:test";
-import assert from "node:assert";
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
 import telemetryRoutes from './telemetry-routes';
