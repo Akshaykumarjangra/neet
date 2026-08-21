@@ -262,9 +262,16 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
-      .from(userPerformance)
-      .where(eq(userPerformance.userId, userId));
+    // ⚡ Bolt Optimization: Replaced N+1 queries in loop with a single batched join query
+    // to drastically reduce database round-trips when processing user performance stats.
+    const attempts = await db.select({
+      isCorrect: userPerformance.isCorrect,
+      subject: contentTopics.subject,
+    })
+    .from(userPerformance)
+    .where(eq(userPerformance.userId, userId))
+    .leftJoin(questions, eq(userPerformance.questionId, questions.id))
+    .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id));
 
     const totalAttempts = attempts.length;
     const correctAnswers = attempts.filter((a) => a.isCorrect).length;
@@ -273,20 +280,11 @@ export class DbStorage implements IStorage {
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
     for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
+      if (attempt.subject) {
+        const stats = subjectStatsMap.get(attempt.subject) || { correct: 0, total: 0 };
+        stats.total++;
+        if (attempt.isCorrect) stats.correct++;
+        subjectStatsMap.set(attempt.subject, stats);
       }
     }
 
