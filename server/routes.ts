@@ -404,17 +404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get topics with question counts
   app.get("/api/topics/with-counts", async (req, res) => {
     try {
-      const topics = await storage.getAllTopics();
-      const topicsWithCounts = await Promise.all(
-        topics.map(async (topic) => {
-          const questions = await storage.getQuestionsByTopic(topic.id);
-          return {
-            ...topic,
-            questionCount: questions.length,
-            totalQuestions: questions.length
-          };
-        })
-      );
+      // ⚡ Bolt: Fixed N+1 query problem by replacing multiple getQuestionsByTopic
+      // queries inside a loop with a single getTopicsWithCounts batched query.
+      const topicsWithCounts = await storage.getTopicsWithCounts();
       res.json(topicsWithCounts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

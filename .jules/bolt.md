@@ -1,0 +1,4 @@
+
+## 2024-05-18 - [Optimizing N+1 DB Queries via Storage Abstract]
+**Learning:** In the project's backend architecture, the `IStorage` interface (`server/storage.ts`) and `DbStorage` class must be used to perform optimizations. Do not use direct database calls in routes. When replacing N+1 query loops, we can resolve it using a single batched `.leftJoin()` + `.groupBy()` query with `count(${questions.id})`. Additionally, any testing scripts should be removed to maintain a clean workspace before checking into production.
+**Action:** When implementing new routes or fixing existing ones, identify looped queries and immediately implement batched aggregation methods in `IStorage`/`DbStorage` instead of importing `db` in the route layer. Always verify and delete scratchpad testing scripts (`.ts` files created manually in the root) prior to submitting a PR.
