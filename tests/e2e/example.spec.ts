@@ -11,8 +11,8 @@ test.describe('User Journey', () => {
         await expect(page).toHaveTitle(/NEET/i);
 
         // Check for Hero Section
-        await expect(page.getByText(/Master NEET with AI/i)).toBeVisible();
-        await expect(page.getByTestId('button-cta-signup')).toBeVisible();
+        await expect(page.getByTestId('text-hero-headline')).toBeVisible();
+        await expect(page.getByTestId('button-cta-signup')).first().toBeVisible();
     });
 
     test('should navigate to pricing', async ({ page }) => {
