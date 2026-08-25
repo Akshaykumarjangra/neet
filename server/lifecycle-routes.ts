@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { requireAuth } from './auth';
 import { db } from './db';
 import { users, mockExamAttempts, userPerformance, auditLogs } from '@shared/schema';
-import { eq, and, sql, lt, desc } from 'drizzle-orm';
+import { eq, and, sql, lt, desc, inArray } from 'drizzle-orm';
 import { logger } from './lib/logger';
 import nodemailer from 'nodemailer';
 import { requireAdmin } from './auth';
@@ -158,9 +158,10 @@ router.post('/run-triggers', requireAdmin, async (req, res) => {
       .orderBy(desc(mockExamAttempts.submittedAt))
       .limit(20);
 
-    for (const { userId } of recentHighScores) {
-      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-      if (user) {
+    const userIds = [...new Set(recentHighScores.map(s => s.userId))];
+    if (userIds.length > 0) {
+      const highScoreUsers = await db.select().from(users).where(inArray(users.id, userIds));
+      for (const user of highScoreUsers) {
         results.processed++;
         const sent = await sendEmail(user.email, DRIP_TEMPLATES.high_score_nps);
         if (sent) results.emailsSent++;
