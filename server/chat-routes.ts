@@ -101,7 +101,7 @@ router.get("/threads", requireAuth, async (req, res) => {
 
     // Enrich with latest message preview
     // Optimized: batch query to resolve N+1 issue for fetching latest messages
-    let threadsWithPreview: Array<typeof threads[0] & { latestMessage: { content: string; createdAt: string; isFlagged: boolean | null; senderId: number } | null }> = [];
+    let threadsWithPreview: Array<typeof threads[0] & { latestMessage: { content: string; createdAt: string; isFlagged: boolean | null; senderId: string } | null }> = [];
     if (threads.length > 0) {
       const threadIds = [...new Set(threads.map(t => t.id))];
       const latestMessages = await db
