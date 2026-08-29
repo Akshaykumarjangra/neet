@@ -1,0 +1,3 @@
+## 2024-05-18 - [Optimizing getQuestionsByTopic N+1 issue in /api/topics/with-counts]
+**Learning:** Found N+1 query issue in `server/routes.ts` where it fetches all questions for a topic in a loop and uses `.length` to get the count. This is highly inefficient because it fetches the whole row over the network just to get the length.
+**Action:** Replace `const questions = await storage.getQuestionsByTopic(topic.id); questions.length;` with an optimized storage function like `getTopicQuestionCounts()` that returns counts grouped by topic IDs using `.groupBy()` and `.leftJoin()` in Drizzle ORM to fetch all counts in a single query.
