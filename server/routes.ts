@@ -404,17 +404,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get topics with question counts
   app.get("/api/topics/with-counts", async (req, res) => {
     try {
-      const topics = await storage.getAllTopics();
-      const topicsWithCounts = await Promise.all(
-        topics.map(async (topic) => {
-          const questions = await storage.getQuestionsByTopic(topic.id);
-          return {
-            ...topic,
-            questionCount: questions.length,
-            totalQuestions: questions.length
-          };
-        })
-      );
+      const topics = await storage.getTopicsWithQuestionCounts();
+      const topicsWithCounts = topics.map(topic => ({
+        ...topic,
+        totalQuestions: topic.questionCount
+      }));
       res.json(topicsWithCounts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
