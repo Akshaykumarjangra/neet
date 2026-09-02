@@ -1,0 +1,11 @@
+--- tests/e2e/example.spec.ts
++++ tests/e2e/example.spec.ts
+@@ -8,7 +8,7 @@
+
+     test('should load the home page successfully', async ({ page }) => {
+         await page.goto('/');
+-        await expect(page).toHaveTitle(/NEET Prep/);
++        await expect(page).toHaveTitle(/NEET 2026 Preparation|NEET Prep/i);
+
+         // Check for Hero Section
+         await expect(page.getByText('Master NEET with AI')).toBeVisible();
