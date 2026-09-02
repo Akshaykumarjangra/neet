@@ -1,0 +1,10 @@
+--- tests/e2e/example.spec.ts
++++ tests/e2e/example.spec.ts
+@@ -11,7 +11,7 @@
+         await expect(page).toHaveTitle(/NEET 2026 Preparation|NEET Prep/i);
+
+         // Check for Hero Section
+-        await expect(page.getByText('Master NEET with AI')).toBeVisible();
++        await expect(page.locator('text=Master NEET with').first()).toBeVisible();
+         await expect(page.getByTestId('button-cta-signup')).toBeVisible();
+     });

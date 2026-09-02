@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, inArray } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -272,16 +272,25 @@ export class DbStorage implements IStorage {
 
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
+    if (attempts.length > 0) {
+      const questionIds = [...new Set(attempts.map(a => a.questionId))];
+
+      const questionsWithTopics = await db.select({
+        questionId: questions.id,
+        subject: contentTopics.subject,
+      })
+      .from(questions)
+      .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+      .where(inArray(questions.id, questionIds));
+
+      const questionSubjectMap = new Map<number, string | null>();
+      for (const row of questionsWithTopics) {
+        questionSubjectMap.set(row.questionId, row.subject);
+      }
+
+      for (const attempt of attempts) {
+        const subject = questionSubjectMap.get(attempt.questionId);
+        if (subject) {
           const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
           stats.total++;
           if (attempt.isCorrect) stats.correct++;
