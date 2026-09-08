@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, sql } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -262,39 +262,36 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
+    // ⚡ Bolt Optimization: Replaced N+1 query loop with a single grouped query
+    const [overall] = await db
+      .select({
+        total: sql<number>`count(*)`.mapWith(Number),
+        correct: sql<number>`sum(case when ${userPerformance.isCorrect} then 1 else 0 end)`.mapWith(Number)
+      })
       .from(userPerformance)
       .where(eq(userPerformance.userId, userId));
 
-    const totalAttempts = attempts.length;
-    const correctAnswers = attempts.filter((a) => a.isCorrect).length;
+    const totalAttempts = overall?.total || 0;
+    const correctAnswers = overall?.correct || 0;
     const accuracy = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
-    const subjectStatsMap = new Map<string, { correct: number; total: number }>();
-    
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
-      }
-    }
+    const stats = await db
+      .select({
+        subject: contentTopics.subject,
+        correct: sql<number>`sum(case when ${userPerformance.isCorrect} then 1 else 0 end)`.mapWith(Number),
+        total: sql<number>`count(*)`.mapWith(Number)
+      })
+      .from(userPerformance)
+      .innerJoin(questions, eq(userPerformance.questionId, questions.id))
+      .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+      .where(eq(userPerformance.userId, userId))
+      .groupBy(contentTopics.subject);
 
-    const subjectStats = Array.from(subjectStatsMap.entries()).map(([subject, stats]) => ({
-      subject,
-      accuracy: (stats.correct / stats.total) * 100,
-      correct: stats.correct,
-      total: stats.total,
+    const subjectStats = stats.map(stat => ({
+      subject: stat.subject,
+      accuracy: stat.total > 0 ? (stat.correct / stat.total) * 100 : 0,
+      correct: stat.correct,
+      total: stat.total
     }));
 
     return { totalAttempts, correctAnswers, accuracy, subjectStats };
