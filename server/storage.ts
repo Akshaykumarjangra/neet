@@ -262,31 +262,28 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
+    // ⚡ Bolt Optimization: Batch queries to resolve N+1 issue
+    const attemptRecords = await db.select({
+      isCorrect: userPerformance.isCorrect,
+      subject: contentTopics.subject,
+    })
       .from(userPerformance)
+      .leftJoin(questions, eq(userPerformance.questionId, questions.id))
+      .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id))
       .where(eq(userPerformance.userId, userId));
 
-    const totalAttempts = attempts.length;
-    const correctAnswers = attempts.filter((a) => a.isCorrect).length;
+    const totalAttempts = attemptRecords.length;
+    const correctAnswers = attemptRecords.filter((a) => a.isCorrect).length;
     const accuracy = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
+    for (const attempt of attemptRecords) {
+      if (attempt.subject) {
+        const stats = subjectStatsMap.get(attempt.subject) || { correct: 0, total: 0 };
+        stats.total++;
+        if (attempt.isCorrect) stats.correct++;
+        subjectStatsMap.set(attempt.subject, stats);
       }
     }
 
