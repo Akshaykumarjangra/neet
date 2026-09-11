@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, sql } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -270,31 +270,25 @@ export class DbStorage implements IStorage {
     const correctAnswers = attempts.filter((a) => a.isCorrect).length;
     const accuracy = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
-    const subjectStatsMap = new Map<string, { correct: number; total: number }>();
-    
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
-      }
-    }
+    // OPTIMIZATION: Replaced an N+1 query loop with a single grouped database aggregation query.
+    // This reduces the number of database roundtrips from O(N) (where N is the number of attempts)
+    // to O(1), significantly improving the execution time and reducing database load.
+    const subjectStatsRaw = await db.select({
+      subject: contentTopics.subject,
+      total: sql<number>`count(*)`.mapWith(Number),
+      correct: sql<number>`sum(case when ${userPerformance.isCorrect} then 1 else 0 end)`.mapWith(Number)
+    })
+    .from(userPerformance)
+    .innerJoin(questions, eq(userPerformance.questionId, questions.id))
+    .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+    .where(eq(userPerformance.userId, userId))
+    .groupBy(contentTopics.subject);
 
-    const subjectStats = Array.from(subjectStatsMap.entries()).map(([subject, stats]) => ({
-      subject,
-      accuracy: (stats.correct / stats.total) * 100,
-      correct: stats.correct,
-      total: stats.total,
+    const subjectStats = subjectStatsRaw.map(stat => ({
+      subject: stat.subject,
+      accuracy: stat.total > 0 ? (stat.correct / stat.total) * 100 : 0,
+      correct: stat.correct,
+      total: stat.total,
     }));
 
     return { totalAttempts, correctAnswers, accuracy, subjectStats };
