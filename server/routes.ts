@@ -404,17 +404,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get topics with question counts
   app.get("/api/topics/with-counts", async (req, res) => {
     try {
-      const topics = await storage.getAllTopics();
-      const topicsWithCounts = await Promise.all(
-        topics.map(async (topic) => {
-          const questions = await storage.getQuestionsByTopic(topic.id);
-          return {
-            ...topic,
-            questionCount: questions.length,
-            totalQuestions: questions.length
-          };
-        })
-      );
+      // ⚡ Bolt Optimization: Replaced N+1 query and O(N) memory allocation with a single, grouped database aggregation.
+      // Previously, this fetched all topics, then looped over each topic to fetch ALL its questions into memory
+      // just to read their `.length` array property. This shifts the counting burden back to PostgreSQL.
+      const topicsWithCounts = await storage.getTopicsWithCounts();
+
       res.json(topicsWithCounts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
