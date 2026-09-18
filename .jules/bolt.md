@@ -5,3 +5,7 @@
 ## 2024-05-24 - Array.prototype.find() inside Array.prototype.map() causes O(N^2) Time Complexity Bottleneck
 **Learning:** Found multiple instances where an array is mapped, and inside the map function, another array is searched using `.find()`. This leads to an O(N^2) time complexity, which could cause a performance bottleneck if the arrays are large.
 **Action:** Replace the O(N^2) nested loop with an O(N) hash map (Set/Map) lookup by precomputing the map outside the loop.
+
+## 2024-05-24 - Jest and node:test interoperability
+**Learning:** Jest will crash trying to parse `node:test` files.
+**Action:** When running Jest in CI (`npx jest`), create a `jest.config.cjs` file to configure `ts-jest` properly and ignore `node:test` spec files by adding `testPathIgnorePatterns: ['\\.spec\\.ts$']`.
