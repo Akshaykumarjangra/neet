@@ -1,0 +1,535 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e7]: Error
+          - generic [ref=e8]: "500: Internal Server Error"
+        - button [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - listitem [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Error
+          - generic [ref=e16]: "500: Internal Server Error"
+        - button [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+  - generic [ref=e22]:
+    - banner [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: NP
+          - generic [ref=e27]: NEET Prep
+        - navigation [ref=e28]:
+          - link "Explore" [ref=e29] [cursor=pointer]:
+            - /url: /pricing
+          - link "Find Mentors" [ref=e30] [cursor=pointer]:
+            - /url: /mentors
+          - link "Simulations" [ref=e31] [cursor=pointer]:
+            - /url: /simulations
+          - link "Pricing" [ref=e32] [cursor=pointer]:
+            - /url: /pricing
+          - link "Features" [ref=e33] [cursor=pointer]:
+            - /url: "#features"
+          - link "Syllabus" [ref=e34] [cursor=pointer]:
+            - /url: "#syllabus"
+          - link "Testimonials" [ref=e35] [cursor=pointer]:
+            - /url: "#testimonials"
+        - generic [ref=e36]:
+          - button [ref=e37] [cursor=pointer]:
+            - img
+          - link "Log In" [ref=e38] [cursor=pointer]:
+            - /url: /login
+            - button "Log In" [ref=e39]
+          - link "Sign Up Free" [ref=e40] [cursor=pointer]:
+            - /url: /signup
+            - button "Sign Up Free" [ref=e41]
+    - main [ref=e42]:
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - img [ref=e50]
+          - generic [ref=e54]:
+            - generic [ref=e55]: 48,392
+            - generic [ref=e56]: Questions Solved Today
+        - generic [ref=e62]:
+          - img [ref=e63]
+          - text: India's Most Advanced NEET Prep Platform
+        - heading "Crack NEET with AI-Powered Learning" [level=1] [ref=e65]
+        - paragraph [ref=e66]: Experience personalized learning with adaptive AI, expert mentors, gamified progress tracking, and 50,000+ practice questions. Join 10,000+ aspirants achieving their medical dreams.
+        - generic [ref=e67]:
+          - link "Start Learning Free" [ref=e68] [cursor=pointer]:
+            - /url: /signup
+            - button "Start Learning Free" [ref=e69]:
+              - img
+              - text: Start Learning Free
+              - img
+          - link "Explore Content" [ref=e70] [cursor=pointer]:
+            - /url: /pricing
+            - button "Explore Content" [ref=e71]:
+              - img
+              - text: Explore Content
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - img [ref=e74]
+            - generic [ref=e76]: 50K+
+            - generic [ref=e77]: Questions
+          - generic [ref=e78]:
+            - img [ref=e79]
+            - generic [ref=e83]: 100+
+            - generic [ref=e84]: Mock Tests
+          - generic [ref=e85]:
+            - img [ref=e86]
+            - generic [ref=e88]: 500+
+            - generic [ref=e89]: Video Lessons
+          - generic [ref=e90]:
+            - img [ref=e91]
+            - generic [ref=e94]: 3D
+            - generic [ref=e95]: Visualizations
+      - generic [ref=e97]:
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - img [ref=e100]
+            - text: Features
+          - heading "Everything You Need to Succeed" [level=2] [ref=e102]
+          - paragraph [ref=e103]: Our comprehensive platform combines cutting-edge AI technology with proven teaching methods to maximize your NEET preparation.
+        - generic [ref=e104]:
+          - generic [ref=e106]:
+            - generic [ref=e107]:
+              - img [ref=e109]
+              - generic [ref=e119]: AI-Powered Learning
+            - paragraph [ref=e121]: Adaptive question recommendations based on your performance and learning patterns
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - img [ref=e126]
+              - generic [ref=e131]: Expert Mentors
+            - paragraph [ref=e133]: Book 1-on-1 sessions with NEET toppers and experienced faculty
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - img [ref=e138]
+              - generic [ref=e140]: 50,000+ Questions
+            - paragraph [ref=e142]: Comprehensive question bank covering the entire NEET syllabus with detailed solutions
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - img [ref=e147]
+              - generic [ref=e151]: Mock Tests
+            - paragraph [ref=e153]: NEET pattern tests with real-time analytics and detailed performance reports
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - img [ref=e158]
+              - generic [ref=e164]: Gamified Learning
+            - paragraph [ref=e166]: Earn XP, maintain streaks, compete on leaderboards and unlock achievements
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - img [ref=e171]
+              - generic [ref=e173]: Video Lessons
+            - paragraph [ref=e175]: Chapter-wise video content with 3D visualizations and interactive simulations
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - paragraph [ref=e182]: NEET Blast
+          - heading "50,000+ QA, 10 Years of Trends, One Deep Analytics Desk" [level=2] [ref=e183]
+          - paragraph [ref=e184]: Dive into the NEET Blast experience to measure your mock-test momentum, unlock decade-long question insights, and track subject streaks with precision-grade analytics.
+        - generic [ref=e185]:
+          - link "Explore NEET Blast" [ref=e186] [cursor=pointer]:
+            - /url: /neet-blast
+            - button "Explore NEET Blast" [ref=e187]:
+              - img
+              - text: Explore NEET Blast
+          - link "Start Mock Test" [ref=e188] [cursor=pointer]:
+            - /url: /mock-tests
+            - button "Start Mock Test" [ref=e189]:
+              - img
+              - text: Start Mock Test
+      - generic [ref=e191]:
+        - generic [ref=e192]:
+          - generic [ref=e193]:
+            - img [ref=e194]
+            - text: Complete Syllabus
+          - heading "Comprehensive NEET Coverage" [level=2] [ref=e196]
+          - paragraph [ref=e197]: Complete coverage of Class 11 and Class 12 syllabus as per the latest NTA guidelines. Every chapter, every concept, every question type covered.
+        - generic [ref=e198]:
+          - generic [ref=e200]:
+            - generic [ref=e201]:
+              - img [ref=e203]
+              - generic [ref=e207]:
+                - text: Physics
+                - img [ref=e208]
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - generic [ref=e212]: Chapters Available
+                - generic [ref=e213]: 23/23
+              - progressbar [ref=e214]
+              - generic [ref=e216]:
+                - generic [ref=e217]: Class 11
+                - generic [ref=e218]: Class 12
+                - generic [ref=e219]: PYQs
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - img [ref=e224]
+              - generic [ref=e226]:
+                - text: Chemistry
+                - img [ref=e227]
+            - generic [ref=e229]:
+              - generic [ref=e230]:
+                - generic [ref=e231]: Chapters Available
+                - generic [ref=e232]: 44/44
+              - progressbar [ref=e233]
+              - generic [ref=e235]:
+                - generic [ref=e236]: Class 11
+                - generic [ref=e237]: Class 12
+                - generic [ref=e238]: PYQs
+          - generic [ref=e240]:
+            - generic [ref=e241]:
+              - img [ref=e243]
+              - generic [ref=e246]:
+                - text: Botany
+                - img [ref=e247]
+            - generic [ref=e249]:
+              - generic [ref=e250]:
+                - generic [ref=e251]: Chapters Available
+                - generic [ref=e252]: 19/19
+              - progressbar [ref=e253]
+              - generic [ref=e255]:
+                - generic [ref=e256]: Class 11
+                - generic [ref=e257]: Class 12
+                - generic [ref=e258]: PYQs
+          - generic [ref=e260]:
+            - generic [ref=e261]:
+              - img [ref=e263]
+              - generic [ref=e272]:
+                - text: Zoology
+                - img [ref=e273]
+            - generic [ref=e275]:
+              - generic [ref=e276]:
+                - generic [ref=e277]: Chapters Available
+                - generic [ref=e278]: 19/19
+              - progressbar [ref=e279]
+              - generic [ref=e281]:
+                - generic [ref=e282]: Class 11
+                - generic [ref=e283]: Class 12
+                - generic [ref=e284]: PYQs
+        - link "View Complete Syllabus" [ref=e286] [cursor=pointer]:
+          - /url: /pricing
+          - button "View Complete Syllabus" [ref=e287]:
+            - text: View Complete Syllabus
+            - img
+      - generic [ref=e289]:
+        - generic [ref=e290]:
+          - generic [ref=e291]:
+            - img [ref=e292]
+            - text: Our Impact
+          - heading "Trusted by Thousands" [level=2] [ref=e295]
+          - paragraph [ref=e296]: Join the community of successful NEET aspirants who achieved their dreams with our platform.
+        - generic [ref=e297]:
+          - generic [ref=e298]:
+            - img [ref=e299]
+            - generic [ref=e304]: 10,000+
+            - generic [ref=e305]: Active Students
+          - generic [ref=e306]:
+            - img [ref=e307]
+            - generic [ref=e310]: 95%
+            - generic [ref=e311]: Success Rate
+          - generic [ref=e312]:
+            - img [ref=e313]
+            - generic [ref=e316]: 500+
+            - generic [ref=e317]: Expert Mentors
+          - generic [ref=e318]:
+            - img [ref=e319]
+            - generic [ref=e321]: 50,000+
+            - generic [ref=e322]: Practice Questions
+      - generic [ref=e324]:
+        - generic [ref=e325]:
+          - generic [ref=e326]:
+            - img [ref=e327]
+            - text: Success Stories
+          - heading "What Our Toppers Say" [level=2] [ref=e329]
+          - paragraph [ref=e330]: Real stories from students who cracked NEET with our platform.
+        - generic [ref=e331]:
+          - generic [ref=e334]:
+            - img [ref=e335]
+            - paragraph [ref=e338]: "\"The AI-powered practice sessions helped me identify my weak areas. The mock tests were exactly like the real exam!\""
+            - generic [ref=e339]:
+              - generic [ref=e340]: PS
+              - generic [ref=e341]:
+                - generic [ref=e342]: Priya Sharma
+                - generic [ref=e343]: NEET 2024 - AIR 156
+            - generic [ref=e344]:
+              - img [ref=e345]
+              - img [ref=e347]
+              - img [ref=e349]
+              - img [ref=e351]
+              - img [ref=e353]
+          - generic [ref=e357]:
+            - img [ref=e358]
+            - paragraph [ref=e361]: "\"The gamification kept me motivated throughout my preparation. Competing on leaderboards made studying fun!\""
+            - generic [ref=e362]:
+              - generic [ref=e363]: RV
+              - generic [ref=e364]:
+                - generic [ref=e365]: Rahul Verma
+                - generic [ref=e366]: NEET 2024 - AIR 342
+            - generic [ref=e367]:
+              - img [ref=e368]
+              - img [ref=e370]
+              - img [ref=e372]
+              - img [ref=e374]
+              - img [ref=e376]
+          - generic [ref=e380]:
+            - img [ref=e381]
+            - paragraph [ref=e384]: "\"1-on-1 mentor sessions cleared all my doubts. The video lessons with 3D visualizations made concepts crystal clear.\""
+            - generic [ref=e385]:
+              - generic [ref=e386]: AP
+              - generic [ref=e387]:
+                - generic [ref=e388]: Ananya Patel
+                - generic [ref=e389]: NEET 2024 - AIR 89
+            - generic [ref=e390]:
+              - img [ref=e391]
+              - img [ref=e393]
+              - img [ref=e395]
+              - img [ref=e397]
+              - img [ref=e399]
+      - generic [ref=e403]:
+        - generic [ref=e404]:
+          - generic [ref=e405]: New • Public preview
+          - heading "Explainer Chatbot (English/Hindi)" [level=2] [ref=e406]
+          - paragraph [ref=e407]: Ask any topic, keyword, or formula. Get simple answers, quick notes, and formulas with an optional deep dive—no login required.
+          - generic [ref=e408]:
+            - generic [ref=e409]: Formulas
+            - generic [ref=e410]: Hindi + English
+            - generic [ref=e411]: Examples
+          - generic [ref=e412]:
+            - link "Try the Explainer" [ref=e413] [cursor=pointer]:
+              - /url: /explain
+              - button "Try the Explainer" [ref=e414]:
+                - text: Try the Explainer
+                - img
+            - link "See all features" [ref=e415] [cursor=pointer]:
+              - /url: /pricing
+              - button "See all features" [ref=e416]
+        - generic [ref=e417]:
+          - generic [ref=e419]:
+            - img [ref=e420]
+            - text: Live preview
+          - generic [ref=e422]:
+            - generic [ref=e423]:
+              - generic [ref=e424]: You
+              - text: Explain Doppler effect in Hindi with one example
+            - generic [ref=e425]:
+              - generic [ref=e426]: Explainer
+              - text: डॉप्लर प्रभाव वह परिवर्तन है जो तरंग के स्रोत और प्रेक्षक के सापेक्ष गतिमान होने पर आवृत्ति में दिखता है...
+            - generic [ref=e427]:
+              - generic [ref=e428]: Formula
+              - generic [ref=e429]: f' = f (c ± vₒ) / (c ∓ vₛ)
+      - generic [ref=e432]:
+        - heading "Everything You Need to Know About NEET 2026" [level=2] [ref=e433]
+        - generic [ref=e434]:
+          - paragraph [ref=e435]:
+            - text: The
+            - strong [ref=e436]: National Eligibility cum Entrance Test (NEET)
+            - text: is India's single largest medical entrance examination, conducted by the
+            - strong [ref=e437]: National Testing Agency (NTA)
+            - text: . Over 24 lakh aspirants register for
+            - strong [ref=e438]: NEET UG
+            - text: every year to secure admission in MBBS, BDS, and AYUSH courses across government and private medical colleges. The
+            - strong [ref=e439]: NEET 2026 registration
+            - text: process is expected to begin early 2026 on the official NTA portal at nta.ac.in.
+          - paragraph [ref=e440]:
+            - text: ZERO AI is built specifically for
+            - strong [ref=e441]: NEET preparation
+            - text: . Our platform combines adaptive AI technology with expert-curated content to provide a comprehensive preparation experience. Whether you're studying for
+            - strong [ref=e442]: NEET UG
+            - text: or preparing for
+            - strong [ref=e443]: NEET PG
+            - text: ", our 50,000+ question bank covers the entire"
+            - strong [ref=e444]: NEET syllabus
+            - text: as per NTA guidelines — including Physics, Chemistry, Botany, and Zoology.
+          - paragraph [ref=e445]:
+            - text: Stay updated with the latest
+            - strong [ref=e446]: NEET 2026 exam date
+            - text: ","
+            - strong [ref=e447]: NEET admit card
+            - text: download instructions,
+            - strong [ref=e448]: NEET application form
+            - text: guidelines, and
+            - strong [ref=e449]: NEET result
+            - text: analysis right here. Our AI engine analyzes 15 years of
+            - strong [ref=e450]: NEET previous year questions (PYQs)
+            - text: to predict high-yield topics and personalize your study plan.
+        - generic [ref=e451]:
+          - link "NEET Cutoff 2026" [ref=e452] [cursor=pointer]:
+            - /url: /neet-cutoff
+            - img [ref=e453]
+            - text: NEET Cutoff 2026
+          - link "NEET Syllabus" [ref=e455] [cursor=pointer]:
+            - /url: /syllabus
+            - img [ref=e456]
+            - text: NEET Syllabus
+          - link "PYQ Analysis" [ref=e458] [cursor=pointer]:
+            - /url: /pyq-analysis
+            - img [ref=e459]
+            - text: PYQ Analysis
+          - link "Rank Predictor" [ref=e461] [cursor=pointer]:
+            - /url: /rank-predictor
+            - img [ref=e462]
+            - text: Rank Predictor
+          - link "Medical Colleges" [ref=e464] [cursor=pointer]:
+            - /url: /medical-colleges
+            - img [ref=e465]
+            - text: Medical Colleges
+          - link "Syllabus Weightage" [ref=e467] [cursor=pointer]:
+            - /url: /syllabus-weightage
+            - img [ref=e468]
+            - text: Syllabus Weightage
+          - link "NEET Exam Pattern" [ref=e470] [cursor=pointer]:
+            - /url: /neet-exam-pattern
+            - img [ref=e471]
+            - text: NEET Exam Pattern
+          - link "Best Books for NEET" [ref=e473] [cursor=pointer]:
+            - /url: /best-books-neet
+            - img [ref=e474]
+            - text: Best Books for NEET
+          - link "NEET Eligibility" [ref=e476] [cursor=pointer]:
+            - /url: /neet-eligibility-criteria
+            - img [ref=e477]
+            - text: NEET Eligibility
+          - link "NEET Application Form" [ref=e479] [cursor=pointer]:
+            - /url: /neet-application-form
+            - img [ref=e480]
+            - text: NEET Application Form
+          - link "NEET Counselling" [ref=e482] [cursor=pointer]:
+            - /url: /neet-counselling
+            - img [ref=e483]
+            - text: NEET Counselling
+          - link "NEET Admit Card" [ref=e485] [cursor=pointer]:
+            - /url: /neet-admit-card
+            - img [ref=e486]
+            - text: NEET Admit Card
+          - link "MBBS Roadmap" [ref=e488] [cursor=pointer]:
+            - /url: /mbbs-roadmap
+            - img [ref=e489]
+            - text: MBBS Roadmap
+          - link "NEET FAQ" [ref=e491] [cursor=pointer]:
+            - /url: /neet-faq
+            - img [ref=e492]
+            - text: NEET FAQ
+          - link "Mock Tests" [ref=e494] [cursor=pointer]:
+            - /url: /mock-tests
+            - img [ref=e495]
+            - text: Mock Tests
+          - link "Find Mentors" [ref=e497] [cursor=pointer]:
+            - /url: /mentors
+            - img [ref=e498]
+            - text: Find Mentors
+      - generic [ref=e503]:
+        - generic [ref=e504]:
+          - img [ref=e505]
+          - text: Start Today
+        - heading "Ready to Begin Your NEET Journey?" [level=2] [ref=e507]
+        - paragraph [ref=e508]: Join thousands of students already preparing for NEET with our AI-powered platform. Start free today and see the difference.
+        - generic [ref=e509]:
+          - link "Create Free Account" [ref=e510] [cursor=pointer]:
+            - /url: /signup
+            - button "Create Free Account" [ref=e511]:
+              - img
+              - text: Create Free Account
+              - img
+          - link "Find a Mentor" [ref=e512] [cursor=pointer]:
+            - /url: /mentors
+            - button "Find a Mentor" [ref=e513]:
+              - img
+              - text: Find a Mentor
+        - paragraph [ref=e514]:
+          - img [ref=e515]
+          - text: No credit card required • Free forever plan available
+  - contentinfo [ref=e518]:
+    - generic [ref=e519]:
+      - generic [ref=e520]:
+        - generic [ref=e521]:
+          - link "ZERO AI" [ref=e522] [cursor=pointer]:
+            - /url: /
+            - img [ref=e524]
+            - generic [ref=e527]: ZERO AI
+          - paragraph [ref=e528]: Empowering the next generation of doctors with AI-driven personalized learning. Master NEET with precision and speed.
+          - generic [ref=e529]:
+            - link [ref=e530] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e531]
+            - link [ref=e533] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e534]
+            - link [ref=e536] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e537]
+            - link [ref=e540] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e541]
+        - generic [ref=e545]:
+          - heading "Platform" [level=3] [ref=e546]
+          - list [ref=e547]:
+            - listitem [ref=e548]:
+              - link "Pricing" [ref=e549] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=e550]:
+              - link "Mock Tests" [ref=e551] [cursor=pointer]:
+                - /url: /mock-tests
+            - listitem [ref=e552]:
+              - link "Mentors" [ref=e553] [cursor=pointer]:
+                - /url: /mentors
+            - listitem [ref=e554]:
+              - link "NEET Cutoff" [ref=e555] [cursor=pointer]:
+                - /url: /neet-cutoff
+            - listitem [ref=e556]:
+              - link "PYQ Analysis" [ref=e557] [cursor=pointer]:
+                - /url: /pyq-analysis
+            - listitem [ref=e558]:
+              - link "NEET Syllabus" [ref=e559] [cursor=pointer]:
+                - /url: /syllabus
+            - listitem [ref=e560]:
+              - link "Medical Colleges" [ref=e561] [cursor=pointer]:
+                - /url: /medical-colleges
+        - generic [ref=e562]:
+          - heading "Company" [level=3] [ref=e563]
+          - list [ref=e564]:
+            - listitem [ref=e565]:
+              - link "About Us" [ref=e566] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e567]:
+              - link "Contact" [ref=e568] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e569]:
+              - link "NEET FAQ" [ref=e570] [cursor=pointer]:
+                - /url: /neet-faq
+        - generic [ref=e571]:
+          - heading "Legal & Support" [level=3] [ref=e572]
+          - list [ref=e573]:
+            - listitem [ref=e574]:
+              - link "Terms of Service" [ref=e575] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e576]:
+              - link "Privacy Policy" [ref=e577] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e578]:
+              - link "Refund Policy" [ref=e579] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e580]:
+              - link "Help Center" [ref=e581] [cursor=pointer]:
+                - /url: /help
+            - listitem [ref=e582]:
+              - link "App Guide" [ref=e583] [cursor=pointer]:
+                - /url: /guide
+            - listitem [ref=e584]:
+              - link "Best Books" [ref=e585] [cursor=pointer]:
+                - /url: /best-books-neet
+      - generic [ref=e586]:
+        - generic [ref=e587]:
+          - generic [ref=e588]:
+            - img [ref=e589]
+            - text: akshaykumar003@outlook.com
+          - generic [ref=e592]:
+            - img [ref=e593]
+            - text: +91 97297 34752
+          - generic [ref=e595]:
+            - img [ref=e596]
+            - text: Bangalore, India
+        - paragraph [ref=e599]: © 2026 Zero Page Technologies. All rights reserved.
+```
