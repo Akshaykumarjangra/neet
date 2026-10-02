@@ -9,7 +9,7 @@ import {
   insertChatMessageSchema,
   type InsertChatThread,
 } from "@shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "./auth";
 
@@ -99,14 +99,20 @@ router.get("/threads", requireAuth, async (req, res) => {
       .where(conditions)
       .orderBy(desc(chatThreads.lastMessageAt));
 
-    // Enrich with latest message preview
-    const threadsWithPreview = await Promise.all(threads.map(async (thread) => {
-      const [latest] = await db
-        .select()
-        .from(chatMessages)
-        .where(eq(chatMessages.threadId, thread.id))
-        .orderBy(desc(chatMessages.createdAt))
-        .limit(1);
+    // Enrich with latest message preview (Optimized to batch query)
+    const threadIds = [...new Set(threads.map((t) => t.id))];
+    const latestMessages = threadIds.length > 0
+      ? await db
+          .selectDistinctOn([chatMessages.threadId])
+          .from(chatMessages)
+          .where(inArray(chatMessages.threadId, threadIds))
+          .orderBy(chatMessages.threadId, desc(chatMessages.createdAt))
+      : [];
+
+    const latestMessagesMap = new Map(latestMessages.map((m) => [m.threadId, m]));
+
+    const threadsWithPreview = threads.map((thread) => {
+      const latest = latestMessagesMap.get(thread.id);
 
       return {
         ...thread,
@@ -117,7 +123,7 @@ router.get("/threads", requireAuth, async (req, res) => {
           senderId: latest.senderId
         } : null
       };
-    }));
+    });
 
     res.json({ threads: threadsWithPreview });
   } catch (error) {
