@@ -1,0 +1,11 @@
+--- tests/e2e/example.spec.ts
++++ tests/e2e/example.spec.ts
+@@ -11,7 +11,7 @@
+         await expect(page).toHaveTitle(/.*NEET.*/i);
+
+         // Check for Hero Section
+-        await expect(page.locator('text=India\\'s').or(page.getByTestId('button-cta-signup'))).toBeVisible();
++        await expect(page.locator('text=India').or(page.getByTestId('button-cta-signup'))).toBeVisible();
+     });
+
+     test('should navigate to pricing', async ({ page }) => {
