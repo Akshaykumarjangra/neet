@@ -22,7 +22,7 @@ import {
   chapterContentVersions,
   chapterContent,
 } from "@shared/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, getTableColumns } from "drizzle-orm";
 import { recordAuditLog } from "./lib/audit";
 import { z } from "zod";
 
