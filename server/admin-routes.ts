@@ -1245,16 +1245,19 @@ router.post("/settings/bulk", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "Settings object required" });
     }
 
-    for (const [key, value] of Object.entries(settings)) {
-      const [existing] = await db.select().from(adminSettings).where(eq(adminSettings.key, key)).limit(1);
-
-      if (existing) {
-        await db.update(adminSettings)
-          .set({ value, updatedBy: userId, updatedAt: new Date() })
-          .where(eq(adminSettings.key, key));
-      } else {
-        await db.insert(adminSettings).values({ key, value, updatedBy: userId });
-      }
+    const entries = Object.entries(settings);
+    if (entries.length > 0) {
+      const values = entries.map(([key, value]) => ({ key, value, updatedBy: userId }));
+      await db.insert(adminSettings)
+        .values(values)
+        .onConflictDoUpdate({
+          target: adminSettings.key,
+          set: {
+            value: sql`EXCLUDED.value`,
+            updatedBy: sql`EXCLUDED.updated_by`,
+            updatedAt: new Date(),
+          },
+        });
     }
 
     // Log the bulk update
