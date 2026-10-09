@@ -1,4 +1,3 @@
-// @ts-nocheck
 // telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
 
 import express, { Request, Response, NextFunction } from 'express';

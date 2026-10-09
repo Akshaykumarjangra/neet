@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { sanitizeResponses, scoreResponses } from "./mock-exam-scoring";
