@@ -262,32 +262,29 @@ export class DbStorage implements IStorage {
     accuracy: number;
     subjectStats: Array<{ subject: string; accuracy: number; correct: number; total: number }>;
   }> {
-    const attempts = await db.select()
+    // ⚡ Bolt: Fetch all attempts and their corresponding subject in a single batched query
+    // This replaces an O(N) N+1 query loop with a single O(1) query utilizing Drizzle inner joins.
+    const joinedAttempts = await db.select({
+      isCorrect: userPerformance.isCorrect,
+      subject: contentTopics.subject,
+    })
       .from(userPerformance)
+      .innerJoin(questions, eq(userPerformance.questionId, questions.id))
+      .innerJoin(contentTopics, eq(questions.topicId, contentTopics.id))
       .where(eq(userPerformance.userId, userId));
 
-    const totalAttempts = attempts.length;
-    const correctAnswers = attempts.filter((a) => a.isCorrect).length;
+    const totalAttempts = joinedAttempts.length;
+    const correctAnswers = joinedAttempts.filter((a) => a.isCorrect).length;
     const accuracy = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
     const subjectStatsMap = new Map<string, { correct: number; total: number }>();
     
-    for (const attempt of attempts) {
-      const question = await this.getQuestionById(attempt.questionId);
-      if (question) {
-        const topic = await db.select()
-          .from(contentTopics)
-          .where(eq(contentTopics.id, question.topicId))
-          .limit(1);
-        
-        if (topic[0]) {
-          const subject = topic[0].subject;
-          const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
-          stats.total++;
-          if (attempt.isCorrect) stats.correct++;
-          subjectStatsMap.set(subject, stats);
-        }
-      }
+    for (const attempt of joinedAttempts) {
+      const subject = attempt.subject;
+      const stats = subjectStatsMap.get(subject) || { correct: 0, total: 0 };
+      stats.total++;
+      if (attempt.isCorrect) stats.correct++;
+      subjectStatsMap.set(subject, stats);
     }
 
     const subjectStats = Array.from(subjectStatsMap.entries()).map(([subject, stats]) => ({
