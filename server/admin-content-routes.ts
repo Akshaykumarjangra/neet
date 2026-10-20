@@ -196,20 +196,21 @@ router.post("/questions/bulk", requireAdmin, async (req, res) => {
 
 router.get("/topics", requireAdminOrMentor, async (req, res) => {
   try {
-    const allTopics = await db.select().from(contentTopics).orderBy(contentTopics.subject, contentTopics.topicName);
-
-    const topicsWithCounts = await Promise.all(
-      allTopics.map(async (topic) => {
-        const countResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(questions)
-          .where(eq(questions.topicId, topic.id));
-        return {
-          ...topic,
-          questionCount: Number(countResult[0].count),
-        };
+    // ⚡ Bolt: Optimize N+1 query by replacing map-loop query with a single left join
+    const topicsWithCountsResult = await db
+      .select({
+        topic: contentTopics,
+        questionCount: sql<number>`count(${questions.id})`.mapWith(Number),
       })
-    );
+      .from(contentTopics)
+      .leftJoin(questions, eq(questions.topicId, contentTopics.id))
+      .groupBy(contentTopics.id)
+      .orderBy(contentTopics.subject, contentTopics.topicName);
+
+    const topicsWithCounts = topicsWithCountsResult.map(row => ({
+      ...row.topic,
+      questionCount: row.questionCount,
+    }));
 
     res.json(topicsWithCounts);
   } catch (error) {
