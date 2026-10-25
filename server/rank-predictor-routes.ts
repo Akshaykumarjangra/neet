@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { requireAuth } from './auth';
 import { db } from './db';
 import { mockExamAttempts, mockExamResponses, mockExamQuestions, users, userPerformance } from '@shared/schema';
-import { eq, desc, sql, and } from 'drizzle-orm';
+import { eq, desc, sql, and, inArray } from 'drizzle-orm';
 import { logger } from './lib/logger';
 
 const predLog = logger.child({ module: 'rank-predictor' });
@@ -57,12 +57,13 @@ function predictRank(score: number, maxScore: number = 720): { low: number; mid:
 }
 
 // Detect silly mistakes
-function detectSillyMistakes(responses: any[], questions: any[]): any[] {
+function detectSillyMistakes(responses: any[], questions: any[] | Map<number, any>): any[] {
   const mistakes: any[] = [];
+  const isMap = questions instanceof Map;
   
   for (const resp of responses) {
     if (resp.isCorrect) continue;
-    const q = questions.find((qq: any) => qq.id === resp.questionId);
+    const q = isMap ? (questions as Map<number, any>).get(resp.questionId) : (questions as any[]).find((qq: any) => qq.id === resp.questionId);
     if (!q) continue;
     
     // Fast wrong answer = likely silly mistake
@@ -140,15 +141,19 @@ router.get('/analyze/:attemptId', requireAuth, async (req, res) => {
       .where(eq(mockExamResponses.attemptId, attemptId));
 
     const questionIds = responses.map(r => r.questionId);
-    const questionData = questionIds.length > 0
+    const uniqueQuestionIds = [...new Set(questionIds)];
+    const questionData = uniqueQuestionIds.length > 0
       ? await db.select().from(mockExamQuestions)
-          .where(sql`${mockExamQuestions.id} = ANY(ARRAY[${sql.raw(questionIds.join(','))}]::int[])`)
+          .where(inArray(mockExamQuestions.id, uniqueQuestionIds))
       : [];
+
+    // Precompute a Map outside the loop to perform O(1) key-based lookups.
+    const questionsMap = new Map(questionData.map(q => [q.id, q]));
 
     // Subject breakdown
     const subjectBreakdown: Record<string, any> = {};
     for (const resp of responses) {
-      const q = questionData.find(qq => qq.id === resp.questionId);
+      const q = questionsMap.get(resp.questionId);
       const subject = q?.subject || 'Unknown';
       if (!subjectBreakdown[subject]) {
         subjectBreakdown[subject] = { correct: 0, wrong: 0, unanswered: 0, score: 0, totalTime: 0, count: 0 };
@@ -172,7 +177,7 @@ router.get('/analyze/:attemptId', requireAuth, async (req, res) => {
 
     const score = attempt.score || 0;
     const prediction = predictRank(score);
-    const sillyMistakes = detectSillyMistakes(responses, questionData);
+    const sillyMistakes = detectSillyMistakes(responses, questionsMap);
 
     // Identify strengths and weaknesses
     const subjects = Object.entries(subjectBreakdown);
