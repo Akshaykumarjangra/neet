@@ -9,7 +9,7 @@ import {
   insertChatMessageSchema,
   type InsertChatThread,
 } from "@shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "./auth";
 
@@ -99,25 +99,38 @@ router.get("/threads", requireAuth, async (req, res) => {
       .where(conditions)
       .orderBy(desc(chatThreads.lastMessageAt));
 
-    // Enrich with latest message preview
-    const threadsWithPreview = await Promise.all(threads.map(async (thread) => {
-      const [latest] = await db
-        .select()
-        .from(chatMessages)
-        .where(eq(chatMessages.threadId, thread.id))
-        .orderBy(desc(chatMessages.createdAt))
-        .limit(1);
+    // Enrich with latest message preview - optimized with batched query to resolve N+1
+    type ThreadWithPreview = typeof threads[0] & {
+      latestMessage: { content: string; createdAt: string; isFlagged: boolean; senderId: string; } | null
+    };
 
-      return {
-        ...thread,
-        latestMessage: latest ? {
-          content: latest.content,
-          createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
-          isFlagged: latest.isFlagged,
-          senderId: latest.senderId
-        } : null
-      };
-    }));
+    let threadsWithPreview: ThreadWithPreview[] = threads.map(t => ({ ...t, latestMessage: null }));
+
+    if (threads.length > 0) {
+      const threadIds = threads.map(t => t.id);
+      const uniqueThreadIds = [...new Set(threadIds)];
+
+      const latestMessages = await db
+        .selectDistinctOn([chatMessages.threadId])
+        .from(chatMessages)
+        .where(inArray(chatMessages.threadId, uniqueThreadIds))
+        .orderBy(chatMessages.threadId, desc(chatMessages.createdAt));
+
+      const latestMessagesMap = new Map(latestMessages.map(m => [m.threadId, m]));
+
+      threadsWithPreview = threads.map(thread => {
+        const latest = latestMessagesMap.get(thread.id);
+        return {
+          ...thread,
+          latestMessage: latest ? {
+            content: latest.content,
+            createdAt: latest.createdAt ? new Date(latest.createdAt).toISOString() : new Date().toISOString(),
+            isFlagged: latest.isFlagged,
+            senderId: latest.senderId
+          } : null
+        };
+      });
+    }
 
     res.json({ threads: threadsWithPreview });
   } catch (error) {
