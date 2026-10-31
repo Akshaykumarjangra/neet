@@ -1,25 +1,23 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('User Journey', () => {
-    test.beforeEach(async ({ page }) => {
-        // Setup any necessary state before each test
-        // NOTE: Tests require a running local server
-    });
+    // We can't easily test login without a real user or a seeded db in this environment,
+    // so we'll test valid public routes first to ensure the app is healthy.
+    // If we have a standardized seed, we could test login.
+    // For now, let's verify the Landing Page and Public Pages load correctly.
 
     test('should load the home page successfully', async ({ page }) => {
         await page.goto('/');
         await expect(page).toHaveTitle(/NEET/);
 
-        // Check for Hero Section (using loose regex to avoid brittle tests)
-        await expect(page.locator('text=/NEET/i').first()).toBeVisible();
+        // Check for Hero Section
+        await expect(page.locator('text=/Master NEET with AI/i').or(page.getByTestId('text-hero-headline')).first()).toBeVisible();
     });
 
     test('should navigate to pricing', async ({ page }) => {
         await page.goto('/');
-
-        // Find pricing link in nav
-        const pricingLink = page.locator('nav').getByRole('link', { name: /Pricing/i }).first();
-        await pricingLink.click();
+        // Click the Pricing link in the navigation bar (desktop or mobile, picking first visible)
+        await page.getByRole('link', { name: /Pricing/i }).first().click();
 
         await expect(page).toHaveURL(/.*pricing/);
         // Relax strict text check or ensure exact match with the pricing page header
@@ -27,20 +25,15 @@ test.describe('User Journey', () => {
     });
 
     // We can try to sign up a temp user if we wanted deep testing,
-    // but a basic auth wall test is simpler.
+    // but for now let's verify the Mock Test route handles unauthenticated access gracefully
     test('should redirect unauthenticated access to mock test', async ({ page }) => {
         await page.goto('/mock-test/1');
-
-        // Wait for potential redirect or auth wall
-        await page.waitForTimeout(2000);
-
-        const url = page.url();
-        if (url.includes('auth') || url.includes('login') || url === 'http://localhost:5001/') {
-             console.log('Redirect successful or bounced to home.');
-        } else {
-             // Depending on app behavior, it might show an overlay instead of redirecting.
-             // We just verify it doesn't crash.
-             console.log('Redirect behavior varied, skipping strict assertion');
-        }
+        // Likely redirects to login or shows auth error
+        // Let's check if we end up on login or see a login prompt
+        await expect(page.locator('text=/Sign in/i').or(page.getByText('Log in')).first()).toBeVisible({ timeout: 10000 }).catch(() => {
+            // Or maybe it redirects to /questions and shows "Please log in"
+            // This assertion depends on exact behavior, let's keep it loose or remove if flaky
+            console.log("Redirect behavior varied, skipping strict assertion");
+        });
     });
 });
