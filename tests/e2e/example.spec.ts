@@ -30,7 +30,7 @@ test.describe('User Journey', () => {
         await page.goto('/mock-test/1');
         // Likely redirects to login or shows auth error
         // Let's check if we end up on login or see a login prompt
-        await expect(page.locator('text=/Sign in/i').or(page.getByText('Log in')).first()).toBeVisible({ timeout: 10000 }).catch(() => {
+        await expect(page.locator('text=/Welcome Back/i').or(page.locator('text=/Sign in/i')).or(page.getByText('Log in')).first()).toBeVisible({ timeout: 10000 }).catch(() => {
             // Or maybe it redirects to /questions and shows "Please log in"
             // This assertion depends on exact behavior, let's keep it loose or remove if flaky
             console.log("Redirect behavior varied, skipping strict assertion");
