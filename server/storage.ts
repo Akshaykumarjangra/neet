@@ -15,7 +15,7 @@ import {
   flashcards,
   flashcardDecks,
 } from "@shared/schema";
-import { eq, and, desc, lt, lte, asc, isNotNull, sql } from "drizzle-orm";
+import { eq, and, desc, lt, lte, asc, isNotNull, sql, getTableColumns } from "drizzle-orm";
 
 type UserRow = typeof users.$inferSelect;
 type UserInsert = typeof users.$inferInsert;
@@ -145,14 +145,7 @@ export class DbStorage implements IStorage {
 
   async getTopicsWithQuestionCounts(): Promise<(ContentTopicRow & { questionCount: number; totalQuestions: number })[]> {
     return await db.select({
-      id: contentTopics.id,
-      topicName: contentTopics.topicName,
-      subject: contentTopics.subject,
-      weightage: contentTopics.weightage,
-      difficulty: contentTopics.difficulty,
-      order: contentTopics.order,
-      isPremium: contentTopics.isPremium,
-      description: contentTopics.description,
+      ...getTableColumns(contentTopics),
       questionCount: sql<number>`count(${questions.id})`.mapWith(Number),
       totalQuestions: sql<number>`count(${questions.id})`.mapWith(Number)
     })
