@@ -2,6 +2,14 @@
   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
+  "jest": {
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "testPathIgnorePatterns": ["\\.spec\\.ts$", "/tests/e2e/"],
+    "moduleNameMapper": {
+      "^@shared/(.*)$": "<rootDir>/shared/$1"
+    }
+  },
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
