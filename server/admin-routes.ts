@@ -898,47 +898,54 @@ export default router;
 // Get placeholder questions statistics
 router.get("/placeholder-stats", requireAdmin, async (req, res) => {
   try {
-    // Get all questions
-    const allQuestions = await db.select().from(questions);
+    const totalCountQuery = await db.select({ count: sql<number>`count(*)` }).from(questions);
+    const totalQuestions = Number(totalCountQuery[0].count);
 
-    // Get all topics
-    const topics = await db.select().from(contentTopics);
-    const topicMap = new Map(topics.map(t => [t.id, t]));
+    const isPlaceholderSql = sql<number>`CASE WHEN
+      ${questions.questionText} LIKE '%[Real question content to be added]%' OR
+      ${questions.questionText} LIKE '%A comprehensive NEET-level question%' OR
+      ${questions.options}::text LIKE '%First possible answer%' OR
+      ${questions.options}::text LIKE '%Second possible answer%'
+      THEN 1 ELSE 0 END`;
 
-    // Find placeholders
-    const placeholders = allQuestions.filter(q =>
-      q.questionText.includes('[Real question content to be added]') ||
-      q.questionText.includes('A comprehensive NEET-level question') ||
-      JSON.stringify(q.options).includes('First possible answer') ||
-      JSON.stringify(q.options).includes('Second possible answer')
-    );
+    const placeholderStats = await db.select({
+      topicId: contentTopics.id,
+      subject: contentTopics.subject,
+      topicName: contentTopics.topicName,
+      placeholderCount: sql<number>`SUM(${isPlaceholderSql})`
+    })
+    .from(questions)
+    .leftJoin(contentTopics, eq(questions.topicId, contentTopics.id))
+    .groupBy(contentTopics.id, contentTopics.subject, contentTopics.topicName);
 
-    // Group by topic
-    const byTopic: Record<string, {
-      subject: string;
-      topicName: string;
-      placeholderCount: number;
-    }> = {};
+    const byTopic: Record<string, { subject: string; topicName: string; placeholderCount: number }> = {};
+    let totalPlaceholders = 0;
 
-    for (const q of placeholders) {
-      const topic = topicMap.get(q.topicId);
-      if (topic) {
-        const key = `${topic.id}`;
-        if (!byTopic[key]) {
-          byTopic[key] = {
-            subject: topic.subject || 'Unknown',
-            topicName: topic.topicName || 'Unknown',
-            placeholderCount: 0,
+    for (const row of placeholderStats) {
+      const count = Number(row.placeholderCount);
+      if (count > 0) {
+        totalPlaceholders += count;
+        if (row.topicId) {
+          byTopic[`${row.topicId}`] = {
+            subject: row.subject || 'Unknown',
+            topicName: row.topicName || 'Unknown',
+            placeholderCount: count,
           };
+        } else {
+          // Accumulate for unknown/deleted topics
+          const key = 'unknown';
+          if (!byTopic[key]) {
+             byTopic[key] = { subject: 'Unknown', topicName: 'Unknown', placeholderCount: 0 };
+          }
+          byTopic[key].placeholderCount += count;
         }
-        byTopic[key].placeholderCount++;
       }
     }
 
     res.json({
-      totalQuestions: allQuestions.length,
-      placeholderCount: placeholders.length,
-      realCount: allQuestions.length - placeholders.length,
+      totalQuestions: totalQuestions,
+      placeholderCount: totalPlaceholders,
+      realCount: totalQuestions - totalPlaceholders,
       byTopic,
     });
   } catch (error) {
