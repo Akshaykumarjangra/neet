@@ -1,24 +1,25 @@
-// telemetry-routes.spec.ts – Jest + Supertest tests for telemetry endpoint
+// telemetry-routes.spec.ts – Jest tests for telemetry endpoint (runs in jest runner)
 
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+
+// Use standard Jest describes/its instead of node:test
+// This file runs via standard jest. It previously used "node:test".
+
+// Mock requireAuthWithPasswordCheck to avoid DB hits
+jest.mock('./auth', () => ({
+    requireAuthWithPasswordCheck: (req: Request, res: Response, next: NextFunction) => {
+        (req as any).session = { userId: 'test-user-id' };
+        next();
+    },
+    getCurrentUser: () => 'test-user-id'
+}));
+
 import telemetryRoutes from './telemetry-routes';
 
-// Dummy auth middleware to satisfy requireAuthWithPasswordCheck
-function dummyAuth(req: Request, res: Response, next: NextFunction) {
-    // Simulate an authenticated user
-    (req as any).session = { userId: 'test-user-id' };
-    next();
-}
-
-// Create an app that uses the dummy auth before the telemetry routes
 function createApp() {
     const app = express();
     app.use(express.json());
-    // Replace the real auth middleware with dummy for testing
-    // The telemetryRoutes file imports requireAuthWithPasswordCheck internally,
-    // but we can mount the router after applying dummy auth globally.
-    app.use(dummyAuth);
     app.use('/api', telemetryRoutes);
     // Error handler to avoid unhandled errors in tests
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

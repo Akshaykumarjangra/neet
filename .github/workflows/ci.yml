@@ -66,7 +66,7 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
       - name: Run Jest tests
-        run: npx jest --passWithNoTests --ci --coverage
+        run: npx jest --passWithNoTests --ci
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           SESSION_SECRET: test-secret-ci
@@ -96,7 +96,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps
       - name: Run migrations
         run: npx drizzle-kit push
         env:
